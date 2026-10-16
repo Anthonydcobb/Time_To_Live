@@ -69,6 +69,8 @@ const MAX_QUEUED_PER_HOST = 4;
 
 export class IpStack {
   readonly arp = new Map<Ipv4, ArpEntry>();
+  /** Every address that has answered a ping from this host. Work orders check it. */
+  readonly repliesFrom = new Set<Ipv4>();
   private queued = new Map<Ipv4, { iface: L3Interface; packet: Ipv4Packet }[]>();
   private waiters = new Map<string, (r: PingResult) => void>();
   private nextPingId = 1;
@@ -264,6 +266,7 @@ export class IpStack {
       if (settled) return;
       settled = true;
       this.waiters.delete(key);
+      if (r.kind === "reply") this.repliesFrom.add(dst);
       done(r.kind === "reply" ? { ...r, rttMs: this.clock.now - start } : r);
     };
     this.waiters.set(key, settle);

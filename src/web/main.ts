@@ -3,10 +3,10 @@ import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import { IosDevice } from "../sim/devices/ios-device";
 import { Pc } from "../sim/devices/pc";
-import { Switch } from "../sim/devices/switch";
 import type { Job } from "../sim/job";
-import type { Device, Port } from "../sim/network";
+import type { Device } from "../sim/network";
 import { cornerStore } from "../sim/scenarios/corner-store";
+import { TopologyView } from "./topology";
 
 /** What a terminal needs from a device's command line, IOS or PC. */
 interface Session {
@@ -230,9 +230,10 @@ class TerminalView {
 // ---- wire up the corner store ----------------------------------------------
 
 const store = cornerStore();
-const devicesEl = document.getElementById("devices")!;
-const cablesEl = document.getElementById("cables")!;
+const tabsEl = document.getElementById("tabs")!;
+const tasksEl = document.getElementById("tasks")!;
 const termsEl = document.getElementById("terminals")!;
+const topology = new TopologyView(store.net, store.layout, document.getElementById("topology")!, (d) => select(d));
 
 const views = new Map<Device, TerminalView>();
 const buttons = new Map<Device, HTMLButtonElement>();
@@ -243,13 +244,10 @@ for (const device of store.net.devices) {
   views.set(device, view);
   device.onOutput((text) => view.log(text));
 
-  const li = document.createElement("li");
   const button = document.createElement("button");
-  const label = device instanceof IosDevice ? `${device.id} · ${device.model}` : `${device.hostname} · PC`;
-  button.textContent = label;
+  button.setAttribute("role", "tab");
   button.addEventListener("click", () => select(device));
-  li.appendChild(button);
-  devicesEl.appendChild(li);
+  tabsEl.appendChild(button);
   buttons.set(device, button);
 }
 
@@ -258,34 +256,9 @@ function select(device: Device): void {
     if (d === device) v.show();
     else v.hide();
     buttons.get(d)!.classList.toggle("active", d === device);
+    buttons.get(d)!.setAttribute("aria-selected", String(d === device));
   }
-}
-
-function lightFor(port: Port): string {
-  if (!port.linkUp) return "";
-  if (port.device instanceof Switch) {
-    const state = port.device.stpState(port);
-    return state === "forwarding" ? "green" : state === "disabled" ? "" : "amber";
-  }
-  return port.protocolUp ? "green" : "amber";
-}
-
-const cablePairs: [Port, Port][] = [];
-for (const d of store.net.devices) {
-  for (const p of d.ports) {
-    if (p.peer && !cablePairs.some(([a, b]) => b === p && a === p.peer)) cablePairs.push([p, p.peer]);
-  }
-}
-const cableRows = cablePairs.map(([a, b]) => {
-  const li = document.createElement("li");
-  cablesEl.appendChild(li);
-  return { li, a, b };
-});
-
-function drawCables(): void {
-  for (const { li, a, b } of cableRows) {
-    li.innerHTML = `${a.device.hostname} ${a.shortName}<span class="light ${lightFor(a)}"></span>──<span class="light ${lightFor(b)}"></span>${b.device.hostname} ${b.shortName}`;
-  }
+  topology.select(device);
 }
 
 // Real time drives the simulation: link lights and spanning tree wait for you.
@@ -296,8 +269,24 @@ function tick(now: number): void {
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
-window.setInterval(drawCables, 250);
-drawCables();
+// The work order ticks itself off as the network starts working.
+const taskRows = store.tasks.map((task) => {
+  const li = document.createElement("li");
+  li.textContent = task.text;
+  li.className = task.done ? "task" : "flavor";
+  tasksEl.appendChild(li);
+  return { li, task };
+});
+
+function refresh(): void {
+  topology.draw();
+  for (const [d, b] of buttons) {
+    b.textContent = d instanceof IosDevice ? `${d.hostname} · ${d.model}` : `${d.hostname} · PC`;
+  }
+  for (const { li, task } of taskRows) li.classList.toggle("done", !!task.done?.());
+}
+window.setInterval(refresh, 250);
+refresh();
 
 window.addEventListener("resize", () => views.forEach((v) => v.resize()));
 select(store.r1);

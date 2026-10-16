@@ -1,0 +1,87 @@
+# Handoff: where Time To Live is
+
+Read this first if you're picking up the project, human or AI. Update it whenever you finish something or change a plan.
+
+Last updated: 2026-10-16.
+
+## The game in one paragraph
+
+Time To Live is a 2D top-down horror game set in Static Springs, a Night Vale style town. You're a network contractor for Bob's Bandwidth & Bloodletting. Each job is a strange local business that needs a network, and you bring the gear, cable it and configure it with a command line that behaves exactly like Cisco IOS. The jobs climb the CCNA 200-301 curriculum, from a corner store with static IPs to The Void-View Hotel. Network attacks are the hauntings. The full design doc lives outside the repo in the project's shared files at `design/design-doc.md`. Ask Ant for it if you can't reach it.
+
+## People and rules
+
+- **Story so far:** the mentor is Walter, job 1's client is Mrs. Finch, and Bellwether is the neighboring town that vanished but still answers pings. See the design doc.
+- **Owner:** Ant (GitHub Anthonydcobb). Ant is studying for the CCNA and makes the design calls. Ask before changing anything in the design.
+- **The CLI must match real IOS:** same modes, abbreviations, `?` help, errors and show output. When unsure, copy real IOS 15 output.
+- **The simulation is real, not answer checking.** Frames actually move. Work orders check live network state, never typed commands.
+- **Never say "Cisco" in game branding.** Devices are made by Cryptis Systems (the CR-2911 router and CS-2960-24TT switch).
+- **Cables:** any Ethernet cable links any two Ethernet ports, since auto-MDIX is assumed. Ant dropped straight-through vs crossover on purpose. Console cables only fit console ports.
+
+## Stack and layout
+
+TypeScript, Vite, Vitest and xterm.js on Node 22. There's no game engine yet. The plan is Phaser or PixiJS later, packaged with Electron or Tauri.
+
+```
+src/sim/      The simulator. No DOM, runs on a virtual clock, fully unit tested.
+src/web/      The bench page: topology diagram, device tabs, terminals, work order.
+tests/        Vitest tests (cli, network, depth, topology).
+```
+
+The README has the full feature list and the file-by-file layout.
+
+```sh
+npm install
+npm run dev      # bench at http://localhost:5173
+npm test
+npm run build    # typecheck and production build
+```
+
+Key ideas:
+- `Clock` is virtual time. The browser advances it from real time, and tests call `clock.advance()`.
+- Commands that take time (ping, traceroute, the typo DNS lookup) return a `Job` that streams output and can be aborted.
+- `Network.connect(a, b, cable)` plugs in a cable. Link state, line protocol (1 s later) and the fake 30 s spanning tree delay follow from there.
+- A scenario such as `src/sim/scenarios/corner-store.ts` builds the network and returns a diagram `layout` and the work order `tasks`. Each task has a `done()` check against live state.
+
+## Done
+
+| What | Where |
+|---|---|
+| IOS parser and console: modes, abbreviations, `?`, Tab, history, real errors, `do`, sub-mode fallback | PR #1 |
+| Config: hostname, enable secret and password, type 7, banner motd, line con and vty, interface IPs, static routes, default gateway, Vlan1 SVI, save, erase, reload | PR #1 |
+| Simulation: ARP, MAC learning and flooding, routing (connected, local, static), ICMP echo, unreachable and TTL exceeded, link and line protocol logs | PR #1 |
+| Show commands: run, start, ip int brief, interfaces, ip route, arp, mac address-table, vlan brief, version, clock | PR #1 |
+| PCs with `ipconfig`, `ping`, `tracert`, `arp -a` | PR #1 and #2 |
+| Real-time ping and traceroute with abort, console ports and cables, CDP | PR #2 |
+| Logical topology diagram, device tabs, and a work order that ticks itself off | PR #3 |
+
+**PR state:** #1 → `main`, #2 stacked on #1, #3 stacked on #2. None are merged yet. Merge them in order: #1, then #2, then #3.
+
+## Next up
+
+Phase 1 (the simulator) still has gaps:
+1. Real spanning tree: BPDUs, root election, blocking, portfast and BPDU guard. This is for job 4, and the cultists sending BPDUs through wall jacks hook into it.
+2. VLANs, trunks and router-on-a-stick for job 3.
+3. `interface range`, SSH and telnet over vty, DHCP server on the router (job 2), LLDP.
+4. A terminal program on the PC that uses the console cable.
+
+Phase 2 is the vertical slice: the corner store as a playable top-down scene. It needs the cabling port panel close-up, the laptop CLI overlay, the home base and home lab, one haunting, mentor radio messages, a sanity meter and placeholder audio.
+
+## Open questions for Ant
+
+- Art style. Ant likes Welcome to Elderfield and is collecting reference screenshots. Who makes the art is also undecided: AI, asset packs or an artist.
+- Story beats per job, and where automation topics go on the job ladder.
+- Whether to keep building simulator depth first or start the Phase 2 slice next.
+
+## Job ladder
+
+| # | Job | CCNA topics |
+|---|---|---|
+| 1 | Corner store | Static IPs, hostname, passwords, interface IPs, `no shutdown` |
+| 2 | 24-hour laundromat | DHCP on the router, a networked printer |
+| 3 | Dentist's office | VLANs, trunks, router-on-a-stick |
+| 4 | Library | Layer 3 switch, STP, EtherChannel |
+| 5 | Funeral home and crematorium | Two sites, a WAN link, static routes |
+| 6 | Town hall and sheriff | OSPF, ACLs |
+| 7 | Community radio station | NAT/PAT, wireless |
+| 8 | Hospital | SSH, port security, HSRP, syslog/NTP |
+| 9 | The Void-View Hotel | Everything, IPv6, fixing someone else's broken network |
