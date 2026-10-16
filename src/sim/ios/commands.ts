@@ -9,12 +9,15 @@ import type { IosConsole, Mode } from "./console";
 import { kw, type Arg, type Command, type Token, type Word } from "./parser";
 import { type5Hash } from "./passwords";
 import * as show from "./show";
+import type { Job } from "../job";
+import { iosPing, iosTraceroute } from "../tools";
 
 export interface Ctx {
   device: IosDevice;
   console: IosConsole;
   out: string[];
-  delayMs: number;
+  /** Set by commands that keep running in simulated time. */
+  job: Job | null;
 }
 
 type Cmd = Command<Ctx>;
@@ -116,28 +119,13 @@ function setPassword(ctx: Ctx, text: string) {
 }
 
 function ping(ctx: Ctx, target: Ipv4): void {
-  const { device, out } = ctx;
-  out.push("Type escape sequence to abort.", `Sending 5, 100-byte ICMP Echos to ${formatIpv4(target)}, timeout is 2 seconds:`);
-  const id = device.stack.newPingId();
-  let marks = "";
-  const rtts: number[] = [];
-  for (let seq = 0; seq < 5; seq++) {
-    const r = device.stack.ping(target, id, seq, 2000);
-    if (r.kind === "reply") {
-      marks += "!";
-      rtts.push(r.rttMs);
-    } else if (r.kind === "unreachable") marks += "U";
-    else if (r.kind === "ttl-expired") marks += "&";
-    else marks += ".";
-  }
-  out.push(marks);
-  const pct = Math.round((rtts.length / 5) * 100);
-  if (rtts.length) {
-    const avg = Math.round(rtts.reduce((a, b) => a + b, 0) / rtts.length);
-    out.push(`Success rate is ${pct} percent (${rtts.length}/5), round-trip min/avg/max = ${Math.round(Math.min(...rtts))}/${avg}/${Math.round(Math.max(...rtts))} ms`);
-  } else {
-    out.push(`Success rate is ${pct} percent (0/5)`);
-  }
+  ctx.out.push("Type escape sequence to abort.", `Sending 5, 100-byte ICMP Echos to ${formatIpv4(target)}, timeout is 2 seconds:`);
+  ctx.job = iosPing({ stack: ctx.device.stack, clock: ctx.device.clock }, target);
+}
+
+function traceroute(ctx: Ctx, target: Ipv4): void {
+  ctx.out.push("Type escape sequence to abort.", `Tracing the route to ${formatIpv4(target)}`, "VRF info: (vrf in name/id, vrf out name/id)");
+  ctx.job = iosTraceroute({ stack: ctx.device.stack, clock: ctx.device.clock }, target);
 }
 
 function validHostname(name: string): boolean {
@@ -176,6 +164,11 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("vlan", "VTP VLAN status"), kw("brief", "VTP all VLAN status in brief")], (c) => c.out.push(...show.showVlanBrief(c.device as Switch)), {
     devices: ["switch"],
   }),
+  cmd(EXEC, [SHOW, kw("cdp", "CDP information")], (c) => c.out.push(...show.showCdp(c.device))),
+  cmd(EXEC, [SHOW, kw("cdp", "CDP information"), kw("neighbors", "CDP neighbor entries")], (c) => c.out.push(...show.showCdpNeighbors(c.device))),
+  cmd(EXEC, [SHOW, kw("cdp", "CDP information"), kw("neighbors", "CDP neighbor entries"), kw("detail", "Show detailed information")], (c) =>
+    c.out.push(...show.showCdpNeighborsDetail(c.device)),
+  ),
   cmd(ENABLE, [SHOW, kw("running-config", "Current operating configuration")], (c) => c.out.push(...show.showRunningConfig(c.device))),
   cmd(ENABLE, [SHOW, kw("startup-config", "Contents of startup configuration")], (c) => c.out.push(...show.showStartupConfig(c.device))),
 ];
@@ -185,6 +178,9 @@ const execCommands: Entry[] = [
   cmd(EXEC, [kw("exit", "Exit from the EXEC")], (c) => c.console.logout()),
   cmd(EXEC, [kw("logout", "Exit from the EXEC")], (c) => c.console.logout()),
   cmd(EXEC, [kw("ping", "Send echo messages"), ipArg("Ping destination address or hostname")], (c, [ip]) => ping(c, ip as Ipv4)),
+  cmd(EXEC, [kw("traceroute", "Trace route to destination"), ipArg("Trace route to destination address or hostname")], (c, [ip]) =>
+    traceroute(c, ip as Ipv4),
+  ),
   cmd(ENABLE, [kw("disable", "Turn off privileged commands")], (c) => c.console.setMode("user")),
   cmd(ENABLE, [kw("configure", "Enter configuration mode"), kw("terminal", "Configure from the terminal")], (c) => {
     c.out.push("Enter configuration commands, one per line.  End with CNTL/Z.");
@@ -301,6 +297,13 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [NO, BANNER, MOTD], (c) => {
     c.device.config.bannerMotd = null;
   }),
+  cmd(CONFIG, [kw("cdp", "Global CDP configuration subcommands"), kw("run", "")], (c) => {
+    c.device.config.cdpRun = true;
+  }),
+  cmd(CONFIG, [NO, kw("cdp", "Global CDP configuration subcommands"), kw("run", "")], (c) => {
+    c.device.config.cdpRun = false;
+    c.device.cdpNeighbors.clear();
+  }),
   cmd(CONFIG, [IP, DOMAIN], (c) => {
     c.device.config.ipDomainLookup = true;
   }),
@@ -386,6 +389,18 @@ const interfaceCommands: Entry[] = [
       cfg.mask = null;
     });
   }, { when: routedIface }),
+  cmd(IF, [kw("cdp", "CDP interface subcommands"), kw("enable", "Enable CDP on interface")], (c) =>
+    forEachIface(c, (n) => {
+      c.device.ifaceConfig(n).cdp = true;
+    }),
+  { when: (c) => c.console.ifaces.every((n) => c.device.findInterface(n)?.port) }),
+  cmd(IF, [NO, kw("cdp", "CDP interface subcommands"), kw("enable", "Enable CDP on interface")], (c) =>
+    forEachIface(c, (n) => {
+      c.device.ifaceConfig(n).cdp = false;
+      const port = c.device.findInterface(n)?.port;
+      if (port) c.device.cdpNeighbors.delete(port);
+    }),
+  { when: (c) => c.console.ifaces.every((n) => c.device.findInterface(n)?.port) }),
   cmd(IF, [kw("shutdown", "Shutdown the selected interface")], (c) => forEachIface(c, (n) => c.device.setShutdown(n, true))),
   cmd(IF, [NO, kw("shutdown", "Shutdown the selected interface")], (c) => forEachIface(c, (n) => c.device.setShutdown(n, false))),
   cmd(IF, [kw("description", "Interface specific description"), lineArg("Up to 240 characters describing this interface")], (c, [text]) =>

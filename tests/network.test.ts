@@ -4,7 +4,7 @@ import { Network } from "../src/sim/network";
 import { Pc } from "../src/sim/devices/pc";
 import { Router } from "../src/sim/devices/router";
 import { cornerStore } from "../src/sim/scenarios/corner-store";
-import { captureLogs, type } from "./helpers";
+import { captureLogs, run, type } from "./helpers";
 
 const STP_SETTLE_MS = 31_000;
 
@@ -56,17 +56,17 @@ describe("the corner store", () => {
     const office = net.device("PC1") as Pc;
     office.configure(ip("192.168.1.11"), ip("255.255.255.0"));
     net.clock.advance(2000);
-    expect(register.shell.execute("ping -n 1 192.168.1.11")).toContain("Request timed out.");
+    expect(run(register, "ping -n 1 192.168.1.11")).toContain("Request timed out.");
     net.clock.advance(STP_SETTLE_MS);
-    expect(register.shell.execute("ping -n 1 192.168.1.11").some((l) => l.startsWith("Reply from 192.168.1.11"))).toBe(true);
+    expect(run(register, "ping -n 1 192.168.1.11").some((l) => l.startsWith("Reply from 192.168.1.11"))).toBe(true);
   });
 
   it("pings PC to PC and PC to router", () => {
     const { register } = configuredStore();
-    const toPc = register.shell.execute("ping 192.168.1.11");
+    const toPc = run(register, "ping 192.168.1.11");
     expect(toPc).toContain("    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),");
     expect(toPc.find((l) => l.startsWith("Reply"))).toMatch(/TTL=128$/);
-    const toRouter = register.shell.execute("ping 192.168.1.1");
+    const toRouter = run(register, "ping 192.168.1.1");
     expect(toRouter.find((l) => l.startsWith("Reply"))).toMatch(/TTL=255$/);
   });
 
@@ -80,25 +80,25 @@ describe("the corner store", () => {
 
   it("fills the ARP and MAC address tables", () => {
     const { r1, s1, register } = configuredStore();
-    register.shell.execute("ping 192.168.1.1");
+    run(register, "ping 192.168.1.1");
     const arp = type(r1, "show arp");
     expect(arp[0]).toBe("Protocol  Address          Age (min)  Hardware Addr   Type   Interface");
     expect(arp.some((l) => l.startsWith("Internet  192.168.1.10 ") && l.endsWith("ARPA   GigabitEthernet0/0"))).toBe(true);
     const macs = type(s1, "show mac address-table");
     expect(macs.some((l) => l.endsWith("Fa0/1"))).toBe(true);
     expect(macs.some((l) => l.endsWith("Gig0/1"))).toBe(true);
-    expect(register.shell.execute("arp -a").some((l) => l.includes("192.168.1.1 "))).toBe(true);
+    expect(run(register, "arp -a").some((l) => l.includes("192.168.1.1 "))).toBe(true);
   });
 
   it("reaches the switch management address once Vlan1 is up", () => {
     const { s1, register } = configuredStore();
     type(s1, "en", "conf t", "int vlan 1", "ip address 192.168.1.2 255.255.255.0", "no shut", "exit", "ip default-gateway 192.168.1.1", "end");
-    expect(register.shell.execute("ping -n 2 192.168.1.2")).toContain("    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),");
+    expect(run(register, "ping -n 2 192.168.1.2")).toContain("    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),");
   });
 
   it("fails with a general failure when the PC has no IP", () => {
     const { register } = cornerStore();
-    expect(register.shell.execute("ping 192.168.1.1")).toEqual(["PING: transmit failed. General failure."]);
+    expect(run(register, "ping 192.168.1.1")).toEqual(["PING: transmit failed. General failure."]);
   });
 });
 
@@ -119,9 +119,9 @@ describe("routing", () => {
     const { a, b } = twoSubnets();
     a.configure(ip("192.168.1.10"), ip("255.255.255.0"));
     b.configure(ip("10.0.0.10"), ip("255.255.255.0"), ip("10.0.0.1"));
-    expect(a.shell.execute("ping -n 1 10.0.0.10")).toContain("Request timed out.");
+    expect(run(a, "ping -n 1 10.0.0.10")).toEqual(["PING: transmit failed. General failure."]);
     a.configure(ip("192.168.1.10"), ip("255.255.255.0"), ip("192.168.1.1"));
-    const out = a.shell.execute("ping 10.0.0.10");
+    const out = run(a, "ping 10.0.0.10");
     expect(out.filter((l) => l.startsWith("Reply from 10.0.0.10")).length).toBeGreaterThanOrEqual(3);
     expect(out.find((l) => l.startsWith("Reply"))).toMatch(/TTL=127$/);
   });
@@ -140,7 +140,7 @@ describe("routing", () => {
   it("answers U when the router has no route", () => {
     const { a } = twoSubnets();
     a.configure(ip("192.168.1.10"), ip("255.255.255.0"), ip("192.168.1.1"));
-    const out = a.shell.execute("ping -n 2 8.8.8.8");
+    const out = run(a, "ping -n 2 8.8.8.8");
     expect(out).toContain("Reply from 192.168.1.1: Destination host unreachable.");
   });
 });

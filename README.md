@@ -31,14 +31,20 @@ npm run build    # typecheck and production build
 - `copy running-config startup-config`, `write memory`, `erase startup-config`, `reload` (asks to save if the config changed).
 - Console login and enable passwords, including lockouts after three wrong tries.
 
-**Show commands:** `running-config`, `startup-config`, `ip interface brief`, `interfaces`, `ip route`, `arp`, `mac address-table`, `vlan brief`, `version`, `clock`.
+- CDP: `cdp run`, `cdp enable` and their `no` forms.
+
+**Show commands:** `running-config`, `startup-config`, `ip interface brief`, `interfaces`, `ip route`, `arp`, `mac address-table`, `vlan brief`, `cdp`, `cdp neighbors [detail]`, `version`, `clock`.
+
+**Commands that take real time:** `ping` and `traceroute` on IOS, `ping` and `tracert` on PCs, and the DNS lookup on a typo all run on the simulation clock, so a timeout really is two seconds of standing in the dark. `Ctrl+Shift+6` aborts on IOS and `Ctrl+C` on a PC.
 
 **The network simulation**
 - Frames actually move over cables with ARP, MAC learning and flooding, IP routing (connected, local and static), and ICMP echo, unreachable and TTL exceeded.
 - Interfaces log `%LINK` and `%LINEPROTO` messages, and line protocol comes up a second after the link.
 - Switch ports wait through 30 seconds of spanning-tree listening and learning (the amber lights) before forwarding.
 - The first ping from a router drops while it ARPs (`.!!!!`), just like real IOS.
-- PCs have a desktop prompt with `ipconfig`, `ping` and `arp -a`.
+- PCs have a desktop prompt with `ipconfig`, `ping`, `tracert` and `arp -a`. Windows pings are a second apart.
+- Any Ethernet cable links any two Ethernet ports (auto-MDIX), so there's no straight-through vs crossover. Console cables go from a PC's RS-232 port to a device's console port.
+- Devices exchange CDP every 60 seconds with a 180 second holdtime, and switches don't forward it.
 
 ## Layout
 
@@ -46,6 +52,8 @@ npm run build    # typecheck and production build
 src/sim/            The simulator. No DOM, fully testable.
   network.ts        Devices, ports, cables, link state
   clock.ts          Virtual time (the game pumps it from real time)
+  job.ts            Commands that keep printing as time passes
+  tools.ts          ping and traceroute, IOS and Windows flavors
   ipstack.ts        ARP, routing, ICMP for routers, PCs and switch SVIs
   devices/          Router (CR-2911), Switch (CS-2960), PC
   ios/              Parser, console modes, commands, show output, passwords
@@ -58,8 +66,7 @@ tests/              Vitest tests
 ## Not yet
 
 - Real spanning tree (BPDUs and loop blocking), VLANs and trunks: job 3 and 4.
-- `interface range`, `show cdp neighbors`, `traceroute`, SSH, DHCP.
-- Commands that take real time (ping currently finishes instantly).
-- Cable types (straight-through, crossover, console).
+- `interface range`, SSH, DHCP, LLDP.
+- A terminal program on the PC that uses the console cable.
 
 Cryptis Systems is fictional. This project is not affiliated with Cisco Systems.

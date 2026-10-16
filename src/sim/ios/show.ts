@@ -30,6 +30,7 @@ export function renderConfig(device: IosDevice, c: IosConfig): string[] {
   if (c.enablePassword) out.push(`enable password ${pw(c.enablePassword)}`);
   if (c.enableSecret || c.enablePassword) out.push("!");
   if (!c.ipDomainLookup) out.push("no ip domain-lookup", "!");
+  if (!c.cdpRun) out.push("no cdp run", "!");
   if (isSwitch) out.push("spanning-tree mode pvst", "spanning-tree extend system-id", "!");
 
   for (const iface of device.interfaces()) {
@@ -39,6 +40,7 @@ export function renderConfig(device: IosDevice, c: IosConfig): string[] {
     if (ic.description) out.push(` description ${ic.description}`);
     if (iface.routed) out.push(ic.ip !== null ? ` ip address ${formatIpv4(ic.ip)} ${formatIpv4(ic.mask!)}` : " no ip address");
     if (iface.port && !isSwitch) out.push(" duplex auto", " speed auto");
+    if (iface.port && !ic.cdp) out.push(" no cdp enable");
     if (ic.shutdown) out.push(" shutdown");
     out.push("!");
   }
@@ -263,6 +265,65 @@ export function showVersion(device: IosDevice): string[] {
     "Configuration register is 0x2102",
     "",
   ].flatMap((l) => l.split("\n"));
+}
+
+/** CDP's short interface names: "Gig 0/0", "Fas 0/1". */
+function cdpIfName(name: string): string {
+  const m = /^([A-Za-z]+)(.*)$/.exec(name)!;
+  return `${m[1].slice(0, 3)} ${m[2]}`;
+}
+
+export function showCdp(device: IosDevice): string[] {
+  if (!device.config.cdpRun) return ["% CDP is not enabled"];
+  return [
+    "Global CDP information:",
+    "    Sending CDP packets every 60 seconds",
+    "    Sending a holdtime value of 180 seconds",
+    "    Sending CDPv2 advertisements is enabled",
+  ];
+}
+
+export function showCdpNeighbors(device: IosDevice): string[] {
+  if (!device.config.cdpRun) return ["% CDP is not enabled"];
+  const now = device.clock.now;
+  const out = [
+    "Capability Codes: R - Router, T - Trans Bridge, B - Source Route Bridge",
+    "                  S - Switch, H - Host, I - IGMP, r - Repeater, P - Phone",
+    "Device ID    Local Intrfce   Holdtme    Capability   Platform    Port ID",
+  ];
+  for (const n of device.liveCdpNeighbors()) {
+    const hold = String(Math.ceil((n.expiresAt - now) / 1000));
+    const cap = n.capability === "Router" ? "R" : "S";
+    out.push(
+      `${n.deviceId.padEnd(13)}${cdpIfName(n.localPort.name).padEnd(16)}${hold.padEnd(15)}${cap.padEnd(9)}${(n.platform.replace("Cryptis ", "") + " ").padEnd(12)}${cdpIfName(n.portId)}`,
+    );
+  }
+  return out;
+}
+
+export function showCdpNeighborsDetail(device: IosDevice): string[] {
+  if (!device.config.cdpRun) return ["% CDP is not enabled"];
+  const now = device.clock.now;
+  const out: string[] = [];
+  for (const n of device.liveCdpNeighbors()) {
+    out.push(
+      "",
+      `Device ID: ${n.deviceId}`,
+      "Entry address(es): ",
+      ...(n.address !== null ? [`  IP address : ${formatIpv4(n.address)}`] : []),
+      `Platform: ${n.platform}, Capabilities: ${n.capability}`,
+      `Interface: ${n.localPort.name}, Port ID (outgoing port): ${n.portId}`,
+      `Holdtime: ${Math.ceil((n.expiresAt - now) / 1000)}`,
+      "",
+      "Version :",
+      n.version,
+      "",
+      "advertisement version: 2",
+      "Duplex: full",
+      "---------------------------",
+    );
+  }
+  return out;
 }
 
 export function showClock(device: IosDevice): string[] {

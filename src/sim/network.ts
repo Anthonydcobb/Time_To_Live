@@ -4,9 +4,15 @@ import type { Frame } from "./frames";
 
 export type DeviceKind = "router" | "switch" | "pc";
 
+export type CableType = "ethernet" | "console";
+export type PortKind = "ethernet" | "console";
+
+export class CableError extends Error {}
+
 /** A physical port. Whether it is shut down lives in the owning device's config. */
 export class Port {
   peer: Port | null = null;
+  cable: CableType | null = null;
   /** Layer 1: cable present and both ends not shut down. */
   linkUp = false;
   /** Layer 2: comes up shortly after the link does. Frames only flow when this is true. */
@@ -17,6 +23,7 @@ export class Port {
     readonly name: string,
     readonly shortName: string,
     readonly mac: Mac,
+    readonly kind: PortKind = "ethernet",
   ) {}
 
   get adminDown(): boolean {
@@ -42,6 +49,9 @@ export abstract class Device {
   abstract get hostname(): string;
   abstract isPortShutdown(port: Port): boolean;
   abstract receive(port: Port, frame: Frame): void;
+
+  /** Called once the device is on a network and has a clock. */
+  onAttach(): void {}
 
   /** Called after a port's link or protocol state changes. */
   onPortStateChange(_port: Port, _layer: "link" | "protocol"): void {}
@@ -84,6 +94,7 @@ export class Network {
   add<T extends Device>(device: T): T {
     device.network = this;
     this.devices.push(device);
+    device.onAttach();
     return device;
   }
 
@@ -93,11 +104,20 @@ export class Network {
     return d;
   }
 
-  connect(a: Port, b: Port): void {
-    if (a === b) throw new Error("Cannot cable a port to itself");
-    if (a.peer || b.peer) throw new Error("Port already has a cable");
+  /**
+   * Plugs a cable between two ports. Any Ethernet cable links any two Ethernet
+   * ports (auto-MDIX), and console cables only fit console ports.
+   */
+  connect(a: Port, b: Port, cable: CableType = "ethernet"): void {
+    if (a === b) throw new CableError("A cable needs two different ports.");
+    if (a.peer || b.peer) throw new CableError("That port already has a cable in it.");
+    const wantKind: PortKind = cable === "console" ? "console" : "ethernet";
+    if (a.kind !== wantKind || b.kind !== wantKind) {
+      throw new CableError(cable === "console" ? "A console cable only fits console ports." : "An Ethernet cable doesn't fit a console port.");
+    }
     a.peer = b;
     b.peer = a;
+    a.cable = b.cable = cable;
     this.refresh(a);
   }
 
@@ -106,6 +126,7 @@ export class Network {
     if (!peer) return;
     port.peer = null;
     peer.peer = null;
+    port.cable = peer.cable = null;
     this.refreshOne(port);
     this.refreshOne(peer);
   }
@@ -117,7 +138,7 @@ export class Network {
   }
 
   private refreshOne(port: Port): void {
-    const up = !!port.peer && !port.adminDown && !port.peer.adminDown;
+    const up = !!port.peer && port.kind === "ethernet" && !port.adminDown && !port.peer.adminDown;
     if (up === port.linkUp) return;
     port.linkUp = up;
     port.device.onPortStateChange(port, "link");

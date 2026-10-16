@@ -71,6 +71,7 @@ export class Router extends IosDevice {
   }
 
   receive(port: Port, frame: Frame): void {
+    if (this.handleCdp(port, frame)) return;
     this.stack.handleFrame(this.l3.get(port)!, frame);
   }
 }
