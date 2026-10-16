@@ -39,6 +39,8 @@ npm run build    # typecheck and production build
 
 **The bench**
 - A logical topology diagram shows each device, the cables between them, the port at each end and a link light (red for down, amber for spanning tree or line protocol coming up, green for forwarding). Click a device to open its terminal, or drag it to move it.
+- Each device has a tab above the terminal.
+- The work order lists job 1's tasks and ticks each one off by reading the live network: the router's interface is up with the right address, each PC has its address, and the pings actually got replies.
 
 **The network simulation**
 - Frames actually move over cables with ARP, MAC learning and flooding, IP routing (connected, local and static), and ICMP echo, unreachable and TTL exceeded.

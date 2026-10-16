@@ -62,39 +62,81 @@ ul {
   padding: 0;
 }
 
-#work-order ul li::before {
-  content: "· ";
+#tasks li {
+  position: relative;
+  padding: 3px 0 3px 22px;
+}
+
+#tasks .task::before {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 6px;
+  width: 10px;
+  height: 10px;
+  border: 1px solid var(--dim);
+}
+
+#tasks .task.done {
+  color: var(--dim);
+}
+
+#tasks .task.done::before {
+  border-color: var(--green);
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+}
+
+#tasks .flavor {
+  color: var(--dim);
+  font-style: italic;
+}
+
+#tasks .flavor::before {
+  content: "·";
+  position: absolute;
+  left: 4px;
   color: var(--amber);
 }
 
-#devices button {
-  width: 100%;
-  text-align: left;
+#tabs {
+  display: flex;
+  gap: 2px;
+  padding: 8px 12px 0;
+  border-bottom: 1px solid var(--line);
+  overflow-x: auto;
+}
+
+#tabs button {
   background: none;
-  border: 1px solid transparent;
-  color: var(--text);
+  border: 1px solid var(--line);
+  border-bottom: none;
+  color: var(--dim);
   font: inherit;
-  padding: 6px 8px;
+  font-size: 13px;
+  padding: 6px 12px;
   cursor: pointer;
+  white-space: nowrap;
 }
 
-#devices button:hover {
-  border-color: var(--line);
+#tabs button:hover {
+  color: var(--text);
 }
 
-#devices button.active {
+#tabs button.active {
+  background: var(--bg);
   border-color: var(--amber);
   color: var(--amber);
+  margin-bottom: -1px;
 }
 
 main {
   display: grid;
-  grid-template-rows: minmax(200px, 42%) 1fr;
+  grid-template-rows: minmax(200px, 42%) auto 1fr;
   min-height: 0;
 }
 
 #topology {
-  border-bottom: 1px solid var(--line);
   min-height: 0;
 }
 

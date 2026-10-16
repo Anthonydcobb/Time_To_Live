@@ -230,7 +230,8 @@ class TerminalView {
 // ---- wire up the corner store ----------------------------------------------
 
 const store = cornerStore();
-const devicesEl = document.getElementById("devices")!;
+const tabsEl = document.getElementById("tabs")!;
+const tasksEl = document.getElementById("tasks")!;
 const termsEl = document.getElementById("terminals")!;
 const topology = new TopologyView(store.net, store.layout, document.getElementById("topology")!, (d) => select(d));
 
@@ -243,13 +244,10 @@ for (const device of store.net.devices) {
   views.set(device, view);
   device.onOutput((text) => view.log(text));
 
-  const li = document.createElement("li");
   const button = document.createElement("button");
-  const label = device instanceof IosDevice ? `${device.id} · ${device.model}` : `${device.hostname} · PC`;
-  button.textContent = label;
+  button.setAttribute("role", "tab");
   button.addEventListener("click", () => select(device));
-  li.appendChild(button);
-  devicesEl.appendChild(li);
+  tabsEl.appendChild(button);
   buttons.set(device, button);
 }
 
@@ -258,6 +256,7 @@ function select(device: Device): void {
     if (d === device) v.show();
     else v.hide();
     buttons.get(d)!.classList.toggle("active", d === device);
+    buttons.get(d)!.setAttribute("aria-selected", String(d === device));
   }
   topology.select(device);
 }
@@ -270,7 +269,24 @@ function tick(now: number): void {
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
-window.setInterval(() => topology.draw(), 250);
+// The work order ticks itself off as the network starts working.
+const taskRows = store.tasks.map((task) => {
+  const li = document.createElement("li");
+  li.textContent = task.text;
+  li.className = task.done ? "task" : "flavor";
+  tasksEl.appendChild(li);
+  return { li, task };
+});
+
+function refresh(): void {
+  topology.draw();
+  for (const [d, b] of buttons) {
+    b.textContent = d instanceof IosDevice ? `${d.hostname} · ${d.model}` : `${d.hostname} · PC`;
+  }
+  for (const { li, task } of taskRows) li.classList.toggle("done", !!task.done?.());
+}
+window.setInterval(refresh, 250);
+refresh();
 
 window.addEventListener("resize", () => views.forEach((v) => v.resize()));
 select(store.r1);
