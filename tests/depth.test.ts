@@ -3,7 +3,7 @@ import { parseIpv4 as ip } from "../src/sim/addr";
 import { Pc } from "../src/sim/devices/pc";
 import { Router } from "../src/sim/devices/router";
 import { Switch } from "../src/sim/devices/switch";
-import { CableError, Network, correctCable } from "../src/sim/network";
+import { CableError, Network } from "../src/sim/network";
 import { cornerStore } from "../src/sim/scenarios/corner-store";
 import { finish, run, type } from "./helpers";
 
@@ -14,9 +14,9 @@ function twoRouters() {
   const r2 = net.add(new Router("R2", "R2"));
   const a = net.add(new Pc("A"));
   const b = net.add(new Pc("B"));
-  net.connect(a.nic, r1.port("Gig0/0"), "crossover");
-  net.connect(r1.port("Gig0/1"), r2.port("Gig0/0"), "crossover");
-  net.connect(r2.port("Gig0/1"), b.nic, "crossover");
+  net.connect(a.nic, r1.port("Gig0/0"));
+  net.connect(r1.port("Gig0/1"), r2.port("Gig0/0"));
+  net.connect(r2.port("Gig0/1"), b.nic);
   type(r1, "en", "conf t", "int g0/0", "ip add 192.168.1.1 255.255.255.0", "no shut", "int g0/1", "ip add 10.0.0.1 255.255.255.0", "no shut", "exit");
   type(r1, "ip route 172.16.0.0 255.255.0.0 10.0.0.2", "end");
   type(r2, "en", "conf t", "int g0/0", "ip add 10.0.0.2 255.255.255.0", "no shut", "int g0/1", "ip add 172.16.0.1 255.255.0.0", "no shut", "exit");
@@ -87,25 +87,15 @@ describe("traceroute", () => {
 });
 
 describe("cables", () => {
-  it("only brings a link up with the right cable type", () => {
-    const net = new Network();
-    const s = net.add(new Switch("S1"));
-    const pc = net.add(new Pc("PC0"));
-    net.connect(pc.nic, s.port("Fa0/1"), "crossover");
-    expect(pc.nic.linkUp).toBe(false);
-    expect(correctCable(pc.nic, s.port("Fa0/1"))).toBe("straight-through");
-    net.disconnect(pc.nic);
-    net.connect(pc.nic, s.port("Fa0/1"), "straight-through");
-    expect(pc.nic.linkUp).toBe(true);
-  });
-
-  it("needs a crossover between two switches", () => {
+  it("links up with any Ethernet cable, even switch to switch", () => {
     const net = new Network();
     const s1 = net.add(new Switch("S1"));
     const s2 = net.add(new Switch("S2"));
+    const pc = net.add(new Pc("PC0"));
     net.connect(s1.port("Gig0/1"), s2.port("Gig0/1"));
-    expect(s1.port("Gig0/1").linkUp).toBe(false);
-    expect(type(s1, "show ip interface brief").find((l) => l.startsWith("GigabitEthernet0/1 "))).toMatch(/down\s+down $/);
+    net.connect(pc.nic, s1.port("Fa0/1"));
+    expect(s1.port("Gig0/1").linkUp).toBe(true);
+    expect(pc.nic.linkUp).toBe(true);
   });
 
   it("connects a console cable from a PC's serial port to the console port", () => {

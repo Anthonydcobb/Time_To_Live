@@ -43,7 +43,7 @@ npm run build    # typecheck and production build
 - Switch ports wait through 30 seconds of spanning-tree listening and learning (the amber lights) before forwarding.
 - The first ping from a router drops while it ARPs (`.!!!!`), just like real IOS.
 - PCs have a desktop prompt with `ipconfig`, `ping`, `tracert` and `arp -a`. Windows pings are a second apart.
-- Cables have types. Straight-through joins unlike devices (PC or router to switch) and crossover joins like ones (switch to switch, router to router, PC to router). A wrong cable leaves the link down, since Cryptis gear predates auto-MDIX. Console cables go from a PC's RS-232 port to a device's console port.
+- Any Ethernet cable links any two Ethernet ports (auto-MDIX), so there's no straight-through vs crossover. Console cables go from a PC's RS-232 port to a device's console port.
 - Devices exchange CDP every 60 seconds with a 180 second holdtime, and switches don't forward it.
 
 ## Layout

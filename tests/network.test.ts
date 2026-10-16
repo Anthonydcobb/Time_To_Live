@@ -108,8 +108,8 @@ describe("routing", () => {
     const r = net.add(new Router("R1"));
     const a = net.add(new Pc("A"));
     const b = net.add(new Pc("B"));
-    net.connect(a.nic, r.port("Gig0/0"), "crossover");
-    net.connect(b.nic, r.port("Gig0/1"), "crossover");
+    net.connect(a.nic, r.port("Gig0/0"));
+    net.connect(b.nic, r.port("Gig0/1"));
     type(r, "en", "conf t", "int g0/0", "ip add 192.168.1.1 255.255.255.0", "no shut", "int g0/1", "ip add 10.0.0.1 255.255.255.0", "no shut", "end");
     net.clock.advance(2000);
     return { net, r, a, b };

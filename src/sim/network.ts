@@ -4,7 +4,7 @@ import type { Frame } from "./frames";
 
 export type DeviceKind = "router" | "switch" | "pc";
 
-export type CableType = "straight-through" | "crossover" | "console";
+export type CableType = "ethernet" | "console";
 export type PortKind = "ethernet" | "console";
 
 export class CableError extends Error {}
@@ -82,22 +82,6 @@ export abstract class Device {
   }
 }
 
-/** Switches cross their pairs internally (MDI-X); PCs and routers don't (MDI). */
-function crossesPairs(port: Port): boolean {
-  return port.device.kind === "switch";
-}
-
-/** Whether this cable type brings the link up between these two ports. */
-export function cableWorks(a: Port, b: Port): boolean {
-  const unlike = crossesPairs(a) !== crossesPairs(b);
-  return a.cable === (unlike ? "straight-through" : "crossover");
-}
-
-/** The cable a technician should have used between two Ethernet ports. */
-export function correctCable(a: Port, b: Port): CableType {
-  return crossesPairs(a) !== crossesPairs(b) ? "straight-through" : "crossover";
-}
-
 /** One cable hop takes this long. */
 export const HOP_DELAY_MS = 0.25;
 /** Line protocol follows the physical link after this long. */
@@ -121,12 +105,10 @@ export class Network {
   }
 
   /**
-   * Plugs a cable between two ports. Ethernet cables plug into any Ethernet
-   * port, but the link only comes up with the right type: straight-through
-   * between unlike devices (PC or router to switch), crossover between like
-   * ones. Cryptis gear predates auto-MDIX.
+   * Plugs a cable between two ports. Any Ethernet cable links any two Ethernet
+   * ports (auto-MDIX), and console cables only fit console ports.
    */
-  connect(a: Port, b: Port, cable: CableType = "straight-through"): void {
+  connect(a: Port, b: Port, cable: CableType = "ethernet"): void {
     if (a === b) throw new CableError("A cable needs two different ports.");
     if (a.peer || b.peer) throw new CableError("That port already has a cable in it.");
     const wantKind: PortKind = cable === "console" ? "console" : "ethernet";
@@ -156,7 +138,7 @@ export class Network {
   }
 
   private refreshOne(port: Port): void {
-    const up = !!port.peer && port.kind === "ethernet" && cableWorks(port, port.peer) && !port.adminDown && !port.peer.adminDown;
+    const up = !!port.peer && port.kind === "ethernet" && !port.adminDown && !port.peer.adminDown;
     if (up === port.linkUp) return;
     port.linkUp = up;
     port.device.onPortStateChange(port, "link");
