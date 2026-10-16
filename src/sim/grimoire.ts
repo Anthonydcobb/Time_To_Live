@@ -4,7 +4,7 @@
 import type { Mode } from "./ios/console";
 
 /** Where an incantation is spoken. User and privileged EXEC share one book. */
-export type Book = "exec" | "config" | "if" | "line";
+export type Book = "exec" | "config" | "if" | "line" | "dhcp";
 
 export function bookFor(mode: Mode): Book {
   switch (mode) {
@@ -17,6 +17,8 @@ export function bookFor(mode: Mode): Book {
       return "if";
     case "config-line":
       return "line";
+    case "dhcp-config":
+      return "dhcp";
   }
 }
 
@@ -29,7 +31,7 @@ export function parseIncantation(text: string): { book: Book; words: string[] } 
 const key = (book: Book, words: string[]) => `${book}:${words.join(" ")}`;
 
 /** Commands everyone knows from the first minute: moving between modes. */
-export const BASICS = ["exec: enable", "exec: disable", "exec: exit", "exec: logout", "config: exit", "config: end", "if: exit", "if: end", "line: exit", "line: end"];
+export const BASICS = ["exec: enable", "exec: disable", "exec: exit", "exec: logout", "config: exit", "config: end", "if: exit", "if: end", "line: exit", "line: end", "dhcp: exit", "dhcp: end"];
 
 export type LearnListener = (book: Book, words: string[]) => void;
 

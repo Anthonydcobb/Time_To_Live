@@ -4,7 +4,7 @@ import type { IosDevice } from "../devices/ios-device";
 import type { Router } from "../devices/router";
 import type { Switch } from "../devices/switch";
 import type { DeviceKind } from "../network";
-import type { LineConfig } from "./config";
+import { newDhcpPool, type DhcpPool, type LineConfig } from "./config";
 import type { IosConsole, Mode } from "./console";
 import { kw, type Arg, type Command, type Token, type Word } from "./parser";
 import { type5Hash } from "./passwords";
@@ -100,7 +100,8 @@ const ENABLE: Mode[] = ["enable"];
 const CONFIG: Mode[] = ["config"];
 const IF: Mode[] = ["config-if"];
 const LINE: Mode[] = ["config-line"];
-const SUB: Mode[] = ["config", "config-if", "config-line"];
+const DHCP: Mode[] = ["dhcp-config"];
+const SUB: Mode[] = ["config", "config-if", "config-line", "dhcp-config"];
 
 const NO = kw("no", "Negate a command or set its defaults");
 const SHOW = kw("show", "Show running system information");
@@ -220,6 +221,7 @@ const exitEnd: Entry[] = [
   }),
   cmd(IF, [kw("exit", "Exit from interface configuration mode")], (c) => c.console.setMode("config")),
   cmd(LINE, [kw("exit", "Exit from line configuration mode")], (c) => c.console.setMode("config")),
+  cmd(DHCP, [kw("exit", "Exit from DHCP pool configuration mode")], (c) => c.console.setMode("config")),
 ];
 
 const ENABLE_KW = kw("enable", "Modify enable password parameters");
@@ -308,6 +310,12 @@ const configCommands: Entry[] = [
     c.device.config.ipDomainLookup = true;
   }),
   cmd(CONFIG, [NO, IP, DOMAIN], (c) => {
+    c.device.config.ipDomainLookup = false;
+  }),
+  cmd(CONFIG, [IP, kw("domain", "IP DNS Resolver"), kw("lookup", "Enable IP Domain Name System hostname translation")], (c) => {
+    c.device.config.ipDomainLookup = true;
+  }),
+  cmd(CONFIG, [NO, IP, kw("domain", "IP DNS Resolver"), kw("lookup", "Enable IP Domain Name System hostname translation")], (c) => {
     c.device.config.ipDomainLookup = false;
   }),
   cmd(CONFIG, [kw("interface", "Select an interface to configure"), ifaceArg], (c, [name]) => {
@@ -442,7 +450,156 @@ const lineCommands: Entry[] = [
   }),
 ];
 
-const ALL: Entry[] = [...showCommands, ...execCommands, ...exitEnd, ...configCommands, ...interfaceCommands, ...lineCommands];
+// ---- DHCP server --------------------------------------------------------------
+
+const DHCP_KW = kw("dhcp", "Configure DHCP server and relay parameters");
+const POOL = kw("pool", "Configure DHCP address pools");
+const EXCLUDED = kw("excluded-address", "Prevent DHCP from assigning certain addresses");
+
+function currentPool(c: Ctx): DhcpPool {
+  return c.device.config.dhcpPools.find((p) => p.name === c.console.dhcpPool)!;
+}
+
+/** `/24` style mask, which `network` accepts in place of a dotted mask. */
+const prefixArg: Arg<Ctx> = {
+  type: "arg",
+  name: "/nn",
+  help: "(/nn or A.B.C.D)  Network mask or prefix length",
+  match: (w, i) => {
+    const m = /^\/(\d{1,2})$/.exec(w[i].text);
+    if (!m || Number(m[1]) > 32) return null;
+    const n = Number(m[1]);
+    return { consumed: 1, value: n === 0 ? 0 : (0xffffffff << (32 - n)) >>> 0 };
+  },
+};
+
+function setPoolNetwork(c: Ctx, ip: Ipv4, mask: Ipv4): void {
+  if (maskToPrefix(mask) === null) {
+    c.out.push("% Invalid mask");
+    return;
+  }
+  const pool = currentPool(c);
+  const network = networkOf(ip, mask);
+  const other = c.device.config.dhcpPools.find((p) => p !== pool && p.network === network && p.mask === mask);
+  if (other) {
+    c.out.push(`% ${formatIpv4(network)}/${maskToPrefix(mask)} is already in use by pool ${other.name}`);
+    return;
+  }
+  pool.network = network;
+  pool.mask = mask;
+}
+
+/** IOS takes up to eight addresses after `default-router` and `dns-server`. */
+function addressLists(word: string, help: string, argHelp: string, apply: (c: Ctx, ips: Ipv4[]) => void): Entry[] {
+  const out: Entry[] = [];
+  for (let n = 1; n <= 8; n++) {
+    const args = Array.from({ length: n }, () => ipArg(argHelp));
+    out.push(cmd(DHCP, [kw(word, help), ...args], (c, ips) => apply(c, ips as Ipv4[])));
+  }
+  return out;
+}
+
+const dhcpCommands: Entry[] = [
+  cmd(CONFIG, [IP, DHCP_KW, POOL, wordArg("Pool name")], (c, [name]) => {
+    const pools = c.device.config.dhcpPools;
+    if (!pools.some((p) => p.name === name)) pools.push(newDhcpPool(name as string));
+    c.console.dhcpPool = name as string;
+    c.console.setMode("dhcp-config");
+  }, { devices: ["router"] }),
+  cmd(CONFIG, [NO, IP, DHCP_KW, POOL, wordArg("Pool name")], (c, [name]) => {
+    const pools = c.device.config.dhcpPools;
+    const i = pools.findIndex((p) => p.name === name);
+    if (i < 0) {
+      c.out.push(`%DHCP pool ${name} does not exist.`);
+      return;
+    }
+    pools.splice(i, 1);
+  }, { devices: ["router"] }),
+  cmd(CONFIG, [IP, DHCP_KW, EXCLUDED, ipArg("Low IP address")], (c, [low]) => addExcluded(c, low as Ipv4, low as Ipv4), { devices: ["router"] }),
+  cmd(CONFIG, [IP, DHCP_KW, EXCLUDED, ipArg("Low IP address"), ipArg("High IP address")], (c, [low, high]) => addExcluded(c, low as Ipv4, high as Ipv4), { devices: ["router"] }),
+  cmd(CONFIG, [NO, IP, DHCP_KW, EXCLUDED, ipArg("Low IP address")], (c, [low]) => removeExcluded(c, low as Ipv4, low as Ipv4), { devices: ["router"] }),
+  cmd(CONFIG, [NO, IP, DHCP_KW, EXCLUDED, ipArg("Low IP address"), ipArg("High IP address")], (c, [low, high]) =>
+    removeExcluded(c, low as Ipv4, high as Ipv4),
+  { devices: ["router"] }),
+  cmd(DHCP, [kw("network", "Network number and mask"), ipArg("Network number in dotted-decimal notation"), ipArg("Network mask")], (c, [ip, mask]) =>
+    setPoolNetwork(c, ip as Ipv4, mask as Ipv4),
+  ),
+  cmd(DHCP, [kw("network", "Network number and mask"), ipArg("Network number in dotted-decimal notation"), prefixArg], (c, [ip, mask]) =>
+    setPoolNetwork(c, ip as Ipv4, mask as Ipv4),
+  ),
+  cmd(DHCP, [NO, kw("network", "Network number and mask")], (c) => {
+    const pool = currentPool(c);
+    pool.network = null;
+    pool.mask = null;
+  }),
+  ...addressLists("default-router", "Default routers", "Router's IP address", (c, ips) => {
+    currentPool(c).defaultRouters = ips;
+  }),
+  cmd(DHCP, [NO, kw("default-router", "Default routers")], (c) => {
+    currentPool(c).defaultRouters = [];
+  }),
+  ...addressLists("dns-server", "DNS servers", "Server's IP address", (c, ips) => {
+    currentPool(c).dnsServers = ips;
+  }),
+  cmd(DHCP, [NO, kw("dns-server", "DNS servers")], (c) => {
+    currentPool(c).dnsServers = [];
+  }),
+  cmd(DHCP, [kw("domain-name", "Domain name"), wordArg("Domain name")], (c, [name]) => {
+    currentPool(c).domainName = name as string;
+  }),
+  cmd(DHCP, [NO, kw("domain-name", "Domain name")], (c) => {
+    currentPool(c).domainName = null;
+  }),
+  cmd(DHCP, [kw("lease", "Address lease time"), numArg(0, 365, "Days")], (c, [d]) => {
+    currentPool(c).lease = [d as number, 0, 0];
+  }),
+  cmd(DHCP, [kw("lease", "Address lease time"), numArg(0, 365, "Days"), numArg(0, 23, "Hours")], (c, [d, h]) => {
+    currentPool(c).lease = [d as number, h as number, 0];
+  }),
+  cmd(DHCP, [kw("lease", "Address lease time"), numArg(0, 365, "Days"), numArg(0, 23, "Hours"), numArg(0, 59, "Minutes")], (c, [d, h, m]) => {
+    currentPool(c).lease = [d as number, h as number, m as number];
+  }),
+  cmd(DHCP, [kw("lease", "Address lease time"), kw("infinite", "Infinite lease")], (c) => {
+    currentPool(c).lease = null;
+  }),
+  cmd(DHCP, [NO, kw("lease", "Address lease time")], (c) => {
+    currentPool(c).lease = [1, 0, 0];
+  }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), DHCP_KW, kw("binding", "DHCP address bindings")], (c) => c.out.push(...show.showDhcpBinding(c.device as Router)), {
+    devices: ["router"],
+  }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), DHCP_KW, POOL], (c) => c.out.push(...show.showDhcpPool(c.device as Router)), { devices: ["router"] }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), DHCP_KW, kw("conflict", "DHCP address conflicts")], (c) => c.out.push(...show.showDhcpConflict(c.device as Router)), {
+    devices: ["router"],
+  }),
+  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), DHCP_KW, kw("binding", "DHCP address bindings"), kw("*", "Clear all automatic bindings")], (c) =>
+    (c.device as Router).dhcp.clear(),
+  { devices: ["router"] }),
+  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), DHCP_KW, kw("binding", "DHCP address bindings"), ipArg("Clear a specific binding")], (c, [ip]) =>
+    (c.device as Router).dhcp.clear(ip as Ipv4),
+  { devices: ["router"] }),
+  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), DHCP_KW, kw("conflict", "DHCP address conflicts"), kw("*", "Clear all address conflicts")], (c) =>
+    (c.device as Router).dhcp.clearConflicts(),
+  { devices: ["router"] }),
+];
+
+function addExcluded(c: Ctx, low: Ipv4, high: Ipv4): void {
+  if (high < low) {
+    c.out.push("% Invalid range");
+    return;
+  }
+  const list = c.device.config.dhcpExcluded;
+  if (!list.some((r) => r.low === low && r.high === high)) list.push({ low, high });
+}
+
+function removeExcluded(c: Ctx, low: Ipv4, high: Ipv4): void {
+  const list = c.device.config.dhcpExcluded;
+  const i = list.findIndex((r) => r.low === low && r.high === high);
+  if (i < 0) c.out.push("% Range not found");
+  else list.splice(i, 1);
+}
+
+const ALL: Entry[] = [...showCommands, ...execCommands, ...exitEnd, ...configCommands, ...interfaceCommands, ...lineCommands, ...dhcpCommands];
 
 const cache = new Map<string, Cmd[]>();
 

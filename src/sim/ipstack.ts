@@ -63,6 +63,8 @@ export interface IpStackOptions {
   localRoutes: boolean;
   staticRoutes?: () => StaticRoute[];
   defaultGateway?: () => Ipv4 | null;
+  /** DHCP messages go here instead of through normal delivery. They arrive before the client has an address. */
+  onDhcp?: (iface: L3Interface, packet: Ipv4Packet) => void;
 }
 
 const MAX_QUEUED_PER_HOST = 4;
@@ -200,6 +202,11 @@ export class IpStack {
       return;
     }
 
+    if (p.dhcp) {
+      this.opts.onDhcp?.(iface, p);
+      return;
+    }
+
     const forMe =
       this.isLocal(p.dst) ||
       p.dst === BROADCAST_IP ||
@@ -224,12 +231,13 @@ export class IpStack {
   }
 
   private reply(from: Ipv4, original: Ipv4Packet, type: IcmpMessage["type"]): void {
-    if (original.icmp.type !== "echo-request") return;
+    if (original.icmp?.type !== "echo-request") return;
     this.send({ kind: "ipv4", src: from, dst: original.src, ttl: this.opts.initialTtl, icmp: { type, id: original.icmp.id, seq: original.icmp.seq } });
   }
 
   private deliver(iface: L3Interface, p: Ipv4Packet): void {
     const icmp = p.icmp;
+    if (!icmp) return;
     if (icmp.type === "echo-request") {
       const src = this.isLocal(p.dst) ? p.dst : iface.ip;
       if (src === null) return;

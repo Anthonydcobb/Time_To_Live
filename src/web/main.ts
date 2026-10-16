@@ -5,7 +5,7 @@ import { IosDevice } from "../sim/devices/ios-device";
 import { Pc } from "../sim/devices/pc";
 import type { Job } from "../sim/job";
 import type { Device } from "../sim/network";
-import { cornerStore } from "../sim/scenarios/corner-store";
+import { JOBS } from "../sim/scenarios";
 import { TopologyView } from "./topology";
 import { BASICS, Grimoire, type Book } from "../sim/grimoire";
 
@@ -230,7 +230,21 @@ class TerminalView {
 
 // ---- wire up the corner store ----------------------------------------------
 
-const store = cornerStore();
+// ?job=2 picks the job; the dropdown reloads the page with it.
+const jobId = new URLSearchParams(location.search).get("job") ?? JOBS[0].id;
+const job = JOBS.find((j) => j.id === jobId) ?? JOBS[0];
+const store = job.build();
+const jobSelect = document.getElementById("job") as HTMLSelectElement;
+for (const j of JOBS) jobSelect.add(new Option(j.name, j.id, false, j === job));
+jobSelect.addEventListener("change", () => {
+  location.search = `?job=${jobSelect.value}`;
+});
+const wo = store.workOrder;
+document.getElementById("wo-number")!.textContent = `Work order #${wo.number}`;
+document.getElementById("wo-client")!.textContent = `${wo.client},`;
+document.getElementById("wo-place")!.textContent = wo.place;
+document.getElementById("wo-notes")!.textContent = wo.notes;
+document.getElementById("wo-hint")!.textContent = wo.hint;
 const grimoire = new Grimoire([...BASICS, ...store.incantations]);
 const tabsEl = document.getElementById("tabs")!;
 const tasksEl = document.getElementById("tasks")!;
@@ -273,7 +287,7 @@ function tick(now: number): void {
 }
 requestAnimationFrame(tick);
 // The grimoire lists every incantation learned so far, newest highlighted.
-const BOOK_NAMES: Record<Book, string> = { exec: "EXEC", config: "config", if: "interface", line: "line" };
+const BOOK_NAMES: Record<Book, string> = { exec: "EXEC", config: "config", if: "interface", line: "line", dhcp: "DHCP pool" };
 const grimoireEl = document.getElementById("grimoire")!;
 function addIncantation(book: Book, words: string[], fresh: boolean): void {
   const li = document.createElement("li");
@@ -309,4 +323,4 @@ window.setInterval(refresh, 250);
 refresh();
 
 window.addEventListener("resize", () => views.forEach((v) => v.resize()));
-select(store.r1);
+select(store.start);

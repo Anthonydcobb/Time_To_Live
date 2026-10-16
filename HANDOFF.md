@@ -55,15 +55,16 @@ Key ideas:
 | Real-time ping and traceroute with abort, console ports and cables, CDP | PR #2 |
 | Logical topology diagram, device tabs, and a work order that ticks itself off | PR #3 |
 | Incantations: unlearned commands show as runes in `?` help; jobs teach them and using one learns it (`src/sim/grimoire.ts`) | PR #4 |
+| DHCP server on the router (with IOS's ping check and conflicts), Windows-style DHCP client with APIPA fallback, job 2 (the laundromat) and a job picker | PR #5 |
 
-**PR state:** #1 → `main`, then #2, #3 and #4 each stacked on the one before. None are merged yet. Merge them in order, #1 first.
+**PR state:** #1 → `main`, then #2 to #5 each stacked on the one before. None are merged yet. Merge them in order, #1 first.
 
 ## Next up
 
 Phase 1 (the simulator) still has gaps:
 1. Real spanning tree: BPDUs, root election, blocking, portfast and BPDU guard. This is for job 4, and the cultists sending BPDUs through wall jacks hook into it.
 2. VLANs, trunks and router-on-a-stick for job 3.
-3. `interface range`, SSH and telnet over vty, DHCP server on the router (job 2), LLDP.
+3. `interface range`, SSH and telnet over vty, `ip helper-address`, LLDP.
 4. A terminal program on the PC that uses the console cable.
 
 Phase 2 is the vertical slice: the corner store as a playable top-down scene. It needs the cabling port panel close-up, the laptop CLI overlay, the home base and home lab, one haunting, mentor radio messages, a sanity meter and placeholder audio.

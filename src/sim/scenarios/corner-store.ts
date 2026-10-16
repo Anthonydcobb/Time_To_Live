@@ -4,11 +4,9 @@ import { Switch } from "../devices/switch";
 import { parseIpv4 as ip } from "../addr";
 import { Network } from "../network";
 
-/** One line of a work order. `done` reads the live network, so it ticks itself off. */
-export interface Task {
-  text: string;
-  done?: () => boolean;
-}
+import type { Scenario, Task } from "./types";
+
+export type { Task } from "./types";
 
 /**
  * Job 1: the corner store. Everything is cabled, nothing is configured.
@@ -81,5 +79,19 @@ export function cornerStore() {
     },
     { text: "Do not restock the back cooler." },
   ];
-  return { net, r1, s1, register, office, layout, tasks, incantations: CORNER_STORE_INCANTATIONS };
+  const scenario: Scenario = {
+    net,
+    layout,
+    tasks,
+    incantations: CORNER_STORE_INCANTATIONS,
+    start: r1,
+    workOrder: {
+      number: "0001",
+      client: "Quik-Stop Forever",
+      place: "Corner of Elm and Elm, Static Springs. Owner: Mrs. Finch.",
+      notes: "The router, the switch and both PCs are already cabled. Nothing is configured.",
+      hint: "On a PC: ipconfig 192.168.1.10 255.255.255.0 192.168.1.1",
+    },
+  };
+  return { ...scenario, r1, s1, register, office };
 }

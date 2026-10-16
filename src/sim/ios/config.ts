@@ -22,6 +22,21 @@ export interface InterfaceConfig {
   cdp: boolean;
 }
 
+export interface DhcpPool {
+  name: string;
+  network: Ipv4 | null;
+  mask: Ipv4 | null;
+  defaultRouters: Ipv4[];
+  dnsServers: Ipv4[];
+  domainName: string | null;
+  /** Lease length as [days, hours, minutes], or null for infinite. IOS defaults to one day. */
+  lease: [number, number, number] | null;
+}
+
+export function newDhcpPool(name: string): DhcpPool {
+  return { name, network: null, mask: null, defaultRouters: [], dnsServers: [], domainName: null, lease: [1, 0, 0] };
+}
+
 /** Everything `show running-config` prints. `reload` restores this from startup-config. */
 export interface IosConfig {
   hostname: string;
@@ -36,6 +51,8 @@ export interface IosConfig {
   vty: LineConfig;
   staticRoutes: StaticRoute[];
   defaultGateway: Ipv4 | null;
+  dhcpExcluded: { low: Ipv4; high: Ipv4 }[];
+  dhcpPools: DhcpPool[];
 }
 
 export function defaultLine(): LineConfig {
@@ -58,6 +75,8 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     vty: { ...defaultLine(), login: true },
     staticRoutes: [],
     defaultGateway: null,
+    dhcpExcluded: [],
+    dhcpPools: [],
   };
 }
 

@@ -29,7 +29,25 @@ export function renderConfig(device: IosDevice, c: IosConfig): string[] {
   if (c.enableSecret) out.push(`enable secret 5 ${c.enableSecret}`);
   if (c.enablePassword) out.push(`enable password ${pw(c.enablePassword)}`);
   if (c.enableSecret || c.enablePassword) out.push("!");
-  if (!c.ipDomainLookup) out.push("no ip domain-lookup", "!");
+  if (c.dhcpExcluded.length) {
+    for (const r of c.dhcpExcluded) out.push(`ip dhcp excluded-address ${formatIpv4(r.low)}${r.high !== r.low ? ` ${formatIpv4(r.high)}` : ""}`);
+    out.push("!");
+  }
+  for (const p of c.dhcpPools) {
+    out.push(`ip dhcp pool ${p.name}`);
+    if (p.network !== null) out.push(` network ${formatIpv4(p.network)} ${formatIpv4(p.mask!)}`);
+    if (p.defaultRouters.length) out.push(` default-router ${p.defaultRouters.map(formatIpv4).join(" ")}`);
+    if (p.dnsServers.length) out.push(` dns-server ${p.dnsServers.map(formatIpv4).join(" ")}`);
+    if (p.domainName) out.push(` domain-name ${p.domainName}`);
+    if (p.lease === null) out.push(" lease infinite");
+    else if (p.lease.join() !== "1,0,0") {
+      const [d, h, m] = p.lease;
+      out.push(` lease ${m ? `${d} ${h} ${m}` : h ? `${d} ${h}` : d}`);
+    }
+    out.push("!");
+  }
+  // Real IOS writes the space form in its config, whichever way you typed it.
+  if (!c.ipDomainLookup) out.push("no ip domain lookup", "!");
   if (!c.cdpRun) out.push("no cdp run", "!");
   if (isSwitch) out.push("spanning-tree mode pvst", "spanning-tree extend system-id", "!");
 
@@ -335,4 +353,73 @@ export function showClock(device: IosDevice): string[] {
   const frac = ms % 1000;
   const pad = (n: number, w = 2) => String(n).padStart(w, "0");
   return [`*${pad(h)}:${pad(m)}:${pad(s)}.${pad(frac, 3)} UTC Mon Mar 1 1993`];
+}
+
+// ---- DHCP ----------------------------------------------------------------------
+
+const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+/** A simulated time as IOS prints dates, counting from midnight on March 1st, 1993. */
+export function iosDate(ms: number): string {
+  const d = new Date(Date.UTC(1993, 2, 1) + ms);
+  const h24 = d.getUTCHours();
+  const h12 = h24 % 12 === 0 ? 12 : h24 % 12;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${MONTHS[d.getUTCMonth()]} ${pad(d.getUTCDate())} ${d.getUTCFullYear()} ${pad(h12)}:${pad(d.getUTCMinutes())} ${h24 < 12 ? "AM" : "PM"}`;
+}
+
+/** DHCP client IDs are 01 (Ethernet) followed by the MAC, dotted every four digits. */
+function clientId(mac: string): string {
+  return ("01" + mac).match(/.{1,4}/g)!.join(".");
+}
+
+export function showDhcpBinding(router: Router): string[] {
+  const out = [
+    "Bindings from all pools not associated with VRF:",
+    "IP address          Client-ID/              Lease expiration        Type",
+    "                    Hardware address/",
+    "                    User name",
+  ];
+  for (const b of router.dhcp.liveBindings()) {
+    const expires = b.expiresAt === null ? "Infinite" : iosDate(b.expiresAt);
+    out.push(`${formatIpv4(b.ip).padEnd(20)}${clientId(b.mac).padEnd(24)}${expires.padEnd(24)}Automatic`);
+  }
+  return out;
+}
+
+export function showDhcpPool(router: Router): string[] {
+  const out: string[] = [];
+  const bindings = router.dhcp.liveBindings();
+  for (const p of router.config.dhcpPools) {
+    out.push("", `Pool ${p.name} :`, " Utilization mark (high/low)    : 100 / 0", " Subnet size (first/next)       : 0 / 0 ");
+    if (p.network === null) {
+      out.push(" Total addresses                : 0", " Leased addresses               : 0", " Pending event                  : none", " 0 subnet is currently in the pool :");
+      continue;
+    }
+    const first = p.network + 1;
+    const last = broadcastOfMask(p.network, p.mask!) - 1;
+    const leased = bindings.filter((b) => b.pool === p.name);
+    const next = leased.length ? Math.max(...leased.map((b) => b.ip)) + 1 : first;
+    out.push(
+      ` Total addresses                : ${last - first + 1}`,
+      ` Leased addresses               : ${leased.length}`,
+      " Pending event                  : none",
+      " 1 subnet is currently in the pool :",
+      " Current index        IP address range                    Leased addresses",
+      ` ${formatIpv4(next).padEnd(21)}${formatIpv4(first).padEnd(17)}- ${formatIpv4(last).padEnd(18)}${leased.length}`,
+    );
+  }
+  return out;
+}
+
+export function showDhcpConflict(router: Router): string[] {
+  const out = ["IP address        Detection method   Detection time          VRF"];
+  for (const c of [...router.dhcp.conflicts.values()].sort((a, b) => a.ip - b.ip)) {
+    out.push(`${formatIpv4(c.ip).padEnd(18)}${"Ping".padEnd(19)}${iosDate(c.detectedAt)}`);
+  }
+  return out;
+}
+
+function broadcastOfMask(network: number, mask: number): number {
+  return (network | (~mask >>> 0)) >>> 0;
 }
