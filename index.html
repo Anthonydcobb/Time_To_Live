@@ -11,9 +11,10 @@
       <h1>Time To Live</h1>
       <p class="sub">Bob's Bandwidth &amp; Bloodletting · bench terminal</p>
       <section id="work-order">
-        <h2>Work order #0001</h2>
-        <p><strong>Quik-Stop Forever</strong>, corner of Elm and Elm, Static Springs. Owner: Mrs. Finch.</p>
-        <p class="hint">The router, the switch and both PCs are already cabled. Nothing is configured.</p>
+        <select id="job" aria-label="Job"></select>
+        <h2 id="wo-number"></h2>
+        <p><strong id="wo-client"></strong> <span id="wo-place"></span></p>
+        <p class="hint" id="wo-notes"></p>
         <ul id="tasks"></ul>
       </section>
       <section>
@@ -24,7 +25,7 @@
       <section>
         <h2>Help</h2>
         <p class="hint">Click a device in the diagram or a tab to open its terminal.</p>
-        <p class="hint">On a PC: <code>ipconfig 192.168.1.10 255.255.255.0 192.168.1.1</code></p>
+        <p class="hint" id="wo-hint"></p>
         <p class="hint">Keys: <kbd>?</kbd> help, <kbd>Tab</kbd> complete, <kbd>↑</kbd><kbd>↓</kbd> history, <kbd>Ctrl+Z</kbd> end, <kbd>Ctrl+Shift+6</kbd> abort.</p>
       </section>
     </aside>

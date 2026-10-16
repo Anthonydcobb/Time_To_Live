@@ -1,6 +1,6 @@
 import { formatIpv4, formatMacCisco, formatMacWindows, maskToPrefix, parseIpv4 } from "../addr";
 import type { Pc } from "../devices/pc";
-import type { Job } from "../job";
+import { Job } from "../job";
 import { winPing, winTracert } from "../tools";
 
 export interface ShellOutput {
@@ -24,7 +24,7 @@ export class PcShell {
     if (!cmd) return { lines: [] };
     switch (cmd.toLowerCase()) {
       case "ipconfig":
-        return { lines: this.ipconfig(args) };
+        return this.ipconfig(args);
       case "ping":
         return this.ping(args);
       case "tracert":
@@ -39,6 +39,9 @@ export class PcShell {
           "  help                           Show this list",
           "  ipconfig                       Show IP settings",
           "  ipconfig /all                  Show IP settings and the MAC address",
+          "  ipconfig /dhcp                 Obtain an IP address automatically",
+          "  ipconfig /renew                Ask the DHCP server for a new lease",
+          "  ipconfig /release              Give the DHCP lease back",
           "  ipconfig <ip> <mask> [<gw>]    Set a static IP address",
           "  ping [-n count] <ip>           Send ICMP echo requests",
           "  tracert <ip>                   Trace the route to a host",
@@ -48,8 +51,47 @@ export class PcShell {
     }
   }
 
-  private ipconfig(args: string[]): string[] {
-    if (args.length === 0 || args[0].toLowerCase() === "/all") return this.showIp(args[0]?.toLowerCase() === "/all");
+  private ipconfig(args: string[]): ShellOutput {
+    const flag = args[0]?.toLowerCase();
+    if (args.length === 0 || flag === "/all") return { lines: this.showIp(flag === "/all") };
+    if (flag === "/dhcp") return this.dhcp();
+    if (flag === "/renew") return this.renew();
+    if (flag === "/release") return this.release();
+    return { lines: this.setStatic(args) };
+  }
+
+  /** Stands in for ticking "Obtain an IP address automatically" in the adapter settings. */
+  private dhcp(): ShellOutput {
+    if (this.pc.dhcp) return this.renew();
+    this.pc.dhcp = true;
+    return this.renew();
+  }
+
+  private renew(): ShellOutput {
+    const pc = this.pc;
+    if (!pc.dhcp) return { lines: ["", "The operation failed as no adapter is in the state permissible for", "this operation.", ""] };
+    if (!pc.nic.protocolUp) {
+      return { lines: ["", "No operation can be performed on FastEthernet0 while it has its media disconnected.", ""] };
+    }
+    const job = new Job();
+    pc.renew((lease) => {
+      if (job.done) return;
+      if (lease) job.write(this.showIp(false).join("\n") + "\n");
+      else job.write("An error occurred while renewing interface FastEthernet0 : unable to contact your DHCP server. Request has timed out.\n");
+      job.finish();
+    });
+    job.onAbort(() => pc.dhcpClient.cancel());
+    return { lines: [], job };
+  }
+
+  private release(): ShellOutput {
+    const pc = this.pc;
+    if (!pc.dhcp) return { lines: ["", "The operation failed as no adapter is in the state permissible for", "this operation.", ""] };
+    pc.release();
+    return { lines: this.showIp(false) };
+  }
+
+  private setStatic(args: string[]): string[] {
     const ip = parseIpv4(args[0]);
     const mask = args[1] ? parseIpv4(args[1]) : null;
     const gw = args[2] ? parseIpv4(args[2]) : null;
@@ -63,14 +105,22 @@ export class PcShell {
   private showIp(all: boolean): string[] {
     const pc = this.pc;
     const lines = ["", "FastEthernet0 Connection:(default port)", ""];
-    if (all) lines.push(`   Physical Address................: ${formatMacWindows(pc.nic.mac)}`);
+    if (all) {
+      lines.push(
+        `   Physical Address................: ${formatMacWindows(pc.nic.mac)}`,
+        `   DHCP Enabled....................: ${pc.dhcp ? "Yes" : "No"}`,
+      );
+    }
+    const addr = (ip: number | null) => (ip === null ? "0.0.0.0" : formatIpv4(ip));
     lines.push(
       "   Connection-specific DNS Suffix..: ",
-      `   IPv4 Address....................: ${pc.ip === null ? "0.0.0.0" : formatIpv4(pc.ip)}`,
-      `   Subnet Mask.....................: ${pc.mask === null ? "0.0.0.0" : formatIpv4(pc.mask)}`,
-      `   Default Gateway.................: ${pc.gateway === null ? "0.0.0.0" : formatIpv4(pc.gateway)}`,
-      "",
+      `   ${pc.autoconfigured ? "Autoconfiguration IPv4 Address.." : "IPv4 Address...................."}: ${addr(pc.ip)}`,
+      `   Subnet Mask.....................: ${addr(pc.mask)}`,
+      `   Default Gateway.................: ${addr(pc.gateway)}`,
     );
+    if (all && pc.lease) lines.push(`   DHCP Server.....................: ${formatIpv4(pc.lease.server)}`);
+    if (all) lines.push(`   DNS Servers.....................: ${pc.dnsServers.length ? pc.dnsServers.map(formatIpv4).join(", ") : "0.0.0.0"}`);
+    lines.push("");
     return lines;
   }
 

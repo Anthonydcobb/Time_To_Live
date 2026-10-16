@@ -20,7 +20,7 @@ function helpAt(device: ReturnType<typeof store>["r1"], line: string) {
 
 describe("grimoire", () => {
   it("spells every taught incantation like a real command", () => {
-    const modes: Record<string, Mode> = { exec: "enable", config: "config", if: "config-if", line: "config-line" };
+    const modes: Record<string, Mode> = { exec: "enable", config: "config", if: "config-if", line: "config-line", dhcp: "dhcp-config" };
     for (const text of [...BASICS, ...CORNER_STORE_INCANTATIONS]) {
       const { book, words } = parseIncantation(text);
       const found = commandsFor(modes[book], "router").some((c) =>

@@ -7,7 +7,7 @@ import { type5Verify } from "./passwords";
 import { Job } from "../job";
 import { bookFor, type Grimoire } from "../grimoire";
 
-export type Mode = "user" | "enable" | "config" | "config-if" | "config-line";
+export type Mode = "user" | "enable" | "config" | "config-if" | "config-line" | "dhcp-config";
 
 type Pending =
   | { kind: "press-return" }
@@ -27,6 +27,7 @@ const SUFFIX: Record<Mode, string> = {
   config: "(config)#",
   "config-if": "(config-if)#",
   "config-line": "(config-line)#",
+  "dhcp-config": "(dhcp-config)#",
 };
 
 const CONFIRM = (text: string) => ["", "y", "yes"].includes(text.trim().toLowerCase());
@@ -36,6 +37,8 @@ export class IosConsole {
   mode: Mode = "user";
   ifaces: string[] = [];
   lineKind: "con" | "vty" = "con";
+  /** The pool `ip dhcp pool NAME` selected. */
+  dhcpPool = "";
   pending: Pending | null = null;
   readonly history: string[] = [];
   /** The player's learned incantations. Without one, every command reads plainly. */
@@ -237,7 +240,7 @@ export class IosConsole {
     const ctx = this.ctx();
 
     let result = parse(commands, text, ctx);
-    if (result.kind !== "ok" && !isDo && (this.mode === "config-if" || this.mode === "config-line")) {
+    if (result.kind !== "ok" && !isDo && (this.mode === "config-if" || this.mode === "config-line" || this.mode === "dhcp-config")) {
       // Sub-modes fall back to global config commands, like real IOS.
       const global = parse(commandsFor("config", kind), text, ctx);
       if (global.kind === "ok") {

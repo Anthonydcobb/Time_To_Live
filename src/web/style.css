@@ -62,6 +62,16 @@ ul {
   padding: 0;
 }
 
+#job {
+  width: 100%;
+  margin-top: 16px;
+  background: var(--bg);
+  color: var(--text);
+  border: 1px solid var(--line);
+  font: inherit;
+  padding: 4px;
+}
+
 #tasks li {
   position: relative;
   padding: 3px 0 3px 22px;

@@ -1,6 +1,7 @@
 import { nextMac } from "../addr";
 import type { Frame } from "../frames";
 import { IpStack, type L3Interface } from "../ipstack";
+import { DhcpServer } from "../dhcp";
 import { defaultConfig, type IosConfig } from "../ios/config";
 import { Port } from "../network";
 import { IosDevice, type InterfaceView } from "./ios-device";
@@ -11,6 +12,7 @@ export class Router extends IosDevice {
   readonly model = "CR-2911";
   protected readonly defaultHostname = "Router";
   readonly stack: IpStack;
+  readonly dhcp: DhcpServer;
   private readonly l3 = new Map<Port, L3Interface>();
 
   constructor(id: string, hostname = "Router") {
@@ -25,6 +27,13 @@ export class Router extends IosDevice {
       initialTtl: 255,
       localRoutes: true,
       staticRoutes: () => this.config.staticRoutes,
+      onDhcp: (iface, packet) => this.dhcp.handle(iface, packet),
+    });
+    this.dhcp = new DhcpServer({
+      clock: () => this.clock,
+      config: () => this.config,
+      stack: this.stack,
+      l3Interfaces: () => this.l3Interfaces(),
     });
   }
 
@@ -68,6 +77,12 @@ export class Router extends IosDevice {
 
   l3Interfaces(): L3Interface[] {
     return [...this.l3.values()];
+  }
+
+  protected afterReload(): void {
+    // Bindings live in RAM unless a DHCP database agent is configured.
+    this.dhcp.clear();
+    this.dhcp.clearConflicts();
   }
 
   receive(port: Port, frame: Frame): void {
