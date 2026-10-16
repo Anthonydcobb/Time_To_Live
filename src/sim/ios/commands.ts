@@ -11,6 +11,10 @@ import { type5Hash } from "./passwords";
 import * as show from "./show";
 import type { Job } from "../job";
 import { iosPing, iosTraceroute } from "../tools";
+import { MAX_NORMAL_VLAN, isDefaultVlan, parseVlanList, splitSubinterface } from "../vlans";
+
+/** IOS's [confirm]: Return or y means yes. */
+export const CONFIRM = (text: string) => ["", "y", "yes"].includes(text.trim().toLowerCase());
 
 export interface Ctx {
   device: IosDevice;
@@ -60,8 +64,11 @@ const numArg = (min: number, max: number, help: string): Arg<Ctx> => ({
   },
 });
 
-/** Interface names: `g0/0`, `gig 0/0`, `GigabitEthernet0/0`, `vlan 1`. */
-const ifaceArg: Arg<Ctx> = {
+/**
+ * Interface names: `g0/0`, `gig 0/0`, `GigabitEthernet0/0`, `vlan 1`, `g0/0.10`.
+ * With `create`, also names that `interface` would create: a new SVI or subinterface.
+ */
+const ifaceArgFor = (create: boolean): Arg<Ctx> => ({
   type: "arg",
   name: "interface",
   help: "Interface",
@@ -82,10 +89,24 @@ const ifaceArg: Arg<Ctx> = {
       consumed = 2;
     }
     const name = types[0].name + number;
-    const iface = ctx.device.interfaces().find((x) => x.name.toLowerCase() === name.toLowerCase());
-    return iface ? { consumed, value: iface.name } : null;
+    const iface = ctx.device.interfaces().find((x) => x.name.toLowerCase() === name.toLowerCase() && x.status() !== "deleted");
+    if (iface) return { consumed, value: iface.name };
+    const created = create ? ctx.device.canCreateInterface(name) : null;
+    return created ? { consumed, value: created } : null;
   },
-};
+});
+const ifaceArg = ifaceArgFor(false);
+
+/** `10`, `10,20`, `30-35`. */
+const vlanListArg = (help: string, name = "<1-4094>"): Arg<Ctx> => ({
+  type: "arg",
+  name,
+  help,
+  match: (w, i) => {
+    const list = parseVlanList(w[i].text);
+    return list ? { consumed: 1, value: list } : null;
+  },
+});
 
 // ---- helpers ---------------------------------------------------------------
 
@@ -99,9 +120,12 @@ const EXEC: Mode[] = ["user", "enable"];
 const ENABLE: Mode[] = ["enable"];
 const CONFIG: Mode[] = ["config"];
 const IF: Mode[] = ["config-if"];
+const SUBIF: Mode[] = ["config-subif"];
+const ANY_IF: Mode[] = ["config-if", "config-subif"];
+const VLAN_MODE: Mode[] = ["config-vlan"];
 const LINE: Mode[] = ["config-line"];
 const DHCP: Mode[] = ["dhcp-config"];
-const SUB: Mode[] = ["config", "config-if", "config-line", "dhcp-config"];
+const SUB: Mode[] = ["config", "config-if", "config-subif", "config-line", "dhcp-config", "config-vlan"];
 
 const NO = kw("no", "Negate a command or set its defaults");
 const SHOW = kw("show", "Show running system information");
@@ -219,7 +243,8 @@ const exitEnd: Entry[] = [
     c.console.setMode("enable");
     configured(c);
   }),
-  cmd(IF, [kw("exit", "Exit from interface configuration mode")], (c) => c.console.setMode("config")),
+  cmd(ANY_IF, [kw("exit", "Exit from interface configuration mode")], (c) => c.console.setMode("config")),
+  cmd(VLAN_MODE, [kw("exit", "Apply changes, bump revision number, and exit mode")], (c) => c.console.setMode("config")),
   cmd(LINE, [kw("exit", "Exit from line configuration mode")], (c) => c.console.setMode("config")),
   cmd(DHCP, [kw("exit", "Exit from DHCP pool configuration mode")], (c) => c.console.setMode("config")),
 ];
@@ -318,9 +343,15 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [NO, IP, kw("domain", "IP DNS Resolver"), kw("lookup", "Enable IP Domain Name System hostname translation")], (c) => {
     c.device.config.ipDomainLookup = false;
   }),
-  cmd(CONFIG, [kw("interface", "Select an interface to configure"), ifaceArg], (c, [name]) => {
-    c.console.ifaces = [name as string];
-    c.console.setMode("config-if");
+  cmd(CONFIG, [kw("interface", "Select an interface to configure"), ifaceArgFor(true)], (c, [name]) => {
+    const n = name as string;
+    if (!c.device.config.interfaces[n]) c.device.createInterface(n);
+    c.console.ifaces = [n];
+    c.console.setMode(splitSubinterface(n) && c.device.kind === "router" ? "config-subif" : "config-if");
+  }),
+  cmd(CONFIG, [NO, kw("interface", "Select an interface to configure"), ifaceArg], (c, [name]) => {
+    const error = c.device.deleteInterface(name as string);
+    if (error) c.out.push(error);
   }),
   cmd(CONFIG, [kw("line", "Configure a terminal line"), kw("console", "Primary terminal line"), numArg(0, 0, "First Line number")], (c) => {
     c.console.lineKind = "con";
@@ -367,7 +398,7 @@ const IF_IP = kw("ip", "Interface Internet Protocol config commands");
 const ADDRESS = kw("address", "Set the IP address of an interface");
 
 const interfaceCommands: Entry[] = [
-  cmd(IF, [IF_IP, ADDRESS, ipArg("IP address"), ipArg("IP subnet mask")], (c, [ip, mask]) => {
+  cmd(ANY_IF, [IF_IP, ADDRESS, ipArg("IP address"), ipArg("IP subnet mask")], (c, [ip, mask]) => {
     const a = ip as Ipv4;
     const m = mask as Ipv4;
     const prefix = maskToPrefix(m);
@@ -380,6 +411,15 @@ const interfaceCommands: Entry[] = [
       return;
     }
     forEachIface(c, (name) => {
+      if (splitSubinterface(name) && !c.device.ifaceConfig(name).encapsulation) {
+        c.out.push(
+          "% Configuring IP routing on a LAN subinterface is only allowed if that",
+          "subinterface is already configured as part of an IEEE 802.10, IEEE 802.1Q,",
+          "or ISL vLAN.",
+          "",
+        );
+        return;
+      }
       const clash = c.device.overlapping(name, a, m);
       if (clash) {
         c.out.push(`% ${formatIpv4(networkOf(a, m))} overlaps with ${clash}`);
@@ -390,7 +430,7 @@ const interfaceCommands: Entry[] = [
       cfg.mask = m;
     });
   }, { when: routedIface }),
-  cmd(IF, [NO, IF_IP, ADDRESS], (c) => {
+  cmd(ANY_IF, [NO, IF_IP, ADDRESS], (c) => {
     forEachIface(c, (name) => {
       const cfg = c.device.ifaceConfig(name);
       cfg.ip = null;
@@ -409,14 +449,14 @@ const interfaceCommands: Entry[] = [
       if (port) c.device.cdpNeighbors.delete(port);
     }),
   { when: (c) => c.console.ifaces.every((n) => c.device.findInterface(n)?.port) }),
-  cmd(IF, [kw("shutdown", "Shutdown the selected interface")], (c) => forEachIface(c, (n) => c.device.setShutdown(n, true))),
-  cmd(IF, [NO, kw("shutdown", "Shutdown the selected interface")], (c) => forEachIface(c, (n) => c.device.setShutdown(n, false))),
-  cmd(IF, [kw("description", "Interface specific description"), lineArg("Up to 240 characters describing this interface")], (c, [text]) =>
+  cmd(ANY_IF, [kw("shutdown", "Shutdown the selected interface")], (c) => forEachIface(c, (n) => c.device.setShutdown(n, true))),
+  cmd(ANY_IF, [NO, kw("shutdown", "Shutdown the selected interface")], (c) => forEachIface(c, (n) => c.device.setShutdown(n, false))),
+  cmd(ANY_IF, [kw("description", "Interface specific description"), lineArg("Up to 240 characters describing this interface")], (c, [text]) =>
     forEachIface(c, (n) => {
       c.device.ifaceConfig(n).description = (text as string).slice(0, 240);
     }),
   ),
-  cmd(IF, [NO, kw("description", "Interface specific description")], (c) =>
+  cmd(ANY_IF, [NO, kw("description", "Interface specific description")], (c) =>
     forEachIface(c, (n) => {
       c.device.ifaceConfig(n).description = null;
     }),
@@ -599,7 +639,203 @@ function removeExcluded(c: Ctx, low: Ipv4, high: Ipv4): void {
   else list.splice(i, 1);
 }
 
-const ALL: Entry[] = [...showCommands, ...execCommands, ...exitEnd, ...configCommands, ...interfaceCommands, ...lineCommands, ...dhcpCommands];
+// ---- VLANs, trunks and router-on-a-stick -------------------------------------------
+
+function sw(c: Ctx): Switch {
+  return c.device as Switch;
+}
+
+/** Applies a switchport change to every selected port, then lets DTP and spanning tree catch up. */
+function eachSwitchport(c: Ctx, fn: (sp: NonNullable<ReturnType<Ctx["device"]["ifaceConfig"]>["switchport"]>) => string | void): void {
+  for (const name of c.console.ifaces) {
+    const error = fn(c.device.ifaceConfig(name).switchport!);
+    if (error) {
+      c.out.push(error);
+      break;
+    }
+  }
+  sw(c).vlanConfigChanged();
+}
+
+const physicalPort = (c: Ctx) => c.console.ifaces.every((n) => c.device.findInterface(n)?.port);
+const subinterface = (c: Ctx) => c.console.ifaces.every((n) => splitSubinterface(n));
+const NEGOTIATE_CONFLICT = "Command rejected: Conflict between 'nonegotiate' and 'dynamic' status.";
+
+const SWITCHPORT = kw("switchport", "Set switching mode characteristics");
+const SP_MODE = kw("mode", "Set trunking mode of the interface");
+const SP_ACCESS = kw("access", "Set access mode characteristics of the interface");
+const SP_TRUNK = kw("trunk", "Set trunking characteristics of the interface");
+const SP_NATIVE = kw("native", "Set trunking native characteristics when interface is in trunking mode");
+const SP_ALLOWED = kw("allowed", "Set allowed VLAN characteristics when interface is in trunking mode");
+const SP_ALLOWED_VLAN = kw("vlan", "Set allowed VLANs when interface is in trunking mode");
+const NONEGOTIATE = kw("nonegotiate", "Device will not engage in negotiation protocol on this interface");
+const VLAN_KW = kw("vlan", "Vlan commands");
+
+function setMode(c: Ctx, mode: "access" | "trunk" | "dynamic auto" | "dynamic desirable"): void {
+  eachSwitchport(c, (sp) => {
+    if (mode.startsWith("dynamic") && sp.nonegotiate) return NEGOTIATE_CONFLICT;
+    sp.mode = mode;
+  });
+}
+
+function setAllowed(c: Ctx, change: (current: number[] | null) => number[] | null): void {
+  eachSwitchport(c, (sp) => {
+    const next = change(sp.allowed);
+    sp.allowed = next && next.length === 4094 ? null : next;
+  });
+}
+
+const ALL_VLANS = Array.from({ length: 4094 }, (_, i) => i + 1);
+
+const switchCommands: Entry[] = [
+  cmd(IF, [SWITCHPORT, SP_MODE, kw("access", "Set trunking mode to ACCESS unconditionally")], (c) => setMode(c, "access"), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, SP_MODE, kw("trunk", "Set trunking mode to TRUNK unconditionally")], (c) => setMode(c, "trunk"), { devices: ["switch"], when: physicalPort }),
+  cmd(
+    IF,
+    [SWITCHPORT, SP_MODE, kw("dynamic", "Set trunking mode to dynamically negotiate access or trunk mode"), kw("auto", "Set trunking mode dynamic negotiation parameter to AUTO")],
+    (c) => setMode(c, "dynamic auto"),
+    { devices: ["switch"], when: physicalPort },
+  ),
+  cmd(
+    IF,
+    [SWITCHPORT, SP_MODE, kw("dynamic", "Set trunking mode to dynamically negotiate access or trunk mode"), kw("desirable", "Set trunking mode dynamic negotiation parameter to DESIRABLE")],
+    (c) => setMode(c, "dynamic desirable"),
+    { devices: ["switch"], when: physicalPort },
+  ),
+  cmd(IF, [NO, SWITCHPORT, SP_MODE], (c) => setMode(c, "dynamic auto"), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, SP_ACCESS, kw("vlan", "Set VLAN when interface is in access mode"), numArg(1, 4094, "VLAN ID of the VLAN when this port is in access mode")], (c, [v]) => {
+    const vlan = v as number;
+    const s = sw(c);
+    // A missing VLAN gets created for you, the one place IOS is that helpful.
+    if (!s.vlans.has(vlan) && vlan <= MAX_NORMAL_VLAN) {
+      c.out.push(`% Access VLAN does not exist. Creating vlan ${vlan}`);
+      s.createVlan(vlan);
+    }
+    eachSwitchport(c, (sp) => {
+      sp.accessVlan = vlan;
+    });
+  }, { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, SWITCHPORT, SP_ACCESS, kw("vlan", "Set VLAN when interface is in access mode")], (c) =>
+    eachSwitchport(c, (sp) => {
+      sp.accessVlan = 1;
+    }),
+  { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, SP_TRUNK, SP_NATIVE, kw("vlan", "Set native VLAN when interface is in trunking mode"), numArg(1, 4094, "VLAN ID of the native VLAN when this port is in trunking mode")], (c, [v]) =>
+    eachSwitchport(c, (sp) => {
+      sp.nativeVlan = v as number;
+    }),
+  { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, SWITCHPORT, SP_TRUNK, SP_NATIVE, kw("vlan", "Set native VLAN when interface is in trunking mode")], (c) =>
+    eachSwitchport(c, (sp) => {
+      sp.nativeVlan = 1;
+    }),
+  { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, SP_TRUNK, SP_ALLOWED, SP_ALLOWED_VLAN, vlanListArg("VLAN IDs of the allowed VLANs when this port is in trunking mode", "WORD")], (c, [list]) =>
+    setAllowed(c, () => list as number[]),
+  { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, SP_TRUNK, SP_ALLOWED, SP_ALLOWED_VLAN, kw("add", "add VLANs to the current list"), vlanListArg("VLAN IDs of the allowed VLANs when this port is in trunking mode", "WORD")], (c, [list]) =>
+    setAllowed(c, (cur) => (cur === null ? null : [...new Set([...cur, ...(list as number[])])].sort((a, b) => a - b))),
+  { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, SP_TRUNK, SP_ALLOWED, SP_ALLOWED_VLAN, kw("remove", "remove VLANs from the current list"), vlanListArg("VLAN IDs of disallowed VLANS when this port is in trunking mode", "WORD")], (c, [list]) =>
+    setAllowed(c, (cur) => (cur ?? ALL_VLANS).filter((v) => !(list as number[]).includes(v))),
+  { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, SP_TRUNK, SP_ALLOWED, SP_ALLOWED_VLAN, kw("except", "all VLANs except the following"), vlanListArg("VLAN IDs of disallowed VLANS when this port is in trunking mode", "WORD")], (c, [list]) =>
+    setAllowed(c, () => ALL_VLANS.filter((v) => !(list as number[]).includes(v))),
+  { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, SP_TRUNK, SP_ALLOWED, SP_ALLOWED_VLAN, kw("all", "all VLANs")], (c) => setAllowed(c, () => null), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, SP_TRUNK, SP_ALLOWED, SP_ALLOWED_VLAN, kw("none", "no VLANs")], (c) => setAllowed(c, () => []), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, SWITCHPORT, SP_TRUNK, SP_ALLOWED, SP_ALLOWED_VLAN], (c) => setAllowed(c, () => null), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, NONEGOTIATE], (c) =>
+    eachSwitchport(c, (sp) => {
+      if (sp.mode.startsWith("dynamic")) return NEGOTIATE_CONFLICT;
+      sp.nonegotiate = true;
+    }),
+  { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, SWITCHPORT, NONEGOTIATE], (c) =>
+    eachSwitchport(c, (sp) => {
+      sp.nonegotiate = false;
+    }),
+  { devices: ["switch"], when: physicalPort }),
+
+  cmd(CONFIG, [VLAN_KW, vlanListArg("ISL VLAN IDs 1-4094")], (c, [list]) => {
+    c.console.vlanIds = list as number[];
+    c.console.vlanName = null;
+    c.console.setMode("config-vlan");
+  }, { devices: ["switch"] }),
+  cmd(CONFIG, [NO, VLAN_KW, vlanListArg("ISL VLAN IDs 1-4094")], (c, [list]) => {
+    for (const id of list as number[]) {
+      if (isDefaultVlan(id)) c.out.push(`%Default VLAN ${id} may not be deleted.`);
+      else sw(c).deleteVlan(id);
+    }
+  }, { devices: ["switch"] }),
+  cmd(VLAN_MODE, [kw("name", "Ascii name of the VLAN"), wordArg("The ascii name for the VLAN")], (c, [name]) => {
+    c.console.vlanName = (name as string).slice(0, 32);
+  }),
+  cmd(VLAN_MODE, [NO, kw("name", "Ascii name of the VLAN")], (c) => {
+    c.console.vlanName = null;
+  }),
+
+  cmd(
+    SUBIF,
+    [kw("encapsulation", "Set encapsulation type for an interface"), kw("dot1Q", "IEEE 802.1Q Virtual LAN"), numArg(1, 4094, "IEEE 802.1Q VLAN ID")],
+    (c, [v]) => setEncapsulation(c, v as number, false),
+    { devices: ["router"], when: subinterface },
+  ),
+  cmd(
+    SUBIF,
+    [kw("encapsulation", "Set encapsulation type for an interface"), kw("dot1Q", "IEEE 802.1Q Virtual LAN"), numArg(1, 4094, "IEEE 802.1Q VLAN ID"), kw("native", "Make this as native vlan")],
+    (c, [v]) => setEncapsulation(c, v as number, true),
+    { devices: ["router"], when: subinterface },
+  ),
+
+  cmd(EXEC, [SHOW, kw("vlan", "VTP VLAN status")], (c) => c.out.push(...show.showVlan(sw(c))), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("trunk", "Show interface trunk information")], (c) => c.out.push(...show.showInterfacesTrunk(sw(c))), {
+    devices: ["switch"],
+  }),
+  cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("switchport", "Show interface switchport information")], (c) =>
+    c.out.push(...show.showInterfacesSwitchport(sw(c))),
+  { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), ifaceArg, kw("switchport", "Show interface switchport information")], (c, [name]) =>
+    c.out.push(...show.showInterfacesSwitchport(sw(c), name as string)),
+  { devices: ["switch"] }),
+  cmd(ENABLE, [kw("delete", "Delete a file"), wordArg("File to delete", "WORD")], (c, [file]) => deleteFile(c, file as string), { devices: ["switch"] }),
+];
+
+function setEncapsulation(c: Ctx, vlan: number, native: boolean): void {
+  const name = c.console.ifaces[0];
+  const parent = splitSubinterface(name)![0];
+  const router = c.device as Router;
+  for (const other of router.subinterfacesOf(parent)) {
+    if (other !== name && router.config.interfaces[other].encapsulation?.vlan === vlan) {
+      c.out.push(
+        `Configuration of multiple subinterfaces of the same main interface with the same VID (${vlan}) is not permitted.`,
+        `This VID is already configured on ${other}.`,
+      );
+      return;
+    }
+  }
+  c.device.ifaceConfig(name).encapsulation = { vlan, native };
+}
+
+/** `delete flash:vlan.dat`, with both of IOS's questions. */
+function deleteFile(c: Ctx, file: string): void {
+  const s = sw(c);
+  const suggested = file.replace(/^flash:/i, "").replace(/^\//, "");
+  c.console.ask(`Delete filename [${suggested}]? `, (text) => {
+    const name = text.trim() || suggested;
+    c.console.ask(`Delete flash:/${name}? [confirm]`, (answer) => {
+      if (!CONFIRM(answer)) return;
+      if (name !== "vlan.dat" || !s.vlanDat) {
+        c.console.print(`%Error deleting flash:/${name} (No such file or directory)`);
+        return;
+      }
+      // The VLANs stay in memory until the next reload.
+      s.vlanDat = false;
+    });
+  });
+}
+
+const ALL: Entry[] = [...showCommands, ...execCommands, ...exitEnd, ...configCommands, ...interfaceCommands, ...lineCommands, ...dhcpCommands, ...switchCommands];
 
 const cache = new Map<string, Cmd[]>();
 

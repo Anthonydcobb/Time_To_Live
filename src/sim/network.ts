@@ -61,8 +61,10 @@ export abstract class Device {
     return this.network.clock;
   }
 
+  /** Finds a port by full name or short name. "Gig0/1" works too, the way Packet Tracer writes it. */
   port(name: string): Port {
-    const p = this.ports.find((x) => x.name.toLowerCase() === name.toLowerCase() || x.shortName.toLowerCase() === name.toLowerCase());
+    const want = name.toLowerCase().replace(/^gig(?=\d)/, "gi");
+    const p = this.ports.find((x) => x.name.toLowerCase() === want || x.shortName.toLowerCase() === want);
     if (!p) throw new Error(`${this.id} has no port ${name}`);
     return p;
   }

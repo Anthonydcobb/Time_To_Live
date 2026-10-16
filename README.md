@@ -33,13 +33,17 @@ npm run build    # typecheck and production build
 - `line con 0` and `line vty`: `password`, `login`, `logging synchronous`, `exec-timeout`.
 - `interface`: `ip address` (with bad-mask and overlap checks), `shutdown`, `description`.
 - DHCP server: `ip dhcp excluded-address`, `ip dhcp pool` with `network`, `default-router`, `dns-server`, `domain-name` and `lease`. Like IOS, it pings an address twice before offering it and logs a conflict if anything answers.
-- `ip route` (next hop or exit interface), `ip default-gateway` on switches, `interface vlan 1`.
+- `ip route` (next hop or exit interface), `ip default-gateway` on switches.
+- VLANs: `vlan 10,20` and `name` (created when you leave config-vlan mode, like IOS), `no vlan`, and `delete flash:vlan.dat`. The VLAN database lives outside the running config, so it survives `erase startup-config` and `reload`. Extended VLANs fail the way they do in VTP server mode, and VLAN 1 and 1002 to 1005 can't be renamed or deleted.
+- Switchports: `switchport mode access|trunk|dynamic auto|dynamic desirable`, `switchport access vlan` (creates a missing VLAN with IOS's warning), `switchport trunk native vlan`, `switchport trunk allowed vlan` (list, add, remove, except, all, none) and `switchport nonegotiate`.
+- SVIs: `interface vlan N` on the switch, with autostate.
+- Router-on-a-stick: subinterfaces (`interface g0/0.10`) with `encapsulation dot1Q N [native]`. IOS's errors for an address before encapsulation and for a VLAN used twice are there, and `no interface` leaves the subinterface listed as deleted.
 - `copy running-config startup-config`, `write memory`, `erase startup-config`, `reload` (asks to save if the config changed).
 - Console login and enable passwords, including lockouts after three wrong tries.
 
 - CDP: `cdp run`, `cdp enable` and their `no` forms.
 
-**Show commands:** `running-config`, `startup-config`, `ip interface brief`, `interfaces`, `ip route`, `arp`, `mac address-table`, `vlan brief`, `ip dhcp binding`, `ip dhcp pool`, `ip dhcp conflict`, `cdp`, `cdp neighbors [detail]`, `version`, `clock`.
+**Show commands:** `running-config`, `startup-config`, `ip interface brief`, `interfaces`, `ip route`, `arp`, `mac address-table`, `vlan`, `vlan brief`, `interfaces trunk`, `interfaces [if] switchport`, `ip dhcp binding`, `ip dhcp pool`, `ip dhcp conflict`, `cdp`, `cdp neighbors [detail]`, `version`, `clock`.
 
 **Commands that take real time:** `ping` and `traceroute` on IOS, `ping` and `tracert` on PCs, and the DNS lookup on a typo all run on the simulation clock, so a timeout really is two seconds of standing in the dark. `Ctrl+Shift+6` aborts on IOS and `Ctrl+C` on a PC.
 
@@ -56,7 +60,9 @@ npm run build    # typecheck and production build
 - PCs have a desktop prompt with `ipconfig`, `ping`, `tracert` and `arp -a`. Windows pings are a second apart.
 - PCs can obtain an address by DHCP (`ipconfig /dhcp`, `/renew`, `/release`). Like Windows, they retry after 4, 8 and 16 seconds, then give up and take a 169.254.x.x address. A PC plugged into a switch port still in spanning tree loses that race, which is the lesson behind portfast.
 - Any Ethernet cable links any two Ethernet ports (auto-MDIX), so there's no straight-through vs crossover. Console cables go from a PC's RS-232 port to a device's console port.
-- Devices exchange CDP every 60 seconds with a 180 second holdtime, and switches don't forward it.
+- Devices exchange CDP every 60 seconds with a 180 second holdtime, and switches don't forward it. Switches log `%CDP-4-NATIVE_VLAN_MISMATCH` when the two ends disagree.
+- VLANs and trunks: access ports drop tagged frames, trunks tag every VLAN but the native one, and the MAC table is per VLAN. DTP follows the real matrix: two dynamic auto ports stay access ports, and routers never negotiate, so the switch port to a router must be forced to trunk. Each VLAN on a port runs its own 30 second spanning-tree wait, so moving a port to a new VLAN goes amber again. Deleting a VLAN strands its ports.
+- PCs drop tagged frames. Routers deliver tagged frames to the matching subinterface, and the first packet routed to a new host is dropped while the router ARPs.
 
 ## Layout
 
@@ -70,14 +76,16 @@ src/sim/            The simulator. No DOM, fully testable.
   devices/          Router (CR-2911), Switch (CS-2960), PC
   ios/              Parser, console modes, commands, show output, passwords
   pc/               The PC command prompt
-  scenarios/        Prebuilt jobs (job 1: the corner store)
+  vlans.ts          VLAN facts and "10,20-30" lists
+  scenarios/        Prebuilt jobs: the corner store, the laundromat, the dentist
 src/web/            The bench terminal (xterm.js)
 tests/              Vitest tests
 ```
 
 ## Not yet
 
-- Real spanning tree (BPDUs and loop blocking), VLANs and trunks: job 3 and 4.
+- Real spanning tree (BPDUs, root election and loop blocking): job 4.
+- VTP (`vtp mode transparent` would allow extended VLANs), voice VLANs, `show interfaces status`.
 - `interface range`, SSH, `ip helper-address` (DHCP relay), LLDP.
 - A terminal program on the PC that uses the console cable.
 

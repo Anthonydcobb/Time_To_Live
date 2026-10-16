@@ -1,13 +1,14 @@
 // One console session on an IOS device: modes, prompts, password checks and
 // the multi-step questions IOS asks (copy, erase, reload, banners).
 import type { IosDevice } from "../devices/ios-device";
-import { commandsFor, type Ctx } from "./commands";
+import type { Switch } from "../devices/switch";
+import { CONFIRM, commandsFor, type Ctx } from "./commands";
 import { complete, help, parse, splitWords, type ParseResult } from "./parser";
 import { type5Verify } from "./passwords";
 import { Job } from "../job";
 import { bookFor, type Grimoire } from "../grimoire";
 
-export type Mode = "user" | "enable" | "config" | "config-if" | "config-line" | "dhcp-config";
+export type Mode = "user" | "enable" | "config" | "config-if" | "config-subif" | "config-line" | "dhcp-config" | "config-vlan";
 
 type Pending =
   | { kind: "press-return" }
@@ -26,11 +27,15 @@ const SUFFIX: Record<Mode, string> = {
   enable: "#",
   config: "(config)#",
   "config-if": "(config-if)#",
+  "config-subif": "(config-subif)#",
   "config-line": "(config-line)#",
   "dhcp-config": "(dhcp-config)#",
+  "config-vlan": "(config-vlan)#",
 };
 
-const CONFIRM = (text: string) => ["", "y", "yes"].includes(text.trim().toLowerCase());
+/** Sub-modes where an unknown command is tried again as a global config command. */
+const SUB_MODES: Mode[] = ["config-if", "config-subif", "config-line", "dhcp-config", "config-vlan"];
+
 const DNS_LOOKUP_MS = 5000;
 
 export class IosConsole {
@@ -39,6 +44,9 @@ export class IosConsole {
   lineKind: "con" | "vty" = "con";
   /** The pool `ip dhcp pool NAME` selected. */
   dhcpPool = "";
+  /** The VLANs `vlan 10,20` selected. Like real IOS, they're created when you leave config-vlan mode. */
+  vlanIds: number[] = [];
+  vlanName: string | null = null;
   pending: Pending | null = null;
   readonly history: string[] = [];
   /** The player's learned incantations. Without one, every command reads plainly. */
@@ -122,11 +130,21 @@ export class IosConsole {
   }
 
   setMode(mode: Mode): void {
+    if (this.mode === "config-vlan" && mode !== "config-vlan") {
+      this.out.push(...(this.device as Switch).commitVlanConfig(this.vlanIds, this.vlanName));
+      this.vlanIds = [];
+      this.vlanName = null;
+    }
     this.mode = mode;
-    if (mode !== "config-if") this.ifaces = [];
+    if (mode !== "config-if" && mode !== "config-subif") this.ifaces = [];
   }
 
   // ---- called by commands -------------------------------------------------
+
+  /** Prints from a callback that runs after the command itself, such as an answer to a question. */
+  print(...lines: string[]): void {
+    this.out.push(...lines);
+  }
 
   beginEnable(): void {
     const cfg = this.device.config;
@@ -202,7 +220,7 @@ export class IosConsole {
 
   // ---- internals ------------------------------------------------------------
 
-  private ask(prompt: string, answer: (text: string) => void): void {
+  ask(prompt: string, answer: (text: string) => void): void {
     this.pending = { kind: "question", prompt, answer };
   }
 
@@ -240,7 +258,7 @@ export class IosConsole {
     const ctx = this.ctx();
 
     let result = parse(commands, text, ctx);
-    if (result.kind !== "ok" && !isDo && (this.mode === "config-if" || this.mode === "config-line" || this.mode === "dhcp-config")) {
+    if (result.kind !== "ok" && !isDo && SUB_MODES.includes(this.mode)) {
       // Sub-modes fall back to global config commands, like real IOS.
       const global = parse(commandsFor("config", kind), text, ctx);
       if (global.kind === "ok") {

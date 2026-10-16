@@ -14,12 +14,37 @@ export interface LineConfig {
   execTimeout: [number, number] | null;
 }
 
+export type SwitchportMode = "access" | "trunk" | "dynamic auto" | "dynamic desirable";
+
+/** Layer 2 settings on a switch's physical port. */
+export interface SwitchportConfig {
+  mode: SwitchportMode;
+  accessVlan: number;
+  nativeVlan: number;
+  /** VLANs allowed on a trunk, or null for all of them. */
+  allowed: number[] | null;
+  nonegotiate: boolean;
+}
+
+export function defaultSwitchport(): SwitchportConfig {
+  // A Catalyst 2960 port is dynamic auto out of the box.
+  return { mode: "dynamic auto", accessVlan: 1, nativeVlan: 1, allowed: null, nonegotiate: false };
+}
+
 export interface InterfaceConfig {
   shutdown: boolean;
   description: string | null;
   ip: Ipv4 | null;
   mask: Ipv4 | null;
   cdp: boolean;
+  /** Switch physical ports only. */
+  switchport?: SwitchportConfig;
+  /** Router subinterfaces only: `encapsulation dot1Q <vlan> [native]`. */
+  encapsulation?: { vlan: number; native: boolean } | null;
+}
+
+export function newInterfaceConfig(shutdown: boolean): InterfaceConfig {
+  return { shutdown, description: null, ip: null, mask: null, cdp: true };
 }
 
 export interface DhcpPool {
@@ -69,7 +94,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     ipDomainLookup: true,
     cdpRun: true,
     interfaces: Object.fromEntries(
-      interfaces.map((i) => [i.name, { shutdown: i.shutdown, description: null, ip: null, mask: null, cdp: true }]),
+      interfaces.map((i) => [i.name, newInterfaceConfig(i.shutdown)]),
     ),
     con: defaultLine(),
     vty: { ...defaultLine(), login: true },

@@ -143,6 +143,8 @@ export class Pc extends Device {
   }
 
   receive(_port: Port, frame: Frame): void {
+    // A PC's NIC doesn't understand 802.1Q tags, so tagged frames from a trunk are dropped.
+    if (frame.vlan !== undefined) return;
     this.stack.handleFrame(this.l3, frame);
   }
 }

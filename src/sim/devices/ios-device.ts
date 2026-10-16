@@ -14,7 +14,8 @@ export interface InterfaceView {
   port: Port | null;
   /** Physical ports can't take an IP on a Layer 2 switch. */
   routed: boolean;
-  status(): "administratively down" | "down" | "up";
+  /** "deleted" is a subinterface removed with `no interface`, which IOS keeps listing until reload. */
+  status(): "administratively down" | "down" | "up" | "deleted";
   protocol(): "up" | "down";
 }
 
@@ -68,6 +69,28 @@ export abstract class IosDevice extends Device {
 
   isPortShutdown(port: Port): boolean {
     return this.config.interfaces[port.name]?.shutdown ?? false;
+  }
+
+  /** The canonical name if `interface NAME` may create this interface (a subinterface or an SVI), otherwise null. */
+  canCreateInterface(_name: string): string | null {
+    return null;
+  }
+
+  createInterface(_name: string): void {}
+
+  /** `no interface NAME`. Returns an error line, or null if it worked. */
+  deleteInterface(_name: string): string | null {
+    return "% Physical interfaces cannot be deleted";
+  }
+
+  /** The order a config lists its interfaces in. */
+  configInterfaceOrder(c: IosConfig): string[] {
+    return Object.keys(c.interfaces);
+  }
+
+  /** The VLAN CDP advertises for a port. Only switches send one. */
+  cdpNativeVlan(_port: Port): number | undefined {
+    return undefined;
   }
 
   findInterface(name: string): InterfaceView | undefined {
@@ -129,6 +152,7 @@ export abstract class IosDevice extends Device {
         holdtimeSec: CDP_HOLDTIME_SEC,
         address: this.managementAddress(),
         version: showVersion(this)[0],
+        nativeVlan: this.cdpNativeVlan(port),
       },
     });
   }
@@ -148,6 +172,10 @@ export abstract class IosDevice extends Device {
       version: p.version,
       expiresAt: this.clock.now + p.holdtimeSec * 1000,
     });
+    const ours = this.cdpNativeVlan(port);
+    if (p.nativeVlan !== undefined && ours !== undefined && p.nativeVlan !== ours) {
+      this.emit(`%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on ${port.name} (${ours}), with ${p.deviceId} ${p.portId} (${p.nativeVlan}).`);
+    }
     return true;
   }
 

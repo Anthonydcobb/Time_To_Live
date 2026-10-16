@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import { BASICS, Grimoire, parseIncantation, toRunes } from "../src/sim/grimoire";
 import { commandsFor } from "../src/sim/ios/commands";
 import type { Mode } from "../src/sim/ios/console";
-import { CORNER_STORE_INCANTATIONS, cornerStore } from "../src/sim/scenarios/corner-store";
+import { cornerStore } from "../src/sim/scenarios/corner-store";
+import { DENTIST_INCANTATIONS } from "../src/sim/scenarios/dentist";
 import { type } from "./helpers";
 
 function store() {
@@ -20,10 +21,18 @@ function helpAt(device: ReturnType<typeof store>["r1"], line: string) {
 
 describe("grimoire", () => {
   it("spells every taught incantation like a real command", () => {
-    const modes: Record<string, Mode> = { exec: "enable", config: "config", if: "config-if", line: "config-line", dhcp: "dhcp-config" };
-    for (const text of [...BASICS, ...CORNER_STORE_INCANTATIONS]) {
+    const modes: Record<string, Mode[]> = {
+      exec: ["enable"],
+      config: ["config"],
+      if: ["config-if", "config-subif"],
+      line: ["config-line"],
+      dhcp: ["dhcp-config"],
+      vlan: ["config-vlan"],
+    };
+    for (const text of [...BASICS, ...DENTIST_INCANTATIONS]) {
       const { book, words } = parseIncantation(text);
-      const found = commandsFor(modes[book], "router").some((c) =>
+      const commands = modes[book].flatMap((m) => [...commandsFor(m, "router"), ...commandsFor(m, "switch")]);
+      const found = commands.some((c) =>
         words.every((w, i) => {
           const t = c.tokens[i];
           return t?.type === "kw" && t.word === w;
