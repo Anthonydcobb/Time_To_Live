@@ -7,6 +7,7 @@
   --amber: #ffb000;
   --green: #4cff7a;
   --off: #3a3a36;
+  --red: #c8323c;
 }
 
 * {
@@ -86,28 +87,90 @@ ul {
   color: var(--amber);
 }
 
-#cables li {
+main {
+  display: grid;
+  grid-template-rows: minmax(200px, 42%) 1fr;
+  min-height: 0;
+}
+
+#topology {
+  border-bottom: 1px solid var(--line);
+  min-height: 0;
+}
+
+.topology {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.topology .cable {
+  stroke: var(--dim);
+  stroke-width: 2;
+}
+
+.topology .light {
+  fill: var(--off);
+}
+
+.topology .light.green {
+  fill: var(--green);
+  filter: drop-shadow(0 0 3px var(--green));
+}
+
+.topology .light.amber {
+  fill: var(--amber);
+  filter: drop-shadow(0 0 3px var(--amber));
+}
+
+.topology .light.red {
+  fill: var(--red);
+}
+
+.topology .port {
+  fill: var(--text);
   font-size: 12px;
-  padding: 2px 0;
 }
 
-.light {
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--off);
-  margin: 0 4px;
+.topology .device {
+  cursor: pointer;
 }
 
-.light.green {
-  background: var(--green);
-  box-shadow: 0 0 6px var(--green);
+.topology .icon {
+  fill: var(--panel);
+  stroke: var(--text);
+  stroke-width: 2;
 }
 
-.light.amber {
-  background: var(--amber);
-  box-shadow: 0 0 6px var(--amber);
+.topology .screen {
+  fill: var(--line);
+}
+
+.topology .glyph {
+  fill: none;
+  stroke: var(--text);
+  stroke-width: 2;
+}
+
+.topology .selected .icon,
+.topology .selected .glyph {
+  stroke: var(--amber);
+}
+
+.topology .name {
+  fill: var(--text);
+  font-size: 14px;
+  text-anchor: middle;
+}
+
+.topology .selected .name {
+  fill: var(--amber);
+}
+
+.topology .model {
+  fill: var(--dim);
+  font-size: 11px;
+  text-anchor: middle;
 }
 
 #terminals {

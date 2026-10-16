@@ -37,6 +37,9 @@ npm run build    # typecheck and production build
 
 **Commands that take real time:** `ping` and `traceroute` on IOS, `ping` and `tracert` on PCs, and the DNS lookup on a typo all run on the simulation clock, so a timeout really is two seconds of standing in the dark. `Ctrl+Shift+6` aborts on IOS and `Ctrl+C` on a PC.
 
+**The bench**
+- A logical topology diagram shows each device, the cables between them, the port at each end and a link light (red for down, amber for spanning tree or line protocol coming up, green for forwarding). Click a device to open its terminal, or drag it to move it.
+
 **The network simulation**
 - Frames actually move over cables with ARP, MAC learning and flooding, IP routing (connected, local and static), and ICMP echo, unreachable and TTL exceeded.
 - Interfaces log `%LINK` and `%LINEPROTO` messages, and line protocol comes up a second after the link.
