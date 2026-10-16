@@ -1,5 +1,6 @@
 // A small IOS-style command parser: unique-prefix keywords, typed arguments,
 // `?` help, tab completion and IOS error positions.
+import { toRunes } from "../grimoire";
 
 export interface Word {
   text: string;
@@ -74,6 +75,18 @@ function keywordsAt<C>(cands: Candidate<C>[], p: number): Keyword[] {
     if (t?.type === "kw" && !seen.has(t.word)) seen.set(t.word, t);
   }
   return [...seen.values()];
+}
+
+/** Decides whether a keyword reads plainly. `path` is the command's keywords so far, "*" for arguments. */
+export type Reveal = (path: string[]) => boolean;
+
+function pathTo<C>(cands: Candidate<C>[], p: number, word: string): string[] {
+  const c = cands.find((x) => {
+    const t = x.cmd.tokens[p];
+    return t?.type === "kw" && t.word === word;
+  });
+  const before = c ? c.cmd.tokens.slice(0, p).map((t) => (t.type === "kw" ? t.word : "*")) : [];
+  return [...before, word];
 }
 
 function argsAt<C>(cands: Candidate<C>[], p: number): Arg<C>[] {
@@ -166,7 +179,7 @@ export type HelpResult =
   | { kind: "error"; result: ParseResult<unknown> };
 
 /** Handles a line ending in `?`. `line` excludes the question mark. */
-export function help<C>(commands: Command<C>[], line: string, ctx: C): HelpResult {
+export function help<C>(commands: Command<C>[], line: string, ctx: C, reveal?: Reveal): HelpResult {
   const words = splitWords(line);
   const partial = line.length > 0 && !/\s$/.test(line);
   const before = partial ? words.slice(0, -1) : words;
@@ -174,20 +187,25 @@ export function help<C>(commands: Command<C>[], line: string, ctx: C): HelpResul
   if (r.kind !== "ok") return { kind: "error", result: r };
   const alive = r.cands.filter((c) => c.cmd.tokens.length > r.p);
 
+  const hidden = (k: Keyword) => !!reveal && !reveal(pathTo(alive, r.p, k.word));
+
   if (partial) {
     const prefix = words[words.length - 1].text.toLowerCase();
     const names = [
-      ...keywordsAt(alive, r.p).map((k) => k.word),
-      ...argsAt(alive, r.p).flatMap((a) => a.completions?.(ctx) ?? []),
-    ].filter((n) => n.toLowerCase().startsWith(prefix));
+      ...keywordsAt(alive, r.p).map((k) => ({ name: k.word, hidden: hidden(k) })),
+      ...argsAt(alive, r.p).flatMap((a) => (a.completions?.(ctx) ?? []).map((name) => ({ name, hidden: false }))),
+    ].filter((n) => n.name.toLowerCase().startsWith(prefix));
     if (!names.length) return { kind: "list", lines: ["% Unrecognized command"] };
-    return { kind: "list", lines: [[...new Set(names)].sort(caseless).join("  ")] };
+    const unique = [...new Map(names.map((n) => [n.name, n])).values()].sort((a, b) => caseless(a.name, b.name));
+    return { kind: "list", lines: [unique.map((n) => (n.hidden ? toRunes(n.name) : n.name)).join("  ")] };
   }
 
   const rows: { name: string; help: string }[] = [
-    ...keywordsAt(alive, r.p).map((k) => ({ name: k.word, help: k.help })),
+    ...keywordsAt(alive, r.p).map((k) => ({ name: k.word, help: k.help, hidden: hidden(k) })),
     ...argsAt(alive, r.p).flatMap((a) => a.helpItems?.(ctx) ?? [{ name: a.name, help: a.help }]),
-  ].sort((a, b) => caseless(a.name, b.name));
+  ]
+    .sort((a, b) => caseless(a.name, b.name))
+    .map((row) => ("hidden" in row && row.hidden ? { name: toRunes(row.name), help: toRunes(row.help) } : row));
   const width = Math.max(0, ...rows.map((row) => row.name.length));
   const lines = rows.map((row) => `  ${row.name.padEnd(width)}  ${row.help}`.trimEnd());
   if (r.cands.some((c) => c.cmd.tokens.length === r.p) && !r.incomplete) lines.push("  <cr>");
@@ -196,7 +214,7 @@ export function help<C>(commands: Command<C>[], line: string, ctx: C): HelpResul
 }
 
 /** Tab completion. Returns the completed line, or null if nothing unique matches. */
-export function complete<C>(commands: Command<C>[], line: string, ctx: C): string | null {
+export function complete<C>(commands: Command<C>[], line: string, ctx: C, reveal?: Reveal): string | null {
   const words = splitWords(line);
   if (!words.length || /\s$/.test(line)) return null;
   const last = words[words.length - 1];
@@ -206,7 +224,10 @@ export function complete<C>(commands: Command<C>[], line: string, ctx: C): strin
   const prefix = last.text.toLowerCase();
   const names = [
     ...new Set([
-      ...keywordsAt(alive, r.p).map((k) => k.word),
+      // You can't Tab-complete an incantation you haven't learned.
+      ...keywordsAt(alive, r.p)
+        .filter((k) => !reveal || reveal(pathTo(alive, r.p, k.word)))
+        .map((k) => k.word),
       ...argsAt(alive, r.p).flatMap((a) => a.completions?.(ctx) ?? []),
     ]),
   ].filter((n) => n.toLowerCase().startsWith(prefix));

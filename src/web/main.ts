@@ -7,6 +7,7 @@ import type { Job } from "../sim/job";
 import type { Device } from "../sim/network";
 import { cornerStore } from "../sim/scenarios/corner-store";
 import { TopologyView } from "./topology";
+import { BASICS, Grimoire, type Book } from "../sim/grimoire";
 
 /** What a terminal needs from a device's command line, IOS or PC. */
 interface Session {
@@ -230,6 +231,7 @@ class TerminalView {
 // ---- wire up the corner store ----------------------------------------------
 
 const store = cornerStore();
+const grimoire = new Grimoire([...BASICS, ...store.incantations]);
 const tabsEl = document.getElementById("tabs")!;
 const tasksEl = document.getElementById("tasks")!;
 const termsEl = document.getElementById("terminals")!;
@@ -239,6 +241,7 @@ const views = new Map<Device, TerminalView>();
 const buttons = new Map<Device, HTMLButtonElement>();
 
 for (const device of store.net.devices) {
+  if (device instanceof IosDevice) device.console.grimoire = grimoire;
   const session = device instanceof IosDevice ? iosSession(device) : pcSession(device as Pc);
   const view = new TerminalView(device, session, termsEl);
   views.set(device, view);
@@ -269,6 +272,23 @@ function tick(now: number): void {
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
+// The grimoire lists every incantation learned so far, newest highlighted.
+const BOOK_NAMES: Record<Book, string> = { exec: "EXEC", config: "config", if: "interface", line: "line" };
+const grimoireEl = document.getElementById("grimoire")!;
+function addIncantation(book: Book, words: string[], fresh: boolean): void {
+  const li = document.createElement("li");
+  li.innerHTML = `<code></code> <span class="book"></span>`;
+  li.querySelector("code")!.textContent = words.join(" ");
+  li.querySelector(".book")!.textContent = BOOK_NAMES[book];
+  if (fresh) li.classList.add("fresh");
+  grimoireEl.appendChild(li);
+}
+for (const text of grimoire.list()) {
+  const [book, words] = text.split(": ");
+  if (!BASICS.includes(text)) addIncantation(book as Book, words.split(" "), false);
+}
+grimoire.onLearn((book, words) => addIncantation(book, words, true));
+
 // The work order ticks itself off as the network starts working.
 const taskRows = store.tasks.map((task) => {
   const li = document.createElement("li");
