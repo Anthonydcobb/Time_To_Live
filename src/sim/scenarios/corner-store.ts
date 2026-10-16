@@ -17,6 +17,25 @@ export interface Task {
  *                           S1 Gig0/1 ── Gig0/0 R1
  *   PC1 (back office) ─ Fa0/2 ┘
  */
+/** What Walter teaches on job 1. Everything else shows as runes until learned. */
+export const CORNER_STORE_INCANTATIONS = [
+  "exec: configure terminal",
+  "exec: show running-config",
+  "exec: show ip interface brief",
+  "exec: ping",
+  "exec: copy running-config startup-config",
+  "config: hostname",
+  "config: interface",
+  "config: enable secret",
+  "config: line console",
+  "if: ip address",
+  "if: shutdown",
+  "if: no shutdown",
+  "if: description",
+  "line: password",
+  "line: login",
+];
+
 export function cornerStore() {
   const net = new Network();
   const r1 = net.add(new Router("R1"));
@@ -62,5 +81,5 @@ export function cornerStore() {
     },
     { text: "Do not restock the back cooler." },
   ];
-  return { net, r1, s1, register, office, layout, tasks };
+  return { net, r1, s1, register, office, layout, tasks, incantations: CORNER_STORE_INCANTATIONS };
 }

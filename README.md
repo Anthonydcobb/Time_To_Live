@@ -23,6 +23,11 @@ npm run build    # typecheck and production build
 - Typo a command in EXEC mode and IOS tries to look it up as a hostname, slowly, until you set `no ip domain-lookup`.
 - `do` from config mode, and global commands work from inside sub-modes.
 
+**Incantations**
+- The player has a grimoire of learned commands. In `?` help, commands they haven't learned show as runes, with each word kept the same length so the columns still line up. Tab won't complete them.
+- Unlearned commands still run if typed in full, and using one correctly learns it, so people who already know IOS aren't held back.
+- Each job teaches a set (job 1's is in `scenarios/corner-store.ts`). The runes are a substitution cipher a patient player can crack.
+
 **Configuration**
 - `hostname`, `enable secret`, `enable password`, `service password-encryption` (type 7), `banner motd` (single and multi-line).
 - `line con 0` and `line vty`: `password`, `login`, `logging synchronous`, `exec-timeout`.

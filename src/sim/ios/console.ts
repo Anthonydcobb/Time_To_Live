@@ -5,6 +5,7 @@ import { commandsFor, type Ctx } from "./commands";
 import { complete, help, parse, splitWords, type ParseResult } from "./parser";
 import { type5Verify } from "./passwords";
 import { Job } from "../job";
+import { bookFor, type Grimoire } from "../grimoire";
 
 export type Mode = "user" | "enable" | "config" | "config-if" | "config-line";
 
@@ -37,6 +38,8 @@ export class IosConsole {
   lineKind: "con" | "vty" = "con";
   pending: Pending | null = null;
   readonly history: string[] = [];
+  /** The player's learned incantations. Without one, every command reads plainly. */
+  grimoire: Grimoire | null = null;
   private out: string[] = [];
   private job: Job | null = null;
 
@@ -89,8 +92,8 @@ export class IosConsole {
   /** `?` pressed. `line` is what was typed before it. Returns help and the text to put back. */
   help(line: string): { lines: string[]; line: string } {
     if (this.pending) return { lines: [], line };
-    const { commands, offset, text } = this.commandsForLine(line);
-    const r = help(commands, text, this.ctx());
+    const { commands, offset, text, isDo } = this.commandsForLine(line);
+    const r = help(commands, text, this.ctx(), this.reveal(isDo));
     if (r.kind === "list") return { lines: r.lines, line };
     this.out = [];
     this.reportError(r.result as ParseResult<Ctx>, offset, false);
@@ -100,8 +103,8 @@ export class IosConsole {
   /** Tab pressed. Returns the completed line, or the same line if nothing matched. */
   complete(line: string): string {
     if (this.pending) return line;
-    const { commands, offset, text } = this.commandsForLine(line);
-    const done = complete(commands, text, this.ctx());
+    const { commands, offset, text, isDo } = this.commandsForLine(line);
+    const done = complete(commands, text, this.ctx(), this.reveal(isDo));
     return done === null ? line : line.slice(0, offset) + done;
   }
 
@@ -200,6 +203,18 @@ export class IosConsole {
     this.pending = { kind: "question", prompt, answer };
   }
 
+  private reveal(isDo: boolean) {
+    const g = this.grimoire;
+    if (!g) return undefined;
+    const book = isDo ? "exec" : bookFor(this.mode);
+    return (path: string[]) => g.knows(book, path);
+  }
+
+  /** Using a command correctly teaches it, so players who already know IOS aren't held back. */
+  private learnFrom(tokens: { type: string; word?: string }[], book: ReturnType<typeof bookFor>): void {
+    this.grimoire?.learn(book, tokens.map((t) => (t.type === "kw" ? t.word! : "*")));
+  }
+
   private ctx(): Ctx {
     return { device: this.device, console: this, out: this.out, job: null };
   }
@@ -231,6 +246,8 @@ export class IosConsole {
       }
     }
     if (result.kind === "ok") {
+      // Learned in the book of the mode it was spoken in, before the command can change modes.
+      this.learnFrom(result.command.tokens, isDo ? "exec" : bookFor(this.mode));
       if (this.mode.startsWith("config") && !isDo) this.device.dirty = true;
       result.command.run(ctx, result.args);
       this.job = ctx.job;

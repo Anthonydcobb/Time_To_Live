@@ -99,6 +99,24 @@ ul {
   color: var(--amber);
 }
 
+#grimoire li {
+  font-size: 12px;
+  padding: 1px 0;
+}
+
+#grimoire .book {
+  color: var(--dim);
+}
+
+#grimoire .fresh code {
+  color: var(--amber);
+}
+
+#grimoire .fresh::after {
+  content: " new";
+  color: var(--amber);
+}
+
 #tabs {
   display: flex;
   gap: 2px;

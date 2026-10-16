@@ -15,6 +15,7 @@ Time To Live is a 2D top-down horror game set in Static Springs, a Night Vale st
 - **The CLI must match real IOS:** same modes, abbreviations, `?` help, errors and show output. When unsure, copy real IOS 15 output.
 - **The simulation is real, not answer checking.** Frames actually move. Work orders check live network state, never typed commands.
 - **Never say "Cisco" in game branding.** Devices are made by Cryptis Systems (the CR-2911 router and CS-2960-24TT switch).
+- **Incantations:** commands are learned like RPG skills. Each new job's scenario lists what it teaches. Unlearned commands still work when typed, by design.
 - **Cables:** any Ethernet cable links any two Ethernet ports, since auto-MDIX is assumed. Ant dropped straight-through vs crossover on purpose. Console cables only fit console ports.
 
 ## Stack and layout
@@ -53,8 +54,9 @@ Key ideas:
 | PCs with `ipconfig`, `ping`, `tracert`, `arp -a` | PR #1 and #2 |
 | Real-time ping and traceroute with abort, console ports and cables, CDP | PR #2 |
 | Logical topology diagram, device tabs, and a work order that ticks itself off | PR #3 |
+| Incantations: unlearned commands show as runes in `?` help; jobs teach them and using one learns it (`src/sim/grimoire.ts`) | PR #4 |
 
-**PR state:** #1 → `main`, #2 stacked on #1, #3 stacked on #2. None are merged yet. Merge them in order: #1, then #2, then #3.
+**PR state:** #1 → `main`, then #2, #3 and #4 each stacked on the one before. None are merged yet. Merge them in order, #1 first.
 
 ## Next up
 
