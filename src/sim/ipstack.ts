@@ -1,0 +1,270 @@
+import {
+  BROADCAST_IP,
+  BROADCAST_MAC,
+  broadcastOf,
+  networkOf,
+  type Ipv4,
+  type Mac,
+} from "./addr";
+import type { Clock } from "./clock";
+import type { Frame, IcmpMessage, Ipv4Packet } from "./frames";
+
+/** Anything that can hold an IP address: a router port, a PC NIC, a switch SVI. */
+export interface L3Interface {
+  name: string;
+  mac: Mac;
+  ip: Ipv4 | null;
+  mask: Ipv4 | null;
+  /** True when line protocol is up and frames can flow. */
+  up(): boolean;
+  transmit(frame: Frame): void;
+}
+
+export interface ArpEntry {
+  ip: Ipv4;
+  mac: Mac;
+  iface: L3Interface;
+  learnedAt: number;
+}
+
+export interface StaticRoute {
+  network: Ipv4;
+  mask: Ipv4;
+  nextHop: Ipv4 | null;
+  exitIface: string | null;
+}
+
+export interface Route {
+  code: "C" | "L" | "S";
+  network: Ipv4;
+  mask: Ipv4;
+  nextHop: Ipv4 | null;
+  iface: L3Interface | null;
+}
+
+export type PingResult =
+  | { kind: "reply"; rttMs: number; ttl: number; from: Ipv4 }
+  | { kind: "timeout" }
+  | { kind: "unreachable"; from: Ipv4 }
+  | { kind: "ttl-expired"; from: Ipv4 };
+
+export interface IpStackOptions {
+  clock: () => Clock;
+  interfaces: () => L3Interface[];
+  /** Routers forward packets that aren't addressed to them. */
+  forwarding: boolean;
+  /**
+   * PCs hold a packet while they ARP for the next hop. Routers drop it,
+   * which is why the first ping from a router is often a `.`.
+   */
+  queueWhileArping: boolean;
+  initialTtl: number;
+  /** Routers add local /32 routes to the table. */
+  localRoutes: boolean;
+  staticRoutes?: () => StaticRoute[];
+  defaultGateway?: () => Ipv4 | null;
+}
+
+const MAX_QUEUED_PER_HOST = 4;
+
+export class IpStack {
+  readonly arp = new Map<Ipv4, ArpEntry>();
+  private queued = new Map<Ipv4, { iface: L3Interface; packet: Ipv4Packet }[]>();
+  private waiters = new Map<string, (r: PingResult) => void>();
+  private nextPingId = 1;
+
+  constructor(private readonly opts: IpStackOptions) {}
+
+  private get clock(): Clock {
+    return this.opts.clock();
+  }
+
+  private upInterfaces(): L3Interface[] {
+    return this.opts.interfaces().filter((i) => i.up() && i.ip !== null && i.mask !== null);
+  }
+
+  isLocal(ip: Ipv4): boolean {
+    return this.upInterfaces().some((i) => i.ip === ip);
+  }
+
+  routes(): Route[] {
+    const routes: Route[] = [];
+    for (const iface of this.upInterfaces()) {
+      routes.push({ code: "C", network: networkOf(iface.ip!, iface.mask!), mask: iface.mask!, nextHop: null, iface });
+      if (this.opts.localRoutes) routes.push({ code: "L", network: iface.ip!, mask: 0xffffffff, nextHop: null, iface });
+    }
+    const connected = [...routes];
+    for (const s of this.opts.staticRoutes?.() ?? []) {
+      if (s.exitIface) {
+        const iface = connected.find((r) => r.iface?.name === s.exitIface)?.iface;
+        if (iface) routes.push({ code: "S", network: s.network, mask: s.mask, nextHop: s.nextHop, iface });
+      } else if (s.nextHop !== null && connected.some((r) => r.code === "C" && networkOf(s.nextHop!, r.mask) === r.network)) {
+        routes.push({ code: "S", network: s.network, mask: s.mask, nextHop: s.nextHop, iface: null });
+      }
+    }
+    return routes;
+  }
+
+  /** Longest-prefix match. Resolves recursive static routes to an exit interface. */
+  lookup(dst: Ipv4, depth = 0): { iface: L3Interface; nextHop: Ipv4 } | null {
+    let best: Route | null = null;
+    for (const r of this.routes()) {
+      if (networkOf(dst, r.mask) !== r.network) continue;
+      if (!best || r.mask >>> 0 > best.mask >>> 0) best = r;
+    }
+    if (best) {
+      if (best.iface) return { iface: best.iface, nextHop: best.nextHop ?? dst };
+      if (best.nextHop !== null && depth < 8) {
+        const via = this.lookup(best.nextHop, depth + 1);
+        if (via) return { iface: via.iface, nextHop: best.nextHop };
+      }
+      return null;
+    }
+    const gw = this.opts.defaultGateway?.() ?? null;
+    if (gw !== null && depth === 0) {
+      const via = this.lookup(gw, depth + 1);
+      if (via && via.nextHop === gw) return { iface: via.iface, nextHop: gw };
+    }
+    return null;
+  }
+
+  /** Routes and sends a packet this host originated. Returns false if there is no route. */
+  send(packet: Ipv4Packet): boolean {
+    if (this.isLocal(packet.dst)) {
+      const iface = this.upInterfaces().find((i) => i.ip === packet.dst)!;
+      this.clock.schedule(0, () => this.deliver(iface, packet));
+      return true;
+    }
+    const route = this.lookup(packet.dst);
+    if (!route) return false;
+    this.sendVia(route.iface, route.nextHop, packet);
+    return true;
+  }
+
+  private sendVia(iface: L3Interface, nextHop: Ipv4, packet: Ipv4Packet): void {
+    const isBroadcast = nextHop === BROADCAST_IP || (iface.ip !== null && nextHop === broadcastOf(iface.ip, iface.mask!));
+    if (isBroadcast) {
+      iface.transmit({ src: iface.mac, dst: BROADCAST_MAC, payload: packet });
+      return;
+    }
+    const entry = this.arp.get(nextHop);
+    if (entry && entry.iface === iface) {
+      iface.transmit({ src: iface.mac, dst: entry.mac, payload: packet });
+      return;
+    }
+    if (this.opts.queueWhileArping) {
+      const q = this.queued.get(nextHop) ?? [];
+      if (q.length < MAX_QUEUED_PER_HOST) q.push({ iface, packet });
+      this.queued.set(nextHop, q);
+    }
+    this.arpRequest(iface, nextHop);
+  }
+
+  private arpRequest(iface: L3Interface, target: Ipv4): void {
+    if (iface.ip === null) return;
+    iface.transmit({
+      src: iface.mac,
+      dst: BROADCAST_MAC,
+      payload: { kind: "arp", op: "request", senderMac: iface.mac, senderIp: iface.ip, targetMac: "000000000000", targetIp: target },
+    });
+  }
+
+  private learn(iface: L3Interface, ip: Ipv4, mac: Mac): void {
+    this.arp.set(ip, { ip, mac, iface, learnedAt: this.clock.now });
+    const waiting = this.queued.get(ip);
+    if (!waiting) return;
+    this.queued.delete(ip);
+    for (const w of waiting) if (w.iface === iface) iface.transmit({ src: iface.mac, dst: mac, payload: w.packet });
+  }
+
+  handleFrame(iface: L3Interface, frame: Frame): void {
+    if (frame.dst !== iface.mac && frame.dst !== BROADCAST_MAC) return;
+    const p = frame.payload;
+    if (p.kind === "arp") {
+      if (iface.ip === null) return;
+      if (p.targetIp === iface.ip) {
+        this.learn(iface, p.senderIp, p.senderMac);
+        if (p.op === "request") {
+          iface.transmit({
+            src: iface.mac,
+            dst: p.senderMac,
+            payload: { kind: "arp", op: "reply", senderMac: iface.mac, senderIp: iface.ip, targetMac: p.senderMac, targetIp: p.senderIp },
+          });
+        }
+      } else if (this.arp.has(p.senderIp)) {
+        this.learn(iface, p.senderIp, p.senderMac);
+      }
+      return;
+    }
+
+    const forMe =
+      this.isLocal(p.dst) ||
+      p.dst === BROADCAST_IP ||
+      (iface.ip !== null && iface.mask !== null && p.dst === broadcastOf(iface.ip, iface.mask));
+    if (forMe) {
+      this.deliver(iface, p);
+      return;
+    }
+    if (!this.opts.forwarding || iface.ip === null) return;
+
+    const ttl = p.ttl - 1;
+    if (ttl <= 0) {
+      this.reply(iface.ip, p, "time-exceeded");
+      return;
+    }
+    const route = this.lookup(p.dst);
+    if (!route) {
+      this.reply(iface.ip, p, "unreachable");
+      return;
+    }
+    this.sendVia(route.iface, route.nextHop, { ...p, ttl });
+  }
+
+  private reply(from: Ipv4, original: Ipv4Packet, type: IcmpMessage["type"]): void {
+    if (original.icmp.type !== "echo-request") return;
+    this.send({ kind: "ipv4", src: from, dst: original.src, ttl: this.opts.initialTtl, icmp: { type, id: original.icmp.id, seq: original.icmp.seq } });
+  }
+
+  private deliver(iface: L3Interface, p: Ipv4Packet): void {
+    const icmp = p.icmp;
+    if (icmp.type === "echo-request") {
+      const src = this.isLocal(p.dst) ? p.dst : iface.ip;
+      if (src === null) return;
+      this.send({ kind: "ipv4", src, dst: p.src, ttl: this.opts.initialTtl, icmp: { type: "echo-reply", id: icmp.id, seq: icmp.seq } });
+      return;
+    }
+    const waiter = this.waiters.get(`${icmp.id}:${icmp.seq}`);
+    if (!waiter) return;
+    if (icmp.type === "echo-reply") waiter({ kind: "reply", rttMs: 0, ttl: p.ttl, from: p.src });
+    else if (icmp.type === "unreachable") waiter({ kind: "unreachable", from: p.src });
+    else waiter({ kind: "ttl-expired", from: p.src });
+  }
+
+  /** Source address this host would use to reach `dst`, or null if it has no route. */
+  sourceFor(dst: Ipv4): Ipv4 | null {
+    if (this.isLocal(dst)) return dst;
+    return this.lookup(dst)?.iface.ip ?? null;
+  }
+
+  newPingId(): number {
+    return this.nextPingId++;
+  }
+
+  /**
+   * Sends one echo request and runs the simulation clock until a reply
+   * arrives or the timeout passes.
+   */
+  ping(dst: Ipv4, id: number, seq: number, timeoutMs = 2000, ttl = this.opts.initialTtl): PingResult {
+    const start = this.clock.now;
+    let result: PingResult | null = null;
+    const key = `${id}:${seq}`;
+    this.waiters.set(key, (r) => {
+      if (!result) result = r.kind === "reply" ? { ...r, rttMs: this.clock.now - start } : r;
+    });
+    const src = this.sourceFor(dst);
+    if (src !== null) this.send({ kind: "ipv4", src, dst, ttl, icmp: { type: "echo-request", id, seq } });
+    this.clock.runUntil(start + timeoutMs, () => result !== null);
+    this.waiters.delete(key);
+    return result ?? { kind: "timeout" };
+  }
+}

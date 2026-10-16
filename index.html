@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Time To Live: Bench Terminal</title>
+    <link rel="stylesheet" href="/src/web/style.css" />
+  </head>
+  <body>
+    <aside id="sidebar">
+      <h1>Time To Live</h1>
+      <p class="sub">Bob's Broadband &amp; Blood Rites · bench terminal</p>
+      <section>
+        <h2>Devices</h2>
+        <ul id="devices"></ul>
+      </section>
+      <section>
+        <h2>Cables</h2>
+        <ul id="cables"></ul>
+      </section>
+      <section id="work-order">
+        <h2>Work order #0001</h2>
+        <p><strong>Quik-Stop Forever</strong>, corner of Elm and Elm, Static Springs.</p>
+        <ul>
+          <li>R1 Gig0/0: 192.168.1.1 /24</li>
+          <li>Register: 192.168.1.10 /24, gateway .1</li>
+          <li>Back Office: 192.168.1.11 /24, gateway .1</li>
+          <li>Everything must ping everything.</li>
+          <li>Do not restock the back cooler.</li>
+        </ul>
+        <p class="hint">On a PC: <code>ipconfig 192.168.1.10 255.255.255.0 192.168.1.1</code></p>
+        <p class="hint">Keys: <kbd>?</kbd> help, <kbd>Tab</kbd> complete, <kbd>↑</kbd><kbd>↓</kbd> history, <kbd>Ctrl+Z</kbd> end, <kbd>Ctrl+Shift+6</kbd> abort.</p>
+      </section>
+    </aside>
+    <main id="terminals"></main>
+    <script type="module" src="/src/web/main.ts"></script>
+  </body>
+</html>
