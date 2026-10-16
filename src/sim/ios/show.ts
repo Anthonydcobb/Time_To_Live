@@ -1,0 +1,277 @@
+// Output for IOS show commands, formatted like the real thing.
+import { formatIpv4, formatMacCisco, maskToPrefix, networkOf, type Ipv4 } from "../addr";
+import type { IosDevice } from "../devices/ios-device";
+import type { Router } from "../devices/router";
+import type { Switch } from "../devices/switch";
+import type { Route } from "../ipstack";
+import type { IosConfig, LineConfig, StoredPassword } from "./config";
+import { type7Encode } from "./passwords";
+
+const IOS_VERSION = "15.1(4)M4";
+
+function pw(p: StoredPassword): string {
+  return p.encrypted ? `7 ${type7Encode(p.text)}` : p.text;
+}
+
+/** The body of the config, as `show running-config` prints it after the header. */
+export function renderConfig(device: IosDevice, c: IosConfig): string[] {
+  const isSwitch = device.kind === "switch";
+  const out: string[] = [
+    "!",
+    `version ${isSwitch ? "15.0" : "15.1"}`,
+    "no service timestamps log datetime msec",
+    "no service timestamps debug datetime msec",
+    c.servicePasswordEncryption ? "service password-encryption" : "no service password-encryption",
+    "!",
+    `hostname ${c.hostname}`,
+    "!",
+  ];
+  if (c.enableSecret) out.push(`enable secret 5 ${c.enableSecret}`);
+  if (c.enablePassword) out.push(`enable password ${pw(c.enablePassword)}`);
+  if (c.enableSecret || c.enablePassword) out.push("!");
+  if (!c.ipDomainLookup) out.push("no ip domain-lookup", "!");
+  if (isSwitch) out.push("spanning-tree mode pvst", "spanning-tree extend system-id", "!");
+
+  for (const iface of device.interfaces()) {
+    const ic = c.interfaces[iface.name];
+    if (!ic) continue;
+    out.push(`interface ${iface.name}`);
+    if (ic.description) out.push(` description ${ic.description}`);
+    if (iface.routed) out.push(ic.ip !== null ? ` ip address ${formatIpv4(ic.ip)} ${formatIpv4(ic.mask!)}` : " no ip address");
+    if (iface.port && !isSwitch) out.push(" duplex auto", " speed auto");
+    if (ic.shutdown) out.push(" shutdown");
+    out.push("!");
+  }
+
+  if (c.defaultGateway !== null) out.push(`ip default-gateway ${formatIpv4(c.defaultGateway)}`);
+  out.push("ip classless");
+  for (const r of c.staticRoutes) {
+    const target = r.exitIface ?? formatIpv4(r.nextHop!);
+    out.push(`ip route ${formatIpv4(r.network)} ${formatIpv4(r.mask)} ${target}`);
+  }
+  out.push("!", "ip flow-export version 9", "!");
+
+  if (c.bannerMotd !== null) out.push("banner motd ^C", ...c.bannerMotd.split("\n"), "^C", "!");
+
+  const line = (header: string, l: LineConfig) => {
+    out.push(header);
+    if (l.execTimeout) out.push(` exec-timeout ${l.execTimeout[0]} ${l.execTimeout[1]}`);
+    if (l.password) out.push(` password ${pw(l.password)}`);
+    if (l.loggingSynchronous) out.push(" logging synchronous");
+    if (l.login) out.push(" login");
+  };
+  line("line con 0", c.con);
+  out.push("!");
+  if (!isSwitch) out.push("line aux 0", "!");
+  line("line vty 0 4", c.vty);
+  if (isSwitch) line("line vty 5 15", c.vty);
+  out.push("!", "!", "!", "end");
+  return out;
+}
+
+function byteCount(lines: string[]): number {
+  return lines.reduce((n, l) => n + l.length + 1, 0);
+}
+
+export function showRunningConfig(device: IosDevice): string[] {
+  const body = renderConfig(device, device.config);
+  return ["Building configuration...", "", `Current configuration : ${byteCount(body)} bytes`, ...body, ""];
+}
+
+export function showStartupConfig(device: IosDevice): string[] {
+  if (!device.startup) return ["startup-config is not present"];
+  const body = renderConfig(device, device.startup);
+  return [`Using ${byteCount(body)} bytes`, ...body, ""];
+}
+
+export function showIpInterfaceBrief(device: IosDevice): string[] {
+  const out = [`${"Interface".padEnd(23)}${"IP-Address".padEnd(16)}OK? Method Status                Protocol `];
+  for (const i of device.interfaces()) {
+    const c = device.config.interfaces[i.name];
+    const ip = c?.ip != null ? formatIpv4(c.ip) : "unassigned";
+    const method = c?.ip != null ? "manual" : "unset ";
+    out.push(`${i.name.padEnd(23)}${ip.padEnd(16)}YES ${method} ${i.status().padEnd(22)}${i.protocol()} `);
+  }
+  return out;
+}
+
+export function showInterfaces(device: IosDevice, only?: string): string[] {
+  const out: string[] = [];
+  for (const i of device.interfaces()) {
+    if (only && i.name !== only) continue;
+    const c = device.config.interfaces[i.name];
+    const status = i.status();
+    const proto = i.protocol();
+    const suffix = i.port ? (status === "administratively down" ? " (disabled)" : status === "up" ? " (connected)" : " (notconnect)") : "";
+    out.push(`${i.name} is ${status}, line protocol is ${proto}${device.kind === "switch" ? suffix : ""}`);
+    const hw = i.port ? (i.name.startsWith("Gigabit") ? "CN Gigabit Ethernet" : "Lance") : "CPU Interface";
+    const mac = formatMacCisco(i.mac);
+    out.push(`  Hardware is ${hw}, address is ${mac} (bia ${mac})`);
+    if (c?.description) out.push(`  Description: ${c.description}`);
+    if (c?.ip != null) out.push(`  Internet address is ${formatIpv4(c.ip)}/${maskToPrefix(c.mask!)}`);
+    const bw = i.name.startsWith("Gigabit") ? 1000000 : i.name.startsWith("Fast") ? 100000 : 100000;
+    out.push(
+      `  MTU 1500 bytes, BW ${bw} Kbit, DLY ${i.name.startsWith("Gigabit") ? 10 : 100} usec,`,
+      "     reliability 255/255, txload 1/255, rxload 1/255",
+      "  Encapsulation ARPA, loopback not set",
+    );
+    if (i.port) {
+      const speed = i.name.startsWith("Gigabit") ? "1000Mb/s" : "100Mb/s";
+      out.push(status === "up" ? `  Full-duplex, ${speed}, media type is RJ45` : "  Auto-duplex, Auto-speed, media type is RJ45");
+    }
+    out.push("  ARP type: ARPA, ARP Timeout 04:00:00");
+  }
+  return out;
+}
+
+const ROUTE_CODES = [
+  "Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP",
+  "       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area",
+  "       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2",
+  "       E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP",
+  "       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2",
+  "       ia - IS-IS inter area, * - candidate default, U - per-user static route",
+  "       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP",
+  "       + - replicated route, % - next hop override",
+];
+
+function classfulPrefix(ip: Ipv4): number {
+  const first = ip >>> 24;
+  if (first < 128) return 8;
+  if (first < 192) return 16;
+  return 24;
+}
+
+function routeTail(r: Route, withPrefix: boolean): string {
+  const net = formatIpv4(r.network) + (withPrefix ? `/${maskToPrefix(r.mask)}` : "");
+  if (r.code === "S" && r.nextHop !== null) return `${net} [1/0] via ${formatIpv4(r.nextHop)}`;
+  return `${net} is directly connected, ${r.iface!.name}`;
+}
+
+export function showIpRoute(router: Router): string[] {
+  const routes = router.stack.routes();
+  const defaultRoute = routes.find((r) => r.mask === 0 && r.network === 0);
+  const out = [...ROUTE_CODES, ""];
+  if (defaultRoute) {
+    const via = defaultRoute.nextHop !== null ? formatIpv4(defaultRoute.nextHop) : "0.0.0.0";
+    out.push(`Gateway of last resort is ${via} to network 0.0.0.0`, "");
+  } else {
+    out.push("Gateway of last resort is not set", "");
+  }
+
+  const groups = new Map<number, Route[]>();
+  for (const r of routes) {
+    if (r === defaultRoute) continue;
+    const prefix = classfulPrefix(r.network);
+    const major = networkOf(r.network, prefix === 8 ? 0xff000000 : prefix === 16 ? 0xffff0000 : 0xffffff00);
+    groups.set(major, [...(groups.get(major) ?? []), r]);
+  }
+  const majors = [...groups.keys()].sort((a, b) => a - b);
+  for (const major of majors) {
+    const rs = groups.get(major)!.sort((a, b) => a.network - b.network || (a.mask >>> 0) - (b.mask >>> 0));
+    const cprefix = classfulPrefix(major);
+    const masks = new Set(rs.map((r) => r.mask));
+    const code = (r: Route) => r.code.padEnd(2);
+    if (rs.length === 1 && maskToPrefix(rs[0].mask) === cprefix) {
+      out.push(`${code(rs[0])}    ${routeTail(rs[0], true)}`);
+    } else if (masks.size > 1) {
+      out.push(`      ${formatIpv4(major)}/${cprefix} is variably subnetted, ${rs.length} subnets, ${masks.size} masks`);
+      for (const r of rs) out.push(`${code(r)}       ${routeTail(r, true)}`);
+    } else {
+      out.push(`      ${formatIpv4(major)}/${maskToPrefix(rs[0].mask)} is subnetted, ${rs.length} subnets`);
+      for (const r of rs) out.push(`${code(r)}       ${routeTail(r, false)}`);
+    }
+  }
+  if (defaultRoute) out.push(`S*    0.0.0.0/0 [1/0] via ${formatIpv4(defaultRoute.nextHop ?? 0)}`);
+  out.push("");
+  return out;
+}
+
+export function showArp(device: IosDevice): string[] {
+  const out = ["Protocol  Address          Age (min)  Hardware Addr   Type   Interface"];
+  const row = (ip: Ipv4, age: string, mac: string, iface: string) =>
+    `Internet  ${formatIpv4(ip).padEnd(17)}${age.padStart(9)}  ${formatMacCisco(mac)}  ARPA   ${iface}`;
+  const rows: [Ipv4, string][] = [];
+  for (const i of device.l3Interfaces()) {
+    if (i.ip !== null && i.up()) rows.push([i.ip, row(i.ip, "-", i.mac, i.name)]);
+  }
+  const now = device.clock.now;
+  for (const e of device.stack.arp.values()) {
+    rows.push([e.ip, row(e.ip, String(Math.floor((now - e.learnedAt) / 60000)), e.mac, e.iface.name)]);
+  }
+  rows.sort((a, b) => a[0] - b[0]);
+  return [...out, ...rows.map((r) => r[1])];
+}
+
+export function showMacAddressTable(sw: Switch): string[] {
+  const out = [
+    "          Mac Address Table",
+    "-------------------------------------------",
+    "",
+    "Vlan    Mac Address       Type        Ports",
+    "----    -----------       --------    -----",
+    "",
+  ];
+  const entries = sw.liveMacEntries().sort((a, b) => a.vlan - b.vlan || (a.mac < b.mac ? -1 : 1));
+  for (const e of entries) {
+    out.push(`${String(e.vlan).padStart(4)}    ${formatMacCisco(e.mac)}    DYNAMIC     ${e.port.shortName}`);
+  }
+  return out;
+}
+
+export function showVlanBrief(sw: Switch): string[] {
+  const out = [
+    "",
+    "VLAN Name                             Status    Ports",
+    "---- -------------------------------- --------- -------------------------------",
+  ];
+  const names = sw.ports.map((p) => p.shortName);
+  const chunks: string[] = [];
+  for (let i = 0; i < names.length; i += 4) chunks.push(names.slice(i, i + 4).join(", "));
+  out.push(`${"1".padEnd(5)}${"default".padEnd(33)}${"active".padEnd(10)}${chunks[0] ?? ""}`);
+  for (const c of chunks.slice(1)) out.push(`${"".padEnd(48)}${c}`);
+  for (const [id, name] of [
+    [1002, "fddi-default"],
+    [1003, "token-ring-default"],
+    [1004, "fddinet-default"],
+    [1005, "trnet-default"],
+  ] as const) {
+    out.push(`${String(id).padEnd(5)}${name.padEnd(33)}${"active".padEnd(10)}`.trimEnd());
+  }
+  return out;
+}
+
+export function showVersion(device: IosDevice): string[] {
+  const isRouter = device.kind === "router";
+  const uptimeMin = Math.floor(device.clock.now / 60000);
+  const image = isRouter ? "cr2900-universalk9-mz.SPA.151-4.M4.bin" : "cs2960-lanbasek9-mz.150-2.SE4.bin";
+  return [
+    `Cryptis IOS Software, ${isRouter ? "CR-2900" : "CS-2960"} Software, Version ${isRouter ? IOS_VERSION : "15.0(2)SE4"}, RELEASE SOFTWARE (fc2)`,
+    "Technical Support: please do not call after dark",
+    "Copyright (c) 1986-1993 by Cryptis Systems, Inc. All rights reserved, and some that were not.",
+    "",
+    "ROM: System Bootstrap, Version 15.1(4)M4, RELEASE SOFTWARE (fc1)",
+    "",
+    `${device.hostname} uptime is ${uptimeMin} minute${uptimeMin === 1 ? "" : "s"}`,
+    "System returned to ROM by power-on",
+    `System image file is "flash:${image}"`,
+    "",
+    `Cryptis ${device.model} (revision 1.0) with 491520K/32768K bytes of memory.`,
+    isRouter ? "3 Gigabit Ethernet interfaces" : "24 FastEthernet interfaces\n2 Gigabit Ethernet interfaces",
+    "255K bytes of non-volatile configuration memory.",
+    "",
+    "Configuration register is 0x2102",
+    "",
+  ].flatMap((l) => l.split("\n"));
+}
+
+export function showClock(device: IosDevice): string[] {
+  // Every device in Static Springs believes it is March 1st, 1993.
+  const ms = device.clock.now;
+  const h = Math.floor(ms / 3_600_000) % 24;
+  const m = Math.floor(ms / 60_000) % 60;
+  const s = Math.floor(ms / 1000) % 60;
+  const frac = ms % 1000;
+  const pad = (n: number, w = 2) => String(n).padStart(w, "0");
+  return [`*${pad(h)}:${pad(m)}:${pad(s)}.${pad(frac, 3)} UTC Mon Mar 1 1993`];
+}

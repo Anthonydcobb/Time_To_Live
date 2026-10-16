@@ -1,0 +1,141 @@
+:root {
+  --bg: #0b0c0a;
+  --panel: #12140f;
+  --line: #2a2e22;
+  --text: #c9c7b8;
+  --dim: #77756a;
+  --amber: #ffb000;
+  --green: #4cff7a;
+  --off: #3a3a36;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font: 14px/1.4 "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+}
+
+body {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+}
+
+#sidebar {
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  padding: 16px;
+  overflow-y: auto;
+}
+
+h1 {
+  margin: 0;
+  color: var(--amber);
+  font-size: 20px;
+  letter-spacing: 0.05em;
+}
+
+h2 {
+  margin: 20px 0 6px;
+  color: var(--dim);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.sub,
+.hint {
+  color: var(--dim);
+  font-size: 12px;
+}
+
+ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+#work-order ul li::before {
+  content: "· ";
+  color: var(--amber);
+}
+
+#devices button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: 1px solid transparent;
+  color: var(--text);
+  font: inherit;
+  padding: 6px 8px;
+  cursor: pointer;
+}
+
+#devices button:hover {
+  border-color: var(--line);
+}
+
+#devices button.active {
+  border-color: var(--amber);
+  color: var(--amber);
+}
+
+#cables li {
+  font-size: 12px;
+  padding: 2px 0;
+}
+
+.light {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--off);
+  margin: 0 4px;
+}
+
+.light.green {
+  background: var(--green);
+  box-shadow: 0 0 6px var(--green);
+}
+
+.light.amber {
+  background: var(--amber);
+  box-shadow: 0 0 6px var(--amber);
+}
+
+#terminals {
+  position: relative;
+  padding: 12px;
+}
+
+.term {
+  position: absolute;
+  inset: 12px;
+  display: none;
+}
+
+.term.active {
+  display: block;
+}
+
+code,
+kbd {
+  color: var(--text);
+}
+
+@media (max-width: 700px) {
+  body {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
+  }
+  #sidebar {
+    max-height: 40vh;
+  }
+}
