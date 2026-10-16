@@ -4,6 +4,7 @@ import "@xterm/xterm/css/xterm.css";
 import { IosDevice } from "../sim/devices/ios-device";
 import { Pc } from "../sim/devices/pc";
 import { Switch } from "../sim/devices/switch";
+import type { Job } from "../sim/job";
 import type { Device, Port } from "../sim/network";
 import { cornerStore } from "../sim/scenarios/corner-store";
 
@@ -11,7 +12,7 @@ import { cornerStore } from "../sim/scenarios/corner-store";
 interface Session {
   prompt(): string;
   secret(): boolean;
-  run(line: string): { lines: string[]; delayMs: number };
+  run(line: string): { lines: string[]; job?: Job };
   help?(line: string): { lines: string[]; line: string };
   complete?(line: string): string;
   ctrlZ?(): { lines: string[] };
@@ -40,7 +41,7 @@ function pcSession(pc: Pc): Session {
     secret: () => false,
     run: (l) => {
       if (l.trim()) history.push(l);
-      return { lines: pc.shell.execute(l), delayMs: 0 };
+      return pc.shell.execute(l);
     },
     history,
     start: () => [pc.shell.banner, ""],
@@ -55,7 +56,8 @@ class TerminalView {
   private readonly fit = new FitAddon();
   private buffer = "";
   private historyIndex = -1;
-  private busy: { timer: number; rest: string[] } | null = null;
+  /** A command still running in simulated time, like ping. Input waits for it. */
+  private busy: Job | null = null;
   /** True while a command runs, so its log messages print after its output. */
   private running = false;
   private queuedLogs: string[] = [];
@@ -77,6 +79,14 @@ class TerminalView {
     this.term.loadAddon(this.fit);
     this.term.open(this.el);
     this.term.onData((d) => this.onData(d));
+    // Ctrl+Shift+6 doesn't produce a control character on every keyboard layout, so catch the key itself.
+    this.term.attachCustomKeyEventHandler((e) => {
+      if (e.type === "keydown" && e.ctrlKey && (e.code === "Digit6" || e.key === "^")) {
+        this.onData("\x1e");
+        return false;
+      }
+      return true;
+    });
     this.writeLines(session.start());
     this.term.write(session.prompt());
   }
@@ -118,7 +128,11 @@ class TerminalView {
 
   private onData(data: string): void {
     if (this.busy) {
-      if (data === "\x1e") this.finishBusy(true);
+      // Ctrl+Shift+6 is the IOS escape sequence; Ctrl+C stops a PC command.
+      if (data === "\x1e" || data === "\x03") {
+        this.term.write(data === "\x1e" ? "^^" : "^C");
+        this.busy.abort();
+      }
       return;
     }
     if (data.startsWith("\x1b")) {
@@ -194,22 +208,19 @@ class TerminalView {
     this.running = true;
     const result = this.session.run(line);
     this.running = false;
-    if (result.delayMs > 0 && result.lines.length > 1) {
-      this.writeLines(result.lines.slice(0, -1));
-      const rest = result.lines.slice(-1);
-      this.busy = { rest, timer: window.setTimeout(() => this.finishBusy(false), result.delayMs) };
+    this.writeLines(result.lines);
+    if (result.job) {
+      const job = result.job;
+      this.busy = job;
+      job.onData((text) => this.term.write(text.replace(/\n/g, CRLF)));
+      job.onDone(() => this.onJobDone());
       return;
     }
-    this.writeLines(result.lines);
     this.flushLogs();
     this.term.write(this.session.prompt());
   }
 
-  private finishBusy(aborted: boolean): void {
-    if (!this.busy) return;
-    window.clearTimeout(this.busy.timer);
-    if (aborted) this.term.write("^^" + CRLF);
-    this.writeLines(this.busy.rest);
+  private onJobDone(): void {
     this.busy = null;
     this.flushLogs();
     this.term.write(this.session.prompt());

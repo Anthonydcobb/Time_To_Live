@@ -3,7 +3,7 @@ import { Network } from "../src/sim/network";
 import { Router } from "../src/sim/devices/router";
 import { Switch } from "../src/sim/devices/switch";
 import { type7Decode, type7Encode, type5Hash, type5Verify } from "../src/sim/ios/passwords";
-import { type } from "./helpers";
+import { finish, type } from "./helpers";
 
 function router() {
   const net = new Network();
@@ -84,11 +84,13 @@ describe("errors", () => {
     const r = router();
     const slow = r.console.input("shw");
     expect(slow.lines[0]).toBe('Translating "shw"...domain server (255.255.255.255)');
-    expect(slow.delayMs).toBeGreaterThan(0);
+    const start = r.clock.now;
+    expect(finish(r, slow.job!)).toEqual(["% Unknown command or computer name, or unable to find computer address"]);
+    expect(r.clock.now - start).toBe(5000);
     type(r, "en", "conf t", "no ip domain-lookup", "end");
     const fast = r.console.input("shw");
-    expect(fast.lines[0]).toBe('Translating "shw"');
-    expect(fast.delayMs).toBe(0);
+    expect(fast.lines).toEqual(['Translating "shw"', "% Unknown command or computer name, or unable to find computer address"]);
+    expect(fast.job).toBeUndefined();
   });
 
   it("rejects bad masks, network addresses and overlapping subnets", () => {

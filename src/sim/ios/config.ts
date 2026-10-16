@@ -19,6 +19,7 @@ export interface InterfaceConfig {
   description: string | null;
   ip: Ipv4 | null;
   mask: Ipv4 | null;
+  cdp: boolean;
 }
 
 /** Everything `show running-config` prints. `reload` restores this from startup-config. */
@@ -29,6 +30,7 @@ export interface IosConfig {
   servicePasswordEncryption: boolean;
   bannerMotd: string | null;
   ipDomainLookup: boolean;
+  cdpRun: boolean;
   interfaces: Record<string, InterfaceConfig>;
   con: LineConfig;
   vty: LineConfig;
@@ -48,8 +50,9 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     servicePasswordEncryption: false,
     bannerMotd: null,
     ipDomainLookup: true,
+    cdpRun: true,
     interfaces: Object.fromEntries(
-      interfaces.map((i) => [i.name, { shutdown: i.shutdown, description: null, ip: null, mask: null }]),
+      interfaces.map((i) => [i.name, { shutdown: i.shutdown, description: null, ip: null, mask: null, cdp: true }]),
     ),
     con: defaultLine(),
     vty: { ...defaultLine(), login: true },

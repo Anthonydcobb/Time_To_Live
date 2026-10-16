@@ -2,6 +2,7 @@ import { nextMac, type Ipv4 } from "../addr";
 import type { Frame } from "../frames";
 import { IpStack, type L3Interface } from "../ipstack";
 import { Device, Port } from "../network";
+import { IosDevice } from "./ios-device";
 import { PcShell } from "../pc/shell";
 
 /** A desktop PC. In the game its IP settings come from a GUI panel; the shell mirrors them. */
@@ -11,6 +12,8 @@ export class Pc extends Device {
   mask: Ipv4 | null = null;
   gateway: Ipv4 | null = null;
   readonly nic: Port;
+  /** Serial port for a console cable to a router or switch. */
+  readonly rs232: Port;
   readonly stack: IpStack;
   readonly shell: PcShell;
   private readonly l3: L3Interface;
@@ -19,6 +22,7 @@ export class Pc extends Device {
     super(id);
     this.nic = new Port(this, "FastEthernet0", "Fa0", nextMac("0060a8"));
     this.ports.push(this.nic);
+    this.rs232 = new Port(this, "RS 232", "RS232", "000000000000", "console");
     const self = this;
     this.l3 = {
       name: "FastEthernet0",
@@ -57,6 +61,12 @@ export class Pc extends Device {
     this.mask = mask;
     this.gateway = gateway;
     this.stack.arp.clear();
+  }
+
+  /** The device whose console this PC's terminal program would talk to, if any. */
+  consoleTarget(): IosDevice | null {
+    const far = this.rs232.peer?.device;
+    return far instanceof IosDevice ? far : null;
   }
 
   receive(_port: Port, frame: Frame): void {

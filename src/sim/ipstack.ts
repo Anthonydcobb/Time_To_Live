@@ -180,6 +180,7 @@ export class IpStack {
   handleFrame(iface: L3Interface, frame: Frame): void {
     if (frame.dst !== iface.mac && frame.dst !== BROADCAST_MAC) return;
     const p = frame.payload;
+    if (p.kind === "cdp") return;
     if (p.kind === "arp") {
       if (iface.ip === null) return;
       if (p.targetIp === iface.ip) {
@@ -251,20 +252,25 @@ export class IpStack {
   }
 
   /**
-   * Sends one echo request and runs the simulation clock until a reply
-   * arrives or the timeout passes.
+   * Sends one echo request and calls back with the result when a reply comes
+   * in or the timeout passes, in simulated time. `ttl` below the default is
+   * how traceroute finds each hop.
    */
-  ping(dst: Ipv4, id: number, seq: number, timeoutMs = 2000, ttl = this.opts.initialTtl): PingResult {
+  probe(dst: Ipv4, opts: { id: number; seq: number; timeoutMs: number; ttl?: number }, done: (r: PingResult) => void): void {
     const start = this.clock.now;
-    let result: PingResult | null = null;
-    const key = `${id}:${seq}`;
-    this.waiters.set(key, (r) => {
-      if (!result) result = r.kind === "reply" ? { ...r, rttMs: this.clock.now - start } : r;
-    });
+    const key = `${opts.id}:${opts.seq}`;
+    let settled = false;
+    const settle = (r: PingResult) => {
+      if (settled) return;
+      settled = true;
+      this.waiters.delete(key);
+      done(r.kind === "reply" ? { ...r, rttMs: this.clock.now - start } : r);
+    };
+    this.waiters.set(key, settle);
     const src = this.sourceFor(dst);
-    if (src !== null) this.send({ kind: "ipv4", src, dst, ttl, icmp: { type: "echo-request", id, seq } });
-    this.clock.runUntil(start + timeoutMs, () => result !== null);
-    this.waiters.delete(key);
-    return result ?? { kind: "timeout" };
+    if (src !== null) {
+      this.send({ kind: "ipv4", src, dst, ttl: opts.ttl ?? this.opts.initialTtl, icmp: { type: "echo-request", id: opts.id, seq: opts.seq } });
+    }
+    this.clock.schedule(opts.timeoutMs, () => settle({ kind: "timeout" }));
   }
 }

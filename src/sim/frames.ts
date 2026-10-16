@@ -23,9 +23,23 @@ export interface Ipv4Packet {
   icmp: IcmpMessage;
 }
 
+/** Cisco Discovery Protocol advertisement. Switches consume these instead of forwarding them. */
+export interface CdpPacket {
+  kind: "cdp";
+  deviceId: string;
+  platform: string;
+  capability: "Router" | "Switch";
+  portId: string;
+  holdtimeSec: number;
+  address: Ipv4 | null;
+  version: string;
+}
+
+export const CDP_MAC: Mac = "01000ccccccc";
+
 export interface Frame {
   src: Mac;
   dst: Mac;
   vlan?: number;
-  payload: ArpPacket | Ipv4Packet;
+  payload: ArpPacket | Ipv4Packet | CdpPacket;
 }

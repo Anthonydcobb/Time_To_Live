@@ -157,6 +157,7 @@ export class Switch extends IosDevice {
   }
 
   receive(port: Port, frame: Frame): void {
+    if (this.handleCdp(port, frame)) return;
     const state = this.stpState(port);
     if (state === "disabled" || state === "listening") return;
     if (frame.src !== BROADCAST_MAC) this.macTable.set(frame.src, { mac: frame.src, vlan: 1, port, learnedAt: this.clock.now });

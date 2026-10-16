@@ -1,8 +1,10 @@
 import type { Ipv4, Mac } from "../addr";
-import { Device, type Port } from "../network";
+import { Device, Port } from "../network";
 import type { IpStack, L3Interface } from "../ipstack";
 import { cloneConfig, defaultConfig, type InterfaceConfig, type IosConfig } from "../ios/config";
 import { IosConsole } from "../ios/console";
+import { showVersion } from "../ios/show";
+import { CDP_MAC, type Frame } from "../frames";
 
 /** What `show ip interface brief` and friends need to know about any interface. */
 export interface InterfaceView {
@@ -16,14 +18,31 @@ export interface InterfaceView {
   protocol(): "up" | "down";
 }
 
+export interface CdpNeighbor {
+  localPort: Port;
+  deviceId: string;
+  platform: string;
+  capability: "Router" | "Switch";
+  portId: string;
+  address: Ipv4 | null;
+  version: string;
+  expiresAt: number;
+}
+
+export const CDP_INTERVAL_MS = 60_000;
+export const CDP_HOLDTIME_SEC = 180;
+
 export abstract class IosDevice extends Device {
   abstract readonly model: string;
   abstract readonly stack: IpStack;
   readonly console: IosConsole;
+  /** The light-blue port on the back. A console cable from a PC's RS-232 port lands here. */
+  readonly consolePort: Port;
   config: IosConfig;
   startup: IosConfig | null = null;
   /** Running config has changed since the last save. */
   dirty = false;
+  readonly cdpNeighbors = new Map<Port, CdpNeighbor>();
   /** Interface whose `shutdown` state is being changed right now, for log wording. */
   protected adminChanging: string | null = null;
 
@@ -32,6 +51,7 @@ export abstract class IosDevice extends Device {
     super(id);
     this.config = defaultConfig("", []);
     this.console = new IosConsole(this);
+    this.consolePort = new Port(this, "Console", "Con", "000000000000", "console");
   }
 
   abstract interfaces(): InterfaceView[];
@@ -74,6 +94,66 @@ export abstract class IosDevice extends Device {
 
   onPortStateChange(port: Port, layer: "link" | "protocol"): void {
     this.logInterfaceChange(port.name, layer, layer === "link" ? port.linkUp : port.protocolUp);
+    if (layer === "protocol" && port.protocolUp) this.clock.schedule(0, () => this.sendCdp(port));
+  }
+
+  onAttach(): void {
+    const tick = () => {
+      for (const p of this.ports) this.sendCdp(p);
+      this.clock.schedule(CDP_INTERVAL_MS, tick);
+    };
+    this.clock.schedule(CDP_INTERVAL_MS, tick);
+  }
+
+  /** The address CDP advertises: the first interface that has one. */
+  managementAddress(): Ipv4 | null {
+    for (const i of this.interfaces()) {
+      const ip = this.config.interfaces[i.name]?.ip;
+      if (ip != null) return ip;
+    }
+    return null;
+  }
+
+  private sendCdp(port: Port): void {
+    const c = this.config;
+    if (!c.cdpRun || !port.protocolUp || !c.interfaces[port.name]?.cdp) return;
+    this.send(port, {
+      src: port.mac,
+      dst: CDP_MAC,
+      payload: {
+        kind: "cdp",
+        deviceId: c.hostname,
+        platform: `Cryptis ${this.model}`,
+        capability: this.kind === "router" ? "Router" : "Switch",
+        portId: port.name,
+        holdtimeSec: CDP_HOLDTIME_SEC,
+        address: this.managementAddress(),
+        version: showVersion(this)[0],
+      },
+    });
+  }
+
+  /** Returns true if the frame was a CDP advertisement (which is never forwarded). */
+  protected handleCdp(port: Port, frame: Frame): boolean {
+    const p = frame.payload;
+    if (p.kind !== "cdp") return false;
+    if (!this.config.cdpRun || !this.config.interfaces[port.name]?.cdp) return true;
+    this.cdpNeighbors.set(port, {
+      localPort: port,
+      deviceId: p.deviceId,
+      platform: p.platform,
+      capability: p.capability,
+      portId: p.portId,
+      address: p.address,
+      version: p.version,
+      expiresAt: this.clock.now + p.holdtimeSec * 1000,
+    });
+    return true;
+  }
+
+  liveCdpNeighbors(): CdpNeighbor[] {
+    const now = this.clock.now;
+    return [...this.cdpNeighbors.values()].filter((n) => n.expiresAt > now);
   }
 
   protected logInterfaceChange(name: string, layer: "link" | "protocol", up: boolean): void {

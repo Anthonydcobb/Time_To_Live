@@ -1,5 +1,13 @@
 import { formatIpv4, formatMacCisco, formatMacWindows, maskToPrefix, parseIpv4 } from "../addr";
 import type { Pc } from "../devices/pc";
+import type { Job } from "../job";
+import { winPing, winTracert } from "../tools";
+
+export interface ShellOutput {
+  lines: string[];
+  /** Set when the command keeps running in simulated time. */
+  job?: Job;
+}
 
 /** The desktop command prompt on a PC, modeled on Windows `ipconfig`, `ping` and `arp`. */
 export class PcShell {
@@ -11,19 +19,21 @@ export class PcShell {
     return "C:\\>";
   }
 
-  execute(line: string): string[] {
+  execute(line: string): ShellOutput {
     const [cmd, ...args] = line.trim().split(/\s+/);
-    if (!cmd) return [];
+    if (!cmd) return { lines: [] };
     switch (cmd.toLowerCase()) {
       case "ipconfig":
-        return this.ipconfig(args);
+        return { lines: this.ipconfig(args) };
       case "ping":
         return this.ping(args);
+      case "tracert":
+        return this.tracert(args);
       case "arp":
-        return args[0]?.toLowerCase() === "-a" ? this.arp() : ["Usage: arp -a"];
+        return { lines: args[0]?.toLowerCase() === "-a" ? this.arp() : ["Usage: arp -a"] };
       case "help":
       case "?":
-        return [
+        return { lines: [
           "Available commands:",
           "  arp -a                         Show the ARP cache",
           "  help                           Show this list",
@@ -31,9 +41,10 @@ export class PcShell {
           "  ipconfig /all                  Show IP settings and the MAC address",
           "  ipconfig <ip> <mask> [<gw>]    Set a static IP address",
           "  ping [-n count] <ip>           Send ICMP echo requests",
-        ];
+          "  tracert <ip>                   Trace the route to a host",
+        ] };
       default:
-        return ["Invalid Command."];
+        return { lines: ["Invalid Command."] };
     }
   }
 
@@ -63,7 +74,7 @@ export class PcShell {
     return lines;
   }
 
-  private ping(args: string[]): string[] {
+  private ping(args: string[]): ShellOutput {
     let count = 4;
     const rest = [...args];
     if (rest[0]?.toLowerCase() === "-n") {
@@ -71,44 +82,30 @@ export class PcShell {
       rest.splice(0, 2);
     }
     const target = rest[0] ? parseIpv4(rest[0]) : null;
-    if (target === null) return ["Ping request could not find host. Please check the name and try again."];
-    const shown = formatIpv4(target);
-    const pc = this.pc;
-    if (pc.ip === null || !pc.nic.protocolUp) return ["PING: transmit failed. General failure."];
+    if (target === null) return { lines: ["Ping request could not find host. Please check the name and try again."] };
+    const failed = this.cannotSend(target);
+    if (failed) return { lines: failed };
+    return { lines: [], job: winPing({ stack: this.pc.stack, clock: this.pc.clock }, target, count) };
+  }
 
-    const lines = [`Pinging ${shown} with 32 bytes of data:`, ""];
-    const rtts: number[] = [];
-    const id = pc.stack.newPingId();
-    for (let seq = 0; seq < count; seq++) {
-      const r = pc.stack.ping(target, id, seq, 2000);
-      if (r.kind === "reply") {
-        rtts.push(r.rttMs);
-        const time = r.rttMs < 1 ? "time<1ms" : `time=${Math.round(r.rttMs)}ms`;
-        lines.push(`Reply from ${formatIpv4(r.from)}: bytes=32 ${time} TTL=${r.ttl}`);
-      } else if (r.kind === "unreachable") {
-        lines.push(`Reply from ${formatIpv4(r.from)}: Destination host unreachable.`);
-      } else if (r.kind === "ttl-expired") {
-        lines.push(`Reply from ${formatIpv4(r.from)}: TTL expired in transit.`);
-      } else {
-        lines.push("Request timed out.");
-      }
+  private tracert(args: string[]): ShellOutput {
+    const target = args[0] ? parseIpv4(args[0]) : null;
+    if (target === null) return { lines: ["Unable to resolve target system name."] };
+    const failed = this.cannotSend(target);
+    if (failed) return { lines: failed };
+    return {
+      lines: [`Tracing route to ${formatIpv4(target)} over a maximum of 30 hops: `, ""],
+      job: winTracert({ stack: this.pc.stack, clock: this.pc.clock }, target),
+    };
+  }
+
+  /** Windows refuses to send at all without an address, a link or a route. */
+  private cannotSend(target: number): string[] | null {
+    const pc = this.pc;
+    if (pc.ip === null || !pc.nic.protocolUp || pc.stack.sourceFor(target) === null) {
+      return ["PING: transmit failed. General failure."];
     }
-    const received = rtts.length;
-    const lost = count - received;
-    lines.push(
-      "",
-      `Ping statistics for ${shown}:`,
-      `    Packets: Sent = ${count}, Received = ${received}, Lost = ${lost} (${Math.round((lost / count) * 100)}% loss),`,
-    );
-    if (received) {
-      const ms = (n: number) => `${Math.round(n)}ms`;
-      lines.push(
-        "Approximate round trip times in milli-seconds:",
-        `    Minimum = ${ms(Math.min(...rtts))}, Maximum = ${ms(Math.max(...rtts))}, Average = ${ms(rtts.reduce((a, b) => a + b, 0) / received)}`,
-      );
-    }
-    lines.push("");
-    return lines;
+    return null;
   }
 
   private arp(): string[] {

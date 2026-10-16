@@ -4,6 +4,7 @@ import type { IosDevice } from "../devices/ios-device";
 import { commandsFor, type Ctx } from "./commands";
 import { complete, help, parse, splitWords, type ParseResult } from "./parser";
 import { type5Verify } from "./passwords";
+import { Job } from "../job";
 
 export type Mode = "user" | "enable" | "config" | "config-if" | "config-line";
 
@@ -15,8 +16,8 @@ type Pending =
 
 export interface ConsoleOutput {
   lines: string[];
-  /** How long the real device would take to print this, e.g. a DNS lookup on a typo. */
-  delayMs: number;
+  /** Set when the command keeps running in simulated time, like ping or a DNS lookup on a typo. */
+  job?: Job;
 }
 
 const SUFFIX: Record<Mode, string> = {
@@ -37,7 +38,7 @@ export class IosConsole {
   pending: Pending | null = null;
   readonly history: string[] = [];
   private out: string[] = [];
-  private delayMs = 0;
+  private job: Job | null = null;
 
   constructor(readonly device: IosDevice) {}
 
@@ -79,10 +80,10 @@ export class IosConsole {
 
   input(line: string): ConsoleOutput {
     this.out = [];
-    this.delayMs = 0;
+    this.job = null;
     if (this.pending) this.handlePending(line);
     else this.run(line);
-    return { lines: this.out, delayMs: this.delayMs };
+    return this.job ? { lines: this.out, job: this.job } : { lines: this.out };
   }
 
   /** `?` pressed. `line` is what was typed before it. Returns help and the text to put back. */
@@ -111,7 +112,7 @@ export class IosConsole {
       this.setMode("enable");
       this.device.emit("%SYS-5-CONFIG_I: Configured from console by console");
     }
-    return { lines: this.out, delayMs: 0 };
+    return { lines: this.out };
   }
 
   setMode(mode: Mode): void {
@@ -200,7 +201,7 @@ export class IosConsole {
   }
 
   private ctx(): Ctx {
-    return { device: this.device, console: this, out: this.out, delayMs: 0 };
+    return { device: this.device, console: this, out: this.out, job: null };
   }
 
   /** Splits off a leading `do` in config modes, which runs a privileged EXEC command. */
@@ -232,7 +233,7 @@ export class IosConsole {
     if (result.kind === "ok") {
       if (this.mode.startsWith("config") && !isDo) this.device.dirty = true;
       result.command.run(ctx, result.args);
-      this.delayMs = ctx.delayMs;
+      this.job = ctx.job;
       return;
     }
     this.reportError(result, offset, !isDo && (this.mode === "user" || this.mode === "enable"));
@@ -243,13 +244,19 @@ export class IosConsole {
       if (exec && result.wordIndex === 0 && result.wordCount === 1) {
         // IOS assumes an unknown word is a hostname to telnet to.
         const word = splitWords(this.history[this.history.length - 1] ?? "")[0]?.text ?? "";
-        if (this.device.config.ipDomainLookup) {
-          this.out.push(`Translating "${word}"...domain server (255.255.255.255)`);
-          this.delayMs = DNS_LOOKUP_MS;
-        } else {
-          this.out.push(`Translating "${word}"`);
+        const unknown = "% Unknown command or computer name, or unable to find computer address\n";
+        if (!this.device.config.ipDomainLookup) {
+          this.out.push(`Translating "${word}"`, unknown.trimEnd());
+          return;
         }
-        this.out.push("% Unknown command or computer name, or unable to find computer address");
+        this.out.push(`Translating "${word}"...domain server (255.255.255.255)`);
+        const job = new Job();
+        this.device.clock.schedule(DNS_LOOKUP_MS, () => {
+          job.write(unknown);
+          job.finish();
+        });
+        job.onAbort(() => job.write("\n" + unknown));
+        this.job = job;
         return;
       }
       this.out.push(" ".repeat(this.prompt().length + offset + result.caret) + "^", "% Invalid input detected at '^' marker.", "");
