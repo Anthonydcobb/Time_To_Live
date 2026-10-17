@@ -111,4 +111,22 @@ describe("captured from real IOS", () => {
     expect(out.find((l) => l.includes("packets output"))).toMatch(/^     [1-9]\d* packets output, \d+ bytes, 0 underruns$/);
     expect(out[out.length - 1]).toBe("     0 output buffer failures, 0 output buffers swapped out");
   });
+
+  it("filters show output after a pipe, but only for show", () => {
+    const r1 = router();
+    type(r1, "conf t", "ip dhcp excluded-address 192.168.1.1");
+    // "sh" matches the config-mode shell command, so the caret lands under "run".
+    expect(type(r1, "sh run | section dhcp")).toEqual(["              ^", "% Invalid input detected at '^' marker.", ""]);
+    expect(type(r1, "do sh run | i dhcp")).toEqual(["ip dhcp excluded-address 192.168.1.1"]);
+    expect(type(r1, "do sh run | section dhcp")).toEqual(["ip dhcp excluded-address 192.168.1.1"]);
+  });
+
+  it("only removes a DHCP exclusion typed exactly as it was added", () => {
+    const r1 = router();
+    type(r1, "conf t", "ip dhcp excluded-address 192.168.1.1");
+    expect(type(r1, "no ip dhcp excluded-address 192.168.1.1")).toEqual([]);
+    expect(type(r1, "no ip dhcp excluded-address 192.168.1.1 192.168.1.10")).toEqual([
+      "% Range [192.168.1.1, 192.168.1.10] is not in the database.",
+    ]);
+  });
 });

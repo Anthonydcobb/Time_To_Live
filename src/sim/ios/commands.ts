@@ -289,6 +289,8 @@ function removeRoute(c: Ctx, network: Ipv4, mask: Ipv4, nextHop?: Ipv4 | null, e
 }
 
 const configCommands: Entry[] = [
+  // IOS.sh's switch. It does nothing here, but it's why "sh run" in config mode puts the caret under "run".
+  cmd(CONFIG, [kw("shell", "Configure shell command"), kw("processing", "Configure shell processing"), kw("full", "Enable shell processing full")], () => {}),
   cmd(CONFIG, [kw("hostname", "Set system's network name"), wordArg("This system's network name")], (c, [name]) => {
     if (!validHostname(name as string)) {
       c.out.push("% Hostname contains one or more illegal characters.");
@@ -642,7 +644,7 @@ function addExcluded(c: Ctx, low: Ipv4, high: Ipv4): void {
 function removeExcluded(c: Ctx, low: Ipv4, high: Ipv4): void {
   const list = c.device.config.dhcpExcluded;
   const i = list.findIndex((r) => r.low === low && r.high === high);
-  if (i < 0) c.out.push("% Range not found");
+  if (i < 0) c.out.push(`% Range [${formatIpv4(low)}, ${formatIpv4(high)}] is not in the database.`);
   else list.splice(i, 1);
 }
 

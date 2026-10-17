@@ -253,6 +253,43 @@ export class IosConsole {
   private run(line: string): void {
     if (!line.trim()) return;
     this.history.push(line);
+    const pipe = this.splitPipe(line);
+    if (pipe) {
+      if (pipe.error) {
+        this.out.push(" ".repeat(this.prompt().length + pipe.error.at) + "^", "% Invalid input detected at '^' marker.", "");
+        return;
+      }
+      const before = this.out.length;
+      // Filters only apply to commands that print straight away, which every show command does.
+      if (this.runCommand(pipe.command) && !this.job) this.out.splice(before, this.out.length - before, ...applyFilter(this.out.slice(before), pipe.filter!));
+      return;
+    }
+    this.runCommand(line);
+  }
+
+  /**
+   * `show ... | include x`: splits off the output modifier. Only show commands
+   * take one; anywhere else the pipe is a stray word and the usual parse error follows.
+   */
+  private splitPipe(line: string): { command: string; filter?: OutputFilter; error?: { at: number } } | null {
+    const bar = line.indexOf("|");
+    if (bar < 0) return null;
+    const command = line.slice(0, bar);
+    const words = splitWords(command).map((w) => w.text.toLowerCase());
+    const showAt = words[0] === "do" ? 1 : 0;
+    if (!words[showAt] || !"show".startsWith(words[showAt]) || words[showAt].length < 2) return null;
+    const rest = line.slice(bar + 1);
+    const m = /^(\s*)(\S+)(\s+(.*))?$/.exec(rest);
+    if (!m) return { command, error: { at: line.length } };
+    const kind = FILTERS.find((f) => f.startsWith(m[2].toLowerCase()));
+    if (!kind) return { command, error: { at: bar + 1 + m[1].length } };
+    const pattern = (m[4] ?? "").trim();
+    if (kind !== "count" && !pattern) return { command, error: { at: line.length } };
+    return { command, filter: { kind, pattern } };
+  }
+
+  /** Returns false when the line didn't parse and an error was printed instead. */
+  private runCommand(line: string): boolean {
     const kind = this.device.kind as "router" | "switch";
     const { commands, offset, text, isDo } = this.commandsForLine(line);
     const ctx = this.ctx();
@@ -275,9 +312,10 @@ export class IosConsole {
       }
       result.command.run(ctx, result.args);
       this.job = ctx.job;
-      return;
+      return true;
     }
     this.reportError(result, offset, !isDo && (this.mode === "user" || this.mode === "enable"));
+    return false;
   }
 
   private reportError(result: ParseResult<Ctx>, offset: number, exec: boolean): void {
@@ -370,6 +408,49 @@ export class IosConsole {
     } else {
       this.pending = { kind: "press-return" };
       this.out.push("% Bad passwords", "");
+    }
+  }
+}
+
+const FILTERS = ["begin", "count", "exclude", "include", "section"] as const;
+type OutputFilter = { kind: (typeof FILTERS)[number]; pattern: string };
+
+/** IOS regexes are close enough to JavaScript's for what anyone types after a pipe. */
+function ioRegex(pattern: string): RegExp {
+  try {
+    return new RegExp(pattern);
+  } catch {
+    return new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  }
+}
+
+function applyFilter(lines: string[], f: OutputFilter): string[] {
+  const re = ioRegex(f.pattern);
+  switch (f.kind) {
+    case "include":
+      return lines.filter((l) => re.test(l));
+    case "exclude":
+      return lines.filter((l) => !re.test(l));
+    case "begin": {
+      const i = lines.findIndex((l) => re.test(l));
+      return i < 0 ? [] : lines.slice(i);
+    }
+    case "count":
+      return [`Number of lines which match regexp = ${lines.filter((l) => (f.pattern ? re.test(l) : true)).length}`];
+    case "section": {
+      // A section is a top-level line and the indented lines under it.
+      const out: string[] = [];
+      let keep = false;
+      for (let i = 0; i < lines.length; i++) {
+        const l = lines[i];
+        if (!l.startsWith(" ")) {
+          const children: string[] = [];
+          for (let j = i + 1; j < lines.length && lines[j].startsWith(" "); j++) children.push(lines[j]);
+          keep = re.test(l) || children.some((c) => re.test(c));
+        }
+        if (keep) out.push(l);
+      }
+      return out;
     }
   }
 }
