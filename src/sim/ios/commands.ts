@@ -169,6 +169,21 @@ function configured(ctx: Ctx): void {
   ctx.device.emit("%SYS-5-CONFIG_I: Configured from console by console");
 }
 
+const HELP_TEXT = [
+  "Help may be requested at any point in a command by entering",
+  "a question mark '?'.  If nothing matches, the help list will",
+  "be empty and you must backup until entering a '?' shows the",
+  "available options.",
+  "Two styles of help are provided:",
+  "1. Full help is available when you are ready to enter a",
+  "   command argument (e.g. 'show ?') and describes each possible",
+  "   argument.",
+  "2. Partial help is provided when an abbreviated argument is entered",
+  "   and you want to know what arguments match the input",
+  "   (e.g. 'show pr?'.)",
+  "",
+];
+
 // ---- the command table ------------------------------------------------------
 
 const showCommands: Entry[] = [
@@ -210,6 +225,7 @@ const execCommands: Entry[] = [
   cmd(EXEC, [kw("enable", "Turn on privileged commands")], (c) => c.console.beginEnable()),
   cmd(EXEC, [kw("exit", "Exit from the EXEC")], (c) => c.console.logout()),
   cmd(EXEC, [kw("logout", "Exit from the EXEC")], (c) => c.console.logout()),
+  cmd(EXEC, [kw("help", "Description of the interactive help system")], (c) => c.out.push(...HELP_TEXT)),
   cmd(EXEC, [kw("ping", "Send echo messages"), ipArg("Ping destination address or hostname")], (c, [ip]) => ping(c, ip as Ipv4)),
   cmd(EXEC, [kw("traceroute", "Trace route to destination"), ipArg("Trace route to destination address or hostname")], (c, [ip]) =>
     traceroute(c, ip as Ipv4),

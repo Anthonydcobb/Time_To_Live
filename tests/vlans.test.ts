@@ -44,8 +44,8 @@ describe("VLAN database", () => {
     expect(type(s1, "do show vlan brief").some((l) => l.startsWith("10 "))).toBe(false);
     type(s1, "exit");
     const brief = type(s1, "do show vlan brief");
-    expect(brief).toContain("10   STAFF                            active");
-    expect(brief).toContain("1002 fddi-default                     act/unsup");
+    expect(brief).toContain("10   STAFF                            active    ");
+    expect(brief).toContain("1002 fddi-default                     act/unsup ");
   });
 
   it("names new VLANs VLAN00xx and creates a list at once", () => {

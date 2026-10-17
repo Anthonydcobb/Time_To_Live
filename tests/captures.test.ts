@@ -176,4 +176,10 @@ describe("captured from real IOS", () => {
     expect(boot.slice(-2)).toEqual(["         --- System Configuration Dialog ---", ""]);
     expect(r1.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [yes/no]: ");
   });
+
+  it("carets hostname in exec mode under the o, since h still matches help", () => {
+    const r1 = router();
+    expect(type(r1, "hostname SW1")[0]).toBe("    ^");
+    expect(type(r1, "help")[0]).toBe("Help may be requested at any point in a command by entering");
+  });
 });

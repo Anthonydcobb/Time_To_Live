@@ -345,7 +345,8 @@ function vlanTable(sw: Switch): string[] {
     const chunks: string[] = [];
     for (let i = 0; i < ports.length; i += 4) chunks.push(ports.slice(i, i + 4).join(", "));
     const status = UNSUPPORTED_VLANS.has(id) ? "act/unsup" : "active";
-    out.push(`${String(id).padEnd(5)}${name.padEnd(33)}${status.padEnd(10)}${chunks[0] ?? ""}`.trimEnd());
+    // IOS pads the status column even when no ports follow, so those lines end in spaces.
+    out.push(`${String(id).padEnd(5)}${name.padEnd(33)}${status.padEnd(10)}${chunks[0] ?? ""}`);
     for (const c of chunks.slice(1)) out.push(`${"".padEnd(48)}${c}`);
   }
   return out;
