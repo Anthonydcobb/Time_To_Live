@@ -188,11 +188,15 @@ export abstract class IosDevice extends Device {
     if (layer === "link") {
       const admin = this.config.interfaces[name]?.shutdown;
       if (admin) this.emit(`%LINK-5-CHANGED: Interface ${name}, changed state to administratively down`);
-      else if (this.adminChanging === name) this.emit(`%LINK-5-CHANGED: Interface ${name}, changed state to ${up ? "up" : "down"}`);
       else this.emit(`%LINK-3-UPDOWN: Interface ${name}, changed state to ${up ? "up" : "down"}`);
     } else {
       this.emit(`%LINEPROTO-5-UPDOWN: Line protocol on Interface ${name}, changed state to ${up ? "up" : "down"}`);
     }
+  }
+
+  /** Console log messages carry IOS's default timestamp: `*Mar  1 00:01:02.345: `. */
+  emit(text: string): void {
+    super.emit(text.startsWith("%") ? `*${logTimestamp(this.clock.now)}: ${text}` : text);
   }
 
   saveConfig(): void {
@@ -228,4 +232,15 @@ export abstract class IosDevice extends Device {
     }
     return null;
   }
+}
+
+/**
+ * `service timestamps log datetime msec`, the IOS default. The clock was never
+ * set, so the star says it isn't authoritative and the date counts from March 1st, 1993.
+ */
+export function logTimestamp(ms: number): string {
+  const d = new Date(Date.UTC(1993, 2, 1) + ms);
+  const pad = (n: number, w = 2) => String(n).padStart(w, "0");
+  const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getUTCMonth()];
+  return `${month} ${String(d.getUTCDate()).padStart(2, " ")} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}.${pad(d.getUTCMilliseconds(), 3)}`;
 }

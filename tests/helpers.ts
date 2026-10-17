@@ -31,6 +31,7 @@ export function run(pc: Pc, line: string): string[] {
 /** Collects unsolicited console messages (%LINK, %LINEPROTO, ...). */
 export function captureLogs(device: IosDevice): string[] {
   const logs: string[] = [];
-  device.onOutput((t) => logs.push(t));
+  // Timestamps are checked once in captures.test.ts; everywhere else only the message matters.
+  device.onOutput((t) => logs.push(t.replace(/^\*\w{3} [ \d]\d \d\d:\d\d:\d\d\.\d{3}: /, "")));
   return logs;
 }

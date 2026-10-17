@@ -17,6 +17,8 @@ export class Port {
   linkUp = false;
   /** Layer 2: comes up shortly after the link does. Frames only flow when this is true. */
   protocolUp = false;
+  /** Autonegotiation is under way and the link will come up shortly. */
+  negotiating = false;
 
   constructor(
     readonly device: Device,
@@ -86,7 +88,12 @@ export abstract class Device {
 
 /** One cable hop takes this long. */
 export const HOP_DELAY_MS = 0.25;
-/** Line protocol follows the physical link after this long. */
+/**
+ * Ethernet autonegotiation: the link comes up this long after both ends are
+ * cabled and enabled. Going down is instant.
+ */
+export const LINK_NEGOTIATION_MS = 2000;
+/** Line protocol follows the physical link after this long. Measured on real IOS (Ant's CML capture). */
 export const LINEPROTO_DELAY_MS = 1000;
 
 export class Network {
@@ -139,9 +146,27 @@ export class Network {
     if (port.peer) this.refreshOne(port.peer);
   }
 
+  private canLink(port: Port): boolean {
+    return !!port.peer && port.kind === "ethernet" && !port.adminDown && !port.peer.adminDown;
+  }
+
   private refreshOne(port: Port): void {
-    const up = !!port.peer && port.kind === "ethernet" && !port.adminDown && !port.peer.adminDown;
+    const up = this.canLink(port);
     if (up === port.linkUp) return;
+    if (up) {
+      if (port.negotiating) return;
+      port.negotiating = true;
+      const peer = port.peer;
+      this.clock.schedule(LINK_NEGOTIATION_MS, () => {
+        port.negotiating = false;
+        if (!port.linkUp && port.peer === peer && this.canLink(port)) this.setLink(port, true);
+      });
+      return;
+    }
+    this.setLink(port, false);
+  }
+
+  private setLink(port: Port, up: boolean): void {
     port.linkUp = up;
     port.device.onPortStateChange(port, "link");
     if (!up) {

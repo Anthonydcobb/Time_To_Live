@@ -20,8 +20,8 @@ export function renderConfig(device: IosDevice, c: IosConfig): string[] {
   const out: string[] = [
     "!",
     `version ${isSwitch ? "15.0" : "15.1"}`,
-    "no service timestamps log datetime msec",
-    "no service timestamps debug datetime msec",
+    "service timestamps debug datetime msec",
+    "service timestamps log datetime msec",
     c.servicePasswordEncryption ? "service password-encryption" : "no service password-encryption",
     "!",
     `hostname ${c.hostname}`,

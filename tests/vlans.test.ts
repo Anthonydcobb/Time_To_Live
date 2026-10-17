@@ -8,7 +8,7 @@ import { dentist } from "../src/sim/scenarios/dentist";
 import { formatVlanList, parseVlanList } from "../src/sim/vlans";
 import { captureLogs, run, type } from "./helpers";
 
-const SETTLE = 32_000;
+const SETTLE = 35_000;
 
 function oneSwitch() {
   const net = new Network();
@@ -30,7 +30,7 @@ function twoSwitches(modeA: string, modeB: string) {
   type(a, "", "en", "conf t", "int g0/1", ...modeA.split(";"), "end");
   type(b, "", "en", "conf t", "int g0/1", ...modeB.split(";"), "end");
   net.connect(a.port("Gi0/1"), b.port("Gi0/1"));
-  net.clock.advance(2_000);
+  net.clock.advance(3_000);
   return { net, a, b, ga: a.port("Gi0/1"), gb: b.port("Gi0/1") };
 }
 
@@ -156,7 +156,7 @@ describe("DTP", () => {
 
   it("gets nothing from a router, which doesn't speak DTP", () => {
     const { s1 } = dentist();
-    s1.clock.advance(2_000);
+    s1.clock.advance(3_000);
     expect(s1.operationalMode(s1.port("Gi0/1"))).toBe("down");
     const net = s1.network!;
     const r = net.add(new Router("R9"));
@@ -164,7 +164,7 @@ describe("DTP", () => {
     type(r, "", "en", "conf t", "int g0/0", "no shut", "end");
     type(sw, "", "en", "conf t", "int g0/1", "switchport mode dynamic desirable", "end");
     net.connect(r.port("Gi0/0"), sw.port("Gi0/1"));
-    net.clock.advance(2_000);
+    net.clock.advance(3_000);
     expect(sw.operationalMode(sw.port("Gi0/1"))).toBe("access");
   });
 

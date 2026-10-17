@@ -3,7 +3,7 @@ import { parseIpv4 as ip } from "../src/sim/addr";
 import { Pc } from "../src/sim/devices/pc";
 import { Router } from "../src/sim/devices/router";
 import { Switch } from "../src/sim/devices/switch";
-import { CableError, Network } from "../src/sim/network";
+import { CableError, LINK_NEGOTIATION_MS, Network } from "../src/sim/network";
 import { cornerStore } from "../src/sim/scenarios/corner-store";
 import { finish, run, type } from "./helpers";
 
@@ -23,7 +23,7 @@ function twoRouters() {
   type(r2, "ip route 192.168.1.0 255.255.255.0 10.0.0.1", "end");
   a.configure(ip("192.168.1.10"), ip("255.255.255.0"), ip("192.168.1.1"));
   b.configure(ip("172.16.0.10"), ip("255.255.0.0"), ip("172.16.0.1"));
-  net.clock.advance(2000);
+  net.clock.advance(3_000);
   return { net, r1, r2, a, b };
 }
 
@@ -94,6 +94,8 @@ describe("cables", () => {
     const pc = net.add(new Pc("PC0"));
     net.connect(s1.port("Gig0/1"), s2.port("Gig0/1"));
     net.connect(pc.nic, s1.port("Fa0/1"));
+    expect(s1.port("Gig0/1").linkUp).toBe(false);
+    net.clock.advance(LINK_NEGOTIATION_MS);
     expect(s1.port("Gig0/1").linkUp).toBe(true);
     expect(pc.nic.linkUp).toBe(true);
   });

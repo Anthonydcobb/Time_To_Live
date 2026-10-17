@@ -11,7 +11,7 @@ function served() {
   const s = cornerStore();
   type(s.r1, "", "en", "conf t", "int g0/0", "ip address 192.168.1.1 255.255.255.0", "no shutdown", "exit");
   type(s.r1, "ip dhcp excluded-address 192.168.1.1 192.168.1.10", "ip dhcp pool LAN", "network 192.168.1.0 255.255.255.0", "default-router 192.168.1.1", "dns-server 192.168.1.1", "end");
-  s.net.clock.advance(32_000);
+  s.net.clock.advance(35_000);
   return s;
 }
 
@@ -51,7 +51,7 @@ describe("DHCP", () => {
   it("falls back to 169.254.x.x when no server answers", () => {
     const { r1, register } = cornerStore();
     type(r1, "", "en", "conf t", "int g0/0", "ip address 192.168.1.1 255.255.255.0", "no shutdown", "end");
-    r1.clock.advance(32_000);
+    r1.clock.advance(35_000);
     const start = register.clock.now;
     const out = run(register, "ipconfig /dhcp");
     expect(out).toEqual(["An error occurred while renewing interface FastEthernet0 : unable to contact your DHCP server. Request has timed out."]);
@@ -67,10 +67,10 @@ describe("DHCP", () => {
     type(r1, "", "en", "conf t", "int g0/0", "ip address 192.168.1.1 255.255.255.0", "no shutdown", "exit");
     type(r1, "ip dhcp pool LAN", "network 192.168.1.0 /24", "default-router 192.168.1.1", "end");
     register.dhcp = true;
-    net.clock.advance(32_000);
+    net.clock.advance(35_000);
     net.connect(register.nic, s.s1.port("Fa0/1"));
     // Every discover goes out while the switch port is still listening or learning.
-    net.clock.advance(61_000);
+    net.clock.advance(64_000);
     expect(addr(register.ip)).toMatch(/^169\.254\./);
     run(register, "ipconfig /renew");
     expect(addr(register.ip)).toBe("192.168.1.2");
@@ -85,7 +85,7 @@ describe("DHCP", () => {
     net.connect(b.nic, r.port("Gig0/1"));
     type(r, "en", "conf t", "int g0/0", "ip address 10.1.0.1 255.255.255.0", "no shut", "int g0/1", "ip address 10.2.0.1 255.255.255.0", "no shut", "exit");
     type(r, "ip dhcp pool ONE", "network 10.1.0.0 255.255.255.0", "default-router 10.1.0.1", "ip dhcp pool TWO", "network 10.2.0.0 255.255.255.0", "default-router 10.2.0.1", "end");
-    net.clock.advance(2000);
+    net.clock.advance(3_000);
     run(a, "ipconfig /dhcp");
     run(b, "ipconfig /dhcp");
     expect(addr(a.ip)).toBe("10.1.0.2");
@@ -129,13 +129,13 @@ describe("job 2: the laundromat", () => {
     const { r1, kiosk, office, printer, tasks, net } = job;
     const done = () => tasks.map((t) => t.done?.() ?? null);
     // The PCs tried DHCP as soon as their cables were in, and gave up.
-    net.clock.advance(61_000);
+    net.clock.advance(64_000);
     expect(addr(kiosk.ip)).toMatch(/^169\.254\./);
     type(r1, "", "en", "conf t", "int g0/0", "ip address 192.168.20.1 255.255.255.0", "no shut", "exit");
     type(r1, "ip dhcp excluded-address 192.168.20.1 192.168.20.20", "ip dhcp pool LAUNDRY", "network 192.168.20.0 255.255.255.0", "default-router 192.168.20.1", "end");
     run(printer, "ipconfig 192.168.20.5 255.255.255.0 192.168.20.1");
     // The switch port facing the router just came up, so spanning tree holds it for 30 seconds.
-    net.clock.advance(32_000);
+    net.clock.advance(35_000);
     expect(done()).toEqual([true, true, true, true, false, false, null]);
     run(kiosk, "ipconfig /renew");
     run(office, "ipconfig /renew");
