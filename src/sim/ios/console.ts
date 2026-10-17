@@ -38,6 +38,17 @@ const SUB_MODES: Mode[] = ["config-if", "config-subif", "config-line", "dhcp-con
 
 const DNS_LOOKUP_MS = 5000;
 
+const HELP_HEADINGS: Record<Mode, string> = {
+  user: "Exec commands:",
+  enable: "Exec commands:",
+  config: "Configure commands:",
+  "config-if": "Interface configuration commands:",
+  "config-subif": "Interface configuration commands:",
+  "config-line": "Line configuration commands:",
+  "dhcp-config": "DHCP pool configuration commands:",
+  "config-vlan": "VLAN configuration commands:",
+};
+
 export class IosConsole {
   mode: Mode = "user";
   ifaces: string[] = [];
@@ -105,7 +116,12 @@ export class IosConsole {
     if (this.pending) return { lines: [], line };
     const { commands, offset, text, isDo } = this.commandsForLine(line);
     const r = help(commands, text, this.ctx(), this.reveal(isDo));
-    if (r.kind === "list") return { lines: r.lines, line };
+    if (r.kind === "list") {
+      if (line.trim() || isDo) return { lines: r.lines, line };
+      // A bare `?` gets the mode's heading. Sub-modes don't list `end`, though it works there.
+      const rows = this.mode === "config" ? r.lines : r.lines.filter((l) => !/^ {2}end /.test(l));
+      return { lines: [HELP_HEADINGS[this.mode], ...rows], line };
+    }
     this.out = [];
     this.reportError(r.result as ParseResult<Ctx>, offset, false);
     return { lines: this.out, line };

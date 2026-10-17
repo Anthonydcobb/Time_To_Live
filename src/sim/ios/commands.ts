@@ -34,14 +34,15 @@ interface Entry {
 
 // ---- argument types ------------------------------------------------------
 
-const ipArg = (help: string): Arg<Ctx> => ({
+const ipArg = (help: string, name = "A.B.C.D"): Arg<Ctx> => ({
   type: "arg",
-  name: "A.B.C.D",
+  name,
   help,
   match: (w, i) => {
     const ip = parseIpv4(w[i].text);
     return ip === null ? null : { consumed: 1, value: ip };
   },
+  partial: (t) => /^\d{1,3}(\.\d{0,3}){0,3}$/.test(t),
 });
 
 const wordArg = (help: string, name = "WORD"): Arg<Ctx> => ({
@@ -509,18 +510,27 @@ function currentPool(c: Ctx): DhcpPool {
   return c.device.config.dhcpPools.find((p) => p.name === c.console.dhcpPool)!;
 }
 
-/** `/24` style mask, which `network` accepts in place of a dotted mask. */
-const prefixArg: Arg<Ctx> = {
+/** `network` takes a dotted mask or a `/24` style prefix length. */
+const poolMaskArg: Arg<Ctx> = {
   type: "arg",
-  name: "/nn",
-  help: "(/nn or A.B.C.D)  Network mask or prefix length",
+  name: "/nn or A.B.C.D",
+  help: "Network mask or prefix length",
   match: (w, i) => {
+    const ip = parseIpv4(w[i].text);
+    if (ip !== null) return { consumed: 1, value: ip };
     const m = /^\/(\d{1,2})$/.exec(w[i].text);
     if (!m || Number(m[1]) > 32) return null;
     const n = Number(m[1]);
     return { consumed: 1, value: n === 0 ? 0 : (0xffffffff << (32 - n)) >>> 0 };
   },
+  partial: (t) => /^(\/\d{0,2}|\d{1,3}(\.\d{0,3}){0,3})$/.test(t),
 };
+
+/** With no mask, `network` uses the address's classful mask. */
+function classfulMask(ip: Ipv4): Ipv4 {
+  const first = ip >>> 24;
+  return first < 128 ? 0xff000000 : first < 192 ? 0xffff0000 : 0xffffff00;
+}
 
 function setPoolNetwork(c: Ctx, ip: Ipv4, mask: Ipv4): void {
   if (maskToPrefix(mask) === null) {
@@ -542,7 +552,7 @@ function setPoolNetwork(c: Ctx, ip: Ipv4, mask: Ipv4): void {
 function addressLists(word: string, help: string, argHelp: string, apply: (c: Ctx, ips: Ipv4[]) => void): Entry[] {
   const out: Entry[] = [];
   for (let n = 1; n <= 8; n++) {
-    const args = Array.from({ length: n }, () => ipArg(argHelp));
+    const args = Array.from({ length: n }, () => ipArg(argHelp, "Hostname or A.B.C.D"));
     out.push(cmd(DHCP, [kw(word, help), ...args], (c, ips) => apply(c, ips as Ipv4[])));
   }
   return out;
@@ -570,10 +580,10 @@ const dhcpCommands: Entry[] = [
   cmd(CONFIG, [NO, IP, DHCP_KW, EXCLUDED, ipArg("Low IP address"), ipArg("High IP address")], (c, [low, high]) =>
     removeExcluded(c, low as Ipv4, high as Ipv4),
   { devices: ["router"] }),
-  cmd(DHCP, [kw("network", "Network number and mask"), ipArg("Network number in dotted-decimal notation"), ipArg("Network mask")], (c, [ip, mask]) =>
-    setPoolNetwork(c, ip as Ipv4, mask as Ipv4),
+  cmd(DHCP, [kw("network", "Network number and mask"), ipArg("Network number in dotted-decimal notation")], (c, [ip]) =>
+    setPoolNetwork(c, ip as Ipv4, classfulMask(ip as Ipv4)),
   ),
-  cmd(DHCP, [kw("network", "Network number and mask"), ipArg("Network number in dotted-decimal notation"), prefixArg], (c, [ip, mask]) =>
+  cmd(DHCP, [kw("network", "Network number and mask"), ipArg("Network number in dotted-decimal notation"), poolMaskArg], (c, [ip, mask]) =>
     setPoolNetwork(c, ip as Ipv4, mask as Ipv4),
   ),
   cmd(DHCP, [NO, kw("network", "Network number and mask")], (c) => {
@@ -581,13 +591,13 @@ const dhcpCommands: Entry[] = [
     pool.network = null;
     pool.mask = null;
   }),
-  ...addressLists("default-router", "Default routers", "Router's IP address", (c, ips) => {
+  ...addressLists("default-router", "Default routers", "Router's name or IP address", (c, ips) => {
     currentPool(c).defaultRouters = ips;
   }),
   cmd(DHCP, [NO, kw("default-router", "Default routers")], (c) => {
     currentPool(c).defaultRouters = [];
   }),
-  ...addressLists("dns-server", "DNS servers", "Server's IP address", (c, ips) => {
+  ...addressLists("dns-server", "DNS servers", "Server's name or IP address", (c, ips) => {
     currentPool(c).dnsServers = ips;
   }),
   cmd(DHCP, [NO, kw("dns-server", "DNS servers")], (c) => {

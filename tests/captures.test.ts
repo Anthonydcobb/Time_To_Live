@@ -129,4 +129,32 @@ describe("captured from real IOS", () => {
       "% Range [192.168.1.1, 192.168.1.10] is not in the database.",
     ]);
   });
+
+  it("matches the DHCP pool help screens", () => {
+    const r1 = router();
+    type(r1, "conf t");
+    expect(r1.console.help("ip dhcp pool ").lines).toEqual(["  WORD  Pool name", ""]);
+    expect(r1.console.help("ip dhcp pool LAN ").lines).toEqual(["  <cr>", ""]);
+    type(r1, "ip dhcp pool LAN");
+    const top = r1.console.help("").lines;
+    expect(top[0]).toBe("DHCP pool configuration commands:");
+    expect(top.some((l) => l.startsWith("  end "))).toBe(false);
+    expect(top).toContain("  exit            Exit from DHCP pool configuration mode");
+    expect(r1.console.help("network ").lines).toEqual(["  A.B.C.D  Network number in dotted-decimal notation", ""]);
+    expect(r1.console.help("network 192.").lines).toEqual(["A.B.C.D  ", ""]);
+    expect(r1.console.help("network 192.168.1.0 ").lines).toEqual(["  /nn or A.B.C.D  Network mask or prefix length", "  <cr>", ""]);
+    expect(r1.console.help("def").lines).toEqual(["default-router  ", ""]);
+    expect(r1.console.help("default-router ").lines).toEqual(["  Hostname or A.B.C.D  Router's name or IP address", ""]);
+    expect(type(r1, "default-router 192.168.1.1 end")[0]).toBe(" ".repeat(43) + "^");
+  });
+
+  it("takes a pool network with no mask as classful", () => {
+    const r1 = router();
+    type(r1, "conf t", "ip dhcp pool LAN", "network 192.168.1.0", "end");
+    expect(type(r1, "show running-config")).toContain(" network 192.168.1.0 255.255.255.0");
+  });
+
+  it("heads the exec help list", () => {
+    expect(router().console.help("").lines[0]).toBe("Exec commands:");
+  });
 });

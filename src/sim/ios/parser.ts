@@ -45,6 +45,8 @@ export interface Arg<C> {
   caretAt?: (words: Word[], i: number, ctx: C) => number | null;
   /** Words this argument can be completed to with Tab or `xx?`. */
   completions?: (ctx: C) => string[];
+  /** True when a half-typed word could still become this argument, so `192.?` lists A.B.C.D. */
+  partial?: (text: string) => boolean;
 }
 
 export type Token<C> = Keyword | Arg<C>;
@@ -205,9 +207,12 @@ export function help<C>(commands: Command<C>[], line: string, ctx: C, reveal?: R
       ...keywordsAt(alive, r.p).map((k) => ({ name: k.word, hidden: hidden(k) })),
       ...argsAt(alive, r.p).flatMap((a) => (a.completions?.(ctx) ?? []).map((name) => ({ name, hidden: false }))),
     ].filter((n) => n.name.toLowerCase().startsWith(prefix));
-    if (!names.length) return { kind: "list", lines: ["% Unrecognized command"] };
+    const text = words[words.length - 1].text;
+    const argNames = argsAt(alive, r.p).filter((a) => a.partial?.(text)).map((a) => ({ name: a.name, hidden: false }));
+    if (!names.length && !argNames.length) return { kind: "list", lines: ["% Unrecognized command"] };
     const unique = [...new Map(names.map((n) => [n.name, n])).values()].sort((a, b) => caseless(a.name, b.name));
-    return { kind: "list", lines: [unique.map((n) => (n.hidden ? toRunes(n.name) : n.name)).join("  ")] };
+    // IOS prints each match followed by two spaces, then a blank line.
+    return { kind: "list", lines: [[...unique, ...argNames].map((n) => (n.hidden ? toRunes(n.name) : n.name) + "  ").join(""), ""] };
   }
 
   const rows: { name: string; help: string }[] = [
@@ -220,7 +225,7 @@ export function help<C>(commands: Command<C>[], line: string, ctx: C, reveal?: R
   const lines = rows.map((row) => `  ${row.name.padEnd(width)}  ${row.help}`.trimEnd());
   if (r.cands.some((c) => c.cmd.tokens.length === r.p) && !r.incomplete) lines.push("  <cr>");
   if (!lines.length) return { kind: "error", result: { kind: "invalid", caret: line.length, wordIndex: words.length, wordCount: words.length } };
-  return { kind: "list", lines };
+  return { kind: "list", lines: [...lines, ""] };
 }
 
 /** Tab completion. Returns the completed line, or null if nothing unique matches. */

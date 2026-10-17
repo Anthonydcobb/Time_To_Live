@@ -121,16 +121,16 @@ describe("help and completion", () => {
   it("completes a partial word with ?", () => {
     const r = router();
     type(r, "en");
-    expect(r.console.help("sh").lines).toEqual(["show"]);
-    expect(r.console.help("co").lines).toEqual(["configure  copy"]);
+    expect(r.console.help("sh").lines).toEqual(["show  ", ""]);
+    expect(r.console.help("co").lines).toEqual(["configure  copy  ", ""]);
   });
 
   it("lists next keywords and <cr>", () => {
     const r = router();
     type(r, "en");
     const lines = r.console.help("show ip ").lines.map((l) => l.trim().split(/\s+/)[0]);
-    expect(lines).toEqual(["arp", "dhcp", "interface", "route"]);
-    expect(r.console.help("show ip interface brief ").lines).toEqual(["  <cr>"]);
+    expect(lines).toEqual(["arp", "dhcp", "interface", "route", ""]);
+    expect(r.console.help("show ip interface brief ").lines).toEqual(["  <cr>", ""]);
   });
 
   it("lists interface types", () => {
