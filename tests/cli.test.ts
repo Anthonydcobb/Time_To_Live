@@ -214,7 +214,7 @@ describe("running config", () => {
     expect(text).toContain("service password-encryption");
     expect(text).toMatch(/line con 0\n password 7 [0-9A-F]+\n login/);
     expect(text).toContain("interface GigabitEthernet0/0\n description to the store switch\n ip address 192.168.1.1 255.255.255.0\n duplex auto\n speed auto\n!");
-    expect(text).toContain("interface GigabitEthernet0/1\n no ip address\n duplex auto\n speed auto\n shutdown");
+    expect(text).toContain("interface GigabitEthernet0/1\n no ip address\n shutdown\n duplex auto\n speed auto");
     expect(text).toContain("banner motd ^C\nAuthorized technicians only\n^C");
   });
 
@@ -229,7 +229,7 @@ describe("running config", () => {
     const r = router();
     type(r, "en", "conf t", "hostname R1", "end");
     expect(type(r, "copy run start", "")).toEqual(["Building configuration...", "[OK]"]);
-    expect(type(r, "show startup-config")[0]).toMatch(/^Using \d+ bytes$/);
+    expect(type(r, "show startup-config")[0]).toMatch(/^Using \d+ out of 262136 bytes$/);
     type(r, "conf t", "hostname Forgotten", "end", "reload");
     expect(r.console.prompt()).toBe("System configuration has been modified. Save? [yes/no]: ");
     type(r, "no");

@@ -43,6 +43,11 @@ export abstract class IosDevice extends Device {
   startup: IosConfig | null = null;
   /** Running config has changed since the last save. */
   dirty = false;
+  /** Clock times for the "! Last configuration change" and "! NVRAM config last updated" header lines. */
+  configChangedAt: number | null = null;
+  nvramWrittenAt: number | null = null;
+  /** The header times as they were when startup-config was written. */
+  startupStamps: { changed: number | null; nvram: number | null } = { changed: null, nvram: null };
   readonly cdpNeighbors = new Map<Port, CdpNeighbor>();
   /** Interface whose `shutdown` state is being changed right now, for log wording. */
   protected adminChanging: string | null = null;
@@ -202,10 +207,13 @@ export abstract class IosDevice extends Device {
   saveConfig(): void {
     this.startup = cloneConfig(this.config);
     this.dirty = false;
+    this.nvramWrittenAt = this.clock.now;
+    this.startupStamps = { changed: this.configChangedAt, nvram: this.nvramWrittenAt };
   }
 
   eraseStartup(): void {
     this.startup = null;
+    this.nvramWrittenAt = null;
   }
 
   /** Throws away the running config and boots from startup-config. */
@@ -215,6 +223,7 @@ export abstract class IosDevice extends Device {
     this.stack.arp.clear();
     this.afterReload();
     this.dirty = false;
+    this.configChangedAt = null;
     for (const p of this.ports) this.network?.refresh(p);
   }
 
@@ -243,4 +252,13 @@ export function logTimestamp(ms: number): string {
   const pad = (n: number, w = 2) => String(n).padStart(w, "0");
   const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getUTCMonth()];
   return `${month} ${String(d.getUTCDate()).padStart(2, " ")} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}.${pad(d.getUTCMilliseconds(), 3)}`;
+}
+
+/** The clock as config headers print it: `00:05:12 UTC Mon Mar 1 1993`. */
+export function configTimestamp(ms: number): string {
+  const d = new Date(Date.UTC(1993, 2, 1) + ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getUTCDay()];
+  const month = logTimestamp(ms).slice(0, 3);
+  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC ${day} ${month} ${d.getUTCDate()} ${d.getUTCFullYear()}`;
 }

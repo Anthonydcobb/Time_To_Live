@@ -19,6 +19,8 @@ export class Port {
   protocolUp = false;
   /** Autonegotiation is under way and the link will come up shortly. */
   negotiating = false;
+  /** Counters for `show interfaces`. */
+  readonly stats = newPortStats();
 
   constructor(
     readonly device: Device,
@@ -37,6 +39,52 @@ export class Port {
     return this.linkUp ? "up" : "down";
   }
 }
+
+export interface PortStats {
+  inPackets: number;
+  inBytes: number;
+  inBroadcasts: number;
+  outPackets: number;
+  outBytes: number;
+  outBroadcasts: number;
+  /** Clock times of the last frame in and out, or null for never. */
+  lastIn: number | null;
+  lastOut: number | null;
+  resets: number;
+}
+
+function newPortStats(): PortStats {
+  return { inPackets: 0, inBytes: 0, inBroadcasts: 0, outPackets: 0, outBytes: 0, outBroadcasts: 0, lastIn: null, lastOut: null, resets: 0 };
+}
+
+/** Rough on-the-wire size of a frame without the FCS, which is what IOS counts. */
+export function frameBytes(frame: Frame): number {
+  const p = frame.payload;
+  // An IOS ping is a 100-byte datagram; DHCP rides in a ~300-byte BOOTP packet; CDP carries a few TLVs.
+  const body = p.kind === "arp" ? 46 : p.kind === "cdp" ? 340 : p.dhcp ? 328 : 100;
+  return 14 + body + (frame.vlan !== undefined ? 4 : 0);
+}
+
+const isBroadcast = (mac: Mac) => parseInt(mac.slice(0, 2), 16) % 2 === 1;
+
+function count(stats: PortStats, dir: "in" | "out", bytes: number, broadcast: boolean, now: number): void {
+  if (dir === "in") {
+    stats.inPackets++;
+    stats.inBytes += bytes;
+    if (broadcast) stats.inBroadcasts++;
+    stats.lastIn = now;
+  } else {
+    stats.outPackets++;
+    stats.outBytes += bytes;
+    if (broadcast) stats.outBroadcasts++;
+    stats.lastOut = now;
+  }
+}
+
+/** Ethernet keepalives go out every 10 seconds on router and switch ports. */
+export const KEEPALIVE_MS = 10_000;
+/** Spanning tree hello time: a switch sends a BPDU out each port every 2 seconds. */
+export const BPDU_MS = 2_000;
 
 export type OutputListener = (text: string) => void;
 
@@ -168,6 +216,7 @@ export class Network {
 
   private setLink(port: Port, up: boolean): void {
     port.linkUp = up;
+    port.stats.resets++;
     port.device.onPortStateChange(port, "link");
     if (!up) {
       if (port.protocolUp) {
@@ -180,6 +229,7 @@ export class Network {
       if (port.linkUp && !port.protocolUp) {
         port.protocolUp = true;
         port.device.onPortStateChange(port, "protocol");
+        this.startBackgroundFrames(port);
       }
     });
   }
@@ -187,8 +237,36 @@ export class Network {
   transmit(from: Port, frame: Frame): void {
     const to = from.peer;
     if (!to || !from.protocolUp) return;
+    const bytes = frameBytes(frame);
+    const broadcast = isBroadcast(frame.dst);
+    count(from.stats, "out", bytes, broadcast, this.clock.now);
     this.clock.schedule(HOP_DELAY_MS, () => {
-      if (to.protocolUp && to.peer === from) to.device.receive(to, frame);
+      if (!to.protocolUp || to.peer !== from) return;
+      count(to.stats, "in", bytes, broadcast, this.clock.now);
+      to.device.receive(to, frame);
     });
+  }
+
+  /**
+   * Keepalives and BPDUs only move the counters: nothing in the sim acts on
+   * them, but they're why a quiet port still shows traffic in `show interfaces`.
+   */
+  private startBackgroundFrames(port: Port): void {
+    const kind = port.device.kind;
+    if (kind === "pc") return;
+    // Every link change bumps the reset count, which ends this run of ticks.
+    const gen = port.stats.resets;
+    const every = (ms: number, peerSees: boolean) => {
+      const tick = () => {
+        if (!port.protocolUp || port.stats.resets !== gen) return;
+        count(port.stats, "out", 60, true, this.clock.now);
+        const to = port.peer;
+        if (peerSees && to?.protocolUp) count(to.stats, "in", 60, true, this.clock.now);
+        this.clock.schedule(ms, tick);
+      };
+      this.clock.schedule(ms, tick);
+    };
+    every(KEEPALIVE_MS, false);
+    if (kind === "switch") every(BPDU_MS, true);
   }
 }

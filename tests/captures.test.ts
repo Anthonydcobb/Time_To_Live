@@ -65,4 +65,50 @@ describe("captured from real IOS", () => {
     ]);
     expect(logs[2].at - logs[1].at).toBe(1000);
   });
+
+  it("heads show running-config the way IOS does", () => {
+    // Captured on IOL 17.15 as "! Last configuration change at 23:06:22 UTC Sat Oct 17 2026".
+    // A 2911 has no clock set, so it counts from Mar 1 1993. IOS 15 lines replace the IOS XE ones.
+    const r1 = router();
+    r1.clock.advance(65_000);
+    type(r1, "conf t", "int g0/0", "ip address 192.168.1.1 255.255.255.0", "end");
+    const run = type(r1, "show running-config");
+    expect(run.slice(0, 7)).toEqual([
+      "Building configuration...",
+      "",
+      expect.stringMatching(/^Current configuration : \d+ bytes$/),
+      "!",
+      "! Last configuration change at 00:01:05 UTC Mon Mar 1 1993",
+      "!",
+      "version 15.1",
+    ]);
+    for (const l of ["boot-start-marker", "no aaa new-model", "ip cef", "ip forward-protocol nd", "control-plane", "end"]) expect(run).toContain(l);
+    expect(run.indexOf("line aux 0")).toBe(run.indexOf("line con 0") + 1);
+  });
+
+  it("prints the full show interfaces block with counters", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1", "R1"));
+    net.connect(net.add(new Pc("PC0")).nic, r1.port("Gi0/0"));
+    type(r1, "", "enable", "conf t", "int g0/0", "ip address 192.168.1.1 255.255.255.0", "no shut", "end");
+    net.clock.advance(60_000);
+    const out = type(r1, "show interfaces g0/0");
+    // Same lines as the capture, except where a 2911's gigabit port differs from IOL's Ethernet0/0.
+    expect(out.slice(0, 10)).toEqual([
+      "GigabitEthernet0/0 is up, line protocol is up ",
+      expect.stringMatching(/^  Hardware is CN Gigabit Ethernet, address is (\w{4}\.\w{4}\.\w{4}) \(bia \1\)$/),
+      "  Internet address is 192.168.1.1/24",
+      "  MTU 1500 bytes, BW 1000000 Kbit/sec, DLY 10 usec, ",
+      "     reliability 255/255, txload 1/255, rxload 1/255",
+      "  Encapsulation ARPA, loopback not set",
+      "  Keepalive set (10 sec)",
+      "  Full Duplex, 1Gbps, media type is RJ45",
+      "  output flow-control is unsupported, input flow-control is unsupported",
+      "  ARP type: ARPA, ARP Timeout 04:00:00",
+    ]);
+    expect(out[10]).toMatch(/^  Last input never, output 00:00:0\d, output hang never$/);
+    // Keepalives go out every 10 seconds even with nothing else to say.
+    expect(out.find((l) => l.includes("packets output"))).toMatch(/^     [1-9]\d* packets output, \d+ bytes, 0 underruns$/);
+    expect(out[out.length - 1]).toBe("     0 output buffer failures, 0 output buffers swapped out");
+  });
 });

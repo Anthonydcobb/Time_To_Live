@@ -269,7 +269,10 @@ export class IosConsole {
     if (result.kind === "ok") {
       // Learned in the book of the mode it was spoken in, before the command can change modes.
       this.learnFrom(result.command.tokens, isDo ? "exec" : bookFor(this.mode));
-      if (this.mode.startsWith("config") && !isDo) this.device.dirty = true;
+      if (this.mode.startsWith("config") && !isDo) {
+        this.device.dirty = true;
+        this.device.configChangedAt = this.device.clock.now;
+      }
       result.command.run(ctx, result.args);
       this.job = ctx.job;
       return;
