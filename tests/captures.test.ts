@@ -168,4 +168,12 @@ describe("captured from real IOS", () => {
       "",
     ]);
   });
+
+  it("boots like IOS, with the legend and the setup dialog on a blank box", () => {
+    const r1 = router();
+    const boot = r1.console.boot();
+    expect(boot).toContain("              Restricted Rights Legend");
+    expect(boot.slice(-2)).toEqual(["         --- System Configuration Dialog ---", ""]);
+    expect(r1.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [yes/no]: ");
+  });
 });

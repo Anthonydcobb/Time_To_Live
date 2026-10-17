@@ -434,7 +434,7 @@ export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
       "Administrative private-vlan trunk Native VLAN tagging: enabled",
       "Administrative private-vlan trunk encapsulation: dot1q",
       "Administrative private-vlan trunk normal VLANs: none",
-      "Administrative private-vlan trunk associated VLANs: none",
+      "Administrative private-vlan trunk associations: none",
       "Administrative private-vlan trunk mappings: none",
       "Operational private-vlan: none",
       `Trunking VLANs Enabled: ${sp.allowed === null ? "ALL" : sp.allowed.length ? formatVlanList(sp.allowed) : "NONE"}`,
@@ -452,14 +452,22 @@ export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
   return out;
 }
 
+/** The first lines of `show version`, which IOS also prints while it boots. */
+export function showVersionBanner(device: IosDevice): string[] {
+  const isRouter = device.kind === "router";
+  return [
+    `Cryptis IOS Software, ${isRouter ? "CR-2900" : "CS-2960"} Software, Version ${isRouter ? IOS_VERSION : "15.0(2)SE4"}, RELEASE SOFTWARE (fc2)`,
+    "Technical Support: please do not call after dark",
+    "Copyright (c) 1986-1993 by Cryptis Systems, Inc. All rights reserved, and some that were not.",
+  ];
+}
+
 export function showVersion(device: IosDevice): string[] {
   const isRouter = device.kind === "router";
   const uptimeMin = Math.floor(device.clock.now / 60000);
   const image = isRouter ? "cr2900-universalk9-mz.SPA.151-4.M4.bin" : "cs2960-lanbasek9-mz.150-2.SE4.bin";
   return [
-    `Cryptis IOS Software, ${isRouter ? "CR-2900" : "CS-2960"} Software, Version ${isRouter ? IOS_VERSION : "15.0(2)SE4"}, RELEASE SOFTWARE (fc2)`,
-    "Technical Support: please do not call after dark",
-    "Copyright (c) 1986-1993 by Cryptis Systems, Inc. All rights reserved, and some that were not.",
+    ...showVersionBanner(device),
     "",
     "ROM: System Bootstrap, Version 15.1(4)M4, RELEASE SOFTWARE (fc1)",
     "",

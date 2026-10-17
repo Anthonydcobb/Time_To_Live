@@ -5,6 +5,7 @@ import type { Switch } from "../devices/switch";
 import { CONFIRM, commandsFor, type Ctx } from "./commands";
 import { complete, help, parse, splitWords, type ParseResult } from "./parser";
 import { type5Verify } from "./passwords";
+import { showVersionBanner } from "./show";
 import { Job } from "../job";
 import { bookFor, type Grimoire } from "../grimoire";
 
@@ -82,26 +83,80 @@ export class IosConsole {
     return this.pending?.kind === "password";
   }
 
-  /** Power-on text, ending at "Press RETURN to get started!". */
+  /**
+   * Power-on text, laid out like a real IOS 15 boot. Without a startup-config
+   * IOS offers the setup dialog first; with one it goes straight to "Press RETURN".
+   */
   boot(): string[] {
     this.mode = "user";
     this.ifaces = [];
     this.pending = { kind: "press-return" };
     const d = this.device;
-    return [
+    const isRouter = d.kind === "router";
+    const lines = [
       "System Bootstrap, Version 15.1(4)M4, RELEASE SOFTWARE (fc1)",
-      "Copyright (c) 1986-1993 by Cryptis Systems, Inc.",
-      `Initializing memory for ECC... done.`,
+      "Technical Support: please do not call after dark",
+      "Copyright (c) 1993 by Cryptis Systems, Inc.",
+      "",
       `Cryptis ${d.model} platform with 524288 Kbytes of main memory`,
       "",
       "Readonly ROMMON initialized",
       "",
-      d.startup ? "Loading startup-config from NVRAM... [OK]" : "--- No startup-config found. Booting with factory defaults. ---",
+      "              Restricted Rights Legend",
       "",
-      "Press RETURN to get started!",
+      "Use, duplication, or disclosure by the Government is",
+      "subject to restrictions as set forth in subparagraph",
+      "(c) of the Commercial Computer Software - Restricted",
+      "Rights clause at FAR sec. 52.227-19 and subparagraph",
+      "(c) (1) (ii) of the Rights in Technical Data and Computer",
+      "Software clause at DFARS sec. 252.227-7013.",
+      "",
+      "           Cryptis Systems, Inc.",
+      "           13 Hollow Lane",
+      "           Static Springs",
+      "",
+      "",
+      "",
+      ...showVersionBanner(d),
+      "",
+      `Cryptis ${d.model} (revision 1.0) with 491520K/32768K bytes of memory.`,
+      "Processor board ID FTX1993A0K3",
+      ...(isRouter ? ["3 Gigabit Ethernet interfaces"] : ["24 FastEthernet interfaces", "2 Gigabit Ethernet interfaces"]),
+      "255K bytes of non-volatile configuration memory.",
       "",
     ];
+    if (d.startup) return [...lines, "", "Press RETURN to get started!", ""];
+    this.askSetupDialog();
+    return [...lines, "", "         --- System Configuration Dialog ---", ""];
   }
+
+  /** The setup dialog a factory-fresh box offers on boot. Everyone answers no. */
+  private askSetupDialog(): void {
+    this.ask("Would you like to enter the initial configuration dialog? [yes/no]: ", (text) => {
+      const t = text.trim().toLowerCase();
+      if (t === "no" || t === "n") {
+        this.pending = { kind: "press-return" };
+        this.out.push("", "", "Press RETURN to get started!", "");
+      } else if (t === "yes" || t === "y") {
+        this.out.push(
+          "",
+          "At any point you may enter a question mark '?' for help.",
+          "Use ctrl-c to abort configuration dialog at any prompt.",
+          "Default settings are in square brackets '[]'.",
+          "",
+        );
+        // The setup facility itself isn't simulated, so any answer backs out the way ctrl-c would.
+        this.ask("Would you like to enter basic management setup? [yes/no]: ", () => {
+          this.pending = { kind: "press-return" };
+          this.out.push("Configuration aborted, no changes made.", "", "", "Press RETURN to get started!", "");
+        });
+      } else {
+        this.out.push("% Please answer 'yes' or 'no'.");
+        this.askSetupDialog();
+      }
+    });
+  }
+
 
   input(line: string): ConsoleOutput {
     this.out = [];

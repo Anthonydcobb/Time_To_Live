@@ -79,12 +79,13 @@ describe("VLAN database", () => {
     const { s1 } = oneSwitch();
     type(s1, "vlan 10", "end", "write memory", "erase startup-config", "", "reload", "");
     expect(s1.vlans.has(10)).toBe(true);
-    type(s1, "", "en", "delete flash:vlan.dat", "", "");
+    type(s1, "no", "", "en", "delete flash:vlan.dat", "", "");
     // Still there until the reload.
     expect(s1.vlans.has(10)).toBe(true);
     type(s1, "reload", "");
     expect(s1.vlans.has(10)).toBe(false);
-    expect(type(s1, "", "en", "delete flash:vlan.dat", "", "")).toEqual(["%Error deleting flash:/vlan.dat (No such file or directory)"]);
+    type(s1, "no", "");
+    expect(type(s1, "en", "delete flash:vlan.dat", "", "")).toEqual(["%Error deleting flash:/vlan.dat (No such file or directory)"]);
   });
 
   it("parses and prints VLAN lists like IOS", () => {

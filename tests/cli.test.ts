@@ -243,6 +243,11 @@ describe("running config", () => {
   it("boots to factory defaults after erase", () => {
     const r = router();
     type(r, "en", "conf t", "hostname R1", "end", "wr", "erase startup-config", "", "reload", "", "");
+    // No startup-config, so IOS offers the setup dialog before anything else.
+    expect(r.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [yes/no]: ");
+    expect(type(r, "maybe")).toEqual(["% Please answer 'yes' or 'no'."]);
+    expect(type(r, "no")).toEqual(["", "", "Press RETURN to get started!", ""]);
+    type(r, "");
     expect(r.console.prompt()).toBe("Router>");
     expect(type(r, "en", "show startup-config")).toEqual(["startup-config is not present"]);
   });
