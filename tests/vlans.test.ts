@@ -171,7 +171,7 @@ describe("DTP", () => {
 
   it("rejects nonegotiate on a dynamic port", () => {
     const { s1 } = oneSwitch();
-    expect(type(s1, "int fa0/1", "switchport nonegotiate")).toEqual(["Command rejected: Conflict between 'nonegotiate' and 'dynamic' status."]);
+    expect(type(s1, "int fa0/1", "switchport nonegotiate")).toEqual(["Command rejected: Conflict between 'nonegotiate' and 'dynamic' status on this interface: Fa0/1"]);
   });
 });
 

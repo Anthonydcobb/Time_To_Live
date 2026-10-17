@@ -687,7 +687,8 @@ function eachSwitchport(c: Ctx, fn: (sp: NonNullable<ReturnType<Ctx["device"]["i
   for (const name of c.console.ifaces) {
     const error = fn(c.device.ifaceConfig(name).switchport!);
     if (error) {
-      c.out.push(error);
+      const short = c.device.findInterface(name)?.port?.shortName ?? name;
+      c.out.push(error === NEGOTIATE_CONFLICT ? `${error} on this interface: ${short}` : error);
       break;
     }
   }
@@ -696,7 +697,7 @@ function eachSwitchport(c: Ctx, fn: (sp: NonNullable<ReturnType<Ctx["device"]["i
 
 const physicalPort = (c: Ctx) => c.console.ifaces.every((n) => c.device.findInterface(n)?.port);
 const subinterface = (c: Ctx) => c.console.ifaces.every((n) => splitSubinterface(n));
-const NEGOTIATE_CONFLICT = "Command rejected: Conflict between 'nonegotiate' and 'dynamic' status.";
+const NEGOTIATE_CONFLICT = "Command rejected: Conflict between 'nonegotiate' and 'dynamic' status";
 
 const SWITCHPORT = kw("switchport", "Set switching mode characteristics");
 const SP_MODE = kw("mode", "Set trunking mode of the interface");
