@@ -68,7 +68,7 @@ Phase 1 (the simulator) still has gaps:
 3. VTP modes, voice VLANs, `show interfaces status`.
 4. A terminal program on the PC that uses the console cable.
 
-Unverified against real gear (best recollection, check when someone has a Catalyst handy): the error text for `no interface` on a physical port, and whether a subinterface shows "administratively down" when only its parent is shut.
+Unverified against real gear (best recollection, check when someone has a Catalyst handy): the error text for `no interface` on a physical port, and whether a subinterface shows "administratively down" when only its parent is shut. From IOS 15 docs and memory rather than a capture (Ant's CML only runs IOL, IOS XE 17): the 2911 `show running-config` skeleton (no license udi, redundancy, Embedded-Service-Engine0/0, line 2 or scheduler lines yet) and the 2911/2960 hardware and media lines in `show interfaces`. Frame byte counts and the 5-minute rates are approximate.
 
 Phase 2 is the vertical slice: the corner store as a playable top-down scene. It needs the cabling port panel close-up, the laptop CLI overlay, the home base and home lab, one haunting, mentor radio messages, a sanity meter and placeholder audio.
 
