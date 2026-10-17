@@ -4,6 +4,7 @@
 import { describe, expect, it } from "vitest";
 import { Pc } from "../src/sim/devices/pc";
 import { Router } from "../src/sim/devices/router";
+import { Switch } from "../src/sim/devices/switch";
 import { Network } from "../src/sim/network";
 import { type } from "./helpers";
 
@@ -181,5 +182,16 @@ describe("captured from real IOS", () => {
     const r1 = router();
     expect(type(r1, "hostname SW1")[0]).toBe("    ^");
     expect(type(r1, "help")[0]).toBe("Help may be requested at any point in a command by entering");
+  });
+
+  it("refuses to delete or rename VLAN 1", () => {
+    const net = new Network();
+    const s1 = net.add(new Switch("S1", "S1"));
+    type(s1, "", "en", "conf t");
+    expect(type(s1, "no vlan 1")).toEqual(["%Default VLAN 1 may not be deleted."]);
+    type(s1, "vlan 1");
+    expect(type(s1, "name LOBBY")).toEqual(["%Default VLAN 1 may not have its name changed."]);
+    expect(type(s1, "exit")).toEqual([]);
+    expect(s1.vlans.get(1)).toBe("default");
   });
 });

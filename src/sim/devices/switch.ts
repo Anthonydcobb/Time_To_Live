@@ -269,10 +269,8 @@ export class Switch extends IosDevice {
     const out: string[] = [];
     for (const id of ids) {
       if (id > MAX_NORMAL_VLAN) continue;
-      if (name !== null && isDefaultVlan(id)) {
-        out.push(`Default VLAN ${id} may not have its name changed.`);
-        continue;
-      }
+      // `name` already refused default VLANs out loud.
+      if (name !== null && isDefaultVlan(id)) continue;
       this.createVlan(id, name ?? undefined);
     }
     const extended = ids.filter((id) => id > MAX_NORMAL_VLAN);

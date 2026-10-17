@@ -66,7 +66,7 @@ describe("VLAN database", () => {
       "%Failed to commit extended VLAN(s) changes.",
     ]);
     expect(type(s1, "no vlan 1")).toEqual(["%Default VLAN 1 may not be deleted."]);
-    expect(type(s1, "vlan 1", "name LOBBY", "exit")).toEqual(["Default VLAN 1 may not have its name changed."]);
+    expect(type(s1, "vlan 1", "name LOBBY", "exit")).toEqual(["%Default VLAN 1 may not have its name changed."]);
   });
 
   it("creates a missing access VLAN for you", () => {

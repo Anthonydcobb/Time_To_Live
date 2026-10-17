@@ -806,6 +806,8 @@ const switchCommands: Entry[] = [
     }
   }, { devices: ["switch"] }),
   cmd(VLAN_MODE, [kw("name", "Ascii name of the VLAN"), wordArg("The ascii name for the VLAN")], (c, [name]) => {
+    // IOS refuses on the spot for default VLANs; the others get the name when you leave the mode.
+    for (const id of c.console.vlanIds.filter(isDefaultVlan)) c.out.push(`%Default VLAN ${id} may not have its name changed.`);
     c.console.vlanName = (name as string).slice(0, 32);
   }),
   cmd(VLAN_MODE, [NO, kw("name", "Ascii name of the VLAN")], (c) => {
