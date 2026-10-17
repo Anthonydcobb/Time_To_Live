@@ -504,6 +504,8 @@ const lineCommands: Entry[] = [
 
 const DHCP_KW = kw("dhcp", "Configure DHCP server and relay parameters");
 const POOL = kw("pool", "Configure DHCP address pools");
+/** Under `show ip` the same words carry different help. */
+const SHOW_DHCP = kw("dhcp", "Show items in the DHCP database");
 const EXCLUDED = kw("excluded-address", "Prevent DHCP from assigning certain addresses");
 
 function currentPool(c: Ctx): DhcpPool {
@@ -624,20 +626,20 @@ const dhcpCommands: Entry[] = [
   cmd(DHCP, [NO, kw("lease", "Address lease time")], (c) => {
     currentPool(c).lease = [1, 0, 0];
   }),
-  cmd(EXEC, [SHOW, kw("ip", "IP information"), DHCP_KW, kw("binding", "DHCP address bindings")], (c) => c.out.push(...show.showDhcpBinding(c.device as Router)), {
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), SHOW_DHCP, kw("binding", "DHCP address bindings")], (c) => c.out.push(...show.showDhcpBinding(c.device as Router)), {
     devices: ["router"],
   }),
-  cmd(EXEC, [SHOW, kw("ip", "IP information"), DHCP_KW, POOL], (c) => c.out.push(...show.showDhcpPool(c.device as Router)), { devices: ["router"] }),
-  cmd(EXEC, [SHOW, kw("ip", "IP information"), DHCP_KW, kw("conflict", "DHCP address conflicts")], (c) => c.out.push(...show.showDhcpConflict(c.device as Router)), {
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), SHOW_DHCP, kw("pool", "DHCP pools information")], (c) => c.out.push(...show.showDhcpPool(c.device as Router)), { devices: ["router"] }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), SHOW_DHCP, kw("conflict", "DHCP address conflicts")], (c) => c.out.push(...show.showDhcpConflict(c.device as Router)), {
     devices: ["router"],
   }),
-  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), DHCP_KW, kw("binding", "DHCP address bindings"), kw("*", "Clear all automatic bindings")], (c) =>
+  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), SHOW_DHCP, kw("binding", "DHCP address bindings"), kw("*", "Clear all automatic bindings")], (c) =>
     (c.device as Router).dhcp.clear(),
   { devices: ["router"] }),
-  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), DHCP_KW, kw("binding", "DHCP address bindings"), ipArg("Clear a specific binding")], (c, [ip]) =>
+  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), SHOW_DHCP, kw("binding", "DHCP address bindings"), ipArg("Clear a specific binding")], (c, [ip]) =>
     (c.device as Router).dhcp.clear(ip as Ipv4),
   { devices: ["router"] }),
-  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), DHCP_KW, kw("conflict", "DHCP address conflicts"), kw("*", "Clear all address conflicts")], (c) =>
+  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), SHOW_DHCP, kw("conflict", "DHCP address conflicts"), kw("*", "Clear all address conflicts")], (c) =>
     (c.device as Router).dhcp.clearConflicts(),
   { devices: ["router"] }),
 ];

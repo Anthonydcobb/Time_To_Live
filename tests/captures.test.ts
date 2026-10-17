@@ -157,4 +157,15 @@ describe("captured from real IOS", () => {
   it("heads the exec help list", () => {
     expect(router().console.help("").lines[0]).toBe("Exec commands:");
   });
+
+  it("labels the show ip dhcp help like IOS", () => {
+    const r1 = router();
+    expect(r1.console.help("show ip ").lines).toContain("  dhcp       Show items in the DHCP database");
+    expect(r1.console.help("show ip dhcp ").lines).toEqual([
+      "  binding   DHCP address bindings",
+      "  conflict  DHCP address conflicts",
+      "  pool      DHCP pools information",
+      "",
+    ]);
+  });
 });
