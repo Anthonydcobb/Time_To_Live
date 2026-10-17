@@ -38,6 +38,11 @@ export interface Arg<C> {
   rest?: boolean;
   /** Help rows to show instead of name/help (used by interface names). */
   helpItems?: (ctx: C) => { name: string; help: string }[];
+  /**
+   * Where the caret goes when this argument fails to match, if part of it was
+   * fine: `int g9/9` points past the `g`, which IOS recognized as an interface type.
+   */
+  caretAt?: (words: Word[], i: number, ctx: C) => number | null;
   /** Words this argument can be completed to with Tab or `xx?`. */
   completions?: (ctx: C) => string[];
 }
@@ -153,7 +158,12 @@ function walk<C>(commands: Command<C>[], words: Word[], line: string, ctx: C): W
         if (keywords.some((k) => k.word.toLowerCase().startsWith(pre))) good = len;
         else break;
       }
-      return invalidAt(word.start + good);
+      let caret = word.start + good;
+      for (const t of argsAt(alive, p)) {
+        const at = t.caretAt?.(words, w, ctx);
+        if (at != null && at > caret) caret = at;
+      }
+      return invalidAt(caret);
     }
     cands = next;
     p++;

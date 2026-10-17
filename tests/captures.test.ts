@@ -29,4 +29,18 @@ describe("captured from real IOS", () => {
     type(r1, "conf t");
     expect(type(r1, "hostnme R1")).toEqual(["                ^", "% Invalid input detected at '^' marker.", ""]);
   });
+
+  it("points at the number when the interface type exists but the interface doesn't", () => {
+    // Captured as "int g0/0" on IOL, which has only Ethernet0/x. Our CR-2911 has Gi0/0 to Gi0/2, so use Gi0/5.
+    const r1 = router();
+    type(r1, "conf t");
+    expect(type(r1, "int g0/5")[0]).toBe("                ^");
+    expect(type(r1, "e0/0")[0]).toBe("            ^");
+  });
+
+  it("rejects a network address with IOS's bad mask message", () => {
+    const r1 = router();
+    type(r1, "conf t", "int g0/0");
+    expect(type(r1, "ip address 192.168.1.0 255.255.255.0")).toEqual(["Bad mask /24 for address 192.168.1.0"]);
+  });
 });

@@ -94,6 +94,13 @@ const ifaceArgFor = (create: boolean): Arg<Ctx> => ({
     const created = create ? ctx.device.canCreateInterface(name) : null;
     return created ? { consumed, value: created } : null;
   },
+  // A known interface type with a bad number: IOS points at the number.
+  caretAt: (words: Word[], i: number, ctx: Ctx) => {
+    const m = /^([a-z-]+)/i.exec(words[i].text);
+    if (!m || !ctx.device.interfaceTypes().some((t) => t.name.toLowerCase().startsWith(m[1].toLowerCase()))) return null;
+    if (m[1].length < words[i].text.length) return words[i].start + m[1].length;
+    return words[i + 1]?.start ?? null;
+  },
 });
 const ifaceArg = ifaceArgFor(false);
 
