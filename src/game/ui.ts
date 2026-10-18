@@ -43,6 +43,8 @@ export class Ui {
   /** A cable you pulled out on the port panel. Its other end is still plugged in at `far`. */
   private holding: Port | null = null;
   private panelDevices: Device[] = [];
+  private readonly portButtons = new Map<Port, HTMLButtonElement>();
+  private hintHeld = false;
   private net: Network | null = null;
 
   constructor() {
@@ -208,7 +210,7 @@ export class Ui {
     this.panelDevices = devices;
     this.panelOpen = true;
     $("panel").hidden = false;
-    this.drawPanel();
+    this.buildPanel();
   }
 
   closePanel(): void {
@@ -221,44 +223,62 @@ export class Ui {
 
   /** Redraws the port lights. Called a few times a second. */
   refresh(): void {
-    if (this.panelOpen) this.drawPanel();
+    if (this.panelOpen) this.updatePanel();
   }
 
-  private drawPanel(): void {
-    const body = $("panel-body");
-    body.replaceChildren(
+  /** Builds a button per port once; `updatePanel` keeps their lights current. */
+  private buildPanel(): void {
+    this.portButtons.clear();
+    $("panel-body").replaceChildren(
       ...this.panelDevices.map((d) => {
         const box = document.createElement("section");
         box.className = "chassis";
         const h = document.createElement("h3");
-        h.textContent = d instanceof IosDevice ? `${d.hostname} · ${d.model}` : d.hostname;
         const ports = document.createElement("div");
         ports.className = "ports";
         for (const p of d.ports) ports.appendChild(this.portButton(p));
         box.append(h, ports);
+        if (!(d instanceof IosDevice)) box.classList.add("loose");
         return box;
       }),
     );
-    $("panel-hint").textContent = this.holding
-      ? `Holding a cable. Its other end is in ${where(this.holding)}. Click a free port to plug it in.`
-      : "Click a cable to pull it out, then click a free port to plug it back in.";
+    this.updatePanel();
+  }
+
+  private updatePanel(): void {
+    const titles = $("panel-body").querySelectorAll("h3");
+    this.panelDevices.forEach((d, i) => {
+      titles[i].textContent = d instanceof IosDevice ? `${d.hostname} · ${d.model}` : `Cable from the ${d.hostname} PC, run under the floor`;
+    });
+    for (const [p, b] of this.portButtons) {
+      const light = p.kind === "console" ? "none" : lightFor(p) === "red" ? "off" : lightFor(p);
+      b.querySelector(".light")!.className = `light ${light}`;
+      b.querySelector(".peer")!.textContent = p.peer ? where(p.peer) : p === this.holding ? "in your hand" : "";
+      b.title = p.peer ? `${p.name} → ${where(p.peer)}` : p.name;
+      b.classList.toggle("held", p === this.holding);
+    }
+    if (!this.hintHeld) {
+      $("panel-hint").textContent = this.holding
+        ? `Holding a cable from ${where(this.holding)}. Click a free port to plug in the other end, or click ${this.holding.shortName} again to let go.`
+        : "Click a free port to run a cable from it, then click where the other end goes. Click a plugged-in cable to pull it out.";
+    }
   }
 
   private portButton(p: Port): HTMLButtonElement {
     const b = document.createElement("button");
     b.className = `port ${p.kind}`;
-    const light = p.kind === "console" ? "none" : lightFor(p) === "red" ? "off" : lightFor(p);
-    b.innerHTML = `<span class="light ${light}"></span><span class="name"></span><span class="peer"></span>`;
+    b.innerHTML = `<span class="light"></span><span class="name"></span><span class="peer"></span>`;
     b.querySelector(".name")!.textContent = p.shortName;
-    b.querySelector(".peer")!.textContent = p.peer ? where(p.peer) : "";
-    b.title = p.peer ? `${p.name} → ${where(p.peer)}` : p.name;
     b.addEventListener("click", () => this.clickPort(p));
+    this.portButtons.set(p, b);
     return b;
   }
 
   private clickPort(p: Port): void {
     if (!this.net || p.kind === "console") return;
-    if (p.peer) {
+    if (p === this.holding) {
+      this.holding = null;
+    } else if (p.peer) {
       if (this.holding) return this.flash("You're already holding a cable.");
       this.holding = p.peer;
       this.net.disconnect(p);
@@ -267,14 +287,20 @@ export class Ui {
         this.net.connect(this.holding, p);
         this.holding = null;
       } catch (e) {
-        if (e instanceof CableError) this.flash(e.message);
-        else throw e;
+        if (e instanceof CableError) return this.flash(e.message);
+        throw e;
       }
+    } else {
+      // A fresh patch cable, plugged in at this end so far.
+      this.holding = p;
     }
-    this.drawPanel();
+    this.hintHeld = false;
+    this.updatePanel();
   }
 
+  /** Shows a message in place of the usual hint until the next click. */
   private flash(text: string): void {
+    this.hintHeld = true;
     $("panel-hint").textContent = text;
   }
 

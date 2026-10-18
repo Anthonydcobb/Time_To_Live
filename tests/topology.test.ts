@@ -35,3 +35,17 @@ describe("work order", () => {
     expect(done()).toEqual([true, true, true, true, true, null]);
   });
 });
+
+describe("work order, uncabled", () => {
+  it("starts with nothing plugged in and ticks off cabling once all three cables are in", () => {
+    const { net, r1, s1, register, office, tasks } = cornerStore({ cabled: false });
+    const cable = tasks.find((t) => t.id === "cable")!;
+    expect(r1.port("Gi0/0").peer).toBeNull();
+    expect(cable.done!()).toBe(false);
+    net.connect(r1.port("Gi0/0"), s1.port("Gi0/1"));
+    net.connect(register.nic, s1.port("Fa0/1"));
+    expect(cable.done!()).toBe(false);
+    net.connect(office.nic, s1.port("Fa0/7"));
+    expect(cable.done!()).toBe(true);
+  });
+});

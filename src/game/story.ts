@@ -28,14 +28,14 @@ const GARY_TIPS: Line[][] = [
  * network and reads it to decide what happens next.
  */
 export class Story {
-  readonly job = cornerStore();
+  readonly job = cornerStore({ cabled: false });
   /** Plugged into S1 Fa0/24 when the job is done. The cable goes into the wall. */
   readonly phantom = new Pc("PHANTOM", "?", "666666666666");
   room: RoomId = "office";
   private readonly flags = new Set<string>();
   private garyTip = 0;
   private finchLine = 0;
-  private told = new Set<number>();
+  private told = new Set<string>();
 
   constructor(private readonly ui: Ui) {
     this.job.net.add(this.phantom);
@@ -44,6 +44,11 @@ export class Story {
     r1.console.grimoire = grimoire;
     s1.console.grimoire = grimoire;
     ui.attach(this.job.net, [r1, s1, register, office]);
+  }
+
+  /** Whether the work order line with this id is done right now. */
+  private done(id: string): boolean {
+    return !!this.job.tasks.find((t) => t.id === id)?.done?.();
   }
 
   has(flag: string): boolean {
@@ -61,7 +66,7 @@ export class Story {
       this.flags.add("arrived");
       this.ui.say([
         { who: W, text: "Quik-Stop Forever! Finest gas station without any gas in the county." },
-        { who: W, text: "Rack's in the back office. Console into the router, get Gi zero slash zero an address, and make it SING." },
+        { who: W, text: "Rack's in the back office. Nothing's plugged in yet, so cable it up first: router to switch, PCs to switch. Then console in and make it SING." },
         { who: W, text: "Then the two PCs. Register up front, other one in back. Over!" },
       ]);
     }
@@ -110,7 +115,7 @@ export class Story {
         ui.say(
           [
             { text: "WORK ORDER #0001. Quik-Stop Forever, corner of Elm and Elm. Owner: Mrs. Finch." },
-            { text: "The router, the switch and both PCs are already cabled. Nothing is configured." },
+            { text: "The router and switch are in the rack. The cables from both PCs are run to it, but nothing is plugged in or configured." },
             { text: "Someone has added in pen: Do not restock the back cooler." },
           ],
           () => {
@@ -169,9 +174,9 @@ export class Story {
         return;
       case "shop:rack":
         ui.choose({ text: "The rack hums. A light-blue console cable hangs off the side, waiting for your laptop." }, [
+          { label: "Cable the back of the rack", run: () => ui.openPanel([r1, s1, register, office]) },
           { label: `Console into R1 (${r1.model})`, run: () => ui.openLaptop(r1, `R1 · ${r1.model} · console`, IOS_HINT) },
           { label: `Console into S1 (${s1.model})`, run: () => ui.openLaptop(s1, `S1 · ${s1.model} · console`, IOS_HINT) },
-          { label: "Look at the ports on the back", run: () => ui.openPanel([r1, s1]) },
           { label: "Never mind", run: () => {} },
         ]);
         return;
@@ -224,33 +229,33 @@ export class Story {
   /** Q: Walter's hint for wherever you are. */
   callWalter(): void {
     if (!this.flags.has("walkie")) return;
-    const t = this.job.tasks;
-    const done = (i: number) => !!t[i].done?.();
+    const done = (id: string) => this.done(id);
     let text: string;
     if (!this.flags.has("job")) text = "The JOB BOARD, kid. The big cork thing on the wall. Over.";
     else if (this.room === "office" && !this.flags.has("done")) text = "Front door, kid. The store won't network itself. It's tried. Over.";
     else if (this.flags.has("done")) text = "You're done! Go home. Don't look at the cooler on the way out. Over.";
-    else if (!done(0)) text = "Router first. In the rack, configure terminal, interface gi0/0, ip address, no shutdown. Incantations, kid! Over.";
-    else if (!done(1)) text = "The register's at the counter. On a PC it's ipconfig, address, mask, gateway. Over.";
-    else if (!done(2)) text = "Now the back office PC. Same deal, point one-one. Over.";
-    else if (!done(3)) text = "Ping the router from BOTH PCs. If the first one drops, that's ARP. Not ghosts. Usually. Over.";
+    else if (!done("cable")) text = "Cables first! Back of the rack. Router Gi zero slash zero to the switch, and both PC cables into the switch. Amber light means it's thinking about it. Over.";
+    else if (!done("router")) text = "Router next. In the rack, configure terminal, interface gi0/0, ip address, no shutdown. Incantations, kid! Over.";
+    else if (!done("register")) text = "The register's at the counter. On a PC it's ipconfig, address, mask, gateway. Over.";
+    else if (!done("office")) text = "Now the back office PC. Same deal, point one-one. Over.";
+    else if (!done("ping-router")) text = "Ping the router from BOTH PCs. If the first one drops, that's ARP. Not ghosts. Usually. Over.";
     else text = "Last thing: ping one PC from the other. Over.";
     this.ui.say([{ who: W, text }]);
   }
 
   /** Watches the network a few times a second and reacts as tasks get done. */
   tick(): void {
-    const t = this.job.tasks;
-    const done = (i: number) => !!t[i].done?.();
-    const once = (i: number, lines: Line[]) => {
-      if (this.told.has(i) || !done(i)) return;
-      this.told.add(i);
+    const done = (id: string) => this.done(id);
+    const once = (id: string, lines: Line[]) => {
+      if (this.told.has(id) || !done(id)) return;
+      this.told.add(id);
       this.ui.say(lines);
     };
-    once(0, [{ who: W, text: "Ooh, a green light! I felt that one in my fillings. Now the PCs. Over." }]);
-    if (done(1) && done(2)) once(2, [{ who: W, text: "Addresses on both PCs. Look at you, giving things names. Names are boundaries, kid. Boundaries are important. Over." }]);
-    once(3, [{ who: W, text: "The router answers! Of course it answers. It's polite. Too polite, some would say. Over." }]);
-    if ([0, 1, 2, 3, 4].every(done) && !this.flags.has("haunt")) this.haunt();
+    once("cable", [{ who: W, text: "All plugged in! Hear that? That's the sound of lights thinking. Give the switch half a minute to trust everybody. Over." }]);
+    once("router", [{ who: W, text: "Ooh, a green light! I felt that one in my fillings. Now the PCs. Over." }]);
+    if (done("register") && done("office")) once("office", [{ who: W, text: "Addresses on both PCs. Look at you, giving things names. Names are boundaries, kid. Boundaries are important. Over." }]);
+    once("ping-router", [{ who: W, text: "The router answers! Of course it answers. It's polite. Too polite, some would say. Over." }]);
+    if (this.job.tasks.every((t) => !t.done || t.done()) && !this.flags.has("haunt")) this.haunt();
   }
 
   /** The job's done, so something else plugs in. */

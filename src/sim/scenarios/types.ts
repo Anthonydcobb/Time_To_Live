@@ -2,6 +2,8 @@ import type { Device, Network } from "../network";
 
 /** One line of a work order. `done` reads the live network, so it ticks itself off. */
 export interface Task {
+  /** A short name the game can look the task up by. */
+  id?: string;
   text: string;
   done?: () => boolean;
 }

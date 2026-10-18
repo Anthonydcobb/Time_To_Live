@@ -407,3 +407,13 @@ kbd {
   font-size: 13px;
   letter-spacing: 0.06em;
 }
+
+.port.held {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 1px var(--amber);
+}
+
+.chassis.loose {
+  background: #1c1d18;
+  border-style: dashed;
+}
