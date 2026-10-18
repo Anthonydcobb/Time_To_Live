@@ -38,8 +38,15 @@ export interface Arg<C> {
   rest?: boolean;
   /** Help rows to show instead of name/help (used by interface names). */
   helpItems?: (ctx: C) => { name: string; help: string }[];
+  /**
+   * Where the caret goes when this argument fails to match, if part of it was
+   * fine: `int g9/9` points past the `g`, which IOS recognized as an interface type.
+   */
+  caretAt?: (words: Word[], i: number, ctx: C) => number | null;
   /** Words this argument can be completed to with Tab or `xx?`. */
   completions?: (ctx: C) => string[];
+  /** True when a half-typed word could still become this argument, so `192.?` lists A.B.C.D. */
+  partial?: (text: string) => boolean;
 }
 
 export type Token<C> = Keyword | Arg<C>;
@@ -153,7 +160,12 @@ function walk<C>(commands: Command<C>[], words: Word[], line: string, ctx: C): W
         if (keywords.some((k) => k.word.toLowerCase().startsWith(pre))) good = len;
         else break;
       }
-      return invalidAt(word.start + good);
+      let caret = word.start + good;
+      for (const t of argsAt(alive, p)) {
+        const at = t.caretAt?.(words, w, ctx);
+        if (at != null && at > caret) caret = at;
+      }
+      return invalidAt(caret);
     }
     cands = next;
     p++;
@@ -195,9 +207,12 @@ export function help<C>(commands: Command<C>[], line: string, ctx: C, reveal?: R
       ...keywordsAt(alive, r.p).map((k) => ({ name: k.word, hidden: hidden(k) })),
       ...argsAt(alive, r.p).flatMap((a) => (a.completions?.(ctx) ?? []).map((name) => ({ name, hidden: false }))),
     ].filter((n) => n.name.toLowerCase().startsWith(prefix));
-    if (!names.length) return { kind: "list", lines: ["% Unrecognized command"] };
+    const text = words[words.length - 1].text;
+    const argNames = argsAt(alive, r.p).filter((a) => a.partial?.(text)).map((a) => ({ name: a.name, hidden: false }));
+    if (!names.length && !argNames.length) return { kind: "list", lines: ["% Unrecognized command"] };
     const unique = [...new Map(names.map((n) => [n.name, n])).values()].sort((a, b) => caseless(a.name, b.name));
-    return { kind: "list", lines: [unique.map((n) => (n.hidden ? toRunes(n.name) : n.name)).join("  ")] };
+    // IOS prints each match followed by two spaces, then a blank line.
+    return { kind: "list", lines: [[...unique, ...argNames].map((n) => (n.hidden ? toRunes(n.name) : n.name) + "  ").join(""), ""] };
   }
 
   const rows: { name: string; help: string }[] = [
@@ -207,10 +222,10 @@ export function help<C>(commands: Command<C>[], line: string, ctx: C, reveal?: R
     .sort((a, b) => caseless(a.name, b.name))
     .map((row) => ("hidden" in row && row.hidden ? { name: toRunes(row.name), help: toRunes(row.help) } : row));
   const width = Math.max(0, ...rows.map((row) => row.name.length));
-  const lines = rows.map((row) => `  ${row.name.padEnd(width)}  ${row.help}`.trimEnd());
+  const lines = rows.flatMap((row) => wrapHelp(`  ${row.name.padEnd(width)}  `, row.help));
   if (r.cands.some((c) => c.cmd.tokens.length === r.p) && !r.incomplete) lines.push("  <cr>");
   if (!lines.length) return { kind: "error", result: { kind: "invalid", caret: line.length, wordIndex: words.length, wordCount: words.length } };
-  return { kind: "list", lines };
+  return { kind: "list", lines: [...lines, ""] };
 }
 
 /** Tab completion. Returns the completed line, or null if nothing unique matches. */
@@ -235,6 +250,23 @@ export function complete<C>(commands: Command<C>[], line: string, ctx: C, reveal
   const pick = exact ?? (names.length === 1 ? names[0] : null);
   if (!pick) return null;
   return line.slice(0, last.start) + pick + " ";
+}
+
+/** IOS wraps help text at 79 columns, continuing under the description column. */
+function wrapHelp(lead: string, text: string): string[] {
+  const indent = " ".repeat(lead.length);
+  const out: string[] = [];
+  let line = lead;
+  let first = true;
+  for (const word of text.split(" ").filter(Boolean)) {
+    if (!first && line.length + 1 + word.length > 79) {
+      out.push(line);
+      line = indent + word;
+    } else line += (first ? "" : " ") + word;
+    first = false;
+  }
+  out.push(line.trimEnd());
+  return out;
 }
 
 function caseless(a: string, b: string): number {

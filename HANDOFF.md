@@ -56,16 +56,19 @@ Key ideas:
 | Logical topology diagram, device tabs, and a work order that ticks itself off | PR #3 |
 | Incantations: unlearned commands show as runes in `?` help; jobs teach them and using one learns it (`src/sim/grimoire.ts`) | PR #4 |
 | DHCP server on the router (with IOS's ping check and conflicts), Windows-style DHCP client with APIPA fallback, job 2 (the laundromat) and a job picker | PR #5 |
+| VLANs, 802.1Q trunks, DTP, per-VLAN spanning tree timers, SVIs with autostate, router-on-a-stick subinterfaces, native VLAN mismatch, job 3 (the dentist) | PR #6 |
 
-**PR state:** #1 → `main`, then #2 to #5 each stacked on the one before. None are merged yet. Merge them in order, #1 first.
+**PR state:** #1 → `main`, then #2 to #6 each stacked on the one before. None are merged yet. Merge them in order, #1 first.
 
 ## Next up
 
 Phase 1 (the simulator) still has gaps:
-1. Real spanning tree: BPDUs, root election, blocking, portfast and BPDU guard. This is for job 4, and the cultists sending BPDUs through wall jacks hook into it.
-2. VLANs, trunks and router-on-a-stick for job 3.
-3. `interface range`, SSH and telnet over vty, `ip helper-address`, LLDP.
+1. Real spanning tree: BPDUs, root election, blocking, portfast and BPDU guard. This is for job 4, and the cultists sending BPDUs through wall jacks hook into it. Timers are already per VLAN per port in `devices/switch.ts`.
+2. `interface range`, SSH and telnet over vty, `ip helper-address`, LLDP.
+3. VTP modes, voice VLANs, `show interfaces status`.
 4. A terminal program on the PC that uses the console cable.
+
+Unverified against real gear (best recollection, check when someone has a Catalyst handy): the error text for `no interface` on a physical port, and whether a subinterface shows "administratively down" when only its parent is shut. From IOS 15 docs and memory rather than a capture (Ant's CML only runs IOL, IOS XE 17): the 2911 `show running-config` skeleton (no license udi, redundancy, Embedded-Service-Engine0/0, line 2 or scheduler lines yet) and the 2911/2960 hardware and media lines in `show interfaces`. Frame byte counts and the 5-minute rates are approximate. The 2960 keeps `Administrative Trunking Encapsulation: dot1q` and `Native VLAN tagging: enabled` (IOL says negotiate/disabled, but a 2960 only does dot1q). Answering yes to the setup dialog backs out as if Ctrl-C was pressed; the setup facility isn't simulated. Boot doesn't print the post-boot log burst (%SYS-5-RESTART, interface logs) yet.
 
 Phase 2 is the vertical slice: the corner store as a playable top-down scene. It needs the cabling port panel close-up, the laptop CLI overlay, the home base and home lab, one haunting, mentor radio messages, a sanity meter and placeholder audio.
 

@@ -14,7 +14,8 @@ export interface InterfaceView {
   port: Port | null;
   /** Physical ports can't take an IP on a Layer 2 switch. */
   routed: boolean;
-  status(): "administratively down" | "down" | "up";
+  /** "deleted" is a subinterface removed with `no interface`, which IOS keeps listing until reload. */
+  status(): "administratively down" | "down" | "up" | "deleted";
   protocol(): "up" | "down";
 }
 
@@ -42,6 +43,11 @@ export abstract class IosDevice extends Device {
   startup: IosConfig | null = null;
   /** Running config has changed since the last save. */
   dirty = false;
+  /** Clock times for the "! Last configuration change" and "! NVRAM config last updated" header lines. */
+  configChangedAt: number | null = null;
+  nvramWrittenAt: number | null = null;
+  /** The header times as they were when startup-config was written. */
+  startupStamps: { changed: number | null; nvram: number | null } = { changed: null, nvram: null };
   readonly cdpNeighbors = new Map<Port, CdpNeighbor>();
   /** Interface whose `shutdown` state is being changed right now, for log wording. */
   protected adminChanging: string | null = null;
@@ -68,6 +74,28 @@ export abstract class IosDevice extends Device {
 
   isPortShutdown(port: Port): boolean {
     return this.config.interfaces[port.name]?.shutdown ?? false;
+  }
+
+  /** The canonical name if `interface NAME` may create this interface (a subinterface or an SVI), otherwise null. */
+  canCreateInterface(_name: string): string | null {
+    return null;
+  }
+
+  createInterface(_name: string): void {}
+
+  /** `no interface NAME`. Returns an error line, or null if it worked. */
+  deleteInterface(_name: string): string | null {
+    return "% Physical interfaces cannot be deleted";
+  }
+
+  /** The order a config lists its interfaces in. */
+  configInterfaceOrder(c: IosConfig): string[] {
+    return Object.keys(c.interfaces);
+  }
+
+  /** The VLAN CDP advertises for a port. Only switches send one. */
+  cdpNativeVlan(_port: Port): number | undefined {
+    return undefined;
   }
 
   findInterface(name: string): InterfaceView | undefined {
@@ -129,6 +157,7 @@ export abstract class IosDevice extends Device {
         holdtimeSec: CDP_HOLDTIME_SEC,
         address: this.managementAddress(),
         version: showVersion(this)[0],
+        nativeVlan: this.cdpNativeVlan(port),
       },
     });
   }
@@ -148,6 +177,10 @@ export abstract class IosDevice extends Device {
       version: p.version,
       expiresAt: this.clock.now + p.holdtimeSec * 1000,
     });
+    const ours = this.cdpNativeVlan(port);
+    if (p.nativeVlan !== undefined && ours !== undefined && p.nativeVlan !== ours) {
+      this.emit(`%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on ${port.name} (${ours}), with ${p.deviceId} ${p.portId} (${p.nativeVlan}).`);
+    }
     return true;
   }
 
@@ -160,20 +193,27 @@ export abstract class IosDevice extends Device {
     if (layer === "link") {
       const admin = this.config.interfaces[name]?.shutdown;
       if (admin) this.emit(`%LINK-5-CHANGED: Interface ${name}, changed state to administratively down`);
-      else if (this.adminChanging === name) this.emit(`%LINK-5-CHANGED: Interface ${name}, changed state to ${up ? "up" : "down"}`);
       else this.emit(`%LINK-3-UPDOWN: Interface ${name}, changed state to ${up ? "up" : "down"}`);
     } else {
       this.emit(`%LINEPROTO-5-UPDOWN: Line protocol on Interface ${name}, changed state to ${up ? "up" : "down"}`);
     }
   }
 
+  /** Console log messages carry IOS's default timestamp: `*Mar  1 00:01:02.345: `. */
+  emit(text: string): void {
+    super.emit(text.startsWith("%") ? `*${logTimestamp(this.clock.now)}: ${text}` : text);
+  }
+
   saveConfig(): void {
     this.startup = cloneConfig(this.config);
     this.dirty = false;
+    this.nvramWrittenAt = this.clock.now;
+    this.startupStamps = { changed: this.configChangedAt, nvram: this.nvramWrittenAt };
   }
 
   eraseStartup(): void {
     this.startup = null;
+    this.nvramWrittenAt = null;
   }
 
   /** Throws away the running config and boots from startup-config. */
@@ -183,6 +223,7 @@ export abstract class IosDevice extends Device {
     this.stack.arp.clear();
     this.afterReload();
     this.dirty = false;
+    this.configChangedAt = null;
     for (const p of this.ports) this.network?.refresh(p);
   }
 
@@ -200,4 +241,24 @@ export abstract class IosDevice extends Device {
     }
     return null;
   }
+}
+
+/**
+ * `service timestamps log datetime msec`, the IOS default. The clock was never
+ * set, so the star says it isn't authoritative and the date counts from March 1st, 1993.
+ */
+export function logTimestamp(ms: number): string {
+  const d = new Date(Date.UTC(1993, 2, 1) + ms);
+  const pad = (n: number, w = 2) => String(n).padStart(w, "0");
+  const month = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][d.getUTCMonth()];
+  return `${month} ${String(d.getUTCDate()).padStart(2, " ")} ${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())}.${pad(d.getUTCMilliseconds(), 3)}`;
+}
+
+/** The clock as config headers print it: `00:05:12 UTC Mon Mar 1 1993`. */
+export function configTimestamp(ms: number): string {
+  const d = new Date(Date.UTC(1993, 2, 1) + ms);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  const day = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getUTCDay()];
+  const month = logTimestamp(ms).slice(0, 3);
+  return `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}:${pad(d.getUTCSeconds())} UTC ${day} ${month} ${d.getUTCDate()} ${d.getUTCFullYear()}`;
 }

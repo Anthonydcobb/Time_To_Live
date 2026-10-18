@@ -1,10 +1,11 @@
 // Output for IOS show commands, formatted like the real thing.
 import { formatIpv4, formatMacCisco, maskToPrefix, networkOf, type Ipv4 } from "../addr";
-import type { IosDevice } from "../devices/ios-device";
+import { configTimestamp, type IosDevice } from "../devices/ios-device";
 import type { Router } from "../devices/router";
 import type { Switch } from "../devices/switch";
+import { UNSUPPORTED_VLANS, formatVlanList } from "../vlans";
 import type { Route } from "../ipstack";
-import type { IosConfig, LineConfig, StoredPassword } from "./config";
+import type { IosConfig, LineConfig, StoredPassword, SwitchportConfig, SwitchportMode } from "./config";
 import { type7Encode } from "./passwords";
 
 const IOS_VERSION = "15.1(4)M4";
@@ -14,21 +15,31 @@ function pw(p: StoredPassword): string {
 }
 
 /** The body of the config, as `show running-config` prints it after the header. */
-export function renderConfig(device: IosDevice, c: IosConfig): string[] {
+export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStamps = { changed: null, nvram: null }): string[] {
   const isSwitch = device.kind === "switch";
-  const out: string[] = [
-    "!",
-    `version ${isSwitch ? "15.0" : "15.1"}`,
-    "no service timestamps log datetime msec",
-    "no service timestamps debug datetime msec",
+  const out: string[] = ["!"];
+  if (stamps.changed !== null) out.push(`! Last configuration change at ${configTimestamp(stamps.changed)}`);
+  if (stamps.nvram !== null) out.push(`! NVRAM config last updated at ${configTimestamp(stamps.nvram)}`);
+  if (stamps.changed !== null || stamps.nvram !== null) out.push("!");
+  out.push(`version ${isSwitch ? "15.0" : "15.1"}`);
+  if (isSwitch) out.push("no service pad");
+  out.push(
+    "service timestamps debug datetime msec",
+    "service timestamps log datetime msec",
     c.servicePasswordEncryption ? "service password-encryption" : "no service password-encryption",
     "!",
     `hostname ${c.hostname}`,
     "!",
-  ];
+    "boot-start-marker",
+    "boot-end-marker",
+    "!",
+  );
   if (c.enableSecret) out.push(`enable secret 5 ${c.enableSecret}`);
   if (c.enablePassword) out.push(`enable password ${pw(c.enablePassword)}`);
   if (c.enableSecret || c.enablePassword) out.push("!");
+  out.push("no aaa new-model");
+  if (isSwitch) out.push("system mtu routing 1500");
+  out.push("!");
   if (c.dhcpExcluded.length) {
     for (const r of c.dhcpExcluded) out.push(`ip dhcp excluded-address ${formatIpv4(r.low)}${r.high !== r.low ? ` ${formatIpv4(r.high)}` : ""}`);
     out.push("!");
@@ -48,28 +59,34 @@ export function renderConfig(device: IosDevice, c: IosConfig): string[] {
   }
   // Real IOS writes the space form in its config, whichever way you typed it.
   if (!c.ipDomainLookup) out.push("no ip domain lookup", "!");
+  if (!isSwitch) out.push("ip cef", "no ipv6 cef", "!", "multilink bundle-name authenticated", "!");
   if (!c.cdpRun) out.push("no cdp run", "!");
-  if (isSwitch) out.push("spanning-tree mode pvst", "spanning-tree extend system-id", "!");
+  if (isSwitch) out.push("spanning-tree mode pvst", "spanning-tree extend system-id", "!", "vlan internal allocation policy ascending", "!");
 
-  for (const iface of device.interfaces()) {
-    const ic = c.interfaces[iface.name];
+  for (const name of device.configInterfaceOrder(c)) {
+    const ic = c.interfaces[name];
     if (!ic) continue;
-    out.push(`interface ${iface.name}`);
+    const physical = device.ports.some((p) => p.name === name);
+    out.push(`interface ${name}`);
     if (ic.description) out.push(` description ${ic.description}`);
-    if (iface.routed) out.push(ic.ip !== null ? ` ip address ${formatIpv4(ic.ip)} ${formatIpv4(ic.mask!)}` : " no ip address");
-    if (iface.port && !isSwitch) out.push(" duplex auto", " speed auto");
-    if (iface.port && !ic.cdp) out.push(" no cdp enable");
+    if (ic.encapsulation) out.push(` encapsulation dot1Q ${ic.encapsulation.vlan}${ic.encapsulation.native ? " native" : ""}`);
+    if (ic.switchport) out.push(...switchportLines(ic.switchport));
+    else out.push(ic.ip !== null ? ` ip address ${formatIpv4(ic.ip)} ${formatIpv4(ic.mask!)}` : " no ip address");
     if (ic.shutdown) out.push(" shutdown");
+    if (physical && !isSwitch) out.push(" duplex auto", " speed auto");
+    if (physical && !ic.cdp) out.push(" no cdp enable");
     out.push("!");
   }
 
   if (c.defaultGateway !== null) out.push(`ip default-gateway ${formatIpv4(c.defaultGateway)}`);
-  out.push("ip classless");
+  if (!isSwitch) out.push("ip forward-protocol nd", "!");
+  out.push(isSwitch ? "ip http server" : "no ip http server", isSwitch ? "ip http secure-server" : "no ip http secure-server", "!");
   for (const r of c.staticRoutes) {
     const target = r.exitIface ?? formatIpv4(r.nextHop!);
     out.push(`ip route ${formatIpv4(r.network)} ${formatIpv4(r.mask)} ${target}`);
   }
-  out.push("!", "ip flow-export version 9", "!");
+  if (c.staticRoutes.length) out.push("!");
+  if (!isSwitch) out.push("control-plane", "!");
 
   if (c.bannerMotd !== null) out.push("banner motd ^C", ...c.bannerMotd.split("\n"), "^C", "!");
 
@@ -81,11 +98,21 @@ export function renderConfig(device: IosDevice, c: IosConfig): string[] {
     if (l.login) out.push(" login");
   };
   line("line con 0", c.con);
-  out.push("!");
-  if (!isSwitch) out.push("line aux 0", "!");
+  if (!isSwitch) out.push("line aux 0");
   line("line vty 0 4", c.vty);
   if (isSwitch) line("line vty 5 15", c.vty);
-  out.push("!", "!", "!", "end");
+  out.push("!", "end");
+  return out;
+}
+
+/** Switchport lines in the order a Catalyst writes them. Defaults print nothing. */
+function switchportLines(sp: SwitchportConfig): string[] {
+  const out: string[] = [];
+  if (sp.accessVlan !== 1) out.push(` switchport access vlan ${sp.accessVlan}`);
+  if (sp.nativeVlan !== 1) out.push(` switchport trunk native vlan ${sp.nativeVlan}`);
+  if (sp.allowed !== null) out.push(` switchport trunk allowed vlan ${sp.allowed.length ? formatVlanList(sp.allowed) : "none"}`);
+  if (sp.mode !== "dynamic auto") out.push(` switchport mode ${sp.mode}`);
+  if (sp.nonegotiate) out.push(" switchport nonegotiate");
   return out;
 }
 
@@ -93,15 +120,21 @@ function byteCount(lines: string[]): number {
   return lines.reduce((n, l) => n + l.length + 1, 0);
 }
 
+interface ConfigStamps {
+  changed: number | null;
+  nvram: number | null;
+}
+
 export function showRunningConfig(device: IosDevice): string[] {
-  const body = renderConfig(device, device.config);
+  const body = renderConfig(device, device.config, { changed: device.configChangedAt, nvram: device.nvramWrittenAt });
   return ["Building configuration...", "", `Current configuration : ${byteCount(body)} bytes`, ...body, ""];
 }
 
 export function showStartupConfig(device: IosDevice): string[] {
   if (!device.startup) return ["startup-config is not present"];
-  const body = renderConfig(device, device.startup);
-  return [`Using ${byteCount(body)} bytes`, ...body, ""];
+  const body = renderConfig(device, device.startup, device.startupStamps);
+  // NVRAM is 256 KB on the router and 64 KB on the switch.
+  return [`Using ${byteCount(body)} out of ${device.kind === "switch" ? 65536 : 262136} bytes`, ...body, ""];
 }
 
 export function showIpInterfaceBrief(device: IosDevice): string[] {
@@ -115,31 +148,91 @@ export function showIpInterfaceBrief(device: IosDevice): string[] {
   return out;
 }
 
+/** How long ago, the way `show interfaces` prints it: 00:00:08, 1d02h, 3w2d, or never. */
+export function sinceText(now: number, at: number | null): string {
+  if (at === null) return "never";
+  const s = Math.floor((now - at) / 1000);
+  const pad = (n: number) => String(n).padStart(2, "0");
+  if (s < 86400) return `${pad(Math.floor(s / 3600))}:${pad(Math.floor(s / 60) % 60)}:${pad(s % 60)}`;
+  const d = Math.floor(s / 86400);
+  return d < 7 ? `${d}d${pad(Math.floor(s / 3600) % 24)}h` : `${Math.floor(d / 7)}w${d % 7}d`;
+}
+
 export function showInterfaces(device: IosDevice, only?: string): string[] {
   const out: string[] = [];
+  const isSwitch = device.kind === "switch";
+  const now = device.clock.now;
   for (const i of device.interfaces()) {
     if (only && i.name !== only) continue;
     const c = device.config.interfaces[i.name];
     const status = i.status();
     const proto = i.protocol();
+    const svi = !i.port && !i.name.includes(".");
+    const sub = i.name.includes(".");
     const suffix = i.port ? (status === "administratively down" ? " (disabled)" : status === "up" ? " (connected)" : " (notconnect)") : "";
-    out.push(`${i.name} is ${status}, line protocol is ${proto}${device.kind === "switch" ? suffix : ""}`);
-    const hw = i.port ? (i.name.startsWith("Gigabit") ? "CN Gigabit Ethernet" : "Lance") : "CPU Interface";
+    out.push(`${i.name} is ${status}, line protocol is ${proto}${isSwitch ? suffix : ""} `);
+    const gig = i.name.startsWith("Gigabit");
+    const hw = svi ? "EtherSVI" : !isSwitch ? "CN Gigabit Ethernet" : gig ? "Gigabit Ethernet" : "Fast Ethernet";
     const mac = formatMacCisco(i.mac);
     out.push(`  Hardware is ${hw}, address is ${mac} (bia ${mac})`);
     if (c?.description) out.push(`  Description: ${c.description}`);
     if (c?.ip != null) out.push(`  Internet address is ${formatIpv4(c.ip)}/${maskToPrefix(c.mask!)}`);
-    const bw = i.name.startsWith("Gigabit") ? 1000000 : i.name.startsWith("Fast") ? 100000 : 100000;
+    const fast = i.name.startsWith("Fast");
     out.push(
-      `  MTU 1500 bytes, BW ${bw} Kbit, DLY ${i.name.startsWith("Gigabit") ? 10 : 100} usec,`,
+      `  MTU 1500 bytes, BW ${fast ? 100000 : 1000000} Kbit/sec, DLY ${fast ? 100 : 10} usec, `,
       "     reliability 255/255, txload 1/255, rxload 1/255",
-      "  Encapsulation ARPA, loopback not set",
     );
-    if (i.port) {
-      const speed = i.name.startsWith("Gigabit") ? "1000Mb/s" : "100Mb/s";
-      out.push(status === "up" ? `  Full-duplex, ${speed}, media type is RJ45` : "  Auto-duplex, Auto-speed, media type is RJ45");
+    if (sub) {
+      out.push(
+        `  Encapsulation 802.1Q Virtual LAN, Vlan ID  ${c?.encapsulation?.vlan ?? 1}.`,
+        "  ARP type: ARPA, ARP Timeout 04:00:00",
+        "  Keepalive set (10 sec)",
+        '  Last clearing of "show interface" counters never',
+      );
+      continue;
     }
-    out.push("  ARP type: ARPA, ARP Timeout 04:00:00");
+    out.push("  Encapsulation ARPA, loopback not set", svi ? "  Keepalive not supported " : "  Keepalive set (10 sec)");
+    if (i.port && isSwitch) {
+      const media = gig ? "10/100/1000BaseTX" : "10/100BaseTX";
+      out.push(
+        status === "up" ? `  Full-duplex, ${gig ? "1000" : "100"}Mb/s, media type is ${media}` : `  Auto-duplex, Auto-speed, media type is ${media}`,
+        "  input flow-control is off, output flow-control is unsupported ",
+      );
+    } else if (i.port) {
+      out.push(
+        status === "up" ? "  Full Duplex, 1Gbps, media type is RJ45" : "  Auto Duplex, Auto Speed, media type is RJ45",
+        "  output flow-control is unsupported, input flow-control is unsupported",
+      );
+    }
+    const st = i.port?.stats;
+    out.push(
+      "  ARP type: ARPA, ARP Timeout 04:00:00",
+      `  Last input ${sinceText(now, st?.lastIn ?? null)}, output ${sinceText(now, st?.lastOut ?? null)}, output hang never`,
+      '  Last clearing of "show interface" counters never',
+      "  Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops: 0",
+      "  Queueing strategy: fifo",
+      "  Output queue: 0/40 (size/max)",
+      "  5 minute input rate 0 bits/sec, 0 packets/sec",
+      "  5 minute output rate 0 bits/sec, 0 packets/sec",
+      `     ${st?.inPackets ?? 0} packets input, ${st?.inBytes ?? 0} bytes, 0 no buffer`,
+      `     Received ${st?.inBroadcasts ?? 0} broadcasts (0 ${isSwitch && !svi ? "multicasts" : "IP multicasts"})`,
+      "     0 runts, 0 giants, 0 throttles ",
+      "     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored",
+    );
+    if (!svi) out.push("     0 watchdog, 0 multicast, 0 pause input");
+    if (isSwitch && !svi) out.push("     0 input packets with dribble condition detected");
+    out.push(`     ${st?.outPackets ?? 0} packets output, ${st?.outBytes ?? 0} bytes, 0 underruns`);
+    if (svi) {
+      out.push(`     0 output errors, ${proto === "up" ? 1 : 0} interface resets`, "     0 unknown protocol drops");
+    } else {
+      out.push(
+        `     0 output errors, 0 collisions, ${st?.resets ?? 0} interface resets`,
+        "     0 unknown protocol drops",
+        "     0 babbles, 0 late collision, 0 deferred",
+        "     0 lost carrier, 0 no carrier, 0 pause output",
+      );
+    }
+    out.push("     0 output buffer failures, 0 output buffers swapped out");
   }
   return out;
 }
@@ -239,26 +332,135 @@ export function showMacAddressTable(sw: Switch): string[] {
   return out;
 }
 
-export function showVlanBrief(sw: Switch): string[] {
+/** The VLAN table at the top of `show vlan` and `show vlan brief`. */
+function vlanTable(sw: Switch): string[] {
   const out = [
     "",
     "VLAN Name                             Status    Ports",
     "---- -------------------------------- --------- -------------------------------",
   ];
-  const names = sw.ports.map((p) => p.shortName);
-  const chunks: string[] = [];
-  for (let i = 0; i < names.length; i += 4) chunks.push(names.slice(i, i + 4).join(", "));
-  out.push(`${"1".padEnd(5)}${"default".padEnd(33)}${"active".padEnd(10)}${chunks[0] ?? ""}`);
-  for (const c of chunks.slice(1)) out.push(`${"".padEnd(48)}${c}`);
-  for (const [id, name] of [
-    [1002, "fddi-default"],
-    [1003, "token-ring-default"],
-    [1004, "fddinet-default"],
-    [1005, "trnet-default"],
-  ] as const) {
-    out.push(`${String(id).padEnd(5)}${name.padEnd(33)}${"active".padEnd(10)}`.trimEnd());
+  for (const [id, name] of [...sw.vlans].sort((a, b) => a[0] - b[0])) {
+    // Trunks aren't listed under any VLAN. Access ports are, even when they're down.
+    const ports = sw.ports.filter((p) => sw.operationalMode(p) !== "trunk" && sw.switchport(p).accessVlan === id).map((p) => p.shortName);
+    const chunks: string[] = [];
+    for (let i = 0; i < ports.length; i += 4) chunks.push(ports.slice(i, i + 4).join(", "));
+    const status = UNSUPPORTED_VLANS.has(id) ? "act/unsup" : "active";
+    // IOS pads the status column even when no ports follow, so those lines end in spaces.
+    out.push(`${String(id).padEnd(5)}${name.padEnd(33)}${status.padEnd(10)}${chunks[0] ?? ""}`);
+    for (const c of chunks.slice(1)) out.push(`${"".padEnd(48)}${c}`);
   }
   return out;
+}
+
+export function showVlanBrief(sw: Switch): string[] {
+  return vlanTable(sw);
+}
+
+const VLAN_TYPES: Record<number, [string, string]> = { 1002: ["fddi", "-"], 1003: ["tr", "-"], 1004: ["fdnet", "ieee"], 1005: ["trnet", "ibm"] };
+
+export function showVlan(sw: Switch): string[] {
+  const out = [
+    ...vlanTable(sw),
+    "",
+    "VLAN Type  SAID       MTU   Parent RingNo BridgeNo Stp  BrdgMode Trans1 Trans2",
+    "---- ----- ---------- ----- ------ ------ -------- ---- -------- ------ ------",
+  ];
+  for (const id of [...sw.vlans.keys()].sort((a, b) => a - b)) {
+    const [type, stp] = VLAN_TYPES[id] ?? ["enet", "-"];
+    out.push(`${String(id).padEnd(5)}${type.padEnd(6)}${String(100000 + id).padEnd(11)}1500  -      -      -        ${stp.padEnd(5)}-        0      0   `);
+  }
+  out.push(
+    "",
+    "Remote SPAN VLANs",
+    "------------------------------------------------------------------------------",
+    "",
+    "",
+    "Primary Secondary Type              Ports",
+    "------- --------- ----------------- ------------------------------------------",
+    "",
+  );
+  return out;
+}
+
+export function showInterfacesTrunk(sw: Switch): string[] {
+  const trunks = sw.ports.filter((p) => sw.operationalMode(p) === "trunk");
+  if (!trunks.length) return [];
+  const list = (vlans: number[]) => (vlans.length ? formatVlanList(vlans) : "none");
+  const mode = (p: (typeof trunks)[number]) => {
+    const sp = sw.switchport(p);
+    if (sp.mode === "trunk") return sp.nonegotiate ? "nonegotiate" : "on";
+    return sp.mode === "dynamic desirable" ? "desirable" : "auto";
+  };
+  const out = ["", "Port        Mode             Encapsulation  Status        Native vlan"];
+  for (const p of trunks) out.push(`${p.shortName.padEnd(12)}${mode(p).padEnd(17)}${"802.1q".padEnd(15)}${"trunking".padEnd(14)}${sw.switchport(p).nativeVlan}`);
+  out.push("", "Port        Vlans allowed on trunk");
+  for (const p of trunks) out.push(`${p.shortName.padEnd(12)}${list(sw.switchport(p).allowed ?? [...Array(4094).keys()].map((i) => i + 1))}`);
+  out.push("", "Port        Vlans allowed and active in management domain");
+  for (const p of trunks) out.push(`${p.shortName.padEnd(12)}${list(sw.vlansOn(p))}`);
+  out.push("", "Port        Vlans in spanning tree forwarding state and not pruned");
+  for (const p of trunks) out.push(`${p.shortName.padEnd(12)}${list(sw.forwardingVlans(p))}`);
+  out.push("");
+  return out;
+}
+
+const ADMIN_MODE: Record<SwitchportMode, string> = {
+  access: "static access",
+  trunk: "trunk",
+  "dynamic auto": "dynamic auto",
+  "dynamic desirable": "dynamic desirable",
+};
+
+export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
+  const out: string[] = [];
+  const vlanLabel = (id: number) => (sw.vlanActive(id) ? `${id} (${sw.vlans.get(id)})` : `${id} (Inactive)`);
+  for (const p of sw.ports) {
+    if (only && p.name !== only) continue;
+    const sp = sw.switchport(p);
+    const op = sw.operationalMode(p);
+    out.push(
+      `Name: ${p.shortName}`,
+      "Switchport: Enabled",
+      `Administrative Mode: ${ADMIN_MODE[sp.mode]}`,
+      `Operational Mode: ${op === "access" ? "static access" : op}`,
+      "Administrative Trunking Encapsulation: dot1q",
+      `Operational Trunking Encapsulation: ${op === "trunk" ? "dot1q" : "native"}`,
+      `Negotiation of Trunking: ${sp.mode === "access" || sp.nonegotiate ? "Off" : "On"}`,
+      `Access Mode VLAN: ${vlanLabel(sp.accessVlan)}`,
+      `Trunking Native Mode VLAN: ${vlanLabel(sp.nativeVlan)}`,
+      "Administrative Native VLAN tagging: enabled",
+      "Voice VLAN: none",
+      "Administrative private-vlan host-association: none ",
+      "Administrative private-vlan mapping: none ",
+      "Administrative private-vlan trunk native VLAN: none",
+      "Administrative private-vlan trunk Native VLAN tagging: enabled",
+      "Administrative private-vlan trunk encapsulation: dot1q",
+      "Administrative private-vlan trunk normal VLANs: none",
+      "Administrative private-vlan trunk associations: none",
+      "Administrative private-vlan trunk mappings: none",
+      "Operational private-vlan: none",
+      `Trunking VLANs Enabled: ${sp.allowed === null ? "ALL" : sp.allowed.length ? formatVlanList(sp.allowed) : "NONE"}`,
+      "Pruning VLANs Enabled: 2-1001",
+      "Capture Mode Disabled",
+      "Capture VLANs Allowed: ALL",
+      "",
+      "Protected: false",
+      "Unknown unicast blocked: disabled",
+      "Unknown multicast blocked: disabled",
+      "Appliance trust: none",
+      "",
+    );
+  }
+  return out;
+}
+
+/** The first lines of `show version`, which IOS also prints while it boots. */
+export function showVersionBanner(device: IosDevice): string[] {
+  const isRouter = device.kind === "router";
+  return [
+    `Cryptis IOS Software, ${isRouter ? "CR-2900" : "CS-2960"} Software, Version ${isRouter ? IOS_VERSION : "15.0(2)SE4"}, RELEASE SOFTWARE (fc2)`,
+    "Technical Support: please do not call after dark",
+    "Copyright (c) 1986-1993 by Cryptis Systems, Inc. All rights reserved, and some that were not.",
+  ];
 }
 
 export function showVersion(device: IosDevice): string[] {
@@ -266,9 +468,7 @@ export function showVersion(device: IosDevice): string[] {
   const uptimeMin = Math.floor(device.clock.now / 60000);
   const image = isRouter ? "cr2900-universalk9-mz.SPA.151-4.M4.bin" : "cs2960-lanbasek9-mz.150-2.SE4.bin";
   return [
-    `Cryptis IOS Software, ${isRouter ? "CR-2900" : "CS-2960"} Software, Version ${isRouter ? IOS_VERSION : "15.0(2)SE4"}, RELEASE SOFTWARE (fc2)`,
-    "Technical Support: please do not call after dark",
-    "Copyright (c) 1986-1993 by Cryptis Systems, Inc. All rights reserved, and some that were not.",
+    ...showVersionBanner(device),
     "",
     "ROM: System Bootstrap, Version 15.1(4)M4, RELEASE SOFTWARE (fc1)",
     "",

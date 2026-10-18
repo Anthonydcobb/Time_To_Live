@@ -53,6 +53,8 @@ export interface CdpPacket {
   holdtimeSec: number;
   address: Ipv4 | null;
   version: string;
+  /** Switches advertise the port's native (or access) VLAN, which is how they spot a mismatch. */
+  nativeVlan?: number;
 }
 
 export const CDP_MAC: Mac = "01000ccccccc";
@@ -60,6 +62,14 @@ export const CDP_MAC: Mac = "01000ccccccc";
 export interface Frame {
   src: Mac;
   dst: Mac;
+  /** The 802.1Q tag, present only while the frame crosses a trunk. */
   vlan?: number;
   payload: ArpPacket | Ipv4Packet | CdpPacket;
+}
+
+/** A copy of the frame with an 802.1Q tag, or without one when `vlan` is undefined. */
+export function retag(frame: Frame, vlan: number | undefined): Frame {
+  if (frame.vlan === vlan) return frame;
+  const { vlan: _old, ...rest } = frame;
+  return vlan === undefined ? rest : { ...rest, vlan };
 }

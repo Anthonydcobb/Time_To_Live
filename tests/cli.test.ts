@@ -121,16 +121,16 @@ describe("help and completion", () => {
   it("completes a partial word with ?", () => {
     const r = router();
     type(r, "en");
-    expect(r.console.help("sh").lines).toEqual(["show"]);
-    expect(r.console.help("co").lines).toEqual(["configure  copy"]);
+    expect(r.console.help("sh").lines).toEqual(["show  ", ""]);
+    expect(r.console.help("co").lines).toEqual(["configure  copy  ", ""]);
   });
 
   it("lists next keywords and <cr>", () => {
     const r = router();
     type(r, "en");
     const lines = r.console.help("show ip ").lines.map((l) => l.trim().split(/\s+/)[0]);
-    expect(lines).toEqual(["arp", "dhcp", "interface", "route"]);
-    expect(r.console.help("show ip interface brief ").lines).toEqual(["  <cr>"]);
+    expect(lines).toEqual(["arp", "dhcp", "interface", "route", ""]);
+    expect(r.console.help("show ip interface brief ").lines).toEqual(["  <cr>", ""]);
   });
 
   it("lists interface types", () => {
@@ -214,7 +214,7 @@ describe("running config", () => {
     expect(text).toContain("service password-encryption");
     expect(text).toMatch(/line con 0\n password 7 [0-9A-F]+\n login/);
     expect(text).toContain("interface GigabitEthernet0/0\n description to the store switch\n ip address 192.168.1.1 255.255.255.0\n duplex auto\n speed auto\n!");
-    expect(text).toContain("interface GigabitEthernet0/1\n no ip address\n duplex auto\n speed auto\n shutdown");
+    expect(text).toContain("interface GigabitEthernet0/1\n no ip address\n shutdown\n duplex auto\n speed auto");
     expect(text).toContain("banner motd ^C\nAuthorized technicians only\n^C");
   });
 
@@ -229,7 +229,7 @@ describe("running config", () => {
     const r = router();
     type(r, "en", "conf t", "hostname R1", "end");
     expect(type(r, "copy run start", "")).toEqual(["Building configuration...", "[OK]"]);
-    expect(type(r, "show startup-config")[0]).toMatch(/^Using \d+ bytes$/);
+    expect(type(r, "show startup-config")[0]).toMatch(/^Using \d+ out of 262136 bytes$/);
     type(r, "conf t", "hostname Forgotten", "end", "reload");
     expect(r.console.prompt()).toBe("System configuration has been modified. Save? [yes/no]: ");
     type(r, "no");
@@ -243,6 +243,11 @@ describe("running config", () => {
   it("boots to factory defaults after erase", () => {
     const r = router();
     type(r, "en", "conf t", "hostname R1", "end", "wr", "erase startup-config", "", "reload", "", "");
+    // No startup-config, so IOS offers the setup dialog before anything else.
+    expect(r.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [yes/no]: ");
+    expect(type(r, "maybe")).toEqual(["% Please answer 'yes' or 'no'."]);
+    expect(type(r, "no")).toEqual(["", "", "Press RETURN to get started!", ""]);
+    type(r, "");
     expect(r.console.prompt()).toBe("Router>");
     expect(type(r, "en", "show startup-config")).toEqual(["startup-config is not present"]);
   });

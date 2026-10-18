@@ -22,7 +22,7 @@ export const LAUNDROMAT_INCANTATIONS = [
  * Job 2: the 24-hour laundromat. The PCs want DHCP, the printer needs a fixed address.
  *
  *   Kiosk ─── Fa0/1 ┐
- *   Office ── Fa0/2 ┼ S1 Gig0/1 ── Gig0/0 R1
+ *   Office ── Fa0/2 ┼ S1 Gi0/1 ── Gi0/0 R1
  *   Printer ─ Fa0/3 ┘
  */
 export function laundromat() {
@@ -56,8 +56,8 @@ export function laundromat() {
   const leased = (pc: Pc) => !!pc.lease && pc.ip !== null && networkOf(pc.ip, MASK) === NET && pc.gateway === GW;
   const tasks: Task[] = [
     {
-      text: "On the router, give Gig0/0 the address 192.168.20.1 255.255.255.0 and bring it up.",
-      done: () => g00().ip === GW && g00().mask === MASK && r1.port("Gig0/0").protocolUp,
+      text: "On the router, give Gi0/0 the address 192.168.20.1 255.255.255.0 and bring it up.",
+      done: () => g00().ip === GW && g00().mask === MASK && r1.port("Gi0/0").protocolUp,
     },
     {
       text: "Keep 192.168.20.1 through .20 out of DHCP for printers and other fixed gear.",

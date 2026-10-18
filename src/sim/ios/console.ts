@@ -1,13 +1,15 @@
 // One console session on an IOS device: modes, prompts, password checks and
 // the multi-step questions IOS asks (copy, erase, reload, banners).
 import type { IosDevice } from "../devices/ios-device";
-import { commandsFor, type Ctx } from "./commands";
+import type { Switch } from "../devices/switch";
+import { CONFIRM, commandsFor, type Ctx } from "./commands";
 import { complete, help, parse, splitWords, type ParseResult } from "./parser";
 import { type5Verify } from "./passwords";
+import { showVersionBanner } from "./show";
 import { Job } from "../job";
 import { bookFor, type Grimoire } from "../grimoire";
 
-export type Mode = "user" | "enable" | "config" | "config-if" | "config-line" | "dhcp-config";
+export type Mode = "user" | "enable" | "config" | "config-if" | "config-subif" | "config-line" | "dhcp-config" | "config-vlan";
 
 type Pending =
   | { kind: "press-return" }
@@ -26,12 +28,27 @@ const SUFFIX: Record<Mode, string> = {
   enable: "#",
   config: "(config)#",
   "config-if": "(config-if)#",
+  "config-subif": "(config-subif)#",
   "config-line": "(config-line)#",
   "dhcp-config": "(dhcp-config)#",
+  "config-vlan": "(config-vlan)#",
 };
 
-const CONFIRM = (text: string) => ["", "y", "yes"].includes(text.trim().toLowerCase());
+/** Sub-modes where an unknown command is tried again as a global config command. */
+const SUB_MODES: Mode[] = ["config-if", "config-subif", "config-line", "dhcp-config", "config-vlan"];
+
 const DNS_LOOKUP_MS = 5000;
+
+const HELP_HEADINGS: Record<Mode, string> = {
+  user: "Exec commands:",
+  enable: "Exec commands:",
+  config: "Configure commands:",
+  "config-if": "Interface configuration commands:",
+  "config-subif": "Interface configuration commands:",
+  "config-line": "Line configuration commands:",
+  "dhcp-config": "DHCP pool configuration commands:",
+  "config-vlan": "VLAN configuration commands:",
+};
 
 export class IosConsole {
   mode: Mode = "user";
@@ -39,6 +56,9 @@ export class IosConsole {
   lineKind: "con" | "vty" = "con";
   /** The pool `ip dhcp pool NAME` selected. */
   dhcpPool = "";
+  /** The VLANs `vlan 10,20` selected. Like real IOS, they're created when you leave config-vlan mode. */
+  vlanIds: number[] = [];
+  vlanName: string | null = null;
   pending: Pending | null = null;
   readonly history: string[] = [];
   /** The player's learned incantations. Without one, every command reads plainly. */
@@ -63,26 +83,80 @@ export class IosConsole {
     return this.pending?.kind === "password";
   }
 
-  /** Power-on text, ending at "Press RETURN to get started!". */
+  /**
+   * Power-on text, laid out like a real IOS 15 boot. Without a startup-config
+   * IOS offers the setup dialog first; with one it goes straight to "Press RETURN".
+   */
   boot(): string[] {
     this.mode = "user";
     this.ifaces = [];
     this.pending = { kind: "press-return" };
     const d = this.device;
-    return [
+    const isRouter = d.kind === "router";
+    const lines = [
       "System Bootstrap, Version 15.1(4)M4, RELEASE SOFTWARE (fc1)",
-      "Copyright (c) 1986-1993 by Cryptis Systems, Inc.",
-      `Initializing memory for ECC... done.`,
+      "Technical Support: please do not call after dark",
+      "Copyright (c) 1993 by Cryptis Systems, Inc.",
+      "",
       `Cryptis ${d.model} platform with 524288 Kbytes of main memory`,
       "",
       "Readonly ROMMON initialized",
       "",
-      d.startup ? "Loading startup-config from NVRAM... [OK]" : "--- No startup-config found. Booting with factory defaults. ---",
+      "              Restricted Rights Legend",
       "",
-      "Press RETURN to get started!",
+      "Use, duplication, or disclosure by the Government is",
+      "subject to restrictions as set forth in subparagraph",
+      "(c) of the Commercial Computer Software - Restricted",
+      "Rights clause at FAR sec. 52.227-19 and subparagraph",
+      "(c) (1) (ii) of the Rights in Technical Data and Computer",
+      "Software clause at DFARS sec. 252.227-7013.",
+      "",
+      "           Cryptis Systems, Inc.",
+      "           13 Hollow Lane",
+      "           Static Springs",
+      "",
+      "",
+      "",
+      ...showVersionBanner(d),
+      "",
+      `Cryptis ${d.model} (revision 1.0) with 491520K/32768K bytes of memory.`,
+      "Processor board ID FTX1993A0K3",
+      ...(isRouter ? ["3 Gigabit Ethernet interfaces"] : ["24 FastEthernet interfaces", "2 Gigabit Ethernet interfaces"]),
+      "255K bytes of non-volatile configuration memory.",
       "",
     ];
+    if (d.startup) return [...lines, "", "Press RETURN to get started!", ""];
+    this.askSetupDialog();
+    return [...lines, "", "         --- System Configuration Dialog ---", ""];
   }
+
+  /** The setup dialog a factory-fresh box offers on boot. Everyone answers no. */
+  private askSetupDialog(): void {
+    this.ask("Would you like to enter the initial configuration dialog? [yes/no]: ", (text) => {
+      const t = text.trim().toLowerCase();
+      if (t === "no" || t === "n") {
+        this.pending = { kind: "press-return" };
+        this.out.push("", "", "Press RETURN to get started!", "");
+      } else if (t === "yes" || t === "y") {
+        this.out.push(
+          "",
+          "At any point you may enter a question mark '?' for help.",
+          "Use ctrl-c to abort configuration dialog at any prompt.",
+          "Default settings are in square brackets '[]'.",
+          "",
+        );
+        // The setup facility itself isn't simulated, so any answer backs out the way ctrl-c would.
+        this.ask("Would you like to enter basic management setup? [yes/no]: ", () => {
+          this.pending = { kind: "press-return" };
+          this.out.push("Configuration aborted, no changes made.", "", "", "Press RETURN to get started!", "");
+        });
+      } else {
+        this.out.push("% Please answer 'yes' or 'no'.");
+        this.askSetupDialog();
+      }
+    });
+  }
+
 
   input(line: string): ConsoleOutput {
     this.out = [];
@@ -97,7 +171,12 @@ export class IosConsole {
     if (this.pending) return { lines: [], line };
     const { commands, offset, text, isDo } = this.commandsForLine(line);
     const r = help(commands, text, this.ctx(), this.reveal(isDo));
-    if (r.kind === "list") return { lines: r.lines, line };
+    if (r.kind === "list") {
+      if (line.trim() || isDo) return { lines: r.lines, line };
+      // A bare `?` gets the mode's heading. Sub-modes don't list `end`, though it works there.
+      const rows = this.mode === "config" ? r.lines : r.lines.filter((l) => !/^ {2}end /.test(l));
+      return { lines: [HELP_HEADINGS[this.mode], ...rows], line };
+    }
     this.out = [];
     this.reportError(r.result as ParseResult<Ctx>, offset, false);
     return { lines: this.out, line };
@@ -122,11 +201,21 @@ export class IosConsole {
   }
 
   setMode(mode: Mode): void {
+    if (this.mode === "config-vlan" && mode !== "config-vlan") {
+      this.out.push(...(this.device as Switch).commitVlanConfig(this.vlanIds, this.vlanName));
+      this.vlanIds = [];
+      this.vlanName = null;
+    }
     this.mode = mode;
-    if (mode !== "config-if") this.ifaces = [];
+    if (mode !== "config-if" && mode !== "config-subif") this.ifaces = [];
   }
 
   // ---- called by commands -------------------------------------------------
+
+  /** Prints from a callback that runs after the command itself, such as an answer to a question. */
+  print(...lines: string[]): void {
+    this.out.push(...lines);
+  }
 
   beginEnable(): void {
     const cfg = this.device.config;
@@ -202,7 +291,7 @@ export class IosConsole {
 
   // ---- internals ------------------------------------------------------------
 
-  private ask(prompt: string, answer: (text: string) => void): void {
+  ask(prompt: string, answer: (text: string) => void): void {
     this.pending = { kind: "question", prompt, answer };
   }
 
@@ -235,12 +324,49 @@ export class IosConsole {
   private run(line: string): void {
     if (!line.trim()) return;
     this.history.push(line);
+    const pipe = this.splitPipe(line);
+    if (pipe) {
+      if (pipe.error) {
+        this.out.push(" ".repeat(this.prompt().length + pipe.error.at) + "^", "% Invalid input detected at '^' marker.", "");
+        return;
+      }
+      const before = this.out.length;
+      // Filters only apply to commands that print straight away, which every show command does.
+      if (this.runCommand(pipe.command) && !this.job) this.out.splice(before, this.out.length - before, ...applyFilter(this.out.slice(before), pipe.filter!));
+      return;
+    }
+    this.runCommand(line);
+  }
+
+  /**
+   * `show ... | include x`: splits off the output modifier. Only show commands
+   * take one; anywhere else the pipe is a stray word and the usual parse error follows.
+   */
+  private splitPipe(line: string): { command: string; filter?: OutputFilter; error?: { at: number } } | null {
+    const bar = line.indexOf("|");
+    if (bar < 0) return null;
+    const command = line.slice(0, bar);
+    const words = splitWords(command).map((w) => w.text.toLowerCase());
+    const showAt = words[0] === "do" ? 1 : 0;
+    if (!words[showAt] || !"show".startsWith(words[showAt]) || words[showAt].length < 2) return null;
+    const rest = line.slice(bar + 1);
+    const m = /^(\s*)(\S+)(\s+(.*))?$/.exec(rest);
+    if (!m) return { command, error: { at: line.length } };
+    const kind = FILTERS.find((f) => f.startsWith(m[2].toLowerCase()));
+    if (!kind) return { command, error: { at: bar + 1 + m[1].length } };
+    const pattern = (m[4] ?? "").trim();
+    if (kind !== "count" && !pattern) return { command, error: { at: line.length } };
+    return { command, filter: { kind, pattern } };
+  }
+
+  /** Returns false when the line didn't parse and an error was printed instead. */
+  private runCommand(line: string): boolean {
     const kind = this.device.kind as "router" | "switch";
     const { commands, offset, text, isDo } = this.commandsForLine(line);
     const ctx = this.ctx();
 
     let result = parse(commands, text, ctx);
-    if (result.kind !== "ok" && !isDo && (this.mode === "config-if" || this.mode === "config-line" || this.mode === "dhcp-config")) {
+    if (result.kind !== "ok" && !isDo && SUB_MODES.includes(this.mode)) {
       // Sub-modes fall back to global config commands, like real IOS.
       const global = parse(commandsFor("config", kind), text, ctx);
       if (global.kind === "ok") {
@@ -251,12 +377,16 @@ export class IosConsole {
     if (result.kind === "ok") {
       // Learned in the book of the mode it was spoken in, before the command can change modes.
       this.learnFrom(result.command.tokens, isDo ? "exec" : bookFor(this.mode));
-      if (this.mode.startsWith("config") && !isDo) this.device.dirty = true;
+      if (this.mode.startsWith("config") && !isDo) {
+        this.device.dirty = true;
+        this.device.configChangedAt = this.device.clock.now;
+      }
       result.command.run(ctx, result.args);
       this.job = ctx.job;
-      return;
+      return true;
     }
     this.reportError(result, offset, !isDo && (this.mode === "user" || this.mode === "enable"));
+    return false;
   }
 
   private reportError(result: ParseResult<Ctx>, offset: number, exec: boolean): void {
@@ -349,6 +479,49 @@ export class IosConsole {
     } else {
       this.pending = { kind: "press-return" };
       this.out.push("% Bad passwords", "");
+    }
+  }
+}
+
+const FILTERS = ["begin", "count", "exclude", "include", "section"] as const;
+type OutputFilter = { kind: (typeof FILTERS)[number]; pattern: string };
+
+/** IOS regexes are close enough to JavaScript's for what anyone types after a pipe. */
+function ioRegex(pattern: string): RegExp {
+  try {
+    return new RegExp(pattern);
+  } catch {
+    return new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+  }
+}
+
+function applyFilter(lines: string[], f: OutputFilter): string[] {
+  const re = ioRegex(f.pattern);
+  switch (f.kind) {
+    case "include":
+      return lines.filter((l) => re.test(l));
+    case "exclude":
+      return lines.filter((l) => !re.test(l));
+    case "begin": {
+      const i = lines.findIndex((l) => re.test(l));
+      return i < 0 ? [] : lines.slice(i);
+    }
+    case "count":
+      return [`Number of lines which match regexp = ${lines.filter((l) => (f.pattern ? re.test(l) : true)).length}`];
+    case "section": {
+      // A section is a top-level line and the indented lines under it.
+      const out: string[] = [];
+      let keep = false;
+      for (let i = 0; i < lines.length; i++) {
+        const l = lines[i];
+        if (!l.startsWith(" ")) {
+          const children: string[] = [];
+          for (let j = i + 1; j < lines.length && lines[j].startsWith(" "); j++) children.push(lines[j]);
+          keep = re.test(l) || children.some((c) => re.test(c));
+        }
+        if (keep) out.push(l);
+      }
+      return out;
     }
   }
 }

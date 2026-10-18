@@ -1,4 +1,5 @@
 import { cornerStore } from "./corner-store";
+import { dentist } from "./dentist";
 import { laundromat } from "./laundromat";
 import type { Scenario } from "./types";
 
@@ -6,4 +7,5 @@ import type { Scenario } from "./types";
 export const JOBS: { id: string; name: string; build: () => Scenario }[] = [
   { id: "1", name: "Job 1: Quik-Stop Forever", build: cornerStore },
   { id: "2", name: "Job 2: Spin Cycle Eternal", build: laundromat },
+  { id: "3", name: "Job 3: Marrow Family Dentistry", build: dentist },
 ];

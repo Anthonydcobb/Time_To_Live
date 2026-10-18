@@ -10,10 +10,10 @@ describe("topology link lights", () => {
     const switchEnd = s1.port("Gig0/1");
     expect(lightFor(routerEnd)).toBe("red");
     type(r1, "en", "conf t", "int g0/0", "no shut", "end");
-    net.clock.advance(2000);
+    net.clock.advance(3_000);
     expect(lightFor(routerEnd)).toBe("green");
     expect(lightFor(switchEnd)).toBe("amber");
-    net.clock.advance(30_000);
+    net.clock.advance(32_000);
     expect(lightFor(switchEnd)).toBe("green");
   });
 });
@@ -27,7 +27,7 @@ describe("work order", () => {
     type(r1, "en", "conf t", "int g0/0", "ip address 192.168.1.1 255.255.255.0", "no shutdown", "end");
     run(register, "ipconfig 192.168.1.10 255.255.255.0 192.168.1.1");
     run(office, "ipconfig 192.168.1.11 255.255.255.0 192.168.1.1");
-    net.clock.advance(32_000);
+    net.clock.advance(35_000);
     expect(done()).toEqual([true, true, true, false, false, null]);
     run(register, "ping 192.168.1.1");
     run(office, "ping 192.168.1.1");

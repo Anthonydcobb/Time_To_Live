@@ -12,7 +12,7 @@ export type { Task } from "./types";
  * Job 1: the corner store. Everything is cabled, nothing is configured.
  *
  *   PC0 (register) ── Fa0/1 ┐
- *                           S1 Gig0/1 ── Gig0/0 R1
+ *                           S1 Gi0/1 ── Gi0/0 R1
  *   PC1 (back office) ─ Fa0/2 ┘
  */
 /** What Walter teaches on job 1. Everything else shows as runes until learned. */
@@ -58,8 +58,8 @@ export function cornerStore() {
   const g00 = () => r1.config.interfaces["GigabitEthernet0/0"];
   const tasks: Task[] = [
     {
-      text: "On the router, give Gig0/0 the address 192.168.1.1 255.255.255.0 and turn it on with no shutdown.",
-      done: () => g00().ip === R1 && g00().mask === MASK && r1.port("Gig0/0").protocolUp,
+      text: "On the router, give Gi0/0 the address 192.168.1.1 255.255.255.0 and turn it on with no shutdown.",
+      done: () => g00().ip === R1 && g00().mask === MASK && r1.port("Gi0/0").protocolUp,
     },
     {
       text: "Set the Register PC to 192.168.1.10 255.255.255.0 with gateway 192.168.1.1.",
