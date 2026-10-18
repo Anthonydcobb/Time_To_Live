@@ -18,6 +18,8 @@ export interface Prop {
   onWall?: boolean;
   /** A loaded spritesheet key to stand here instead of the grey box. */
   sprite?: string;
+  /** Which frame of `sprite` to show (default 0). */
+  frame?: number;
   /** Set dressing: you bump into it, but there's nothing to press E on. */
   decor?: boolean;
 }
@@ -119,7 +121,11 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "storage", label: "Storage", x: 1, y: 12, w: 1, h: 1, verb: "", color: 0x50504a, decor: true },
       { id: "boxes", label: "Boxes", x: 2, y: 12, w: 1, h: 1, verb: "", color: 0x5e5240, decor: true },
       // Shop floor
-      { id: "cooler", label: "Fridges", x: 9, y: 2, w: 8, h: 1, verb: "Look at", color: 0x4a5a66 },
+      // Four two-door units with different stock (frames 0-3 of the sheet).
+      { id: "cooler", label: "Fridges", x: 9, y: 2, w: 2, h: 1, verb: "Look at", color: 0x4a5a66, sprite: "store-fridges", frame: 0 },
+      { id: "cooler", label: "Fridges", x: 11, y: 2, w: 2, h: 1, verb: "Look at", color: 0x4a5a66, sprite: "store-fridges", frame: 1 },
+      { id: "cooler", label: "Fridges", x: 13, y: 2, w: 2, h: 1, verb: "Look at", color: 0x4a5a66, sprite: "store-fridges", frame: 2 },
+      { id: "cooler", label: "Fridges", x: 15, y: 2, w: 2, h: 1, verb: "Look at", color: 0x4a5a66, sprite: "store-fridges", frame: 3 },
       { id: "jack", label: "Jack", x: 7, y: 5, w: 1, h: 1, verb: "Look at", color: 0x3a3a36, onWall: true },
       { id: "baskets", label: "Baskets", x: 18, y: 2, w: 1, h: 1, verb: "", color: 0x5a3a3a, decor: true },
       { id: "baskets", label: "Baskets", x: 8, y: 5, w: 1, h: 1, verb: "", color: 0x5a3a3a, decor: true },

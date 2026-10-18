@@ -50,6 +50,7 @@ export class RoomScene extends Phaser.Scene {
     this.load.spritesheet("player", "assets/sprites/characters/player-walk.png", { frameWidth: 16, frameHeight: 32 });
     this.load.spritesheet("mrs-finch", "assets/sprites/characters/mrs-finch-walk.png", { frameWidth: 16, frameHeight: 32 });
     this.load.spritesheet("store-tiles", "assets/sprites/tiles/store-tiles.png", { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet("store-fridges", "assets/sprites/props/store-fridges.png", { frameWidth: 32, frameHeight: 48 });
   }
 
   create(data: { room?: RoomId }): void {
@@ -152,8 +153,8 @@ export class RoomScene extends Phaser.Scene {
     const h = p.h * TILE;
     const inset = p.onWall ? 6 : 4;
     if (p.sprite) {
-      // A person: standing on the bottom of their tile, facing you.
-      this.add.sprite(x + w / 2, y + h, p.sprite, 0).setOrigin(0.5, 1).setScale(4).setDepth(y + h);
+      // Standing on the bottom of its footprint, so tall things rise up over the wall behind.
+      this.add.sprite(x + w / 2, y + h, p.sprite, p.frame ?? 0).setOrigin(0.5, 1).setScale(4).setDepth(y + h);
       solid(x + inset, y + inset, w - inset * 2, h - inset * 2);
       return;
     }
