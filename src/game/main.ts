@@ -4,6 +4,13 @@ import { Story } from "./story";
 import { Ui } from "./ui";
 
 const ui = new Ui();
+
+// The page needs one click before it gets the keyboard, especially inside a frame.
+const start = document.getElementById("start")!;
+start.addEventListener("click", () => {
+  start.remove();
+  window.focus();
+});
 const story = new Story(ui);
 
 const game = new Phaser.Game({

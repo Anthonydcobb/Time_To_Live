@@ -8,6 +8,7 @@
   --green: #4cff7a;
   --off: #2a2a26;
   --console: #6ab0d8;
+  color-scheme: dark;
   --mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
 }
 
@@ -384,4 +385,25 @@ kbd {
 
 #card .press.shown {
   opacity: 1;
+}
+
+#start {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: grid;
+  place-content: center;
+  gap: 10px;
+  border: 0;
+  background: #050504ee;
+  color: var(--amber);
+  font: 22px var(--mono);
+  letter-spacing: 0.1em;
+  cursor: pointer;
+}
+
+#start span {
+  color: var(--dim);
+  font-size: 13px;
+  letter-spacing: 0.06em;
 }
