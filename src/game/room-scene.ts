@@ -56,6 +56,7 @@ export class RoomScene extends Phaser.Scene {
       [...row].forEach((ch, tx) => {
         const x = tx * TILE;
         const y = ty * TILE;
+        if (ch === " ") return;
         if (ch === "#") {
           const faceBelow = this.room.map[ty + 1]?.[tx] === ".";
           this.add.rectangle(x, y, TILE, TILE, faceBelow ? WALL_FACE : WALL_TOP).setOrigin(0);
@@ -79,8 +80,12 @@ export class RoomScene extends Phaser.Scene {
     // Only your feet collide, so you can stand in front of tall things.
     this.body_.setSize(40, 22).setOffset(-20, -22);
     this.body_.setCollideWorldBounds(true);
-    this.physics.world.setBounds(0, 0, this.room.map[0].length * TILE, this.room.map.length * TILE);
+    const worldW = this.room.map[0].length * TILE;
+    const worldH = this.room.map.length * TILE;
+    this.physics.world.setBounds(0, 0, worldW, worldH);
     this.physics.add.collider(this.player, walls);
+    // Rooms bigger than the screen scroll with you.
+    this.cameras.main.setBounds(0, 0, worldW, worldH).startFollow(this.player, true);
 
     this.prompt = this.add
       .text(0, 0, "", { fontFamily: "IBM Plex Mono, monospace", fontSize: "16px", color: "#ffb000", backgroundColor: "#0b0c0acc", padding: { x: 6, y: 3 } })
@@ -90,9 +95,10 @@ export class RoomScene extends Phaser.Scene {
     const title = this.add
       .text(this.scale.width / 2, this.scale.height / 2 - 40, this.room.title, { fontFamily: "IBM Plex Mono, monospace", fontSize: "28px", color: "#d8d4c0", backgroundColor: "#0b0c0acc", padding: { x: 12, y: 6 } })
       .setOrigin(0.5)
+      .setScrollFactor(0)
       .setDepth(10_000);
     this.tweens.add({ targets: title, alpha: 0, delay: 1400, duration: 800, onComplete: () => title.destroy() });
-    this.dark = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0).setOrigin(0).setDepth(20_000);
+    this.dark = this.add.rectangle(0, 0, this.scale.width, this.scale.height, 0x000000, 0).setOrigin(0).setScrollFactor(0).setDepth(20_000);
 
     // Capture nothing, so WASD and Space still reach the terminal.
     const kb = this.input.keyboard!;
@@ -139,15 +145,16 @@ export class RoomScene extends Phaser.Scene {
     if (!p.onWall) solid(x + inset, y + inset, w - inset * 2, h - inset * 2);
   }
 
-  /** The cable nobody ran: from the back of the cooler, along the floor, into the wall. */
+  /** The cable nobody ran: from the back of the fridges, along the floor, into the wall jack. */
   private drawPhantomCable(): void {
     const g = this.add.graphics().setDepth(2);
     g.lineStyle(4, 0x2a6a8a, 1);
     g.beginPath();
-    g.moveTo(1.1 * TILE, 4 * TILE);
-    g.lineTo(1.1 * TILE, 4.4 * TILE);
-    g.lineTo(0.9 * TILE, 4.6 * TILE);
-    g.lineTo(0.9 * TILE, 7.5 * TILE);
+    g.moveTo(9.15 * TILE, 2 * TILE);
+    g.lineTo(9.15 * TILE, 2.4 * TILE);
+    g.lineTo(8.1 * TILE, 2.6 * TILE);
+    g.lineTo(8.1 * TILE, 4.5 * TILE);
+    g.lineTo(8 * TILE, 4.5 * TILE);
     g.strokePath();
   }
 
@@ -210,6 +217,7 @@ export class RoomScene extends Phaser.Scene {
     let best: Prop | null = null;
     let bestD = REACH;
     for (const p of this.room.props) {
+      if (p.decor) continue;
       const x0 = p.x * TILE;
       const y0 = p.y * TILE;
       const dx = Math.max(x0 - fx, 0, fx - (x0 + p.w * TILE));
