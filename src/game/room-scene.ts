@@ -56,6 +56,8 @@ export class RoomScene extends Phaser.Scene {
     this.load.spritesheet("store-counter", "assets/sprites/props/store-counter.png", { frameWidth: 16, frameHeight: 80 });
     this.load.spritesheet("store-rack", "assets/sprites/props/store-rack.png", { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("store-jack", "assets/sprites/props/store-jack.png", { frameWidth: 16, frameHeight: 16 });
+    // Set dressing: 32x80 cells, each piece standing at the bottom centre of its cell.
+    this.load.spritesheet("store-decor", "assets/sprites/props/store-decor.png", { frameWidth: 32, frameHeight: 80 });
   }
 
   create(data: { room?: RoomId }): void {
