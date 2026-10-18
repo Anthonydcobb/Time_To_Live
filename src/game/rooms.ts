@@ -16,6 +16,8 @@ export interface Prop {
   color: number;
   /** Hung on a wall, so it doesn't need its own collision. */
   onWall?: boolean;
+  /** A loaded spritesheet key to stand here instead of the grey box. */
+  sprite?: string;
 }
 
 export interface RoomDef {
@@ -77,7 +79,7 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "shelf2", label: "Shelf", x: 5, y: 2, w: 1, h: 2, verb: "Look at", color: 0x5a5244 },
       { id: "counter", label: "Counter", x: 2, y: 6, w: 3, h: 1, verb: "Lean on", color: 0x5a5448 },
       { id: "register", label: "Register\nPC0", x: 5, y: 6, w: 1, h: 1, verb: "Use", color: 0x46504a },
-      { id: "finch", label: "Mrs.\nFinch", x: 3, y: 5, w: 1, h: 1, verb: "Talk to", color: 0x6a5a7a },
+      { id: "finch", label: "Mrs.\nFinch", x: 3, y: 5, w: 1, h: 1, verb: "Talk to", color: 0x6a5a7a, sprite: "mrs-finch" },
       { id: "jack", label: "Jack", x: 0, y: 7, w: 1, h: 1, verb: "Look at", color: 0x3a3a36, onWall: true },
       { id: "desk", label: "Desk", x: 10, y: 1, w: 2, h: 1, verb: "Look at", color: 0x55524a },
       { id: "office", label: "PC1", x: 11, y: 1, w: 1, h: 1, verb: "Use", color: 0x46504a },

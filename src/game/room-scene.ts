@@ -36,6 +36,7 @@ export class RoomScene extends Phaser.Scene {
   preload(): void {
     // Rows: down, up, left, right. Each row is stand, step, pass, step, pass.
     this.load.spritesheet("player", "assets/sprites/characters/player-walk.png", { frameWidth: 16, frameHeight: 32 });
+    this.load.spritesheet("mrs-finch", "assets/sprites/characters/mrs-finch-walk.png", { frameWidth: 16, frameHeight: 32 });
   }
 
   create(data: { room?: RoomId }): void {
@@ -120,6 +121,12 @@ export class RoomScene extends Phaser.Scene {
     const w = p.w * TILE;
     const h = p.h * TILE;
     const inset = p.onWall ? 6 : 4;
+    if (p.sprite) {
+      // A person: standing on the bottom of their tile, facing you.
+      this.add.sprite(x + w / 2, y + h, p.sprite, 0).setOrigin(0.5, 1).setScale(4).setDepth(y + h);
+      solid(x + inset, y + inset, w - inset * 2, h - inset * 2);
+      return;
+    }
     this.add
       .rectangle(x + inset, y + inset, w - inset * 2, h - inset * 2, p.color)
       .setOrigin(0)
