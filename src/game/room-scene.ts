@@ -37,6 +37,8 @@ export class RoomScene extends Phaser.Scene {
   private near: Prop | null = null;
   private facing = new Phaser.Math.Vector2(0, 1);
   private sprite!: Phaser.GameObjects.Sprite;
+  /** Prop sprites by prop id, for swapping frames when the story moves on. */
+  private propSprites = new Map<string, Phaser.GameObjects.Sprite[]>();
 
   constructor(
     private readonly story: Story,
@@ -52,6 +54,8 @@ export class RoomScene extends Phaser.Scene {
     this.load.spritesheet("store-tiles", "assets/sprites/tiles/store-tiles.png", { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet("store-fridges", "assets/sprites/props/store-fridges.png", { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet("store-counter", "assets/sprites/props/store-counter.png", { frameWidth: 16, frameHeight: 80 });
+    this.load.spritesheet("store-rack", "assets/sprites/props/store-rack.png", { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("store-jack", "assets/sprites/props/store-jack.png", { frameWidth: 16, frameHeight: 16 });
   }
 
   create(data: { room?: RoomId }): void {
@@ -60,6 +64,7 @@ export class RoomScene extends Phaser.Scene {
       this.anims.create({ key: `walk-${dir}`, frames: this.anims.generateFrameNumbers("player", { start: row * 5 + 1, end: row * 5 + 4 }), frameRate: 8, repeat: -1 });
     });
     this.room = ROOMS[data.room ?? "office"];
+    this.propSprites.clear();
     const walls = this.physics.add.staticGroup();
     const solid = (x: number, y: number, w: number, h: number) => {
       const r = this.add.rectangle(x + w / 2, y + h / 2, w, h).setVisible(false);
@@ -156,8 +161,9 @@ export class RoomScene extends Phaser.Scene {
     if (p.hidden) return;
     if (p.sprite) {
       // Standing on the bottom of its footprint, so tall things rise up over the wall behind.
-      this.add.sprite(x + w / 2, y + h, p.sprite, p.frame ?? 0).setOrigin(0.5, 1).setScale(4).setDepth(y + h);
-      solid(x + inset, y + inset, w - inset * 2, h - inset * 2);
+      const sprite = this.add.sprite(x + w / 2, y + h, p.sprite, p.frame ?? 0).setOrigin(0.5, 1).setScale(4).setDepth(p.onWall ? 1 : y + h);
+      this.propSprites.set(p.id, [...(this.propSprites.get(p.id) ?? []), sprite]);
+      if (!p.onWall) solid(x + inset, y + inset, w - inset * 2, h - inset * 2);
       return;
     }
     this.add
@@ -174,6 +180,7 @@ export class RoomScene extends Phaser.Scene {
 
   /** The cable nobody ran: from the back of the fridges, along the floor, into the wall jack. */
   private drawPhantomCable(): void {
+    for (const s of this.propSprites.get("jack") ?? []) s.setFrame(1);
     const g = this.add.graphics().setDepth(2);
     g.lineStyle(4, 0x2a6a8a, 1);
     g.beginPath();

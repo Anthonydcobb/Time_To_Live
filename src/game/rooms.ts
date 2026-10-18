@@ -113,7 +113,7 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "boxes", label: "Boxes", x: 4, y: 2, w: 1, h: 2, verb: "", color: 0x5e5240, decor: true },
       { id: "broom", label: "Broom", x: 6, y: 5, w: 1, h: 1, verb: "", color: 0x5a4a32, decor: true },
       // Back office
-      { id: "rack", label: "Rack\nR1 S1", x: 1, y: 7, w: 2, h: 1, verb: "Work on", color: 0x3c4450 },
+      { id: "rack", label: "Rack\nR1 S1", x: 1, y: 7, w: 2, h: 1, verb: "Work on", color: 0x3c4450, sprite: "store-rack" },
       { id: "storage", label: "Storage", x: 3, y: 7, w: 1, h: 1, verb: "", color: 0x50504a, decor: true },
       { id: "files", label: "Files", x: 1, y: 9, w: 1, h: 2, verb: "", color: 0x50504a, decor: true },
       { id: "files", label: "Files", x: 6, y: 8, w: 1, h: 2, verb: "", color: 0x50504a, decor: true },
@@ -128,7 +128,8 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "cooler", label: "Fridges", x: 11, y: 2, w: 2, h: 1, verb: "Look at", color: 0x4a5a66, sprite: "store-fridges", frame: 1 },
       { id: "cooler", label: "Fridges", x: 13, y: 2, w: 2, h: 1, verb: "Look at", color: 0x4a5a66, sprite: "store-fridges", frame: 2 },
       { id: "cooler", label: "Fridges", x: 15, y: 2, w: 2, h: 1, verb: "Look at", color: 0x4a5a66, sprite: "store-fridges", frame: 3 },
-      { id: "jack", label: "Jack", x: 7, y: 5, w: 1, h: 1, verb: "Look at", color: 0x3a3a36, onWall: true },
+      // Frame 1 is the jack with roots growing out of it, shown once the haunt starts.
+      { id: "jack", label: "Jack", x: 7, y: 5, w: 1, h: 1, verb: "Look at", color: 0x3a3a36, onWall: true, sprite: "store-jack" },
       { id: "baskets", label: "Baskets", x: 18, y: 2, w: 1, h: 1, verb: "", color: 0x5a3a3a, decor: true },
       { id: "baskets", label: "Baskets", x: 8, y: 5, w: 1, h: 1, verb: "", color: 0x5a3a3a, decor: true },
       { id: "shelf1", label: "Wall\nshelf", x: 8, y: 7, w: 1, h: 4, verb: "Look at", color: 0x5a5244 },
