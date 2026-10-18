@@ -8,7 +8,14 @@ import { TerminalView, iosSession, pcSession } from "../web/terminal";
 export interface Line {
   who?: string;
   text: string;
+  /** Which of the speaker's portraits to show: 0 calm, 1 paranoid, 2 frantic. Default 0. */
+  mood?: 0 | 1 | 2;
 }
+
+/** Portrait sheets by speaker: three 64 px faces side by side, calm to frantic. */
+const PORTRAITS: Record<string, string> = {
+  "MRS. FINCH": "assets/portraits/mrs-finch.png",
+};
 
 export interface Choice {
   label: string;
@@ -83,6 +90,7 @@ export class Ui {
     const who = $("who");
     who.textContent = next.who ?? "";
     who.hidden = !next.who;
+    this.showPortrait(next);
     this.typed = 0;
     window.clearInterval(this.typer);
     this.typer = window.setInterval(() => {
@@ -91,6 +99,16 @@ export class Ui {
       if (this.typed >= next.text.length) window.clearInterval(this.typer);
     }, TYPE_MS);
     this.renderLine();
+  }
+
+  private showPortrait(line: Line): void {
+    const sheet = line.who ? PORTRAITS[line.who] : undefined;
+    const el = $("portrait");
+    el.hidden = !sheet;
+    $("dialogue").classList.toggle("has-portrait", !!sheet);
+    if (!sheet) return;
+    el.style.backgroundImage = `url(${sheet})`;
+    el.style.backgroundPosition = `${(line.mood ?? 0) * 50}% 0`;
   }
 
   private renderLine(): void {
@@ -120,6 +138,7 @@ export class Ui {
     $("dialogue").hidden = false;
     $("who").textContent = prompt.who ?? "";
     $("who").hidden = !prompt.who;
+    this.showPortrait(prompt);
     $("line").textContent = prompt.text;
     $("more").hidden = true;
     const list = $("choices");

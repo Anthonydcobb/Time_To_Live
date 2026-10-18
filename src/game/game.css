@@ -126,6 +126,24 @@ kbd {
   border: 2px solid var(--line);
 }
 
+/* A speaker's 64 px portrait at 2x, inside the box on the left. */
+#dialogue.has-portrait {
+  min-height: 156px;
+  padding-left: 160px;
+}
+
+#portrait {
+  position: absolute;
+  left: 14px;
+  top: 14px;
+  width: 128px;
+  height: 128px;
+  background-repeat: no-repeat;
+  background-size: 300% 100%;
+  image-rendering: pixelated;
+  border: 2px solid var(--line);
+}
+
 #who {
   margin: 0 0 4px;
   color: var(--amber);
