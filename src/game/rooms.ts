@@ -97,7 +97,7 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "board", label: "Job board", x: 6, y: 0, w: 2, h: 1, verb: "Read", color: 0x7a6a48, onWall: true },
       { id: "gary", label: "Locked door", x: 10, y: 0, w: 1, h: 1, verb: "Knock on", color: 0x5a2a2a, onWall: true },
       { id: "desk", label: "Bob's desk", x: 2, y: 2, w: 3, h: 1, verb: "Look at", color: 0x55524a },
-      { id: "walkie", label: "Walkie", x: 8, y: 2, w: 1, h: 1, verb: "Pick up", color: 0x4a5a4a },
+      { id: "walkie", label: "Walkie", x: 8, y: 2, w: 1, h: 1, verb: "Pick up", color: 0x4a5a4a, sprite: "walkie" },
       { id: "coffee", label: "Coffee", x: 13, y: 5, w: 1, h: 1, verb: "Use", color: 0x4a4440 },
       { id: "cabinet", label: "Files", x: 1, y: 6, w: 1, h: 2, verb: "Open", color: 0x50504a },
       { id: "exit", label: "Front door", x: 7, y: 9, w: 1, h: 1, verb: "Go out", color: 0x3a3428, onWall: true },

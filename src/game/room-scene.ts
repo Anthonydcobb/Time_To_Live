@@ -61,6 +61,8 @@ export class RoomScene extends Phaser.Scene {
     this.load.spritesheet("store-counter", "assets/sprites/props/store-counter.png", { frameWidth: 16, frameHeight: 80 });
     this.load.spritesheet("store-rack", "assets/sprites/props/store-rack.png", { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("store-jack", "assets/sprites/props/store-jack.png", { frameWidth: 16, frameHeight: 16 });
+    // Frame 0 the walkie on its charger, frame 1 the charger once you've taken it.
+    this.load.spritesheet("walkie", "assets/sprites/props/walkie.png", { frameWidth: 16, frameHeight: 16 });
     // Set dressing: 32x80 cells, each piece standing at the bottom centre of its cell.
     this.load.spritesheet("store-decor", "assets/sprites/props/store-decor.png", { frameWidth: 32, frameHeight: 80 });
   }
@@ -106,7 +108,7 @@ export class RoomScene extends Phaser.Scene {
       }),
     );
 
-    for (const p of this.room.props) this.drawProp(p.id === "walkie" && this.story.has("walkie") ? { ...p, label: "Charger" } : p, solid);
+    for (const p of this.room.props) this.drawProp(p.id === "walkie" && this.story.has("walkie") ? { ...p, label: "Charger", frame: 1 } : p, solid);
     if (this.room.id === "shop" && this.story.has("haunt")) this.drawPhantomCable();
 
     // You: the contractor, 16x32 drawn at 4x, standing on her feet.
@@ -147,13 +149,16 @@ export class RoomScene extends Phaser.Scene {
     const onGoto = (to: RoomId) => this.scene.restart({ room: to });
     const onFlicker = () => this.flicker();
     const onHaunt = () => this.room.id === "shop" && this.drawPhantomCable();
+    const onWalkie = () => this.propSprites.get("walkie")?.forEach((s) => s.setFrame(1));
     events.on("goto", onGoto);
     events.on("flicker", onFlicker);
     events.on("haunt", onHaunt);
+    events.on("walkie", onWalkie);
     this.events.once("shutdown", () => {
       events.off("goto", onGoto);
       events.off("flicker", onFlicker);
       events.off("haunt", onHaunt);
+      events.off("walkie", onWalkie);
     });
 
     this.cameras.main.fadeIn(300);

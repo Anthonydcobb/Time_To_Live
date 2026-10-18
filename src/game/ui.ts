@@ -18,6 +18,10 @@ export interface Line {
  */
 const PORTRAITS: Record<string, { busts?: (string | undefined)[]; sheet?: string }> = {
   "MRS. FINCH": { busts: ["assets/portraits/mrs-finch-bust.webp"], sheet: "assets/portraits/mrs-finch.png" },
+  // You only ever hear Walter, so his portrait is the radio.
+  "WALTER (walkie)": { busts: ["assets/portraits/walter-bust.webp"] },
+  // The contractor. She has no spoken lines yet.
+  SIMONE: { busts: ["assets/portraits/simone-bust.webp"] },
 };
 
 export interface Choice {

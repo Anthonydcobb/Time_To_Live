@@ -96,6 +96,7 @@ export class Story {
       case "office:walkie":
         if (!this.flags.has("walkie")) {
           this.flags.add("walkie");
+          events.emit("walkie");
           ui.say([
             { who: W, text: "Is this thing on? Course it's on. Everything's on. That's the trouble with everything." },
             { who: W, text: "WELCOME, welcome, welcome, new hire, to Bob's Bandwidth and Bloodletting! Ding ding ding! You have unlocked: a job!" },
