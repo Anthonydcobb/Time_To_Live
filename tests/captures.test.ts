@@ -7,7 +7,7 @@ import { Router } from "../src/sim/devices/router";
 import { Switch } from "../src/sim/devices/switch";
 import { Network } from "../src/sim/network";
 import { help } from "../src/sim/ios/parser";
-import { type } from "./helpers";
+import { captureLogs, type } from "./helpers";
 
 function router() {
   const net = new Network();
@@ -258,5 +258,22 @@ describe("captured from real IOS", () => {
       ["S2", 3000, "%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up"],
     ]);
     expect(s1.operationalMode(s1.port("Gi0/1"))).toBe("trunk");
+  });
+
+  it("bounces a trunk when its mode changes from dynamic to trunk", () => {
+    const net = new Network();
+    const s1 = net.add(new Switch("S1", "S1"));
+    const s2 = net.add(new Switch("S2", "S2"));
+    net.connect(s1.port("Gi0/1"), s2.port("Gi0/1"));
+    type(s2, "", "en", "conf t", "int g0/1", "switchport mode dynamic desirable");
+    net.clock.advance(40_000);
+    expect(s1.operationalMode(s1.port("Gi0/1"))).toBe("trunk");
+    const logs = captureLogs(s1);
+    type(s1, "", "en", "conf t", "int g0/1", "switchport mode trunk");
+    net.clock.advance(5000);
+    expect(logs.filter((l) => l.startsWith("%LINEPROTO"))).toEqual([
+      "%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to down",
+      "%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up",
+    ]);
   });
 });

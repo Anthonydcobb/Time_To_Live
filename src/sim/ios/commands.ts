@@ -710,10 +710,18 @@ const NONEGOTIATE = kw("nonegotiate", "Device will not engage in negotiation pro
 const VLAN_KW = kw("vlan", "Vlan commands");
 
 function setMode(c: Ctx, mode: "access" | "trunk" | "dynamic auto" | "dynamic desirable"): void {
+  const s = sw(c);
+  const ports = c.console.ifaces.map((n) => c.device.findInterface(n)?.port).filter((p) => !!p);
+  const before = ports.map((p) => ({ p, op: s.operationalMode(p), admin: s.switchport(p).mode }));
   eachSwitchport(c, (sp) => {
     if (mode.startsWith("dynamic") && sp.nonegotiate) return NEGOTIATE_CONFLICT;
     sp.mode = mode;
   });
+  // A trunk that stays a trunk still bounces when its mode is changed (captured: dynamic auto to trunk).
+  // A change of operational mode bounces too, but syncVlans already handles that.
+  for (const { p, op, admin } of before) {
+    if (op === "trunk" && s.operationalMode(p) === "trunk" && admin !== mode) c.device.network?.bounceProtocol(p);
+  }
 }
 
 function setAllowed(c: Ctx, change: (current: number[] | null) => number[] | null): void {
