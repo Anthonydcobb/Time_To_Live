@@ -35,11 +35,14 @@ export interface RoomDef {
 }
 
 /**
- * Frames in a room tileset. Row 0 is floor, row 1 is wall. Each list is frame and weight;
+ * Frames in a room tileset. Row 0 is floor; row 1 is the wall top, one-tile wall faces and
+ * the top halves of two-tile walls; row 2 is the bottom halves. Each list is frame and weight;
  * a tile's spot in the room picks one, so the same room always looks the same.
  */
 export const FLOOR_FRAMES: [number, number][] = [[0, 30], [1, 28], [6, 18], [7, 10], [2, 4], [3, 4], [4, 4], [5, 2]];
 export const WALL_FACE_FRAMES: [number, number][] = [[9, 55], [10, 18], [11, 13], [12, 14]];
+export const WALL_UPPER_FRAMES: [number, number][] = [[13, 80], [14, 20]];
+export const WALL_LOWER_FRAMES: [number, number][] = [[16, 60], [17, 18], [18, 12], [19, 10]];
 export const WALL_TOP_FRAME = 8;
 
 export function pickFrame(tx: number, ty: number, frames: [number, number][]): number {
@@ -87,6 +90,7 @@ export const ROOMS: Record<RoomId, RoomDef> = {
     // back office below it, the shop floor on the right.
     map: [
       "   ##################",
+      "   ##################",
       "   #...#............#",
       "   #................#",
       "   #...#............#",
@@ -102,37 +106,37 @@ export const ROOMS: Record<RoomId, RoomDef> = {
     ],
     props: [
       // Hallway
-      { id: "boxes", label: "Boxes", x: 4, y: 1, w: 1, h: 2, verb: "", color: 0x5e5240, decor: true },
-      { id: "broom", label: "Broom", x: 6, y: 4, w: 1, h: 1, verb: "", color: 0x5a4a32, decor: true },
+      { id: "boxes", label: "Boxes", x: 4, y: 2, w: 1, h: 2, verb: "", color: 0x5e5240, decor: true },
+      { id: "broom", label: "Broom", x: 6, y: 5, w: 1, h: 1, verb: "", color: 0x5a4a32, decor: true },
       // Back office
-      { id: "rack", label: "Rack\nR1 S1", x: 1, y: 6, w: 2, h: 1, verb: "Work on", color: 0x3c4450 },
-      { id: "storage", label: "Storage", x: 3, y: 6, w: 1, h: 1, verb: "", color: 0x50504a, decor: true },
-      { id: "files", label: "Files", x: 1, y: 8, w: 1, h: 2, verb: "", color: 0x50504a, decor: true },
-      { id: "files", label: "Files", x: 6, y: 7, w: 1, h: 2, verb: "", color: 0x50504a, decor: true },
-      { id: "desk", label: "Desk", x: 6, y: 9, w: 1, h: 2, verb: "Look at", color: 0x55524a },
-      { id: "office", label: "PC1", x: 6, y: 9, w: 1, h: 1, verb: "Use", color: 0x46504a },
-      { id: "chair", label: "Chair", x: 5, y: 10, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true },
-      { id: "storage", label: "Storage", x: 1, y: 11, w: 1, h: 1, verb: "", color: 0x50504a, decor: true },
-      { id: "boxes", label: "Boxes", x: 2, y: 11, w: 1, h: 1, verb: "", color: 0x5e5240, decor: true },
+      { id: "rack", label: "Rack\nR1 S1", x: 1, y: 7, w: 2, h: 1, verb: "Work on", color: 0x3c4450 },
+      { id: "storage", label: "Storage", x: 3, y: 7, w: 1, h: 1, verb: "", color: 0x50504a, decor: true },
+      { id: "files", label: "Files", x: 1, y: 9, w: 1, h: 2, verb: "", color: 0x50504a, decor: true },
+      { id: "files", label: "Files", x: 6, y: 8, w: 1, h: 2, verb: "", color: 0x50504a, decor: true },
+      { id: "desk", label: "Desk", x: 6, y: 10, w: 1, h: 2, verb: "Look at", color: 0x55524a },
+      { id: "office", label: "PC1", x: 6, y: 10, w: 1, h: 1, verb: "Use", color: 0x46504a },
+      { id: "chair", label: "Chair", x: 5, y: 11, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true },
+      { id: "storage", label: "Storage", x: 1, y: 12, w: 1, h: 1, verb: "", color: 0x50504a, decor: true },
+      { id: "boxes", label: "Boxes", x: 2, y: 12, w: 1, h: 1, verb: "", color: 0x5e5240, decor: true },
       // Shop floor
-      { id: "cooler", label: "Fridges", x: 9, y: 1, w: 8, h: 1, verb: "Look at", color: 0x4a5a66 },
-      { id: "jack", label: "Jack", x: 7, y: 4, w: 1, h: 1, verb: "Look at", color: 0x3a3a36, onWall: true },
-      { id: "baskets", label: "Baskets", x: 18, y: 1, w: 1, h: 1, verb: "", color: 0x5a3a3a, decor: true },
-      { id: "baskets", label: "Baskets", x: 8, y: 4, w: 1, h: 1, verb: "", color: 0x5a3a3a, decor: true },
-      { id: "shelf1", label: "Wall\nshelf", x: 8, y: 6, w: 1, h: 4, verb: "Look at", color: 0x5a5244 },
-      { id: "shelf1", label: "Shelf", x: 10, y: 5, w: 1, h: 4, verb: "Look at", color: 0x5a5244 },
-      { id: "shelf2", label: "Shelf", x: 12, y: 5, w: 1, h: 4, verb: "Look at", color: 0x5a5244 },
-      { id: "shelf1", label: "Shelf", x: 14, y: 5, w: 1, h: 4, verb: "Look at", color: 0x5a5244 },
-      { id: "register", label: "Register\nPC0", x: 18, y: 3, w: 1, h: 1, verb: "Use", color: 0x46504a },
-      { id: "counter", label: "Counter", x: 18, y: 4, w: 1, h: 3, verb: "Lean on", color: 0x5a5448 },
-      { id: "finch", label: "Mrs.\nFinch", x: 19, y: 4, w: 1, h: 1, verb: "Talk to", color: 0x6a5a7a, sprite: "mrs-finch" },
-      { id: "shelf2", label: "Wall\nshelf", x: 19, y: 8, w: 1, h: 2, verb: "Look at", color: 0x5a5244 },
-      { id: "bins", label: "Bins", x: 19, y: 10, w: 1, h: 2, verb: "", color: 0x3a3a36, decor: true },
-      { id: "boxes", label: "Boxes", x: 17, y: 11, w: 1, h: 1, verb: "", color: 0x5e5240, decor: true },
-      { id: "baskets", label: "Baskets", x: 8, y: 11, w: 2, h: 1, verb: "", color: 0x5a3a3a, decor: true },
-      { id: "exit", label: "Door", x: 14, y: 12, w: 2, h: 1, verb: "Leave", color: 0x3a3428, onWall: true },
+      { id: "cooler", label: "Fridges", x: 9, y: 2, w: 8, h: 1, verb: "Look at", color: 0x4a5a66 },
+      { id: "jack", label: "Jack", x: 7, y: 5, w: 1, h: 1, verb: "Look at", color: 0x3a3a36, onWall: true },
+      { id: "baskets", label: "Baskets", x: 18, y: 2, w: 1, h: 1, verb: "", color: 0x5a3a3a, decor: true },
+      { id: "baskets", label: "Baskets", x: 8, y: 5, w: 1, h: 1, verb: "", color: 0x5a3a3a, decor: true },
+      { id: "shelf1", label: "Wall\nshelf", x: 8, y: 7, w: 1, h: 4, verb: "Look at", color: 0x5a5244 },
+      { id: "shelf1", label: "Shelf", x: 10, y: 6, w: 1, h: 4, verb: "Look at", color: 0x5a5244 },
+      { id: "shelf2", label: "Shelf", x: 12, y: 6, w: 1, h: 4, verb: "Look at", color: 0x5a5244 },
+      { id: "shelf1", label: "Shelf", x: 14, y: 6, w: 1, h: 4, verb: "Look at", color: 0x5a5244 },
+      { id: "register", label: "Register\nPC0", x: 18, y: 4, w: 1, h: 1, verb: "Use", color: 0x46504a },
+      { id: "counter", label: "Counter", x: 18, y: 5, w: 1, h: 3, verb: "Lean on", color: 0x5a5448 },
+      { id: "finch", label: "Mrs.\nFinch", x: 19, y: 5, w: 1, h: 1, verb: "Talk to", color: 0x6a5a7a, sprite: "mrs-finch" },
+      { id: "shelf2", label: "Wall\nshelf", x: 19, y: 9, w: 1, h: 2, verb: "Look at", color: 0x5a5244 },
+      { id: "bins", label: "Bins", x: 19, y: 11, w: 1, h: 2, verb: "", color: 0x3a3a36, decor: true },
+      { id: "boxes", label: "Boxes", x: 17, y: 12, w: 1, h: 1, verb: "", color: 0x5e5240, decor: true },
+      { id: "baskets", label: "Baskets", x: 8, y: 12, w: 2, h: 1, verb: "", color: 0x5a3a3a, decor: true },
+      { id: "exit", label: "Door", x: 14, y: 13, w: 2, h: 1, verb: "Leave", color: 0x3a3428, onWall: true },
     ],
-    spawn: { x: 14, y: 11 },
+    spawn: { x: 14, y: 12 },
     tiles: "store-tiles",
   },
 };

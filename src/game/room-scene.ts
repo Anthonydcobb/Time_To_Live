@@ -1,5 +1,17 @@
 import Phaser from "phaser";
-import { FLOOR_FRAMES, pickFrame, ROOMS, TILE, WALL_FACE_FRAMES, WALL_TOP_FRAME, type Prop, type RoomDef, type RoomId } from "./rooms";
+import {
+  FLOOR_FRAMES,
+  pickFrame,
+  ROOMS,
+  TILE,
+  WALL_FACE_FRAMES,
+  WALL_LOWER_FRAMES,
+  WALL_TOP_FRAME,
+  WALL_UPPER_FRAMES,
+  type Prop,
+  type RoomDef,
+  type RoomId,
+} from "./rooms";
 import { events, type Story } from "./story";
 import type { Ui } from "./ui";
 
@@ -60,8 +72,13 @@ export class RoomScene extends Phaser.Scene {
         if (ch === " ") return;
         const tiles = this.room.tiles;
         if (tiles) {
-          const faceBelow = ch === "#" && this.room.map[ty + 1]?.[tx] === ".";
-          const frame = ch !== "#" ? pickFrame(tx, ty, FLOOR_FRAMES) : faceBelow ? pickFrame(tx, ty, WALL_FACE_FRAMES) : WALL_TOP_FRAME;
+          // A wall with floor below shows its face. If more wall sits above it, the face is two
+          // tiles tall: this is the bottom half and the tile above draws the top half.
+          const at = (dy: number) => this.room.map[ty + dy]?.[tx] ?? " ";
+          let frame = WALL_TOP_FRAME;
+          if (ch !== "#") frame = pickFrame(tx, ty, FLOOR_FRAMES);
+          else if (at(1) === ".") frame = pickFrame(tx, ty, at(-1) === "#" ? WALL_LOWER_FRAMES : WALL_FACE_FRAMES);
+          else if (at(1) === "#" && at(2) === ".") frame = pickFrame(tx, ty, WALL_UPPER_FRAMES);
           this.add.image(x, y, tiles, frame).setOrigin(0).setScale(TILE / 16);
           if (ch === "#") solid(x, y, TILE, TILE);
         } else if (ch === "#") {
@@ -157,11 +174,11 @@ export class RoomScene extends Phaser.Scene {
     const g = this.add.graphics().setDepth(2);
     g.lineStyle(4, 0x2a6a8a, 1);
     g.beginPath();
-    g.moveTo(9.15 * TILE, 2 * TILE);
-    g.lineTo(9.15 * TILE, 2.4 * TILE);
-    g.lineTo(8.1 * TILE, 2.6 * TILE);
-    g.lineTo(8.1 * TILE, 4.5 * TILE);
-    g.lineTo(8 * TILE, 4.5 * TILE);
+    g.moveTo(9.15 * TILE, 3 * TILE);
+    g.lineTo(9.15 * TILE, 3.4 * TILE);
+    g.lineTo(8.1 * TILE, 3.6 * TILE);
+    g.lineTo(8.1 * TILE, 5.5 * TILE);
+    g.lineTo(8 * TILE, 5.5 * TILE);
     g.strokePath();
   }
 
