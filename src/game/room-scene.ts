@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { ROOMS, TILE, type Prop, type RoomDef, type RoomId } from "./rooms";
+import { FLOOR_FRAMES, pickFrame, ROOMS, TILE, WALL_FACE_FRAMES, WALL_TOP_FRAME, type Prop, type RoomDef, type RoomId } from "./rooms";
 import { events, type Story } from "./story";
 import type { Ui } from "./ui";
 
@@ -37,6 +37,7 @@ export class RoomScene extends Phaser.Scene {
     // Rows: down, up, left, right. Each row is stand, step, pass, step, pass.
     this.load.spritesheet("player", "assets/sprites/characters/player-walk.png", { frameWidth: 16, frameHeight: 32 });
     this.load.spritesheet("mrs-finch", "assets/sprites/characters/mrs-finch-walk.png", { frameWidth: 16, frameHeight: 32 });
+    this.load.spritesheet("store-tiles", "assets/sprites/tiles/store-tiles.png", { frameWidth: 16, frameHeight: 16 });
   }
 
   create(data: { room?: RoomId }): void {
@@ -57,7 +58,13 @@ export class RoomScene extends Phaser.Scene {
         const x = tx * TILE;
         const y = ty * TILE;
         if (ch === " ") return;
-        if (ch === "#") {
+        const tiles = this.room.tiles;
+        if (tiles) {
+          const faceBelow = ch === "#" && this.room.map[ty + 1]?.[tx] === ".";
+          const frame = ch !== "#" ? pickFrame(tx, ty, FLOOR_FRAMES) : faceBelow ? pickFrame(tx, ty, WALL_FACE_FRAMES) : WALL_TOP_FRAME;
+          this.add.image(x, y, tiles, frame).setOrigin(0).setScale(TILE / 16);
+          if (ch === "#") solid(x, y, TILE, TILE);
+        } else if (ch === "#") {
           const faceBelow = this.room.map[ty + 1]?.[tx] === ".";
           this.add.rectangle(x, y, TILE, TILE, faceBelow ? WALL_FACE : WALL_TOP).setOrigin(0);
           if (faceBelow) this.add.rectangle(x, y, TILE, TILE / 3, WALL_TOP).setOrigin(0);

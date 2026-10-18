@@ -30,6 +30,26 @@ export interface RoomDef {
   props: Prop[];
   /** Where you appear, in tiles. */
   spawn: { x: number; y: number };
+  /** A loaded 16 px tileset for the floor and walls. Without one the room is flat grey boxes. */
+  tiles?: string;
+}
+
+/**
+ * Frames in a room tileset. Row 0 is floor, row 1 is wall. Each list is frame and weight;
+ * a tile's spot in the room picks one, so the same room always looks the same.
+ */
+export const FLOOR_FRAMES: [number, number][] = [[0, 30], [1, 28], [6, 18], [7, 10], [2, 4], [3, 4], [4, 4], [5, 2]];
+export const WALL_FACE_FRAMES: [number, number][] = [[9, 55], [10, 18], [11, 13], [12, 14]];
+export const WALL_TOP_FRAME = 8;
+
+export function pickFrame(tx: number, ty: number, frames: [number, number][]): number {
+  const h = (((tx * 73856093) ^ (ty * 19349663)) >>> 0) % 100;
+  let acc = 0;
+  for (const [frame, weight] of frames) {
+    acc += weight;
+    if (h < acc) return frame;
+  }
+  return frames[0][0];
 }
 
 export const ROOMS: Record<RoomId, RoomDef> = {
@@ -113,5 +133,6 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "exit", label: "Door", x: 14, y: 12, w: 2, h: 1, verb: "Leave", color: 0x3a3428, onWall: true },
     ],
     spawn: { x: 14, y: 11 },
+    tiles: "store-tiles",
   },
 };
