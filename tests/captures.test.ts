@@ -202,4 +202,10 @@ describe("captured from real IOS", () => {
     expect(type(s1, "switchport nonegotiate")).toEqual(["Command rejected: Conflict between 'nonegotiate' and 'dynamic' status on this interface: Fa0/2"]);
     expect(type(s1, "switchport access vlan 50")).toEqual(["% Access VLAN does not exist. Creating vlan 50"]);
   });
+
+  it("prints nothing for show interfaces trunk when no port is trunking", () => {
+    const net = new Network();
+    const s1 = net.add(new Switch("S1", "S1"));
+    expect(type(s1, "", "en", "show interfaces trunk")).toEqual([]);
+  });
 });
