@@ -10,6 +10,8 @@ const FLOOR = [0x34332e, 0x31302b];
 const WALL_TOP = 0x1c1b18;
 const WALL_FACE = 0x26251f;
 
+const DIRS = ["down", "up", "left", "right"] as const;
+
 type Keys = Record<"up" | "down" | "left" | "right" | "w" | "a" | "s" | "d" | "e" | "q", Phaser.Input.Keyboard.Key>;
 
 /** One grey-box room: tiles, props with labels, and you. */
@@ -22,6 +24,7 @@ export class RoomScene extends Phaser.Scene {
   private dark!: Phaser.GameObjects.Rectangle;
   private near: Prop | null = null;
   private facing = new Phaser.Math.Vector2(0, 1);
+  private sprite!: Phaser.GameObjects.Sprite;
 
   constructor(
     private readonly story: Story,
@@ -30,7 +33,16 @@ export class RoomScene extends Phaser.Scene {
     super("room");
   }
 
+  preload(): void {
+    // Rows: down, up, left, right. Each row is stand, step, pass, step, pass.
+    this.load.spritesheet("player", "assets/sprites/characters/player-walk.png", { frameWidth: 16, frameHeight: 32 });
+  }
+
   create(data: { room?: RoomId }): void {
+    DIRS.forEach((dir, row) => {
+      if (this.anims.exists(`walk-${dir}`)) return;
+      this.anims.create({ key: `walk-${dir}`, frames: this.anims.generateFrameNumbers("player", { start: row * 5 + 1, end: row * 5 + 4 }), frameRate: 8, repeat: -1 });
+    });
     this.room = ROOMS[data.room ?? "office"];
     const walls = this.physics.add.staticGroup();
     const solid = (x: number, y: number, w: number, h: number) => {
@@ -57,11 +69,10 @@ export class RoomScene extends Phaser.Scene {
     for (const p of this.room.props) this.drawProp(p.id === "walkie" && this.story.has("walkie") ? { ...p, label: "Charger" } : p, solid);
     if (this.room.id === "shop" && this.story.has("haunt")) this.drawPhantomCable();
 
-    // You: a grey stand-in, 16x32 at 4x minus a little so doorways feel roomy.
+    // You: the contractor, 16x32 drawn at 4x, standing on her feet.
     const s = this.room.spawn;
-    const body = this.add.rectangle(0, -40, 44, 88, 0x9a988c).setStrokeStyle(2, 0x1a1a18);
-    const head = this.add.rectangle(0, -70, 30, 22, 0xb8b4a4);
-    this.player = this.add.container((s.x + 0.5) * TILE, (s.y + 0.9) * TILE, [body, head]);
+    this.sprite = this.add.sprite(0, 0, "player", 0).setOrigin(0.5, 1).setScale(4);
+    this.player = this.add.container((s.x + 0.5) * TILE, (s.y + 0.9) * TILE, [this.sprite]);
     this.physics.add.existing(this.player);
     this.body_ = this.player.body as Phaser.Physics.Arcade.Body;
     // Only your feet collide, so you can stand in front of tall things.
@@ -154,6 +165,7 @@ export class RoomScene extends Phaser.Scene {
     v.normalize().scale(SPEED);
     this.body_.setVelocity(v.x, v.y);
     this.player.setDepth(this.player.y);
+    this.animate(v.lengthSq() > 0);
 
     this.near = frozen ? null : this.nearest();
     if (this.near) {
@@ -174,6 +186,14 @@ export class RoomScene extends Phaser.Scene {
       Phaser.Input.Keyboard.JustDown(k.e);
       Phaser.Input.Keyboard.JustDown(k.q);
     }
+  }
+
+  /** Walks while moving; otherwise stands still facing the last way she walked. */
+  private animate(moving: boolean): void {
+    const f = this.facing;
+    const dir = Math.abs(f.x) > Math.abs(f.y) ? (f.x < 0 ? "left" : "right") : f.y < 0 ? "up" : "down";
+    if (moving) this.sprite.play(`walk-${dir}`, true);
+    else this.sprite.stop().setFrame(DIRS.indexOf(dir) * 5);
   }
 
   /** The closest prop to your feet, a little ahead of where you face. */
