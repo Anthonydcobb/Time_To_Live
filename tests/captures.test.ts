@@ -276,4 +276,16 @@ describe("captured from real IOS", () => {
       "%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up",
     ]);
   });
+
+  it("doesn't bounce an access port set to mode access", () => {
+    const net = new Network();
+    const s1 = net.add(new Switch("S1", "S1"));
+    const s2 = net.add(new Switch("S2", "S2"));
+    net.connect(s1.port("Gi0/1"), s2.port("Gi0/1"));
+    net.clock.advance(40_000);
+    const logs = captureLogs(s1);
+    type(s1, "", "en", "conf t", "int g0/1", "switchport mode access");
+    net.clock.advance(5000);
+    expect(logs.filter((l) => l.startsWith("%LINEPROTO"))).toEqual([]);
+  });
 });
