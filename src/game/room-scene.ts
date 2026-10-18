@@ -63,6 +63,9 @@ export class RoomScene extends Phaser.Scene {
     this.load.spritesheet("store-jack", "assets/sprites/props/store-jack.png", { frameWidth: 16, frameHeight: 16 });
     // Frame 0 the walkie on its charger, frame 1 the charger once you've taken it.
     this.load.spritesheet("walkie", "assets/sprites/props/walkie.png", { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet("office-tiles", "assets/sprites/tiles/office-tiles.png", { frameWidth: 16, frameHeight: 16 });
+    // Bob's office props: 80x48 cells, each piece standing at the bottom centre of its cell.
+    this.load.spritesheet("office-props", "assets/sprites/props/office-props.png", { frameWidth: 80, frameHeight: 48 });
     // Set dressing: 32x80 cells, each piece standing at the bottom centre of its cell.
     this.load.spritesheet("store-decor", "assets/sprites/props/store-decor.png", { frameWidth: 32, frameHeight: 80 });
   }
@@ -92,7 +95,7 @@ export class RoomScene extends Phaser.Scene {
           // tiles tall: this is the bottom half and the tile above draws the top half.
           const at = (dy: number) => this.room.map[ty + dy]?.[tx] ?? " ";
           let frame = WALL_TOP_FRAME;
-          if (ch !== "#") frame = pickFrame(tx, ty, FLOOR_FRAMES);
+          if (ch !== "#") frame = pickFrame(tx, ty, this.room.floor ?? FLOOR_FRAMES);
           else if (at(1) === ".") frame = pickFrame(tx, ty, at(-1) === "#" ? WALL_LOWER_FRAMES : WALL_FACE_FRAMES);
           else if (at(1) === "#" && at(2) === ".") frame = pickFrame(tx, ty, WALL_UPPER_FRAMES);
           this.add.image(x, y, tiles, frame).setOrigin(0).setScale(TILE / 16);
