@@ -12,9 +12,12 @@ export interface Line {
   mood?: 0 | 1 | 2;
 }
 
-/** Portrait sheets by speaker: three 64 px faces side by side, calm to frantic. */
-const PORTRAITS: Record<string, string> = {
-  "MRS. FINCH": "assets/portraits/mrs-finch.png",
+/**
+ * Portraits by speaker. `busts` are illustrations by mood (calm, paranoid, frantic) shown
+ * over the room; a mood without one falls back to `sheet`, three 64 px pixel faces side by side.
+ */
+const PORTRAITS: Record<string, { busts?: (string | undefined)[]; sheet?: string }> = {
+  "MRS. FINCH": { busts: ["assets/portraits/mrs-finch-bust.webp"], sheet: "assets/portraits/mrs-finch.png" },
 };
 
 export interface Choice {
@@ -102,13 +105,19 @@ export class Ui {
   }
 
   private showPortrait(line: Line): void {
-    const sheet = line.who ? PORTRAITS[line.who] : undefined;
+    const mood = line.mood ?? 0;
+    const set = line.who ? PORTRAITS[line.who] : undefined;
+    const bust = set?.busts?.[mood];
+    const sheet = bust ? undefined : set?.sheet;
+    const img = $<HTMLImageElement>("bust");
+    img.hidden = !bust;
+    if (bust && !img.src.endsWith(bust)) img.src = bust;
     const el = $("portrait");
     el.hidden = !sheet;
     $("dialogue").classList.toggle("has-portrait", !!sheet);
     if (!sheet) return;
     el.style.backgroundImage = `url(${sheet})`;
-    el.style.backgroundPosition = `${(line.mood ?? 0) * 50}% 0`;
+    el.style.backgroundPosition = `${mood * 50}% 0`;
   }
 
   private renderLine(): void {

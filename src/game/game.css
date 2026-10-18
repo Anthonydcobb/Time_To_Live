@@ -144,6 +144,27 @@ kbd {
   border: 2px solid var(--line);
 }
 
+/* An illustrated bust standing on the top-left of the box, over the room. */
+#bust {
+  position: absolute;
+  left: 4px;
+  bottom: calc(100% - 2px);
+  height: min(280px, 42vh);
+  pointer-events: none;
+  filter: drop-shadow(0 6px 10px #000a);
+}
+
+#bust:not([hidden]) {
+  animation: bust-in 180ms ease-out;
+}
+
+@keyframes bust-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+}
+
 #who {
   margin: 0 0 4px;
   color: var(--amber);
