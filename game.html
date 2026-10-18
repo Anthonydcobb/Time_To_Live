@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Time To Live</title>
+    <link rel="stylesheet" href="/src/game/game.css" />
+  </head>
+  <body>
+    <div id="stage"></div>
+
+    <aside id="work-order" hidden>
+      <h2>Work order #0001 <span id="wo-count"></span></h2>
+      <div id="wo-body">
+        <p>Quik-Stop Forever · Mrs. Finch</p>
+        <ul id="tasks"></ul>
+      </div>
+    </aside>
+    <p id="keys">WASD / arrows move · <kbd>E</kbd> use · <kbd>Q</kbd> walkie · <kbd>J</kbd> work order</p>
+
+    <div id="dialogue" hidden>
+      <p id="who"></p>
+      <p id="line"></p>
+      <ul id="choices" hidden></ul>
+      <span id="more">▼</span>
+    </div>
+
+    <div id="laptop" hidden>
+      <div class="lid">
+        <header><span id="laptop-title"></span><button id="laptop-close" aria-label="Close">Esc</button></header>
+        <div id="laptop-screen"></div>
+        <footer id="laptop-hint"></footer>
+      </div>
+    </div>
+
+    <div id="panel" hidden>
+      <div class="lid">
+        <header><span>Back of the rack</span><button id="panel-close" aria-label="Close">Esc</button></header>
+        <div id="panel-body"></div>
+        <footer id="panel-hint"></footer>
+      </div>
+    </div>
+
+    <div id="card" hidden></div>
+    <script type="module" src="/src/game/main.ts"></script>
+  </body>
+</html>

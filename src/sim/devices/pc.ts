@@ -1,4 +1,4 @@
-import { nextMac, type Ipv4 } from "../addr";
+import { nextMac, type Ipv4, type Mac } from "../addr";
 import type { Frame } from "../frames";
 import { IpStack, type L3Interface } from "../ipstack";
 import { Device, Port } from "../network";
@@ -29,9 +29,9 @@ export class Pc extends Device {
   readonly shell: PcShell;
   private readonly l3: L3Interface;
 
-  constructor(id: string, readonly name = id) {
+  constructor(id: string, readonly name = id, mac: Mac = nextMac("0060a8")) {
     super(id);
-    this.nic = new Port(this, "FastEthernet0", "Fa0", nextMac("0060a8"));
+    this.nic = new Port(this, "FastEthernet0", "Fa0", mac);
     this.ports.push(this.nic);
     this.rs232 = new Port(this, "RS 232", "RS232", "000000000000", "console");
     const self = this;

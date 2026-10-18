@@ -1,0 +1,322 @@
+import { IosDevice } from "../sim/devices/ios-device";
+import type { Pc } from "../sim/devices/pc";
+import { CableError, type Device, type Network, type Port } from "../sim/network";
+import { lightFor } from "../web/topology";
+import { TerminalView, iosSession, pcSession } from "../web/terminal";
+
+/** One line of dialogue. `who` is printed above it. */
+export interface Line {
+  who?: string;
+  text: string;
+}
+
+export interface Choice {
+  label: string;
+  run: () => void;
+}
+
+interface Entry extends Line {
+  then?: () => void;
+}
+
+const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+const TYPE_MS = 18;
+
+/**
+ * Everything drawn in HTML over the game: dialogue, choices, title cards,
+ * the laptop terminal and the port panel. While any of it is open, the
+ * player can't move.
+ */
+export class Ui {
+  /** When something last closed, so the key that closed it doesn't also trigger the next thing. */
+  closedAt = 0;
+  private queue: Entry[] = [];
+  private current: Entry | null = null;
+  private typed = 0;
+  private typer = 0;
+  private choices: Choice[] | null = null;
+  private picked = 0;
+  private card: (() => void) | null = null;
+  private screen: TerminalView | null = null;
+  private panelOpen = false;
+  private readonly views = new Map<Device, TerminalView>();
+  /** A cable you pulled out on the port panel. Its other end is still plugged in at `far`. */
+  private holding: Port | null = null;
+  private panelDevices: Device[] = [];
+  private net: Network | null = null;
+
+  constructor() {
+    window.addEventListener("keydown", (e) => this.onKey(e), true);
+    $("panel-close").addEventListener("click", () => this.closePanel());
+    $("laptop-close").addEventListener("click", () => this.closeLaptop());
+    window.addEventListener("resize", () => this.screen?.resize());
+  }
+
+  get busy(): boolean {
+    return !!(this.current || this.choices || this.card || this.screen || this.panelOpen);
+  }
+
+  /** Whether a terminal or the port panel has the keyboard. */
+  get typing(): boolean {
+    return !!(this.screen || this.panelOpen);
+  }
+
+  // ---- dialogue -------------------------------------------------------------
+
+  say(lines: Line[], then?: () => void): void {
+    lines.forEach((l, i) => this.queue.push({ ...l, then: i === lines.length - 1 ? then : undefined }));
+    if (!this.busy) this.showNext();
+  }
+
+  private showNext(): void {
+    const next = this.queue.shift();
+    if (!next) {
+      $("dialogue").hidden = true;
+      this.closedAt = performance.now();
+      return;
+    }
+    this.current = next;
+    $("dialogue").hidden = false;
+    $("choices").hidden = true;
+    const who = $("who");
+    who.textContent = next.who ?? "";
+    who.hidden = !next.who;
+    this.typed = 0;
+    window.clearInterval(this.typer);
+    this.typer = window.setInterval(() => {
+      this.typed += 2;
+      this.renderLine();
+      if (this.typed >= next.text.length) window.clearInterval(this.typer);
+    }, TYPE_MS);
+    this.renderLine();
+  }
+
+  private renderLine(): void {
+    if (!this.current) return;
+    $("line").textContent = this.current.text.slice(0, this.typed);
+    $("more").hidden = this.typed < this.current.text.length;
+  }
+
+  private advance(): void {
+    const c = this.current;
+    if (!c) return;
+    if (this.typed < c.text.length) {
+      this.typed = c.text.length;
+      window.clearInterval(this.typer);
+      this.renderLine();
+      return;
+    }
+    this.current = null;
+    c.then?.();
+    if (!this.current && !this.choices && !this.screen && !this.panelOpen) this.showNext();
+  }
+
+  choose(prompt: Line, options: Choice[]): void {
+    this.current = null;
+    this.choices = options;
+    this.picked = 0;
+    $("dialogue").hidden = false;
+    $("who").textContent = prompt.who ?? "";
+    $("who").hidden = !prompt.who;
+    $("line").textContent = prompt.text;
+    $("more").hidden = true;
+    const list = $("choices");
+    list.hidden = false;
+    list.replaceChildren(
+      ...options.map((o, i) => {
+        const li = document.createElement("li");
+        li.textContent = o.label;
+        li.addEventListener("click", () => this.pick(i));
+        return li;
+      }),
+    );
+    this.renderChoices();
+  }
+
+  private renderChoices(): void {
+    Array.from($("choices").children).forEach((li, i) => li.classList.toggle("picked", i === this.picked));
+  }
+
+  private pick(i: number): void {
+    const options = this.choices;
+    if (!options) return;
+    this.choices = null;
+    $("choices").hidden = true;
+    $("dialogue").hidden = true;
+    this.closedAt = performance.now();
+    options[i].run();
+    if (!this.current && !this.choices && !this.screen && !this.panelOpen) this.showNext();
+  }
+
+  // ---- title cards ----------------------------------------------------------
+
+  /** A full-screen card, like the town sign or the job report. E closes it after `minMs`. */
+  showCard(html: string, then?: () => void, minMs = 1200): HTMLElement {
+    const el = $("card");
+    el.innerHTML = html + `<p class="press">E to continue</p>`;
+    el.hidden = false;
+    const shownAt = performance.now();
+    window.setTimeout(() => el.querySelector(".press")?.classList.add("shown"), minMs);
+    this.card = () => {
+      if (performance.now() - shownAt < minMs) return;
+      el.hidden = true;
+      this.card = null;
+      this.closedAt = performance.now();
+      then?.();
+      if (!this.busy) this.showNext();
+    };
+    return el;
+  }
+
+  // ---- laptop ---------------------------------------------------------------
+
+  /** Builds a terminal for every device now, so log messages pile up even before you look. */
+  attach(net: Network, devices: Device[]): void {
+    this.net = net;
+    const screen = $("laptop-screen");
+    for (const d of devices) {
+      const session = d instanceof IosDevice ? iosSession(d) : pcSession(d as Pc);
+      const view = new TerminalView(d, session, screen);
+      this.views.set(d, view);
+      d.onOutput((text) => view.log(text));
+    }
+  }
+
+  openLaptop(device: Device, title: string, hint: string): void {
+    const view = this.views.get(device);
+    if (!view) return;
+    $("laptop-title").textContent = title;
+    $("laptop-hint").textContent = hint;
+    $("laptop").hidden = false;
+    this.screen = view;
+    view.show();
+  }
+
+  closeLaptop(): void {
+    if (!this.screen) return;
+    this.screen.hide();
+    this.screen = null;
+    $("laptop").hidden = true;
+    this.closedAt = performance.now();
+    (document.activeElement as HTMLElement | null)?.blur();
+    this.showNext();
+  }
+
+  // ---- port panel -----------------------------------------------------------
+
+  openPanel(devices: Device[]): void {
+    this.panelDevices = devices;
+    this.panelOpen = true;
+    $("panel").hidden = false;
+    this.drawPanel();
+  }
+
+  closePanel(): void {
+    if (!this.panelOpen) return;
+    this.panelOpen = false;
+    $("panel").hidden = true;
+    this.closedAt = performance.now();
+    this.showNext();
+  }
+
+  /** Redraws the port lights. Called a few times a second. */
+  refresh(): void {
+    if (this.panelOpen) this.drawPanel();
+  }
+
+  private drawPanel(): void {
+    const body = $("panel-body");
+    body.replaceChildren(
+      ...this.panelDevices.map((d) => {
+        const box = document.createElement("section");
+        box.className = "chassis";
+        const h = document.createElement("h3");
+        h.textContent = d instanceof IosDevice ? `${d.hostname} · ${d.model}` : d.hostname;
+        const ports = document.createElement("div");
+        ports.className = "ports";
+        for (const p of d.ports) ports.appendChild(this.portButton(p));
+        box.append(h, ports);
+        return box;
+      }),
+    );
+    $("panel-hint").textContent = this.holding
+      ? `Holding a cable. Its other end is in ${where(this.holding)}. Click a free port to plug it in.`
+      : "Click a cable to pull it out, then click a free port to plug it back in.";
+  }
+
+  private portButton(p: Port): HTMLButtonElement {
+    const b = document.createElement("button");
+    b.className = `port ${p.kind}`;
+    const light = p.kind === "console" ? "none" : lightFor(p) === "red" ? "off" : lightFor(p);
+    b.innerHTML = `<span class="light ${light}"></span><span class="name"></span><span class="peer"></span>`;
+    b.querySelector(".name")!.textContent = p.shortName;
+    b.querySelector(".peer")!.textContent = p.peer ? where(p.peer) : "";
+    b.title = p.peer ? `${p.name} → ${where(p.peer)}` : p.name;
+    b.addEventListener("click", () => this.clickPort(p));
+    return b;
+  }
+
+  private clickPort(p: Port): void {
+    if (!this.net || p.kind === "console") return;
+    if (p.peer) {
+      if (this.holding) return this.flash("You're already holding a cable.");
+      this.holding = p.peer;
+      this.net.disconnect(p);
+    } else if (this.holding) {
+      try {
+        this.net.connect(this.holding, p);
+        this.holding = null;
+      } catch (e) {
+        if (e instanceof CableError) this.flash(e.message);
+        else throw e;
+      }
+    }
+    this.drawPanel();
+  }
+
+  private flash(text: string): void {
+    $("panel-hint").textContent = text;
+  }
+
+  // ---- keys -----------------------------------------------------------------
+
+  private onKey(e: KeyboardEvent): void {
+    const confirm = e.key === "e" || e.key === "E" || e.key === " " || e.key === "Enter";
+    if (e.key === "Escape" && (this.screen || this.panelOpen)) {
+      e.preventDefault();
+      e.stopPropagation();
+      if (this.screen) this.closeLaptop();
+      else this.closePanel();
+      return;
+    }
+    if (this.screen || this.panelOpen) return;
+    if (this.card) {
+      if (confirm || e.key === "Escape") {
+        e.preventDefault();
+        this.card();
+      }
+      return;
+    }
+    if (this.choices) {
+      const n = this.choices.length;
+      if (e.key === "ArrowUp" || e.key === "w" || e.key === "W") this.picked = (this.picked + n - 1) % n;
+      else if (e.key === "ArrowDown" || e.key === "s" || e.key === "S") this.picked = (this.picked + 1) % n;
+      else if (!confirm && e.key !== "Escape") return;
+      // Keep the key from landing in a terminal that the choice opens.
+      e.preventDefault();
+      if (confirm) return this.pick(this.picked);
+      if (e.key === "Escape") return this.pick(n - 1);
+      this.renderChoices();
+      return;
+    }
+    if (this.current && confirm) {
+      e.preventDefault();
+      this.advance();
+    }
+  }
+}
+
+/** "S1 Fa0/1", or "the wall" for a cable nobody ran. */
+function where(p: Port): string {
+  return p.device.id === "PHANTOM" ? "the wall" : `${p.device.hostname} ${p.shortName}`;
+}

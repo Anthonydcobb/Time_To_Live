@@ -2,7 +2,7 @@
 
 Read this first if you're picking up the project, human or AI. Update it whenever you finish something or change a plan.
 
-Last updated: 2026-10-16.
+Last updated: 2026-10-18.
 
 ## The game in one paragraph
 
@@ -20,11 +20,13 @@ Time To Live is a 2D top-down horror game set in Static Springs, a Night Vale st
 
 ## Stack and layout
 
-TypeScript, Vite, Vitest and xterm.js on Node 22. There's no game engine yet. The plan is Phaser or PixiJS later, packaged with Electron or Tauri.
+TypeScript, Vite, Vitest, xterm.js and Phaser 3 on Node 22. Packaging with Electron or Tauri comes later.
 
 ```
 src/sim/      The simulator. No DOM, runs on a virtual clock, fully unit tested.
 src/web/      The bench page: topology diagram, device tabs, terminals, work order.
+              terminal.ts is the xterm terminal, shared with the game.
+src/game/     The game (game.html): Phaser rooms, dialogue, laptop overlay, port panel, story script.
 tests/        Vitest tests (cli, network, depth, topology).
 ```
 
@@ -32,7 +34,7 @@ The README has the full feature list and the file-by-file layout.
 
 ```sh
 npm install
-npm run dev      # bench at http://localhost:5173
+npm run dev      # bench at http://localhost:5173, game at /game.html (?debug shows hitboxes)
 npm test
 npm run build    # typecheck and production build
 ```
@@ -70,7 +72,7 @@ Phase 1 (the simulator) still has gaps:
 
 Unverified against real gear (best recollection, check when someone has a Catalyst handy): the error text for `no interface` on a physical port, and whether a subinterface shows "administratively down" when only its parent is shut. From IOS 15 docs and memory rather than a capture (Ant's CML only runs IOL, IOS XE 17): the 2911 `show running-config` skeleton (no license udi, redundancy, Embedded-Service-Engine0/0, line 2 or scheduler lines yet) and the 2911/2960 hardware and media lines in `show interfaces`. Frame byte counts and the 5-minute rates are approximate. The 2960 keeps `Administrative Trunking Encapsulation: dot1q` and `Native VLAN tagging: enabled` (IOL says negotiate/disabled, but a 2960 only does dot1q). Answering yes to the setup dialog backs out as if Ctrl-C was pressed; the setup facility isn't simulated. Boot doesn't print the post-boot log burst (%SYS-5-RESTART, interface logs) yet.
 
-Phase 2 is the vertical slice: the corner store as a playable top-down scene. It needs the cabling port panel close-up, the laptop CLI overlay, the home base and home lab, one haunting, mentor radio messages, a sanity meter and placeholder audio.
+Phase 2 is the vertical slice. Ant picked 16 px art (drawn at 4x) and Phaser on 2026-10-18. The grey-box corner store is built (`src/game/`, branch `claude/corner-store-slice`): home base with the walkie-talkie (Walter), Gary's locked door, the job board and Bob's desk; the shop with Mrs. Finch, the register and back office PCs, the rack (console into R1 or S1) and a port panel where you can pull and replug cables. The work order ticks off from the live network. When it's all done, a phantom PC (MAC 6666.6666.6666, 192.168.1.66) plugs into S1 Fa0/24 through the wall behind the cooler and pings the register now and then, the lights flicker, and the job report's BOUNDARY INTEGRITY line fades. The town sign goes from 4,218 to 4,219 on the way home. `src/game/story.ts` holds every line and trigger. Still to do: Ant's sprites (spec in the shared `design/art-spec-corner-store.md`, PNGs land in the shared `art/` folder), the home lab, a sanity meter, sound, and saving progress.
 
 ## Open questions for Ant
 
