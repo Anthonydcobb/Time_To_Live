@@ -20,6 +20,8 @@ export interface Prop {
   sprite?: string;
   /** Which frame of `sprite` to show (default 0). */
   frame?: number;
+  /** Drawn by another prop's sprite: no box, label or collision of its own, but still usable. */
+  hidden?: boolean;
   /** Set dressing: you bump into it, but there's nothing to press E on. */
   decor?: boolean;
 }
@@ -133,8 +135,10 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "shelf1", label: "Shelf", x: 10, y: 6, w: 1, h: 4, verb: "Look at", color: 0x5a5244 },
       { id: "shelf2", label: "Shelf", x: 12, y: 6, w: 1, h: 4, verb: "Look at", color: 0x5a5244 },
       { id: "shelf1", label: "Shelf", x: 14, y: 6, w: 1, h: 4, verb: "Look at", color: 0x5a5244 },
-      { id: "register", label: "Register\nPC0", x: 18, y: 4, w: 1, h: 1, verb: "Use", color: 0x46504a },
-      { id: "counter", label: "Counter", x: 18, y: 5, w: 1, h: 3, verb: "Lean on", color: 0x5a5448 },
+      // The counter sprite carries the CRT (PC0), keyboard and cash register; the register
+      // is listed after it so the CRT end of the counter offers "Use Register PC0".
+      { id: "counter", label: "Counter", x: 18, y: 4, w: 1, h: 4, verb: "Lean on", color: 0x5a5448, sprite: "store-counter" },
+      { id: "register", label: "Register\nPC0", x: 18, y: 4, w: 1, h: 1, verb: "Use", color: 0x46504a, hidden: true },
       { id: "finch", label: "Mrs.\nFinch", x: 19, y: 5, w: 1, h: 1, verb: "Talk to", color: 0x6a5a7a, sprite: "mrs-finch" },
       { id: "shelf2", label: "Wall\nshelf", x: 19, y: 9, w: 1, h: 2, verb: "Look at", color: 0x5a5244 },
       { id: "bins", label: "Bins", x: 19, y: 11, w: 1, h: 2, verb: "", color: 0x3a3a36, decor: true },

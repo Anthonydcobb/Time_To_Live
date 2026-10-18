@@ -51,6 +51,7 @@ export class RoomScene extends Phaser.Scene {
     this.load.spritesheet("mrs-finch", "assets/sprites/characters/mrs-finch-walk.png", { frameWidth: 16, frameHeight: 32 });
     this.load.spritesheet("store-tiles", "assets/sprites/tiles/store-tiles.png", { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet("store-fridges", "assets/sprites/props/store-fridges.png", { frameWidth: 32, frameHeight: 48 });
+    this.load.spritesheet("store-counter", "assets/sprites/props/store-counter.png", { frameWidth: 16, frameHeight: 80 });
   }
 
   create(data: { room?: RoomId }): void {
@@ -152,6 +153,7 @@ export class RoomScene extends Phaser.Scene {
     const w = p.w * TILE;
     const h = p.h * TILE;
     const inset = p.onWall ? 6 : 4;
+    if (p.hidden) return;
     if (p.sprite) {
       // Standing on the bottom of its footprint, so tall things rise up over the wall behind.
       this.add.sprite(x + w / 2, y + h, p.sprite, p.frame ?? 0).setOrigin(0.5, 1).setScale(4).setDepth(y + h);
