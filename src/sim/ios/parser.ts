@@ -222,7 +222,7 @@ export function help<C>(commands: Command<C>[], line: string, ctx: C, reveal?: R
     .sort((a, b) => caseless(a.name, b.name))
     .map((row) => ("hidden" in row && row.hidden ? { name: toRunes(row.name), help: toRunes(row.help) } : row));
   const width = Math.max(0, ...rows.map((row) => row.name.length));
-  const lines = rows.map((row) => `  ${row.name.padEnd(width)}  ${row.help}`.trimEnd());
+  const lines = rows.flatMap((row) => wrapHelp(`  ${row.name.padEnd(width)}  `, row.help));
   if (r.cands.some((c) => c.cmd.tokens.length === r.p) && !r.incomplete) lines.push("  <cr>");
   if (!lines.length) return { kind: "error", result: { kind: "invalid", caret: line.length, wordIndex: words.length, wordCount: words.length } };
   return { kind: "list", lines: [...lines, ""] };
@@ -250,6 +250,23 @@ export function complete<C>(commands: Command<C>[], line: string, ctx: C, reveal
   const pick = exact ?? (names.length === 1 ? names[0] : null);
   if (!pick) return null;
   return line.slice(0, last.start) + pick + " ";
+}
+
+/** IOS wraps help text at 79 columns, continuing under the description column. */
+function wrapHelp(lead: string, text: string): string[] {
+  const indent = " ".repeat(lead.length);
+  const out: string[] = [];
+  let line = lead;
+  let first = true;
+  for (const word of text.split(" ").filter(Boolean)) {
+    if (!first && line.length + 1 + word.length > 79) {
+      out.push(line);
+      line = indent + word;
+    } else line += (first ? "" : " ") + word;
+    first = false;
+  }
+  out.push(line.trimEnd());
+  return out;
 }
 
 function caseless(a: string, b: string): number {

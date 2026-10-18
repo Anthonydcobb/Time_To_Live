@@ -6,6 +6,7 @@ import { Pc } from "../src/sim/devices/pc";
 import { Router } from "../src/sim/devices/router";
 import { Switch } from "../src/sim/devices/switch";
 import { Network } from "../src/sim/network";
+import { help } from "../src/sim/ios/parser";
 import { type } from "./helpers";
 
 function router() {
@@ -207,5 +208,32 @@ describe("captured from real IOS", () => {
     const net = new Network();
     const s1 = net.add(new Switch("S1", "S1"));
     expect(type(s1, "", "en", "show interfaces trunk")).toEqual([]);
+  });
+
+  it("wraps long help text at 79 columns like IOS", () => {
+    const net = new Network();
+    const s1 = net.add(new Switch("S1", "S1"));
+    type(s1, "", "en", "conf t", "int g0/1");
+    const help = s1.console.help("switchport ").lines;
+    const i = help.findIndex((l) => l.startsWith("  nonegotiate"));
+    // Our list is narrower than IOL's (no port-security), so this exactly fits in 79 columns.
+    expect(help[i]).toBe("  nonegotiate  Device will not engage in negotiation protocol on this interface");
+    expect(help[i].length).toBe(79);
+    expect(s1.console.help("switchport mode dynamic ").lines).toEqual([
+      "  auto       Set trunking mode dynamic negotiation parameter to AUTO",
+      "  desirable  Set trunking mode dynamic negotiation parameter to DESIRABLE",
+      "",
+    ]);
+  });
+
+  it("wraps a help line the way IOL wrapped switchport nonegotiate", () => {
+    const kw = (word: string, help: string) => ({ tokens: [{ type: "kw" as const, word, help }], run: () => {} });
+    const r = help([kw("port-security", "Security related command"), kw("nonegotiate", "Device will not engage in negotiation protocol on this interface")], "", {});
+    expect(r.kind === "list" && r.lines).toEqual([
+      "  nonegotiate    Device will not engage in negotiation protocol on this",
+      "                 interface",
+      "  port-security  Security related command",
+      "",
+    ]);
   });
 });
