@@ -311,7 +311,12 @@ export class Switch extends IosDevice {
         continue;
       }
       let timers = this.stpSince.get(port);
-      if (this.lastMode.get(port) !== mode) {
+      const was = this.lastMode.get(port);
+      if (was && was !== mode) {
+        // A live port that turns into a trunk, or stops being one, bounces line protocol on both ends.
+        this.clock.schedule(0, () => this.network?.bounceProtocol(port));
+      }
+      if (was !== mode) {
         // Turning into a trunk or an access port starts spanning tree over on the port.
         timers = undefined;
         this.flushMacs(port);

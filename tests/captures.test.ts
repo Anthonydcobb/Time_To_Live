@@ -236,4 +236,27 @@ describe("captured from real IOS", () => {
       "",
     ]);
   });
+
+  it("bounces line protocol on both switches for 3 s when DTP forms a trunk", () => {
+    // Captured: auto on S1, then desirable on S2. Both log down at :35.908 and up at :38.908.
+    const net = new Network();
+    const s1 = net.add(new Switch("S1", "S1"));
+    const s2 = net.add(new Switch("S2", "S2"));
+    net.connect(s1.port("Gi0/1"), s2.port("Gi0/1"));
+    net.clock.advance(40_000);
+    const logs: { at: number; who: string; text: string }[] = [];
+    for (const s of [s1, s2]) s.onOutput((text) => logs.push({ at: net.clock.now, who: s.hostname, text: text.replace(/^\*[^%]*/, "") }));
+    const start = net.clock.now;
+    type(s2, "", "en", "conf t", "int g0/1", "switchport mode dynamic desirable");
+    net.clock.advance(5000);
+    const proto = logs.filter((l) => l.text.startsWith("%LINEPROTO"));
+    const rows = proto.map((l) => [l.who, l.at - start, l.text]).sort((a, b) => (a[1] as number) - (b[1] as number) || String(a[0]).localeCompare(String(b[0])));
+    expect(rows).toEqual([
+      ["S1", 0, "%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to down"],
+      ["S2", 0, "%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to down"],
+      ["S1", 3000, "%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up"],
+      ["S2", 3000, "%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up"],
+    ]);
+    expect(s1.operationalMode(s1.port("Gi0/1"))).toBe("trunk");
+  });
 });

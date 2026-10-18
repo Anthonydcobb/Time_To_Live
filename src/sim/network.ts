@@ -144,6 +144,9 @@ export const LINK_NEGOTIATION_MS = 2000;
 /** Line protocol follows the physical link after this long. Measured on real IOS (Ant's CML capture). */
 export const LINEPROTO_DELAY_MS = 1000;
 
+/** How long line protocol stays down when a switch port changes between access and trunk. Measured in CML. */
+export const PORT_BOUNCE_MS = 3000;
+
 export class Network {
   readonly clock = new Clock();
   readonly devices: Device[] = [];
@@ -230,6 +233,26 @@ export class Network {
         port.protocolUp = true;
         port.device.onPortStateChange(port, "protocol");
         this.startBackgroundFrames(port);
+      }
+    });
+  }
+
+  /**
+   * Drops line protocol on both ends of a link and brings it back after a
+   * pause, the way a Catalyst bounces a port that turns into a trunk or back.
+   */
+  bounceProtocol(port: Port, downMs = PORT_BOUNCE_MS): void {
+    const ends = [port, port.peer].filter((p): p is Port => !!p && p.protocolUp);
+    for (const p of ends) {
+      p.protocolUp = false;
+      p.device.onPortStateChange(p, "protocol");
+    }
+    this.clock.schedule(downMs, () => {
+      for (const p of ends) {
+        if (!p.linkUp || p.protocolUp) continue;
+        p.protocolUp = true;
+        p.device.onPortStateChange(p, "protocol");
+        this.startBackgroundFrames(p);
       }
     });
   }
