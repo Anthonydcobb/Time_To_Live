@@ -37,6 +37,11 @@ export class RoomScene extends Phaser.Scene {
   private near: Prop | null = null;
   private facing = new Phaser.Math.Vector2(0, 1);
   private sprite!: Phaser.GameObjects.Sprite;
+  /** The room's darkness: ambient fill with lamp glows added, multiplied over everything. */
+  private lightMap: Phaser.GameObjects.RenderTexture | null = null;
+  private glow!: Phaser.GameObjects.Image;
+  /** Per lamp: current brightness (0-1) and when it next changes, for flickering tubes. */
+  private lampState: { level: number; next: number }[] = [];
   /** Prop sprites by prop id, for swapping frames when the story moves on. */
   private propSprites = new Map<string, Phaser.GameObjects.Sprite[]>();
 
@@ -119,6 +124,7 @@ export class RoomScene extends Phaser.Scene {
     this.physics.add.collider(this.player, walls);
     // Rooms bigger than the screen scroll with you.
     this.cameras.main.setBounds(0, 0, worldW, worldH).startFollow(this.player, true);
+    this.setupLights(worldW, worldH);
 
     this.prompt = this.add
       .text(0, 0, "", { fontFamily: "IBM Plex Mono, monospace", fontSize: "16px", color: "#ffb000", backgroundColor: "#0b0c0acc", padding: { x: 6, y: 3 } })
@@ -194,6 +200,54 @@ export class RoomScene extends Phaser.Scene {
     g.strokePath();
   }
 
+  private setupLights(worldW: number, worldH: number): void {
+    this.lightMap = null;
+    const lights = this.room.lights;
+    if (!lights) return;
+    if (!this.textures.exists("light-glow")) {
+      // A soft white disc, tinted per lamp when it's drawn.
+      const size = 256;
+      const tex = this.textures.createCanvas("light-glow", size, size)!;
+      const ctx = tex.getContext();
+      const grad = ctx.createRadialGradient(size / 2, size / 2, 0, size / 2, size / 2, size / 2);
+      grad.addColorStop(0, "rgba(255,255,255,1)");
+      grad.addColorStop(0.35, "rgba(255,255,255,0.7)");
+      grad.addColorStop(0.7, "rgba(255,255,255,0.22)");
+      grad.addColorStop(1, "rgba(255,255,255,0)");
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, size, size);
+      tex.refresh();
+    }
+    this.glow = this.make.image({ key: "light-glow", add: false }).setBlendMode(Phaser.BlendModes.ADD);
+    this.lightMap = this.add.renderTexture(0, 0, worldW, worldH).setOrigin(0).setDepth(9_000).setBlendMode(Phaser.BlendModes.MULTIPLY);
+    this.lampState = lights.lamps.map(() => ({ level: 1, next: 0 }));
+  }
+
+  /** Redraws the darkness each frame so flickering tubes and your own glow can move. */
+  private drawLights(now: number): void {
+    const lights = this.room.lights;
+    const map = this.lightMap;
+    if (!lights || !map) return;
+    map.fill(lights.ambient);
+    const put = (x: number, y: number, r: number, wide: number, color: number, alpha: number) => {
+      const d = (2 * r * TILE) / 256;
+      this.glow.setPosition(x, y).setScale(d * wide, d).setTint(color).setAlpha(alpha);
+      map.draw(this.glow);
+    };
+    lights.lamps.forEach((lamp, i) => {
+      const s = this.lampState[i];
+      if (lamp.flicker && now >= s.next) {
+        // Mostly on; sometimes a quick stutter.
+        const stutter = s.level === 1 && Math.random() < 0.35;
+        s.level = stutter ? 0.15 + Math.random() * 0.35 : 1;
+        s.next = now + (stutter ? 40 + Math.random() * 120 : 600 + Math.random() * 3500);
+      }
+      put(lamp.x * TILE, lamp.y * TILE, lamp.r, lamp.wide ?? 1, lamp.color, s.level);
+    });
+    // Enough of a glow on you that you never vanish in the dark corners.
+    put(this.player.x, this.player.y - 40, 1.6, 1, 0x7a8a7a, 0.6);
+  }
+
   private flicker(): void {
     const steps = [0.85, 0, 0.6, 0, 0.9, 0.2, 0];
     steps.forEach((a, i) => this.time.delayedCall(i * 110 + Math.random() * 60, () => this.dark.setFillStyle(0x000000, a)));
@@ -216,6 +270,7 @@ export class RoomScene extends Phaser.Scene {
     this.body_.setVelocity(v.x, v.y);
     this.player.setDepth(this.player.y);
     this.animate(v.lengthSq() > 0);
+    this.drawLights(this.time.now);
 
     this.near = frozen ? null : this.nearest();
     if (this.near) {

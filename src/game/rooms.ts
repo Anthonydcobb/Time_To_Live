@@ -36,7 +36,24 @@ export interface RoomDef {
   spawn: { x: number; y: number };
   /** A loaded 16 px tileset for the floor and walls. Without one the room is flat grey boxes. */
   tiles?: string;
+  /** If set, the room is dark except for these. Without lights the room is evenly lit. */
+  lights?: { ambient: number; lamps: Lamp[] };
 }
+
+/** A pool of light. Position and radius are in tiles. */
+export interface Lamp {
+  x: number;
+  y: number;
+  r: number;
+  color: number;
+  /** Stretch sideways, for long fluorescent tubes. */
+  wide?: number;
+  /** Buzzes and cuts out now and then. */
+  flicker?: boolean;
+}
+
+const FLUORESCENT = 0xb8e0b0;
+const BULB = 0xe8c888;
 
 /**
  * Frames in a room tileset. Row 0 is floor; row 1 is the wall top, one-tile wall faces and
@@ -149,5 +166,19 @@ export const ROOMS: Record<RoomId, RoomDef> = {
     ],
     spawn: { x: 14, y: 12 },
     tiles: "store-tiles",
+    // Green fluorescent tubes from the concept, a bare bulb in the hallway. The corner by the
+    // wall jack is left in the dark on purpose.
+    lights: {
+      ambient: 0x4a524a,
+      lamps: [
+        { x: 11, y: 3.6, r: 3.2, color: FLUORESCENT, wide: 1.5 },
+        { x: 15, y: 3.6, r: 3.2, color: FLUORESCENT, wide: 1.5 },
+        { x: 12.5, y: 8, r: 3.6, color: FLUORESCENT, wide: 1.4 },
+        { x: 18.5, y: 5.5, r: 3, color: FLUORESCENT, wide: 1.2 },
+        { x: 13, y: 11.6, r: 3, color: FLUORESCENT, wide: 1.4, flicker: true },
+        { x: 5.5, y: 3.2, r: 2.2, color: BULB },
+        { x: 3.5, y: 9.5, r: 3.4, color: FLUORESCENT, wide: 1.3 },
+      ],
+    },
   },
 };
