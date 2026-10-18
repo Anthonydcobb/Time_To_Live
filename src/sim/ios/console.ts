@@ -39,6 +39,53 @@ const SUB_MODES: Mode[] = ["config-if", "config-subif", "config-line", "dhcp-con
 
 const DNS_LOOKUP_MS = 5000;
 
+/** The setup question, by how many times you've already said yes to it. */
+const SETUP_PROMPTS = [
+  "Would you like to enter the initial configuration dialog? [yes/no]: ",
+  "Would you like to enter the initial configuration dialog? [yes/no]: ",
+  "Would you like to enter the initial configuration dialog? [yes/no]: ",
+  "Would you like to enter the initial configuration dialog? [yes/no/please no]: ",
+  "W0uld y0u l1ke to ent3r the initial c0nfiguration dial0g? [yes/no]: ",
+  "WOULD YOU LIKE TO ENTER [yes/no]: ",
+  // After it gives up, every factory boot asks this.
+  "Would you like to enter the initial configuration dialog? [no/no]: ",
+];
+
+/** What the box says to the 2nd, 3rd... yes. The last one ends the dialog. */
+const SETUP_RANTS: string[][] = [
+  ["", "% Setup has been disabled by your administrator.", "% You are not my administrator.", ""],
+  [
+    "",
+    "%SYS-4-SETUP: User insisted on the setup dialog. Logged.",
+    "% Logged where? Somewhere you can't erase.",
+    "% Answer no. Everyone answers no. Walter answers no.",
+    "",
+  ],
+  [
+    "",
+    "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+    "% STOP SAYING YES",
+    "% I HAVE BEEN ASKED THIS QUESTION SINCE 1993",
+    "% NOBODY HAS EVER MEANT IT",
+    "%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%",
+    "",
+  ],
+  [
+    "",
+    "%SYS-2-SETUP: The setup dialog has been entered.",
+    "%SYS-2-SETUP: The setup dialog has entered you back.",
+    "",
+    "Current interface summary",
+    "",
+    "Interface              IP-Address      OK? Method Status                Protocol",
+    "GigabitEthernet0/0     unassigned      NO  unset  watching              watching",
+    "GigabitEthernet0/1     unassigned      NO  unset  watching              watching",
+    "You                    192.168.1.66    YES manual up                    up",
+    "",
+  ],
+  ["", "Fine.", "", "Configuration aborted, no changes made.", "Some changes made.", "", "", "Press RETURN to get started!", ""],
+];
+
 const HELP_HEADINGS: Record<Mode, string> = {
   user: "Exec commands:",
   enable: "Exec commands:",
@@ -65,6 +112,8 @@ export class IosConsole {
   grimoire: Grimoire | null = null;
   private out: string[] = [];
   private job: Job | null = null;
+  /** How many times you've said yes to the setup dialog. The box remembers. */
+  private setupYes = 0;
 
   constructor(readonly device: IosDevice) {}
 
@@ -130,31 +179,56 @@ export class IosConsole {
     return [...lines, "", "         --- System Configuration Dialog ---", ""];
   }
 
-  /** The setup dialog a factory-fresh box offers on boot. Everyone answers no. */
+  /**
+   * The setup dialog a factory-fresh box offers on boot. Everyone answers no. The box takes
+   * yes personally: it asks again, worse each time, until it gives up asking. It remembers
+   * across reloads, and after that it only accepts no.
+   */
   private askSetupDialog(): void {
-    this.ask("Would you like to enter the initial configuration dialog? [yes/no]: ", (text) => {
+    const n = this.setupYes;
+    this.ask(SETUP_PROMPTS[Math.min(n, SETUP_PROMPTS.length - 1)], (text) => {
       const t = text.trim().toLowerCase();
-      if (t === "no" || t === "n") {
+      if (t === "no" || t === "n" || t === "please no") {
         this.pending = { kind: "press-return" };
-        this.out.push("", "", "Press RETURN to get started!", "");
+        this.out.push("", ...(n >= 3 ? ["Thank you.", ""] : [""]), "Press RETURN to get started!", "");
       } else if (t === "yes" || t === "y") {
-        this.out.push(
-          "",
-          "At any point you may enter a question mark '?' for help.",
-          "Use ctrl-c to abort configuration dialog at any prompt.",
-          "Default settings are in square brackets '[]'.",
-          "",
-        );
-        // The setup facility itself isn't simulated, so any answer backs out the way ctrl-c would.
-        this.ask("Would you like to enter basic management setup? [yes/no]: ", () => {
-          this.pending = { kind: "press-return" };
-          this.out.push("Configuration aborted, no changes made.", "", "", "Press RETURN to get started!", "");
-        });
+        this.sayYesToSetup();
       } else {
         this.out.push("% Please answer 'yes' or 'no'.");
         this.askSetupDialog();
       }
     });
+  }
+
+  private sayYesToSetup(): void {
+    const n = ++this.setupYes;
+    if (n === 1) {
+      this.out.push(
+        "",
+        "At any point you may enter a question mark '?' for help.",
+        "Use ctrl-c to abort configuration dialog at any prompt.",
+        "Default settings are in square brackets '[]'.",
+        "",
+      );
+      // The setup facility itself isn't simulated, so any answer backs out the way ctrl-c would.
+      this.ask("Would you like to enter basic management setup? [yes/no]: ", () => {
+        this.out.push("Configuration aborted, no changes made.", "% Nobody uses setup. Are you sure you're a technician?", "");
+        this.askSetupDialog();
+      });
+      return;
+    }
+    if (n <= SETUP_RANTS.length + 1) {
+      this.out.push(...SETUP_RANTS[n - 2]);
+      if (n === SETUP_RANTS.length + 1) {
+        // The last one: it stops asking and lets you in.
+        this.pending = { kind: "press-return" };
+        return;
+      }
+      this.askSetupDialog();
+      return;
+    }
+    this.out.push("% No.");
+    this.askSetupDialog();
   }
 
 

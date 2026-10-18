@@ -251,4 +251,48 @@ describe("running config", () => {
     expect(r.console.prompt()).toBe("Router>");
     expect(type(r, "en", "show startup-config")).toEqual(["startup-config is not present"]);
   });
+
+  it("takes yes to the setup dialog worse every time, then stops asking for good", () => {
+    const r = router();
+    const factoryBoot = () => type(r, "en", "conf t", "hostname R1", "end", "wr", "erase startup-config", "", "reload", "", "");
+    const QUESTION = "Would you like to enter the initial configuration dialog? [yes/no]: ";
+    factoryBoot();
+    expect(r.console.prompt()).toBe(QUESTION);
+
+    // The first yes looks like real IOS, then backs out.
+    expect(type(r, "yes")).toContain("Use ctrl-c to abort configuration dialog at any prompt.");
+    expect(r.console.prompt()).toBe("Would you like to enter basic management setup? [yes/no]: ");
+    expect(type(r, "yes")).toContain("% Nobody uses setup. Are you sure you're a technician?");
+    expect(r.console.prompt()).toBe(QUESTION);
+
+    expect(type(r, "yes")).toContain("% You are not my administrator.");
+    expect(type(r, "y")).toContain("% Answer no. Everyone answers no. Walter answers no.");
+    expect(r.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [yes/no/please no]: ");
+    expect(type(r, "yes")).toContain("% STOP SAYING YES");
+    expect(r.console.prompt()).toMatch(/^W0uld y0u/);
+    expect(type(r, "yes")).toContain("You                    192.168.1.66    YES manual up                    up");
+    expect(r.console.prompt()).toBe("WOULD YOU LIKE TO ENTER [yes/no]: ");
+
+    // The last yes ends it, and nothing was actually configured.
+    const last = type(r, "yes");
+    expect(last).toContain("Some changes made.");
+    expect(last).toContain("Press RETURN to get started!");
+    type(r, "");
+    expect(r.console.prompt()).toBe("Router>");
+    expect(type(r, "en", "show startup-config")).toEqual(["startup-config is not present"]);
+
+    // It remembers across reloads: now it only takes no, and thanks you for it.
+    factoryBoot();
+    expect(r.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [no/no]: ");
+    expect(type(r, "yes")).toEqual(["% No."]);
+    expect(type(r, "no")).toEqual(["", "Thank you.", "", "Press RETURN to get started!", ""]);
+  });
+
+  it("accepts 'please no' when it asks for one", () => {
+    const r = router();
+    type(r, "en", "conf t", "hostname R1", "end", "wr", "erase startup-config", "", "reload", "", "");
+    type(r, "yes", "yes", "yes", "yes");
+    expect(r.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [yes/no/please no]: ");
+    expect(type(r, "please no")).toContain("Thank you.");
+  });
 });
