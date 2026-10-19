@@ -12,6 +12,7 @@ import {
   type RoomDef,
   type RoomId,
 } from "./rooms";
+import { audio } from "./audio";
 import { events, type Story } from "./story";
 import type { Ui } from "./ui";
 
@@ -77,6 +78,7 @@ export class RoomScene extends Phaser.Scene {
     });
     this.room = ROOMS[data.room ?? "office"];
     this.propSprites.clear();
+    audio.setRoom(this.room.id, this.story.has("haunt"));
     const walls = this.physics.add.staticGroup();
     const solid = (x: number, y: number, w: number, h: number) => {
       const r = this.add.rectangle(x + w / 2, y + h / 2, w, h).setVisible(false);
@@ -151,7 +153,10 @@ export class RoomScene extends Phaser.Scene {
 
     const onGoto = (to: RoomId) => this.scene.restart({ room: to });
     const onFlicker = () => this.flicker();
-    const onHaunt = () => this.room.id === "shop" && this.drawPhantomCable();
+    const onHaunt = () => {
+      audio.haunt();
+      if (this.room.id === "shop") this.drawPhantomCable();
+    };
     const onWalkie = () => this.propSprites.get("walkie")?.forEach((s) => s.setFrame(1));
     events.on("goto", onGoto);
     events.on("flicker", onFlicker);
@@ -248,6 +253,7 @@ export class RoomScene extends Phaser.Scene {
         // Mostly on; sometimes a quick stutter.
         const stutter = s.level === 1 && Math.random() < 0.35;
         s.level = stutter ? 0.15 + Math.random() * 0.35 : 1;
+        if (stutter) audio.crackle();
         s.next = now + (stutter ? 40 + Math.random() * 120 : 600 + Math.random() * 3500);
       }
       put(lamp.x * TILE, lamp.y * TILE, lamp.r, lamp.wide ?? 1, lamp.color, s.level);
@@ -257,6 +263,7 @@ export class RoomScene extends Phaser.Scene {
   }
 
   private flicker(): void {
+    audio.crackle(true);
     const steps = [0.85, 0, 0.6, 0, 0.9, 0.2, 0];
     steps.forEach((a, i) => this.time.delayedCall(i * 110 + Math.random() * 60, () => this.dark.setFillStyle(0x000000, a)));
   }
@@ -279,6 +286,7 @@ export class RoomScene extends Phaser.Scene {
     this.player.setDepth(this.player.y);
     this.animate(v.lengthSq() > 0);
     this.drawLights(this.time.now);
+    audio.update(this.player.x / TILE, this.player.y / TILE);
 
     this.near = frozen ? null : this.nearest();
     if (this.near) {

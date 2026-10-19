@@ -3,6 +3,7 @@ import type { Pc } from "../sim/devices/pc";
 import { CableError, type Device, type Network, type Port } from "../sim/network";
 import { lightFor } from "../web/topology";
 import { TerminalView, iosSession, pcSession } from "../web/terminal";
+import { audio } from "./audio";
 
 /** One line of dialogue. `who` is printed above it. */
 export interface Line {
@@ -34,6 +35,8 @@ interface Entry extends Line {
 }
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+/** Walter only ever talks over the radio, so his lines get static. */
+const isWalter = (line?: Line) => !!line?.who?.startsWith("WALTER");
 const TYPE_MS = 18;
 
 /**
@@ -86,6 +89,7 @@ export class Ui {
 
   private showNext(): void {
     const next = this.queue.shift();
+    audio.walkie(isWalter(next));
     if (!next) {
       $("dialogue").hidden = true;
       this.closedAt = performance.now();
@@ -140,6 +144,8 @@ export class Ui {
       return;
     }
     this.current = null;
+    // Unkey the radio after every line; the next Walter line keys it again, like a real walkie.
+    audio.walkie(false);
     c.then?.();
     if (!this.current && !this.choices && !this.screen && !this.panelOpen) this.showNext();
   }
@@ -148,6 +154,7 @@ export class Ui {
     this.current = null;
     this.choices = options;
     this.picked = 0;
+    audio.walkie(isWalter(prompt));
     $("dialogue").hidden = false;
     $("who").textContent = prompt.who ?? "";
     $("who").hidden = !prompt.who;
@@ -177,6 +184,7 @@ export class Ui {
     this.choices = null;
     $("choices").hidden = true;
     $("dialogue").hidden = true;
+    audio.walkie(false);
     this.closedAt = performance.now();
     options[i].run();
     if (!this.current && !this.choices && !this.screen && !this.panelOpen) this.showNext();

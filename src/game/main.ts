@@ -1,4 +1,5 @@
 import Phaser from "phaser";
+import { audio } from "./audio";
 import { RoomScene } from "./room-scene";
 import { Story } from "./story";
 import { Ui } from "./ui";
@@ -10,6 +11,8 @@ const start = document.getElementById("start")!;
 start.addEventListener("click", () => {
   start.remove();
   window.focus();
+  // Browsers only allow sound after a click, so this is where it starts.
+  audio.start();
 });
 const story = new Story(ui);
 
@@ -50,6 +53,7 @@ const count = document.getElementById("wo-count")!;
 let expanded = true;
 window.addEventListener("keydown", (e) => {
   if ((e.key === "j" || e.key === "J") && !ui.typing) expanded = !expanded;
+  if ((e.key === "m" || e.key === "M") && !ui.typing) audio.toggleMute();
 });
 window.setInterval(() => {
   workOrder.hidden = !story.has("job");
@@ -62,4 +66,4 @@ window.setInterval(() => {
 }, 250);
 
 // ?debug shows collision boxes and lets the console reach the game.
-if (location.search.includes("debug")) Object.assign(window, { story, ui, game });
+if (location.search.includes("debug")) Object.assign(window, { story, ui, game, audio });
