@@ -103,8 +103,8 @@ Phase 2 is the vertical slice. Ant picked 16 px art (drawn at 4x) and Phaser on 
 | 2 | 24-hour laundromat | DHCP on the router, a networked printer |
 | 3 | Dentist's office | VLANs, trunks, router-on-a-stick |
 | 4 | Library | Layer 3 switch, STP, EtherChannel |
-| 5 | Funeral home and crematorium | Two sites, a WAN link, static routes |
+| 5 | Funeral home and crematorium | Two sites, a WAN link, static routes, SSH (you can't be at both sites, so this is where remote access is earned; see `docs/noc-and-remote-access.md`) |
 | 6 | Town hall and sheriff | OSPF, ACLs |
 | 7 | Community radio station | NAT/PAT, wireless |
-| 8 | Hospital | SSH, port security, HSRP, syslog/NTP |
+| 8 | Hospital | Port security, HSRP, syslog/NTP |
 | 9 | The Void-View Hotel | Everything, IPv6, fixing someone else's broken network |

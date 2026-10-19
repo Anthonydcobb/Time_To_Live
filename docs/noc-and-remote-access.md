@@ -14,9 +14,9 @@ Early on, every problem means driving out to the site. Learning SSH unlocks a NO
 - These jobs teach the basics: cabling, interfaces, IP addressing, and how to tell a link light from a working link.
 - This is how job 1 (the corner store) already plays.
 
-### 2. Earning SSH
+### 2. Earning SSH (job 5, the funeral home and crematorium)
 
-A job teaches setting up SSH for real, on the client's gear, from the console:
+Ant moved SSH up from job 8 so the NOC matters for more of the game. Job 5 is the first job with two sites over a WAN link, and you can't be at both at once, so that's where remote access becomes something you need. The job teaches setting up SSH for real, on the client's gear, from the console:
 
 ```
 hostname R1
@@ -32,6 +32,7 @@ line vty 0 4
 - When a site has working SSH and a route back to B&B, it appears on your NOC terminal.
 - The CCNA lesson is the reward: if you skip a step, the site never shows up.
 - If you later lock yourself out (a wrong ACL, `transport input none`, a deleted user), you're back to a truck roll.
+- From job 6 on, the NOC is part of every job. The earlier sites (store, laundromat, dentist) were built without SSH, so going back to add it is optional side work: one more truck roll now, and remote fixes for that site from then on.
 
 ### 3. The NOC desk
 
@@ -91,7 +92,6 @@ These are simulator changes, so per `AGENTS.md` each one needs tests. Plan them 
 
 ## Open questions for Ant
 
-- Which job teaches SSH? A natural fit is after VLANs (job 3), when the gear is getting complex enough that driving out every time hurts.
 - Does B&B have its own network you build first (the office's server rack), with sites connecting back to it? That would turn the office rack into the hub of the whole game.
 - Is the NOC on your desk, or is it the server rack's console in the main office?
 - Do tickets arrive on a schedule, or does the story hand them to you?
