@@ -5,6 +5,7 @@ import { lightFor } from "../web/topology";
 import { TerminalView, iosSession, pcSession } from "../web/terminal";
 import { audio } from "./audio";
 import { LaptopScreen } from "./laptop-screen";
+import { TownMap, type SiteId } from "./town-map";
 import { PcScreen } from "./pc-screen";
 import type { Point } from "../web/topology";
 
@@ -68,6 +69,7 @@ export class Ui {
   private net: Network | null = null;
   private readonly pcScreen = new PcScreen(document.body);
   private readonly laptopScreen = new LaptopScreen(document.body);
+  private readonly townMap = new TownMap(document.body);
 
   constructor() {
     window.addEventListener("keydown", (e) => this.onKey(e), true);
@@ -81,7 +83,7 @@ export class Ui {
   }
 
   get busy(): boolean {
-    return !!(this.current || this.choices || this.card || this.screen || this.panelOpen);
+    return !!(this.current || this.choices || this.card || this.screen || this.panelOpen || this.townMap.isOpen);
   }
 
   /** Whether a terminal or the port panel has the keyboard. */
@@ -120,6 +122,16 @@ export class Ui {
       if (this.typed >= next.text.length) window.clearInterval(this.typer);
     }, TYPE_MS);
     this.renderLine();
+  }
+
+  /** The town map: pick where to go from the places in `go`, or close it to stay put. */
+  openTownMap(here: SiteId, go: Partial<Record<SiteId, () => void>>): void {
+    const done = () => {
+      this.closedAt = performance.now();
+      this.showNext();
+    };
+    const wrapped = Object.fromEntries(Object.entries(go).map(([id, fn]) => [id, () => (done(), fn!())]));
+    this.townMap.open(here, wrapped, done);
   }
 
   /** Shows an illustrated close-up until the dialogue it goes with closes. */
@@ -395,6 +407,13 @@ export class Ui {
 
   private onKey(e: KeyboardEvent): void {
     const confirm = e.key === "e" || e.key === "E" || e.key === " " || e.key === "Enter";
+    if (this.townMap.isOpen) {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        this.townMap.cancel();
+      }
+      return;
+    }
     if (e.key === "Escape" && (this.screen || this.panelOpen)) {
       e.preventDefault();
       e.stopPropagation();
