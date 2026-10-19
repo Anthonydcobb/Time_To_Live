@@ -125,13 +125,13 @@ export class Ui {
   }
 
   /** The town map: pick where to go from the places in `go`, or close it to stay put. */
-  openTownMap(here: SiteId, go: Partial<Record<SiteId, () => void>>): void {
+  openTownMap(here: SiteId, go: Partial<Record<SiteId, () => void>>, opts: { haunted?: boolean } = {}): void {
     const done = () => {
       this.closedAt = performance.now();
       this.showNext();
     };
     const wrapped = Object.fromEntries(Object.entries(go).map(([id, fn]) => [id, () => (done(), fn!())]));
-    this.townMap.open(here, wrapped, done);
+    this.townMap.open(here, wrapped, done, opts);
   }
 
   /** Shows an illustrated close-up until the dialogue it goes with closes. */
@@ -408,7 +408,10 @@ export class Ui {
   private onKey(e: KeyboardEvent): void {
     const confirm = e.key === "e" || e.key === "E" || e.key === " " || e.key === "Enter";
     if (this.townMap.isOpen) {
-      if (e.key === "Escape") {
+      if (this.townMap.driving && confirm) {
+        e.preventDefault();
+        this.townMap.skip();
+      } else if (e.key === "Escape") {
         e.preventDefault();
         this.townMap.cancel();
       }

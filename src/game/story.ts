@@ -160,7 +160,7 @@ export class Story {
       case "office:exit":
         if (!this.flags.has("walkie")) ui.say([{ text: "You should grab the walkie-talkie off the charger first." }]);
         else if (!this.flags.has("job")) ui.say([{ who: W, text: "Whoa whoa whoa. No ticket, no trip. Job board, kid. Over." }]);
-        else ui.openTownMap("bobs", { quikstop: () => this.travel("shop") });
+        else ui.openTownMap("bobs", { quikstop: () => this.travel("shop") }, { haunted: this.flags.has("haunt") });
         return;
 
       // ---- the shop ----
@@ -202,7 +202,7 @@ export class Story {
         ui.say([{ text: "A wall jack. According to the work order, nothing in the shop uses it." }]);
         return;
       case "shop:exit":
-        if (this.flags.has("done")) ui.openTownMap("quikstop", { bobs: () => this.travel("office") });
+        if (this.flags.has("done")) ui.openTownMap("quikstop", { bobs: () => this.travel("office") }, { haunted: this.flags.has("haunt") });
         else ui.say([{ who: W, text: "Leaving already? The ticket's not done, kid. Mrs. Finch is counting on you. So is... no one else. Over." }]);
         return;
     }
