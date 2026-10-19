@@ -4,6 +4,7 @@ import { CableError, type Device, type Network, type Port } from "../sim/network
 import { lightFor } from "../web/topology";
 import { TerminalView, iosSession, pcSession } from "../web/terminal";
 import { audio } from "./audio";
+import { PcScreen } from "./pc-screen";
 
 /** One line of dialogue. `who` is printed above it. */
 export interface Line {
@@ -63,12 +64,13 @@ export class Ui {
   private readonly portButtons = new Map<Port, HTMLButtonElement>();
   private hintHeld = false;
   private net: Network | null = null;
+  private readonly pcScreen = new PcScreen(document.body);
 
   constructor() {
     window.addEventListener("keydown", (e) => this.onKey(e), true);
     $("panel-close").addEventListener("click", () => this.closePanel());
     $("laptop-close").addEventListener("click", () => this.closeLaptop());
-    window.addEventListener("resize", () => this.screen?.resize());
+    window.addEventListener("resize", () => (this.pcScreen.isOpen ? this.pcScreen.resize() : this.screen?.resize()));
   }
 
   get busy(): boolean {
@@ -240,6 +242,17 @@ export class Ui {
   openLaptop(device: Device, title: string, hint: string): void {
     const view = this.views.get(device);
     if (!view) return;
+    if (device.kind === "pc") {
+      // PCs get their own screen: Cryptis NetOS, with the terminal as its Command Prompt.
+      this.screen = view;
+      this.pcScreen.open(device as Pc, view, title, hint, () => {
+        this.screen = null;
+        this.closedAt = performance.now();
+        (document.activeElement as HTMLElement | null)?.blur();
+        this.showNext();
+      });
+      return;
+    }
     $("laptop-title").textContent = title;
     $("laptop-hint").textContent = hint;
     $("laptop").hidden = false;
@@ -249,6 +262,7 @@ export class Ui {
 
   closeLaptop(): void {
     if (!this.screen) return;
+    if (this.pcScreen.isOpen) return this.pcScreen.close();
     this.screen.hide();
     this.screen = null;
     $("laptop").hidden = true;
@@ -364,6 +378,7 @@ export class Ui {
     if (e.key === "Escape" && (this.screen || this.panelOpen)) {
       e.preventDefault();
       e.stopPropagation();
+      if (this.pcScreen.isOpen && this.pcScreen.back()) return;
       if (this.screen) this.closeLaptop();
       else this.closePanel();
       return;

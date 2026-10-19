@@ -479,3 +479,555 @@ kbd {
   background: #1c1d18;
   border-style: dashed;
 }
+
+/* ---- Cryptis NetOS: a PC's screen on an old CRT ------------------------------ */
+
+#pc {
+  position: fixed;
+  inset: 0;
+  z-index: 7;
+  display: grid;
+  place-items: center;
+  background: #000a;
+  --ph: #a8f0b8;
+  --ph-dim: #5e9a6c;
+  --ph-dark: #1f4a2c;
+}
+
+#pc .crt {
+  position: relative;
+  width: min(1000px, 94vw);
+  aspect-ratio: 4 / 3;
+  max-height: 92vh;
+  padding: 3.2% 3.6% 5%;
+  background: linear-gradient(160deg, #3a3d36, #24261f 55%, #1a1b16);
+  border-radius: 22px;
+  box-shadow: inset 0 0 0 2px #4a4d44, inset 0 -8px 20px #0008, 0 30px 60px #000c;
+}
+
+#pc .tape {
+  position: absolute;
+  top: 6px;
+  right: 7%;
+  padding: 3px 14px;
+  background: #cfc6a8;
+  color: #2a2620;
+  font: 600 13px "IBM Plex Mono", monospace;
+  transform: rotate(2deg);
+  box-shadow: 0 2px 4px #0006;
+  z-index: 2;
+}
+
+#pc .glass {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 28px / 22px;
+  background: radial-gradient(ellipse at center, #0e1a12 0%, #07100a 70%, #030604 100%);
+  box-shadow: inset 0 0 60px #000, inset 0 0 0 3px #0a0c09;
+  color: var(--ph);
+  font-family: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+  text-shadow: 0 0 4px #a8f0b866, -1px 0 0 #ff3cc855, 1px 0 0 #3cf0ff44;
+}
+
+/* Power on: a bright line opens into the picture. Power off: it collapses to a dot. */
+#pc.on .glass {
+  animation: crt-on 700ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes crt-on {
+  0% {
+    transform: scale(1, 0.004);
+    filter: brightness(6);
+  }
+  45% {
+    transform: scale(1, 0.004);
+    filter: brightness(4);
+  }
+  100% {
+    transform: scale(1, 1);
+    filter: brightness(1);
+  }
+}
+
+#pc.off .glass {
+  animation: crt-off 420ms ease-in forwards;
+}
+
+@keyframes crt-off {
+  0% {
+    transform: scale(1, 1);
+    filter: brightness(1);
+  }
+  55% {
+    transform: scale(1, 0.006);
+    filter: brightness(5);
+  }
+  100% {
+    transform: scale(0, 0.006);
+    filter: brightness(8);
+  }
+}
+
+#pc .glass.jolt {
+  animation: jolt 260ms steps(4);
+}
+
+@keyframes jolt {
+  25% {
+    transform: translateX(-3px) skewX(-1deg);
+    filter: brightness(1.5);
+  }
+  50% {
+    transform: translateX(2px);
+  }
+  75% {
+    transform: translateX(-1px) skewX(0.6deg);
+  }
+}
+
+/* Boot: the sigil and name fade up through static, then flicker away. */
+#pc .boot {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 14px;
+  animation: boot-up 1200ms steps(12) both 400ms;
+}
+
+#pc .boot .sigil {
+  height: 150px;
+  filter: drop-shadow(0 0 10px #a8f0b8aa);
+  animation: sigil-pulse 1600ms ease-in-out infinite alternate;
+}
+
+@keyframes boot-up {
+  0% {
+    opacity: 0;
+    filter: blur(3px);
+  }
+  40% {
+    opacity: 0.5;
+  }
+  55% {
+    opacity: 0.15;
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0);
+  }
+}
+
+@keyframes sigil-pulse {
+  from {
+    filter: drop-shadow(0 0 6px #a8f0b866);
+  }
+  to {
+    filter: drop-shadow(0 0 16px #a8f0b8cc);
+  }
+}
+
+#pc .brand {
+  display: grid;
+  justify-items: center;
+  line-height: 1;
+}
+
+#pc .brand b {
+  font-size: clamp(26px, 5vw, 54px);
+  letter-spacing: 0.08em;
+  text-shadow: 0 0 8px #a8f0b8aa, -2px 0 0 #ff3cc888, 2px 0 0 #3cf0ff77;
+}
+
+#pc .brand small {
+  font-size: 0.5em;
+}
+
+#pc .brand span {
+  margin-top: 8px;
+  font-size: 13px;
+  letter-spacing: 0.3em;
+  color: var(--ph-dim);
+}
+
+#pc .bootlog {
+  margin: 6px 0 0;
+  min-height: 7.5em;
+  font-size: 12px;
+  color: var(--ph-dim);
+}
+
+#pc.booted .boot {
+  animation: boot-out 700ms steps(7) forwards;
+}
+
+@keyframes boot-out {
+  0% {
+    opacity: 1;
+  }
+  20% {
+    opacity: 0.2;
+  }
+  35% {
+    opacity: 0.9;
+  }
+  60% {
+    opacity: 0.1;
+    transform: skewX(4deg);
+  }
+  100% {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+
+#pc .desk {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 3% 4%;
+  opacity: 0;
+  visibility: hidden;
+}
+
+#pc.booted .desk {
+  visibility: visible;
+  animation: desk-in 600ms steps(6) forwards 450ms;
+}
+
+@keyframes desk-in {
+  0% {
+    opacity: 0;
+  }
+  30% {
+    opacity: 0.8;
+  }
+  45% {
+    opacity: 0.2;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+#pc .desk header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 14px;
+  letter-spacing: 0.12em;
+}
+
+#pc .desk header img {
+  height: 38px;
+}
+
+#pc .desk header .host {
+  margin-left: auto;
+  color: var(--ph-dim);
+}
+
+#pc nav {
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  margin: 14px 0;
+}
+
+#pc button {
+  font: inherit;
+  color: var(--ph);
+  background: transparent;
+  border: 2px solid var(--ph-dim);
+  padding: 6px 12px;
+  cursor: pointer;
+  text-shadow: inherit;
+}
+
+#pc button:hover,
+#pc button.on {
+  background: var(--ph-dark);
+  border-color: var(--ph);
+  box-shadow: 0 0 10px #a8f0b855;
+}
+
+#pc button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+#pc .win {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  border: 2px solid var(--ph-dim);
+  background: #06100acc;
+}
+
+#pc .win[hidden] {
+  display: none;
+}
+
+#pc .win .bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2px 4px 2px 10px;
+  background: var(--ph-dark);
+  border-bottom: 2px solid var(--ph-dim);
+  letter-spacing: 0.1em;
+}
+
+#pc .win .bar button {
+  padding: 0 8px;
+  border-width: 1px;
+}
+
+#pc .body {
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 10px 14px;
+  font-size: 13px;
+}
+
+#pc .idle {
+  margin: auto;
+  text-align: center;
+  line-height: 1.8;
+}
+
+#pc .omen {
+  color: var(--ph-dim);
+  letter-spacing: 0.15em;
+}
+
+#pc .config h4 {
+  margin: 14px 0 6px;
+  padding-bottom: 3px;
+  border-bottom: 1px dashed var(--ph-dim);
+  font-weight: 600;
+  letter-spacing: 0.1em;
+}
+
+#pc .config h4:first-child {
+  margin-top: 0;
+}
+
+#pc .config h4 em {
+  margin-left: 10px;
+  font-style: normal;
+  font-size: 11px;
+  color: #d8a040;
+}
+
+#pc .row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 5px 0;
+}
+
+#pc .row > span:first-child {
+  width: 190px;
+  flex: none;
+}
+
+#pc .row.off {
+  opacity: 0.45;
+}
+
+#pc .radios label {
+  margin-right: 16px;
+}
+
+#pc .dhcp-msg {
+  color: var(--ph-dim);
+}
+
+#pc input,
+#pc select {
+  font: inherit;
+  color: var(--ph);
+  background: #030805;
+  border: 1px solid var(--ph-dim);
+  padding: 3px 6px;
+  width: 220px;
+  text-shadow: inherit;
+}
+
+#pc input.prefix {
+  width: 50px;
+}
+
+#pc input[type="radio"],
+#pc input[type="checkbox"] {
+  width: auto;
+  accent-color: #a8f0b8;
+}
+
+#pc input:focus {
+  outline: none;
+  border-color: var(--ph);
+  box-shadow: 0 0 8px #a8f0b866;
+}
+
+#pc input.bad {
+  border-color: #e05050;
+  color: #f0a0a0;
+}
+
+#pc .err {
+  min-height: 1.2em;
+  margin: 6px 0;
+  color: #e07060;
+}
+
+#pc .body.cmd {
+  position: relative;
+  padding: 4px;
+}
+
+#pc .body.cmd .term {
+  inset: 6px;
+}
+
+#pc .wireless table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 8px 0;
+}
+
+#pc .wireless th,
+#pc .wireless td {
+  text-align: left;
+  padding: 4px 6px;
+  border-bottom: 1px dashed var(--ph-dark);
+}
+
+#pc .wireless .tabs {
+  display: flex;
+  gap: 8px;
+}
+
+#pc .scramble {
+  display: inline-block;
+  animation: scramble 900ms steps(3) infinite;
+}
+
+@keyframes scramble {
+  33% {
+    transform: translateX(2px);
+    color: #ff7ad8;
+  }
+  66% {
+    transform: translateX(-2px);
+    color: #7af0ff;
+  }
+}
+
+#pc .hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--ph-dim);
+}
+
+/* The CRT itself: grain, scanlines, a rolling band and zig-zag interference. */
+#pc .noise,
+#pc .scan,
+#pc .band,
+#pc .zig {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+#pc .noise {
+  width: 100%;
+  height: 100%;
+  image-rendering: pixelated;
+  mix-blend-mode: screen;
+  opacity: 0.55;
+}
+
+#pc .scan {
+  background: repeating-linear-gradient(to bottom, #0000 0 2px, #0006 2px 3px);
+  box-shadow: inset 0 0 120px #000c;
+}
+
+#pc .band {
+  background: linear-gradient(to bottom, #0000, #a8f0b814 45%, #a8f0b826 50%, #a8f0b814 55%, #0000);
+  height: 22%;
+  animation: roll 7s linear infinite;
+}
+
+@keyframes roll {
+  from {
+    transform: translateY(-30%);
+  }
+  to {
+    transform: translateY(560%);
+  }
+}
+
+#pc .zig {
+  opacity: 0;
+  background: repeating-linear-gradient(-55deg, #a8f0b800 0 6px, #a8f0b82a 6px 8px, #ff3cc81c 8px 10px, #0000 10px 18px);
+  animation: zig 5.3s steps(1) infinite;
+}
+
+#pc.on .zig {
+  animation: zig-boot 1800ms steps(9) 300ms, zig 5.3s steps(1) infinite 2.4s;
+}
+
+@keyframes zig {
+  0%,
+  86%,
+  100% {
+    opacity: 0;
+    transform: none;
+  }
+  88% {
+    opacity: 0.9;
+    transform: skewX(18deg) translateX(-10px);
+  }
+  91% {
+    opacity: 0.4;
+    transform: skewX(-24deg) translateX(14px);
+  }
+  94% {
+    opacity: 0.8;
+    transform: skewX(9deg);
+  }
+}
+
+@keyframes zig-boot {
+  0% {
+    opacity: 1;
+    transform: skewX(30deg);
+  }
+  30% {
+    opacity: 0.4;
+    transform: skewX(-20deg);
+  }
+  60% {
+    opacity: 0.8;
+    transform: skewX(12deg);
+  }
+  100% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #pc *,
+  #pc .glass {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
