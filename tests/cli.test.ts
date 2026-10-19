@@ -252,8 +252,21 @@ describe("running config", () => {
     expect(type(r, "en", "show startup-config")).toEqual(["startup-config is not present"]);
   });
 
+  it("keeps the setup dialog plain IOS outside story mode, however often you say yes", () => {
+    const r = router();
+    const factoryBoot = () => type(r, "en", "conf t", "hostname R1", "end", "wr", "erase startup-config", "", "reload", "", "");
+    for (let i = 0; i < 3; i++) {
+      factoryBoot();
+      expect(r.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [yes/no]: ");
+      expect(type(r, "yes")).toContain("Use ctrl-c to abort configuration dialog at any prompt.");
+      expect(type(r, "yes")).toEqual(["Configuration aborted, no changes made.", "", "", "Press RETURN to get started!", ""]);
+      type(r, "");
+      expect(r.console.prompt()).toBe("Router>");
+    }
+  });
   it("takes yes to the setup dialog worse every time, then stops asking for good", () => {
     const r = router();
+    r.console.story = true;
     const factoryBoot = () => type(r, "en", "conf t", "hostname R1", "end", "wr", "erase startup-config", "", "reload", "", "");
     const QUESTION = "Would you like to enter the initial configuration dialog? [yes/no]: ";
     factoryBoot();
@@ -290,6 +303,7 @@ describe("running config", () => {
 
   it("accepts 'please no' when it asks for one", () => {
     const r = router();
+    r.console.story = true;
     type(r, "en", "conf t", "hostname R1", "end", "wr", "erase startup-config", "", "reload", "", "");
     type(r, "yes", "yes", "yes", "yes");
     expect(r.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [yes/no/please no]: ");

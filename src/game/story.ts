@@ -43,6 +43,9 @@ export class Story {
     const { r1, s1, register, office } = this.job;
     r1.console.grimoire = grimoire;
     s1.console.grimoire = grimoire;
+    // Story Mode: the setup dialog gets angrier each time you say yes.
+    r1.console.story = true;
+    s1.console.story = true;
     ui.attach(this.job.net, [r1, s1, register, office]);
   }
 

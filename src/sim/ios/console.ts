@@ -112,7 +112,12 @@ export class IosConsole {
   grimoire: Grimoire | null = null;
   private out: string[] = [];
   private job: Job | null = null;
-  /** How many times you've said yes to the setup dialog. The box remembers. */
+  /**
+   * Story Mode extras: the setup dialog takes yes personally. Off by default, so Sandbox
+   * Mode and automated tests get plain IOS behavior; the story turns it on per device.
+   */
+  story = false;
+  /** How many times you've said yes to the setup dialog in story mode. The box remembers. */
   private setupYes = 0;
 
   constructor(readonly device: IosDevice) {}
@@ -180,23 +185,39 @@ export class IosConsole {
   }
 
   /**
-   * The setup dialog a factory-fresh box offers on boot. Everyone answers no. The box takes
-   * yes personally: it asks again, worse each time, until it gives up asking. It remembers
-   * across reloads, and after that it only accepts no.
+   * The setup dialog a factory-fresh box offers on boot. Everyone answers no. In story mode
+   * the box takes yes personally: it asks again, worse each time, until it gives up asking.
+   * It remembers across reloads, and after that it only accepts no.
    */
   private askSetupDialog(): void {
-    const n = this.setupYes;
+    const n = this.story ? this.setupYes : 0;
     this.ask(SETUP_PROMPTS[Math.min(n, SETUP_PROMPTS.length - 1)], (text) => {
       const t = text.trim().toLowerCase();
-      if (t === "no" || t === "n" || t === "please no") {
+      if (t === "no" || t === "n" || (this.story && t === "please no")) {
         this.pending = { kind: "press-return" };
         this.out.push("", ...(n >= 3 ? ["Thank you.", ""] : [""]), "Press RETURN to get started!", "");
       } else if (t === "yes" || t === "y") {
-        this.sayYesToSetup();
+        if (this.story) this.sayYesToSetup();
+        else this.plainSetup();
       } else {
         this.out.push("% Please answer 'yes' or 'no'.");
         this.askSetupDialog();
       }
+    });
+  }
+
+  /** Real IOS: the setup facility isn't simulated, so any answer backs out the way ctrl-c would. */
+  private plainSetup(): void {
+    this.out.push(
+      "",
+      "At any point you may enter a question mark '?' for help.",
+      "Use ctrl-c to abort configuration dialog at any prompt.",
+      "Default settings are in square brackets '[]'.",
+      "",
+    );
+    this.ask("Would you like to enter basic management setup? [yes/no]: ", () => {
+      this.pending = { kind: "press-return" };
+      this.out.push("Configuration aborted, no changes made.", "", "", "Press RETURN to get started!", "");
     });
   }
 
