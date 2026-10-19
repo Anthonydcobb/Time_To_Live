@@ -92,6 +92,7 @@ export class Ui {
     audio.walkie(isWalter(next));
     if (!next) {
       $("dialogue").hidden = true;
+      this.hideCloseUp();
       this.closedAt = performance.now();
       return;
     }
@@ -110,6 +111,17 @@ export class Ui {
       if (this.typed >= next.text.length) window.clearInterval(this.typer);
     }, TYPE_MS);
     this.renderLine();
+  }
+
+  /** Shows an illustrated close-up until the dialogue it goes with closes. */
+  showCloseUp(src: string): void {
+    const img = $<HTMLImageElement>("closeup");
+    if (!img.src.endsWith(src)) img.src = src;
+    img.hidden = false;
+  }
+
+  hideCloseUp(): void {
+    $("closeup").hidden = true;
   }
 
   private showPortrait(line: Line): void {
@@ -184,6 +196,7 @@ export class Ui {
     this.choices = null;
     $("choices").hidden = true;
     $("dialogue").hidden = true;
+    this.hideCloseUp();
     audio.walkie(false);
     this.closedAt = performance.now();
     options[i].run();

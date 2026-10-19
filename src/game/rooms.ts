@@ -22,6 +22,8 @@ export interface Prop {
   frame?: number;
   /** Drawn by another prop's sprite: no box, label or collision of its own, but still usable. */
   hidden?: boolean;
+  /** An illustrated close-up shown above the dialogue while you inspect it. */
+  card?: string;
   /** Set dressing: you bump into it, but there's nothing to press E on. */
   decor?: boolean;
 }
@@ -105,14 +107,14 @@ export const ROOMS: Record<RoomId, RoomDef> = {
     // 11 small file cabinet. Files, boxes and storage borrow the store's "store-decor" sheet.
     props: [
       // The corridor: Gary's padlocked door at the end of it.
-      { id: "gary", label: "Locked door", x: 4, y: 1, w: 2, h: 1, verb: "Knock on", color: 0x5a2a2a, onWall: true, sprite: "office-props", frame: 5 },
+      { id: "gary", label: "Locked door", x: 4, y: 1, w: 2, h: 1, verb: "Knock on", color: 0x5a2a2a, onWall: true, sprite: "office-props", frame: 5, card: "assets/cards/gary-door.webp" },
       // Bob's office
       { id: "photo", label: "Photo", x: 2, y: 6, w: 1, h: 1, verb: "Look at", color: 0x6b6450, onWall: true, sprite: "office-props", frame: 10 },
       { id: "cabinet", label: "Files", x: 1, y: 7, w: 1, h: 1, verb: "Open", color: 0x50504a, sprite: "office-props", frame: 11 },
       { id: "files", label: "Files", x: 2, y: 7, w: 1, h: 1, verb: "", color: 0x50504a, decor: true, sprite: "office-props", frame: 11 },
       { id: "storage", label: "Storage", x: 3, y: 7, w: 1, h: 1, verb: "", color: 0x50504a, decor: true, sprite: "store-decor", frame: 8 },
       { id: "chair", label: "Chair", x: 2, y: 8, w: 1, h: 1, verb: "", color: 0x3a3a36, decor: true, sprite: "office-props", frame: 2 },
-      { id: "desk", label: "Bob's desk", x: 1, y: 9, w: 3, h: 1, verb: "Look at", color: 0x55524a, sprite: "office-props", frame: 1 },
+      { id: "desk", label: "Bob's desk", x: 1, y: 9, w: 3, h: 1, verb: "Look at", color: 0x55524a, sprite: "office-props", frame: 1, card: "assets/cards/bobs-desk.webp" },
       // Listed after the desk so the walkie wins the spot it sits on.
       { id: "walkie", label: "Walkie", x: 2, y: 9, w: 1, h: 1, verb: "Pick up", color: 0x4a5a4a, sprite: "walkie" },
       { id: "armchair", label: "Armchair", x: 1, y: 12, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props", frame: 2 },
@@ -143,7 +145,7 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "files", label: "Files", x: 19, y: 9, w: 1, h: 2, verb: "", color: 0x50504a, decor: true, sprite: "store-decor", frame: 5 },
       { id: "storage", label: "Storage", x: 10, y: 12, w: 1, h: 1, verb: "", color: 0x50504a, decor: true, sprite: "store-decor", frame: 8 },
       { id: "storage", label: "Storage", x: 11, y: 12, w: 1, h: 1, verb: "", color: 0x50504a, decor: true, sprite: "store-decor", frame: 8 },
-      { id: "coffee", label: "Coffee", x: 15, y: 12, w: 1, h: 1, verb: "Use", color: 0x4a4440, sprite: "office-props", frame: 4 },
+      { id: "coffee", label: "Coffee", x: 15, y: 12, w: 1, h: 1, verb: "Use", color: 0x4a4440, sprite: "office-props", frame: 4, card: "assets/cards/coffee-station.webp" },
       { id: "boxes", label: "Boxes", x: 18, y: 11, w: 1, h: 1, verb: "", color: 0x5e5240, decor: true, sprite: "store-decor", frame: 6 },
       { id: "boxes", label: "Boxes", x: 19, y: 11, w: 1, h: 1, verb: "", color: 0x5e5240, decor: true, sprite: "store-decor", frame: 6 },
       { id: "boxes", label: "Crates", x: 17, y: 12, w: 1, h: 1, verb: "", color: 0x5e5240, decor: true, sprite: "store-decor", frame: 6 },

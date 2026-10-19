@@ -300,7 +300,12 @@ export class RoomScene extends Phaser.Scene {
 
     // Ignore the press that just closed a dialogue box.
     const fresh = performance.now() - this.ui.closedAt > 200;
-    if (!frozen && fresh && Phaser.Input.Keyboard.JustDown(k.e) && this.near) this.story.interact(this.near.id);
+    if (!frozen && fresh && Phaser.Input.Keyboard.JustDown(k.e) && this.near) {
+      if (this.near.card) this.ui.showCloseUp(this.near.card);
+      this.story.interact(this.near.id);
+      // If inspecting it didn't open any dialogue, don't leave the close-up hanging.
+      if (!this.ui.busy) this.ui.hideCloseUp();
+    }
     if (!frozen && fresh && Phaser.Input.Keyboard.JustDown(k.q)) this.story.callWalter();
     if (frozen) {
       // Swallow presses made while the UI had the keyboard.
