@@ -4,7 +4,9 @@ import { CableError, type Device, type Network, type Port } from "../sim/network
 import { lightFor } from "../web/topology";
 import { TerminalView, iosSession, pcSession } from "../web/terminal";
 import { audio } from "./audio";
+import { LaptopScreen } from "./laptop-screen";
 import { PcScreen } from "./pc-screen";
+import type { Point } from "../web/topology";
 
 /** One line of dialogue. `who` is printed above it. */
 export interface Line {
@@ -65,12 +67,17 @@ export class Ui {
   private hintHeld = false;
   private net: Network | null = null;
   private readonly pcScreen = new PcScreen(document.body);
+  private readonly laptopScreen = new LaptopScreen(document.body);
 
   constructor() {
     window.addEventListener("keydown", (e) => this.onKey(e), true);
     $("panel-close").addEventListener("click", () => this.closePanel());
     $("laptop-close").addEventListener("click", () => this.closeLaptop());
-    window.addEventListener("resize", () => (this.pcScreen.isOpen ? this.pcScreen.resize() : this.screen?.resize()));
+    window.addEventListener("resize", () => {
+      if (this.pcScreen.isOpen) this.pcScreen.resize();
+      else if (this.laptopScreen.isOpen) this.laptopScreen.resize();
+      else this.screen?.resize();
+    });
   }
 
   get busy(): boolean {
@@ -228,7 +235,7 @@ export class Ui {
   // ---- laptop ---------------------------------------------------------------
 
   /** Builds a terminal for every device now, so log messages pile up even before you look. */
-  attach(net: Network, devices: Device[]): void {
+  attach(net: Network, devices: Device[], layout: Record<string, Point> = {}): void {
     this.net = net;
     const screen = $("laptop-screen");
     for (const d of devices) {
@@ -237,11 +244,23 @@ export class Ui {
       this.views.set(d, view);
       d.onOutput((text) => view.log(text));
     }
+    this.laptopScreen.attach(net, layout, this.views, devices);
   }
 
   openLaptop(device: Device, title: string, hint: string): void {
     const view = this.views.get(device);
     if (!view) return;
+    if (device instanceof IosDevice) {
+      // Routers and switches: the B&B field laptop on the console cable, with a topology map.
+      this.screen = view;
+      this.laptopScreen.open(device, title, hint, () => {
+        this.screen = null;
+        this.closedAt = performance.now();
+        (document.activeElement as HTMLElement | null)?.blur();
+        this.showNext();
+      });
+      return;
+    }
     if (device.kind === "pc") {
       // PCs get their own screen: Cryptis NetOS, with the terminal as its Command Prompt.
       this.screen = view;
@@ -263,6 +282,7 @@ export class Ui {
   closeLaptop(): void {
     if (!this.screen) return;
     if (this.pcScreen.isOpen) return this.pcScreen.close();
+    if (this.laptopScreen.isOpen) return this.laptopScreen.close();
     this.screen.hide();
     this.screen = null;
     $("laptop").hidden = true;

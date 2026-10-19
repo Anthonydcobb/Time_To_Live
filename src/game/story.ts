@@ -46,7 +46,7 @@ export class Story {
     // Story Mode: the setup dialog gets angrier each time you say yes.
     r1.console.story = true;
     s1.console.story = true;
-    ui.attach(this.job.net, [r1, s1, register, office]);
+    ui.attach(this.job.net, [r1, s1, register, office], this.job.layout);
   }
 
   /** Whether the work order line with this id is done right now. */
