@@ -5,7 +5,7 @@ import type { Router } from "../devices/router";
 import type { Switch } from "../devices/switch";
 import { UNSUPPORTED_VLANS, formatVlanList } from "../vlans";
 import type { Route } from "../ipstack";
-import type { IosConfig, LineConfig, StandardAclRule, StoredPassword, SwitchportConfig, SwitchportMode } from "./config";
+import type { AclAddress, IosConfig, LineConfig, StoredPassword, SwitchportConfig, SwitchportMode } from "./config";
 import { type7Encode } from "./passwords";
 
 const IOS_VERSION = "15.1(4)M4";
@@ -100,7 +100,10 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   for (const [number, rules] of Object.entries(c.standardAcls).sort(([a], [b]) => Number(a) - Number(b))) {
     for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + formatAclSource(rule));
   }
-  if (Object.keys(c.standardAcls).length) out.push("!");
+  for (const [number, rules] of Object.entries(c.extendedAcls).sort(([a], [b]) => Number(a) - Number(b))) {
+    for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + rule.protocol + " " + formatAclSource(rule.source) + " " + formatAclSource(rule.destination));
+  }
+  if (Object.keys(c.standardAcls).length || Object.keys(c.extendedAcls).length) out.push("!");
   if (!isSwitch) out.push("control-plane", "!");
 
   if (c.bannerMotd !== null) out.push("banner motd ^C", ...c.bannerMotd.split("\n"), "^C", "!");
@@ -136,7 +139,7 @@ function switchportLines(sp: SwitchportConfig): string[] {
   return out;
 }
 
-function formatAclSource(rule: StandardAclRule): string {
+function formatAclSource(rule: AclAddress): string {
   if (rule.network === null) return "any";
   return rule.wildcard === 0 ? formatIpv4(rule.network) : formatIpv4(rule.network) + " " + formatIpv4(rule.wildcard!);
 }
@@ -644,6 +647,10 @@ export function showAccessLists(device: IosDevice): string[] {
   for (const [number, rules] of Object.entries(device.config.standardAcls).sort(([a], [b]) => Number(a) - Number(b))) {
     out.push(`Standard IP access list ${number}`);
     rules.forEach((rule, index) => out.push(`    ${(index + 1) * 10} ${rule.action} ${formatAclSource(rule)}`));
+  }
+  for (const [number, rules] of Object.entries(device.config.extendedAcls).sort(([a], [b]) => Number(a) - Number(b))) {
+    out.push("Extended IP access list " + number);
+    rules.forEach((rule, index) => out.push("    " + ((index + 1) * 10) + " " + rule.action + " " + rule.protocol + " " + formatAclSource(rule.source) + " " + formatAclSource(rule.destination)));
   }
   return out.length ? out : ["No access lists configured"];
 }

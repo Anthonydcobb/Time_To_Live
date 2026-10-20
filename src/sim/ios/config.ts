@@ -58,10 +58,20 @@ export function newInterfaceConfig(shutdown: boolean): InterfaceConfig {
   return { shutdown, description: null, ip: null, mask: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, cdp: true };
 }
 
-export interface StandardAclRule {
-  action: "permit" | "deny";
+export interface AclAddress {
   network: Ipv4 | null;
   wildcard: Ipv4 | null;
+}
+
+export interface StandardAclRule extends AclAddress {
+  action: "permit" | "deny";
+}
+
+export interface ExtendedAclRule {
+  action: "permit" | "deny";
+  protocol: "ip" | "icmp";
+  source: AclAddress;
+  destination: AclAddress;
 }
 
 export interface DhcpPool {
@@ -86,6 +96,7 @@ export interface IosConfig {
   users: Record<string, string>;
   rsaKeysGenerated: boolean;
   standardAcls: Record<number, StandardAclRule[]>;
+  extendedAcls: Record<number, ExtendedAclRule[]>;
   enableSecret: string | null;
   enablePassword: StoredPassword | null;
   servicePasswordEncryption: boolean;
@@ -115,6 +126,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     users: {},
     rsaKeysGenerated: false,
     standardAcls: {},
+    extendedAcls: {},
     enableSecret: null,
     enablePassword: null,
     servicePasswordEncryption: false,

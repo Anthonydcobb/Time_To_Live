@@ -34,4 +34,41 @@ describe("standard IPv4 ACLs", () => {
     const deniedPing = run(pc, "ping -n 2 10.0.0.1");
     expect(deniedPing.some((line) => line.startsWith("Reply from 10.0.0.1"))).toBe(false);
   });
+
+  it("supports extended ACLs that distinguish ICMP from other IP traffic", () => {
+    const net = new Network();
+    const router = net.add(new Router("R1", "R1"));
+    type(
+      router,
+      "en",
+      "conf t",
+      "access-list 101 deny icmp 10.0.0.10 10.0.0.1",
+      "access-list 101 permit ip any any",
+      "int g0/0",
+      "ip access-group 101 in",
+      "end",
+    );
+    const icmp = {
+      kind: "ipv4" as const,
+      src: ip("10.0.0.10")!,
+      dst: ip("10.0.0.1")!,
+      ttl: 64,
+      icmp: { type: "echo-request" as const, id: 1, seq: 1 },
+    };
+    const ipPacket = {
+      kind: "ipv4" as const,
+      src: ip("10.0.0.10")!,
+      dst: ip("10.0.0.1")!,
+      ttl: 64,
+    };
+    expect(
+      permitsStandardAcl(router.config, "GigabitEthernet0/0", icmp, "in"),
+    ).toBe(false);
+    expect(
+      permitsStandardAcl(router.config, "GigabitEthernet0/0", ipPacket, "in"),
+    ).toBe(true);
+    expect(type(router, "show access-lists")).toContain(
+      "Extended IP access list 101",
+    );
+  });
 });

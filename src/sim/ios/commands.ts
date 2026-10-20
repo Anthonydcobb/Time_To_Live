@@ -4,7 +4,7 @@ import type { IosDevice } from "../devices/ios-device";
 import type { Router } from "../devices/router";
 import type { Switch } from "../devices/switch";
 import type { DeviceKind } from "../network";
-import { newDhcpPool, type DhcpPool, type LineConfig } from "./config";
+import { newDhcpPool, type AclAddress, type DhcpPool, type LineConfig } from "./config";
 import type { IosConsole, Mode } from "./console";
 import { kw, type Arg, type Command, type Token, type Word } from "./parser";
 import { type5Hash } from "./passwords";
@@ -149,6 +149,22 @@ function forEachIface(ctx: Ctx, fn: (name: string) => void): void {
 
 function setPassword(ctx: Ctx, text: string) {
   return { text, encrypted: ctx.device.config.servicePasswordEncryption };
+}
+
+function aclAddress(text: string): AclAddress | null {
+  if (text.toLowerCase() === "any") return { network: null, wildcard: null };
+  const network = parseIpv4(text);
+  return network === null ? null : { network, wildcard: 0 };
+}
+
+function addExtendedAcl(c: Ctx, number: number, action: "permit" | "deny", protocol: "ip" | "icmp", sourceText: string, destinationText: string): void {
+  const source = aclAddress(sourceText);
+  const destination = aclAddress(destinationText);
+  if (!source || !destination) {
+    c.out.push("% Invalid address in access-list.");
+    return;
+  }
+  (c.device.config.extendedAcls[number] ??= []).push({ action, protocol, source, destination });
 }
 
 function ping(ctx: Ctx, target: Ipv4): void {
@@ -390,6 +406,21 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [NO, ACCESS_LIST, numArg(1, 99, "Standard ACL number")], (c, [number]) => {
     delete c.device.config.standardAcls[number as number];
   }),
+  cmd(CONFIG, [ACCESS_LIST, numArg(100, 199, "Extended ACL number"), PERMIT, kw("icmp", "Internet Control Message Protocol"), wordArg("Source address or any"), wordArg("Destination address or any")], (c, [number, source, destination]) => {
+    addExtendedAcl(c, number as number, "permit", "icmp", source as string, destination as string);
+  }),
+  cmd(CONFIG, [ACCESS_LIST, numArg(100, 199, "Extended ACL number"), DENY, kw("icmp", "Internet Control Message Protocol"), wordArg("Source address or any"), wordArg("Destination address or any")], (c, [number, source, destination]) => {
+    addExtendedAcl(c, number as number, "deny", "icmp", source as string, destination as string);
+  }),
+  cmd(CONFIG, [ACCESS_LIST, numArg(100, 199, "Extended ACL number"), PERMIT, kw("ip", "Any Internet Protocol"), wordArg("Source address or any"), wordArg("Destination address or any")], (c, [number, source, destination]) => {
+    addExtendedAcl(c, number as number, "permit", "ip", source as string, destination as string);
+  }),
+  cmd(CONFIG, [ACCESS_LIST, numArg(100, 199, "Extended ACL number"), DENY, kw("ip", "Any Internet Protocol"), wordArg("Source address or any"), wordArg("Destination address or any")], (c, [number, source, destination]) => {
+    addExtendedAcl(c, number as number, "deny", "ip", source as string, destination as string);
+  }),
+  cmd(CONFIG, [NO, ACCESS_LIST, numArg(100, 199, "Extended ACL number")], (c, [number]) => {
+    delete c.device.config.extendedAcls[number as number];
+  }),
   cmd(CONFIG, [SERVICE, PWENC], (c) => {
     const cfg = c.device.config;
     cfg.servicePasswordEncryption = true;
@@ -496,16 +527,16 @@ const IF_IP = kw("ip", "Interface Internet Protocol config commands");
 const ADDRESS = kw("address", "Set the IP address of an interface");
 
 const interfaceCommands: Entry[] = [
-  cmd(ANY_IF, [IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 99, "Standard ACL number"), kw("in", "Inbound packets")], (c, [number]) => {
+  cmd(ANY_IF, [IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 199, "ACL number"), kw("in", "Inbound packets")], (c, [number]) => {
     forEachIface(c, (name) => { c.device.ifaceConfig(name).accessGroupIn = number as number; });
   }, { when: routedIface }),
-  cmd(ANY_IF, [IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 99, "Standard ACL number"), kw("out", "Outbound packets")], (c, [number]) => {
+  cmd(ANY_IF, [IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 199, "ACL number"), kw("out", "Outbound packets")], (c, [number]) => {
     forEachIface(c, (name) => { c.device.ifaceConfig(name).accessGroupOut = number as number; });
   }, { when: routedIface }),
-  cmd(ANY_IF, [NO, IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 99, "Standard ACL number"), kw("in", "Inbound packets")], (c, [number]) => {
+  cmd(ANY_IF, [NO, IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 199, "ACL number"), kw("in", "Inbound packets")], (c, [number]) => {
     forEachIface(c, (name) => { if (c.device.ifaceConfig(name).accessGroupIn === number) c.device.ifaceConfig(name).accessGroupIn = null; });
   }, { when: routedIface }),
-  cmd(ANY_IF, [NO, IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 99, "Standard ACL number"), kw("out", "Outbound packets")], (c, [number]) => {
+  cmd(ANY_IF, [NO, IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 199, "ACL number"), kw("out", "Outbound packets")], (c, [number]) => {
     forEachIface(c, (name) => { if (c.device.ifaceConfig(name).accessGroupOut === number) c.device.ifaceConfig(name).accessGroupOut = null; });
   }, { when: routedIface }),
   cmd(ANY_IF, [IF_IP, kw("helper-address", "Specify a destination address for DHCP relay"), ipArg("DHCP server address")], (c, [server]) => {
