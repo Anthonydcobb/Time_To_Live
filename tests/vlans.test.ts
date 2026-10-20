@@ -53,6 +53,16 @@ describe("interface status", () => {
   });
 });
 
+describe("voice VLANs", () => {
+  it("creates and reports a voice VLAN on an access port", () => {
+    const { s1 } = oneSwitch();
+    const output = type(s1, "int fa0/1", "switchport mode access", "switchport voice vlan 150", "end");
+    expect(output).toContain("% Voice VLAN does not exist. Creating vlan 150");
+    expect(type(s1, "show interfaces fa0/1 switchport")).toContain("Voice VLAN: 150 (VLAN0150)");
+    expect(type(s1, "show running-config").join("\n")).toContain(" switchport voice vlan 150");
+  });
+});
+
 describe("VLAN database", () => {
   it("creates a VLAN only when you leave config-vlan mode", () => {
     const { s1 } = oneSwitch();

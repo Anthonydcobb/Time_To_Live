@@ -23,6 +23,7 @@ export type ChannelGroupMode = "on" | "active" | "passive" | "desirable" | "auto
 export interface SwitchportConfig {
   mode: SwitchportMode;
   accessVlan: number;
+  voiceVlan: number | null;
   nativeVlan: number;
   /** VLANs allowed on a trunk, or null for all of them. */
   allowed: number[] | null;
@@ -35,7 +36,7 @@ export interface SwitchportConfig {
 
 export function defaultSwitchport(): SwitchportConfig {
   // A Catalyst 2960 port is dynamic auto out of the box.
-  return { mode: "dynamic auto", accessVlan: 1, nativeVlan: 1, allowed: null, nonegotiate: false, portfast: false, bpduGuard: false, channelGroup: null, channelMode: null };
+  return { mode: "dynamic auto", accessVlan: 1, voiceVlan: null, nativeVlan: 1, allowed: null, nonegotiate: false, portfast: false, bpduGuard: false, channelGroup: null, channelMode: null };
 }
 
 export interface InterfaceConfig {

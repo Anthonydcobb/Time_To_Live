@@ -841,6 +841,7 @@ const NEGOTIATE_CONFLICT = "Command rejected: Conflict between 'nonegotiate' and
 const SWITCHPORT = kw("switchport", "Set switching mode characteristics");
 const SP_MODE = kw("mode", "Set trunking mode of the interface");
 const SP_ACCESS = kw("access", "Set access mode characteristics of the interface");
+const SP_VOICE = kw("voice", "Voice appliance attributes");
 const SP_TRUNK = kw("trunk", "Set trunking characteristics of the interface");
 const SP_NATIVE = kw("native", "Set trunking native characteristics when interface is in trunking mode");
 const SP_ALLOWED = kw("allowed", "Set allowed VLAN characteristics when interface is in trunking mode");
@@ -914,6 +915,18 @@ const switchCommands: Entry[] = [
     eachSwitchport(c, (sp) => {
       sp.accessVlan = 1;
     }),
+  { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, SP_VOICE, kw("vlan", "Set VLAN when interface is in voice mode"), numArg(1, 4094, "VLAN ID of the voice VLAN")], (c, [v]) => {
+    const vlan = v as number;
+    const s = sw(c);
+    if (!s.vlans.has(vlan) && vlan <= MAX_NORMAL_VLAN) {
+      c.out.push(`% Voice VLAN does not exist. Creating vlan ${vlan}`);
+      s.createVlan(vlan);
+    }
+    eachSwitchport(c, (sp) => { sp.voiceVlan = vlan; });
+  }, { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, SWITCHPORT, SP_VOICE, kw("vlan", "Set VLAN when interface is in voice mode")], (c) =>
+    eachSwitchport(c, (sp) => { sp.voiceVlan = null; }),
   { devices: ["switch"], when: physicalPort }),
   cmd(IF, [SWITCHPORT, SP_TRUNK, SP_NATIVE, kw("vlan", "Set native VLAN when interface is in trunking mode"), numArg(1, 4094, "VLAN ID of the native VLAN when this port is in trunking mode")], (c, [v]) =>
     eachSwitchport(c, (sp) => {

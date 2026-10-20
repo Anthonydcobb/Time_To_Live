@@ -129,6 +129,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
 function switchportLines(sp: SwitchportConfig): string[] {
   const out: string[] = [];
   if (sp.accessVlan !== 1) out.push(` switchport access vlan ${sp.accessVlan}`);
+  if (sp.voiceVlan !== null) out.push(` switchport voice vlan ${sp.voiceVlan}`);
   if (sp.nativeVlan !== 1) out.push(` switchport trunk native vlan ${sp.nativeVlan}`);
   if (sp.allowed !== null) out.push(` switchport trunk allowed vlan ${sp.allowed.length ? formatVlanList(sp.allowed) : "none"}`);
   if (sp.mode !== "dynamic auto") out.push(` switchport mode ${sp.mode}`);
@@ -523,7 +524,7 @@ export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
       `Access Mode VLAN: ${vlanLabel(sp.accessVlan)}`,
       `Trunking Native Mode VLAN: ${vlanLabel(sp.nativeVlan)}`,
       "Administrative Native VLAN tagging: enabled",
-      "Voice VLAN: none",
+      `Voice VLAN: ${sp.voiceVlan === null ? "none" : vlanLabel(sp.voiceVlan)}`,
       "Administrative private-vlan host-association: none ",
       "Administrative private-vlan mapping: none ",
       "Administrative private-vlan trunk native VLAN: none",
