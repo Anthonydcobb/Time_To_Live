@@ -47,6 +47,8 @@ export class Switch extends IosDevice {
   readonly macTable = new Map<string, MacEntry>();
   /** When each VLAN started spanning tree on each port. */
   private readonly stpSince = new Map<Port, Map<number, number>>();
+  /** The role used when the current STP timer was started. */
+  private readonly stpRoles = new Map<Port, Map<number, StpRole>>();
   private readonly lastMode = new Map<Port, OperationalMode>();
   private readonly svis = new Map<string, L3Interface>();
   private readonly sviUp = new Set<string>();
@@ -304,6 +306,7 @@ export class Switch extends IosDevice {
     }
     this.macTable.clear();
     this.stpSince.clear();
+    this.stpRoles.clear();
     this.lastMode.clear();
     this.syncVlans();
   }
@@ -361,6 +364,7 @@ export class Switch extends IosDevice {
       const mode = this.operationalMode(port);
       if (mode === "down") {
         this.stpSince.delete(port);
+        this.stpRoles.delete(port);
         this.lastMode.delete(port);
         this.flushMacs(port);
         continue;
@@ -374,6 +378,7 @@ export class Switch extends IosDevice {
       if (was !== mode) {
         // Turning into a trunk or an access port starts spanning tree over on the port.
         timers = undefined;
+        this.stpRoles.delete(port);
         this.flushMacs(port);
         this.lastMode.set(port, mode);
       }
@@ -382,14 +387,37 @@ export class Switch extends IosDevice {
         this.stpSince.set(port, timers);
       }
       const carried = new Set(this.vlansOn(port));
+      let roles = this.stpRoles.get(port);
+      if (!roles) {
+        roles = new Map();
+        this.stpRoles.set(port, roles);
+      }
       for (const v of [...timers.keys()]) {
-        if (carried.has(v)) continue;
+        if (carried.has(v)) {
+          const role = this.stpRole(port, v);
+          if (roles.get(v) !== undefined && roles.get(v) !== role) {
+            timers.set(v, now);
+            this.flushMacs(port, v);
+          }
+          roles.set(v, role);
+          continue;
+        }
         timers.delete(v);
+        roles.delete(v);
         this.flushMacs(port, v);
       }
       for (const v of carried) {
-        if (timers.has(v)) continue;
+        const role = this.stpRole(port, v);
+        if (timers.has(v)) {
+          if (roles.get(v) !== role) {
+            timers.set(v, now);
+            this.flushMacs(port, v);
+          }
+          roles.set(v, role);
+          continue;
+        }
         timers.set(v, now);
+        roles.set(v, role);
         // An SVI comes up once some port in its VLAN reaches forwarding.
         this.clock.schedule(STP_LISTENING_MS + STP_LEARNING_MS, () => this.updateSvis());
       }

@@ -65,4 +65,14 @@ describe("spanning tree", () => {
     expect(output).toContain("Spanning tree enabled protocol ieee");
     expect(output).toContain("Altn BLK");
   });
+
+  it("reconverges through the alternate path after the root link fails", () => {
+    const { net, b } = triangle();
+    expect(b.stpRole(b.port("Gi0/2"), 1)).toBe("designated");
+    net.disconnect(b.port("Gi0/1"));
+    expect(b.stpRole(b.port("Gi0/2"), 1)).toBe("root");
+    expect(b.stpState(b.port("Gi0/2"), 1)).toBe("listening");
+    net.clock.advance(30_000);
+    expect(b.stpState(b.port("Gi0/2"), 1)).toBe("forwarding");
+  });
 });
