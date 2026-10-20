@@ -81,6 +81,36 @@ describe("port security", () => {
   });
 });
 
+describe("DHCP snooping", () => {
+  it("drops rogue server replies and learns trusted ACK bindings", () => {
+    const { net, s1, pcs } = oneSwitch();
+    const pc1 = pcs[0];
+    type(s1, "ip dhcp snooping", "ip dhcp snooping vlan 1", "interface fa0/2", "ip dhcp snooping trust", "end");
+    net.clock.advance(35_000);
+    const rogueLogs = captureLogs(s1);
+    const offer = { src: "001122334455", dst: "ffffffffffff", payload: { kind: "ipv4" as const, src: ip("10.0.0.1")!, dst: 0xffffffff, ttl: 255, dhcp: { op: "offer" as const, xid: 1, chaddr: pc1.nic.mac, yiaddr: ip("10.0.0.10")!, serverId: ip("10.0.0.1")! } } };
+    s1.receive(s1.port("Fa0/1"), offer);
+    expect(rogueLogs.some((line) => line.includes("UNTRUSTED_PORT"))).toBe(true);
+
+    const ack = { ...offer, src: "00aabbccddee", payload: { ...offer.payload, dhcp: { ...offer.payload.dhcp, op: "ack" as const } } };
+    s1.receive(s1.port("Fa0/1"), { ...offer, payload: { ...offer.payload, dhcp: { ...offer.payload.dhcp, op: "discover" as const } } });
+    s1.receive(s1.port("Fa0/2"), ack);
+    expect(type(s1, "show ip dhcp snooping binding").join("\n")).toContain("10.0.0.10");
+    expect(type(s1, "show ip dhcp snooping").join("\n")).toContain("Fa0/2");
+  });
+
+  it("enforces an untrusted-port DHCP rate limit", () => {
+    const { net, s1, pcs } = oneSwitch();
+    type(s1, "ip dhcp snooping", "ip dhcp snooping vlan 1", "interface fa0/1", "ip dhcp snooping limit rate 1", "end");
+    net.clock.advance(35_000);
+    const logs = captureLogs(s1);
+    const discover = { src: pcs[0].nic.mac, dst: "ffffffffffff", payload: { kind: "ipv4" as const, src: 0, dst: 0xffffffff, ttl: 255, dhcp: { op: "discover" as const, xid: 1, chaddr: pcs[0].nic.mac, yiaddr: 0 } } };
+    s1.receive(s1.port("Fa0/1"), discover);
+    s1.receive(s1.port("Fa0/1"), { ...discover, payload: { ...discover.payload, dhcp: { ...discover.payload.dhcp, xid: 2 } } });
+    expect(logs.some((line) => line.includes("RATE_LIMIT_EXCEEDED"))).toBe(true);
+  });
+});
+
 describe("voice VLANs", () => {
   it("creates and reports a voice VLAN on an access port", () => {
     const { s1 } = oneSwitch();

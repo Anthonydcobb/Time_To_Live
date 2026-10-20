@@ -66,6 +66,8 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   if (!c.cdpRun) out.push("no cdp run", "!");
   if (isSwitch) {
     if (c.ipRouting) out.push("ip routing");
+    if (c.dhcpSnooping) out.push("ip dhcp snooping");
+    if (c.dhcpSnoopingVlans.length) out.push(`ip dhcp snooping vlan ${formatVlanList(c.dhcpSnoopingVlans)}`);
     out.push("spanning-tree mode pvst", "spanning-tree extend system-id");
     for (const [vlan, priority] of Object.entries(c.spanningTreePriority).sort(([a], [b]) => Number(a) - Number(b))) out.push(`spanning-tree vlan ${vlan} priority ${priority}`);
     out.push("!", "vlan internal allocation policy ascending", "!");
@@ -141,6 +143,8 @@ function switchportLines(sp: SwitchportConfig): string[] {
   if (sp.portSecurityMaximum !== 1) out.push(` switchport port-security maximum ${sp.portSecurityMaximum}`);
   if (sp.portSecurityViolation !== "shutdown") out.push(` switchport port-security violation ${sp.portSecurityViolation}`);
   if (sp.portSecuritySticky) out.push(" switchport port-security mac-address sticky");
+  if (sp.dhcpTrust) out.push(" ip dhcp snooping trust");
+  if (sp.dhcpRateLimit !== null) out.push(` ip dhcp snooping limit rate ${sp.dhcpRateLimit}`);
   return out;
 }
 
@@ -573,6 +577,8 @@ export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
       `Port Security Violation Mode: ${sp.portSecurityViolation}`,
       `Sticky MAC Addresses: ${sp.portSecuritySticky ? "Enabled" : "Disabled"}`,
       `Secure MAC Addresses: ${sp.secureMacs.length}`,
+      `DHCP Snooping Trust: ${sp.dhcpTrust ? "trusted" : "untrusted"}`,
+      `DHCP Snooping Rate Limit: ${sp.dhcpRateLimit ?? "none"}`,
       "Administrative private-vlan host-association: none ",
       "Administrative private-vlan mapping: none ",
       "Administrative private-vlan trunk native VLAN: none",
@@ -593,6 +599,30 @@ export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
       "Appliance trust: none",
       "",
     );
+  }
+  return out;
+}
+
+export function showIpDhcpSnooping(sw: Switch): string[] {
+  const out = [
+    "DHCP snooping is " + (sw.config.dhcpSnooping ? "active" : "not configured"),
+    `DHCP snooping is configured on VLANs: ${sw.config.dhcpSnoopingVlans.length ? formatVlanList(sw.config.dhcpSnoopingVlans) : "none"}`,
+    "Insertion of option 82 is enabled",
+    "Verification of hwaddr field is enabled",
+    "",
+    "Interface                  Trusted     Rate limit (pps)",
+  ];
+  for (const p of sw.ports) {
+    const sp = sw.switchport(p);
+    out.push(`${p.shortName.padEnd(27)}${(sp.dhcpTrust ? "yes" : "no").padEnd(12)}${sp.dhcpRateLimit ?? "none"}`);
+  }
+  return out;
+}
+
+export function showIpDhcpSnoopingBinding(sw: Switch): string[] {
+  const out = ["MacAddress          IpAddress        Lease(sec)  Type           VLAN  Interface", "------------------  ---------------  ----------  -------------  ----  -----------------"];
+  for (const b of sw.config.dhcpSnoopingBindings) {
+    out.push(`${formatMacCisco(b.mac).padEnd(20)}${formatIpv4(b.ip).padEnd(17)}${"-".padEnd(12)}${"dhcp-snooping".padEnd(15)}${String(b.vlan).padEnd(6)}${b.port}`);
   }
   return out;
 }

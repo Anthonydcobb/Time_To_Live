@@ -53,6 +53,7 @@ export class Switch extends IosDevice {
   private readonly stpRoles = new Map<Port, Map<number, StpRole>>();
   private readonly lastMode = new Map<Port, OperationalMode>();
   private readonly svis = new Map<string, L3Interface>();
+  private readonly dhcpRateWindows = new Map<Port, { started: number; count: number }>();
   private readonly sviUp = new Set<string>();
 
   constructor(id: string, hostname = "Switch") {
@@ -539,6 +540,23 @@ export class Switch extends IosDevice {
     const state = this.stpState(port, vlan);
     if (state === "disabled" || state === "listening") return;
     const sp = this.switchport(port);
+    const dhcp = frame.payload.kind === "ipv4" ? frame.payload.dhcp : undefined;
+    if (dhcp && this.config.dhcpSnooping && this.config.dhcpSnoopingVlans.includes(vlan)) {
+      if ((dhcp.op === "offer" || dhcp.op === "ack") && !sp.dhcpTrust) {
+        this.emit(`%DHCP_SNOOPING-5-DHCP_SNOOPING_UNTRUSTED_PORT: DHCP ${dhcp.op.toUpperCase()} dropped on untrusted port ${port.shortName}.`);
+        return;
+      }
+      if ((dhcp.op === "discover" || dhcp.op === "request" || dhcp.op === "release") && sp.dhcpRateLimit !== null) {
+        const window = this.dhcpRateWindows.get(port);
+        const next = !window || this.clock.now - window.started >= 1_000 ? { started: this.clock.now, count: 0 } : window;
+        next.count++;
+        this.dhcpRateWindows.set(port, next);
+        if (next.count > sp.dhcpRateLimit) {
+          this.emit(`%DHCP_SNOOPING-4-DHCP_RATE_LIMIT_EXCEEDED: DHCP packet rate limit exceeded on port ${port.shortName}.`);
+          return;
+        }
+      }
+    }
     if (sp.portSecurity && frame.src !== BROADCAST_MAC) {
       if (!sp.secureMacs.includes(frame.src)) {
         if (sp.secureMacs.length >= sp.portSecurityMaximum) {
@@ -623,6 +641,12 @@ export class Switch extends IosDevice {
 
   /** Trunks tag every VLAN except the native one. Access ports send frames untagged. */
   private egress(port: Port, frame: Frame, vlan: number): void {
+    const dhcp = frame.payload.kind === "ipv4" ? frame.payload.dhcp : undefined;
+    const sp = this.switchport(port);
+    if (dhcp?.op === "ack" && this.config.dhcpSnooping && this.config.dhcpSnoopingVlans.includes(vlan) && !sp.dhcpTrust && dhcp.yiaddr !== 0) {
+      this.config.dhcpSnoopingBindings = this.config.dhcpSnoopingBindings.filter((b) => !(b.vlan === vlan && b.port === port.shortName && b.mac === dhcp.chaddr));
+      this.config.dhcpSnoopingBindings.push({ mac: dhcp.chaddr, ip: dhcp.yiaddr, vlan, port: port.shortName, learnedAt: this.clock.now });
+    }
     const tagged = this.operationalMode(port) === "trunk" && vlan !== this.switchport(port).nativeVlan;
     this.send(port, retag(frame, tagged ? vlan : undefined));
   }

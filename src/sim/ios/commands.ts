@@ -1013,6 +1013,10 @@ const switchCommands: Entry[] = [
   cmd(IF, [SWITCHPORT, kw("port-security", "Control port security features"), kw("violation", "Security violation mode"), kw("restrict", "Drop and count violating traffic" )], (c) => eachSwitchport(c, (sp) => { sp.portSecurityViolation = "restrict"; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [SWITCHPORT, kw("port-security", "Control port security features"), kw("violation", "Security violation mode"), kw("protect", "Drop violating traffic" )], (c) => eachSwitchport(c, (sp) => { sp.portSecurityViolation = "protect"; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [SWITCHPORT, kw("port-security", "Control port security features"), kw("mac-address", "Secure MAC address"), kw("sticky", "Learn secure addresses dynamically")], (c) => eachSwitchport(c, (sp) => { sp.portSecuritySticky = true; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [IP, kw("dhcp", "Configure DHCP parameters"), kw("snooping", "DHCP snooping"), kw("trust", "Trust DHCP messages from this interface")], (c) => eachSwitchport(c, (sp) => { sp.dhcpTrust = true; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, IP, kw("dhcp", "Configure DHCP parameters"), kw("snooping", "DHCP snooping"), kw("trust", "Trust DHCP messages from this interface")], (c) => eachSwitchport(c, (sp) => { sp.dhcpTrust = false; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [IP, kw("dhcp", "Configure DHCP parameters"), kw("snooping", "DHCP snooping"), kw("limit", "DHCP snooping rate limit"), kw("rate", "DHCP packet rate"), numArg(1, 2048, "Packets per second")], (c, [rate]) => eachSwitchport(c, (sp) => { sp.dhcpRateLimit = rate as number; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, IP, kw("dhcp", "Configure DHCP parameters"), kw("snooping", "DHCP snooping"), kw("limit", "DHCP snooping rate limit")], (c) => eachSwitchport(c, (sp) => { sp.dhcpRateLimit = null; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [STP, kw("portfast", "Enable edge port behavior")], (c) => eachSwitchport(c, (sp) => { sp.portfast = true; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [NO, STP, kw("portfast", "Enable edge port behavior")], (c) => eachSwitchport(c, (sp) => { sp.portfast = false; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [STP, kw("bpduguard", "Enable BPDU Guard"), kw("enable", "Enable BPDU Guard")], (c) => eachSwitchport(c, (sp) => { sp.bpduGuard = true; }), { devices: ["switch"], when: physicalPort }),
@@ -1064,6 +1068,19 @@ const switchCommands: Entry[] = [
   cmd(CONFIG, [NO, kw("vtp", "Configure VTP domain parameters"), kw("domain", "Set the VTP administrative domain")], (c) => {
     sw(c).config.vtpDomain = "";
   }, { devices: ["switch"] }),
+  cmd(CONFIG, [IP, kw("dhcp", "Configure DHCP parameters"), kw("snooping", "DHCP snooping"), kw("vlan", "Enable DHCP snooping on VLANs"), vlanListArg("VLAN IDs")], (c, [vlans]) => {
+    sw(c).config.dhcpSnoopingVlans = vlans as number[];
+  }, { devices: ["switch"] }),
+  cmd(CONFIG, [NO, IP, kw("dhcp", "Configure DHCP parameters"), kw("snooping", "DHCP snooping"), kw("vlan", "Enable DHCP snooping on VLANs"), vlanListArg("VLAN IDs")], (c) => {
+    sw(c).config.dhcpSnoopingVlans = [];
+  }, { devices: ["switch"] }),
+  cmd(CONFIG, [IP, kw("dhcp", "Configure DHCP parameters"), kw("snooping", "DHCP snooping")], (c) => {
+    sw(c).config.dhcpSnooping = true;
+  }, { devices: ["switch"] }),
+  cmd(CONFIG, [NO, IP, kw("dhcp", "Configure DHCP parameters"), kw("snooping", "DHCP snooping")], (c) => {
+    sw(c).config.dhcpSnooping = false;
+    sw(c).config.dhcpSnoopingBindings = [];
+  }, { devices: ["switch"] }),
   cmd(VLAN_MODE, [NO, kw("name", "Ascii name of the VLAN")], (c) => {
     c.console.vlanName = null;
   }),
@@ -1083,6 +1100,8 @@ const switchCommands: Entry[] = [
 
   cmd(EXEC, [SHOW, kw("vlan", "VTP VLAN status")], (c) => c.out.push(...show.showVlan(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("vtp", "VTP information"), kw("status", "VTP domain status")], (c) => c.out.push(...show.showVtpStatus(sw(c))), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("dhcp", "DHCP information"), kw("snooping", "DHCP snooping status"), kw("binding", "DHCP snooping bindings")], (c) => c.out.push(...show.showIpDhcpSnoopingBinding(sw(c))), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("dhcp", "DHCP information"), kw("snooping", "DHCP snooping status")], (c) => c.out.push(...show.showIpDhcpSnooping(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("trunk", "Show interface trunk information")], (c) => c.out.push(...show.showInterfacesTrunk(sw(c))), {
     devices: ["switch"],
   }),
