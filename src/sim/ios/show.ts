@@ -61,7 +61,11 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   if (!c.ipDomainLookup) out.push("no ip domain lookup", "!");
   if (!isSwitch) out.push("ip cef", "no ipv6 cef", "!", "multilink bundle-name authenticated", "!");
   if (!c.cdpRun) out.push("no cdp run", "!");
-  if (isSwitch) out.push("spanning-tree mode pvst", "spanning-tree extend system-id", "!", "vlan internal allocation policy ascending", "!");
+  if (isSwitch) {
+    out.push("spanning-tree mode pvst", "spanning-tree extend system-id");
+    for (const [vlan, priority] of Object.entries(c.spanningTreePriority).sort(([a], [b]) => Number(a) - Number(b))) out.push(`spanning-tree vlan ${vlan} priority ${priority}`);
+    out.push("!", "vlan internal allocation policy ascending", "!");
+  }
 
   for (const name of device.configInterfaceOrder(c)) {
     const ic = c.interfaces[name];
@@ -354,6 +358,32 @@ function vlanTable(sw: Switch): string[] {
 
 export function showVlanBrief(sw: Switch): string[] {
   return vlanTable(sw);
+}
+
+export function showSpanningTree(sw: Switch): string[] {
+  const switches = (sw.network?.devices ?? []).filter((d): d is Switch => d.kind === "switch");
+  const out: string[] = [];
+  for (const vlan of [...sw.vlans.keys()].filter((v) => sw.vlanActive(v)).sort((a, b) => a - b)) {
+    const root = [...switches].sort((a, b) => a.bridgeId(vlan).localeCompare(b.bridgeId(vlan)))[0] ?? sw;
+    const rootPriority = root.bridgePriority(vlan) + vlan;
+    const rootPorts = sw.ports.filter((p) => sw.stpRole(p, vlan) === "root");
+    out.push(`VLAN${String(vlan).padStart(4, "0")}`, "  Spanning tree enabled protocol ieee", `  Root ID    Priority    ${rootPriority}`,
+      `             Address     ${formatMacCisco(root.baseMac)}`);
+    if (root === sw) out.push("             This bridge is the root");
+    else if (rootPorts[0]) out.push(`             Cost        ${rootPorts[0].shortName.startsWith("Gi") ? 4 : 19}`, `             Port        ${rootPorts[0].shortName.replace(/^\D+/, "") || rootPorts[0].shortName}(${rootPorts[0].name})`);
+    out.push("", `  Bridge ID  Priority    ${sw.bridgePriority(vlan) + vlan}`, `             Address     ${formatMacCisco(sw.baseMac)}`, "", "Interface        Role Sts Cost      Prio.Nbr Type", "---------------- ---- --- --------- -------- --------------------------------");
+    for (const p of sw.ports.filter((p) => sw.vlansOn(p).includes(vlan))) {
+      const role = sw.stpRole(p, vlan);
+      const state = sw.stpState(p, vlan);
+      const roleText = role === "root" ? "Root" : role === "alternate" ? "Altn" : "Desg";
+      const stateText = state === "blocking" ? "BLK" : state === "listening" ? "LST" : state === "learning" ? "LRN" : state === "forwarding" ? "FWD" : "---";
+      const cost = p.shortName.startsWith("Gi") ? 4 : 19;
+      const number = Number(p.shortName.split("/").pop()) || 0;
+      out.push(`${p.shortName.padEnd(16)} ${roleText.padEnd(4)} ${stateText.padEnd(3)} ${String(cost).padEnd(9)} 128.${number}    ${p.peer?.device.kind === "switch" ? "P2p" : "Edge"}`);
+    }
+    out.push("");
+  }
+  return out;
 }
 
 const VLAN_TYPES: Record<number, [string, string]> = { 1002: ["fddi", "-"], 1003: ["tr", "-"], 1004: ["fdnet", "ieee"], 1005: ["trnet", "ibm"] };

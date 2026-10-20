@@ -61,7 +61,7 @@ function newPortStats(): PortStats {
 export function frameBytes(frame: Frame): number {
   const p = frame.payload;
   // An IOS ping is a 100-byte datagram; DHCP rides in a ~300-byte BOOTP packet; CDP carries a few TLVs.
-  const body = p.kind === "arp" ? 46 : p.kind === "cdp" ? 340 : p.dhcp ? 328 : 100;
+  const body = p.kind === "arp" ? 46 : p.kind === "cdp" ? 340 : p.kind === "bpdu" ? 52 : p.dhcp ? 328 : 100;
   return 14 + body + (frame.vlan !== undefined ? 4 : 0);
 }
 
@@ -105,6 +105,9 @@ export abstract class Device {
 
   /** Called after a port's link or protocol state changes. */
   onPortStateChange(_port: Port, _layer: "link" | "protocol"): void {}
+
+  /** Optional periodic control frame, such as a switch BPDU. */
+  backgroundFrame(_port: Port): Frame | null { return null; }
 
   get clock(): Clock {
     if (!this.network) throw new Error(`${this.id} is not on a network`);
@@ -270,10 +273,7 @@ export class Network {
     });
   }
 
-  /**
-   * Keepalives and BPDUs only move the counters: nothing in the sim acts on
-   * them, but they're why a quiet port still shows traffic in `show interfaces`.
-   */
+  /** Keepalives and BPDUs explain the quiet background traffic on IOS ports. */
   private startBackgroundFrames(port: Port): void {
     const kind = port.device.kind;
     if (kind === "pc") return;
@@ -282,9 +282,13 @@ export class Network {
     const every = (ms: number, peerSees: boolean) => {
       const tick = () => {
         if (!port.protocolUp || port.stats.resets !== gen) return;
-        count(port.stats, "out", 60, true, this.clock.now);
-        const to = port.peer;
-        if (peerSees && to?.protocolUp) count(to.stats, "in", 60, true, this.clock.now);
+        const frame = port.device.backgroundFrame(port);
+        if (frame) this.transmit(port, frame);
+        else {
+          count(port.stats, "out", 60, true, this.clock.now);
+          const to = port.peer;
+          if (peerSees && to?.protocolUp) count(to.stats, "in", 60, true, this.clock.now);
+        }
         this.clock.schedule(ms, tick);
       };
       this.clock.schedule(ms, tick);

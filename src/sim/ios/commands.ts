@@ -212,6 +212,9 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("vlan", "VTP VLAN status"), kw("brief", "VTP all VLAN status in brief")], (c) => c.out.push(...show.showVlanBrief(c.device as Switch)), {
     devices: ["switch"],
   }),
+  cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol")], (c) => c.out.push(...show.showSpanningTree(c.device as Switch)), {
+    devices: ["switch"],
+  }),
   cmd(EXEC, [SHOW, kw("cdp", "CDP information")], (c) => c.out.push(...show.showCdp(c.device))),
   cmd(EXEC, [SHOW, kw("cdp", "CDP information"), kw("neighbors", "CDP neighbor entries")], (c) => c.out.push(...show.showCdpNeighbors(c.device))),
   cmd(EXEC, [SHOW, kw("cdp", "CDP information"), kw("neighbors", "CDP neighbor entries"), kw("detail", "Show detailed information")], (c) =>
@@ -280,6 +283,7 @@ const BANNER = kw("banner", "Define a login banner");
 const MOTD = kw("motd", "Set Message of the Day banner");
 const DOMAIN = kw("domain-lookup", "Enable IP Domain Name System hostname translation");
 const ROUTE = kw("route", "Establish static routes");
+const STP = kw("spanning-tree", "Spanning Tree Protocol");
 
 function addRoute(c: Ctx, network: Ipv4, mask: Ipv4, via: { nextHop: Ipv4 | null; exitIface: string | null }): void {
   if (maskToPrefix(mask) === null) {
@@ -318,6 +322,20 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [NO, kw("hostname", "Set system's network name")], (c) => {
     c.device.config.hostname = c.device.kind === "router" ? "Router" : "Switch";
   }),
+  cmd(CONFIG, [STP, kw("vlan", "VLAN spanning tree parameters"), numArg(1, 4094, "VLAN ID"), kw("priority", "Set bridge priority"), numArg(0, 61440, "Bridge priority")], (c, [vlan, priority]) => {
+    if (c.device.kind !== "switch") return;
+    if ((priority as number) % 4096 !== 0) {
+      c.out.push("% Bridge priority must be in increments of 4096.");
+      return;
+    }
+    c.device.config.spanningTreePriority[vlan as number] = priority as number;
+    (c.device as Switch).vlanConfigChanged();
+  }, { devices: ["switch"] }),
+  cmd(CONFIG, [NO, STP, kw("vlan", "VLAN spanning tree parameters"), numArg(1, 4094, "VLAN ID"), kw("priority", "Set bridge priority")], (c, [vlan]) => {
+    if (c.device.kind !== "switch") return;
+    delete c.device.config.spanningTreePriority[vlan as number];
+    (c.device as Switch).vlanConfigChanged();
+  }, { devices: ["switch"] }),
   cmd(CONFIG, [ENABLE_KW, kw("secret", "Assign the privileged level secret"), wordArg("The UNENCRYPTED (cleartext) 'enable' secret")], (c, [s]) => {
     c.device.config.enableSecret = type5Hash(s as string);
   }),

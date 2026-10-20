@@ -1,5 +1,5 @@
 import { BROADCAST_MAC, nextMac, type Mac } from "../addr";
-import { retag, type Frame } from "../frames";
+import { retag, STP_MAC, type BpduPacket, type Frame } from "../frames";
 import { IpStack, type L3Interface } from "../ipstack";
 import { defaultConfig, defaultSwitchport, newInterfaceConfig, type IosConfig, type SwitchportConfig } from "../ios/config";
 import { Port } from "../network";
@@ -22,8 +22,9 @@ export const MAC_AGING_MS = 300_000;
 export const STP_LISTENING_MS = 15_000;
 export const STP_LEARNING_MS = 15_000;
 
-export type StpState = "disabled" | "listening" | "learning" | "forwarding";
-const STP_RANK: Record<StpState, number> = { disabled: 0, listening: 1, learning: 2, forwarding: 3 };
+export type StpRole = "disabled" | "root" | "designated" | "alternate";
+export type StpState = "disabled" | "blocking" | "listening" | "learning" | "forwarding";
+const STP_RANK: Record<StpState, number> = { disabled: 0, blocking: 1, listening: 2, learning: 3, forwarding: 4 };
 
 /** What a port is doing right now, after DTP has had its say. */
 export type OperationalMode = "access" | "trunk" | "down";
@@ -214,6 +215,7 @@ export class Switch extends IosDevice {
     }
     const since = timers?.get(vlan);
     if (since === undefined) return "disabled";
+    if (this.stpRole(port, vlan) === "alternate") return "blocking";
     const elapsed = this.clock.now - since;
     if (elapsed < STP_LISTENING_MS) return "listening";
     if (elapsed < STP_LISTENING_MS + STP_LEARNING_MS) return "learning";
@@ -223,6 +225,58 @@ export class Switch extends IosDevice {
   /** VLANs on a port that have finished listening and learning. */
   forwardingVlans(port: Port): number[] {
     return this.vlansOn(port).filter((v) => this.stpState(port, v) === "forwarding");
+  }
+
+  bridgePriority(vlan: number): number {
+    return this.config.spanningTreePriority[vlan] ?? 32768;
+  }
+
+  bridgeId(vlan: number): string {
+    return `${String(this.bridgePriority(vlan) + vlan).padStart(5, "0")}:${this.baseMac}`;
+  }
+
+  /** Calculates PVST-style roles across the connected switch graph. */
+  stpRole(port: Port, vlan: number): StpRole {
+    if (!port.protocolUp || !this.vlansOn(port).includes(vlan)) return "disabled";
+    const peer = port.peer?.device;
+    if (!(peer instanceof Switch) || !port.peer) return "designated";
+    const peerPort = port.peer;
+    if (!peerPort.protocolUp || !peer.vlansOn(peerPort).includes(vlan)) return "designated";
+    const switches = (this.network?.devices ?? []).filter((d): d is Switch => d instanceof Switch);
+    const root = [...switches].sort((a, b) => a.bridgeId(vlan).localeCompare(b.bridgeId(vlan)))[0];
+    if (!root) return "designated";
+    const distances = new Map<Switch, number>([[root, 0]]);
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const sw of switches) {
+        const base = distances.get(sw);
+        if (base === undefined) continue;
+        for (const candidate of sw.ports) {
+          const other = candidate.peer?.device;
+          if (!(other instanceof Switch) || !candidate.peer?.protocolUp || !candidate.protocolUp) continue;
+          if (!sw.vlansOn(candidate).includes(vlan) || !(other as Switch).vlansOn(candidate.peer).includes(vlan)) continue;
+          const next = base + (candidate.shortName.startsWith("Gi") ? 4 : 19);
+          if (next < (distances.get(other) ?? Infinity)) { distances.set(other, next); changed = true; }
+        }
+      }
+    }
+    if (this === root) return "designated";
+    const cost = (p: Port) => p.shortName.startsWith("Gi") ? 4 : 19;
+    const rootPort = this.ports
+      .filter((p) => p.peer?.device instanceof Switch && p.protocolUp && p.peer.protocolUp && this.vlansOn(p).includes(vlan) && (p.peer.device as Switch).vlansOn(p.peer).includes(vlan))
+      .sort((a, b) => {
+        const ac = (distances.get(a.peer!.device as Switch) ?? Infinity) + cost(a);
+        const bc = (distances.get(b.peer!.device as Switch) ?? Infinity) + cost(b);
+        if (ac !== bc) return ac - bc;
+        const ab = (a.peer!.device as Switch).bridgeId(vlan);
+        const bb = (b.peer!.device as Switch).bridgeId(vlan);
+        return ab.localeCompare(bb) || a.shortName.localeCompare(b.shortName);
+      })[0];
+    if (rootPort === port) return "root";
+    const mine = `${distances.get(this) ?? Infinity}|${this.bridgeId(vlan)}|${port.shortName}`;
+    const theirs = `${distances.get(peer) ?? Infinity}|${peer.bridgeId(vlan)}|${peerPort.shortName}`;
+    return mine < theirs ? "designated" : "alternate";
   }
 
   /** What CDP advertises as this port's native VLAN: the native VLAN on a trunk, the access VLAN otherwise. */
@@ -373,6 +427,7 @@ export class Switch extends IosDevice {
 
   receive(port: Port, frame: Frame): void {
     if (this.handleCdp(port, frame)) return;
+    if (this.handleBpdu(port, frame)) return;
     const vlan = this.ingressVlan(port, frame);
     if (vlan === null) return;
     const state = this.stpState(port, vlan);
@@ -387,6 +442,27 @@ export class Switch extends IosDevice {
       if (frame.dst === this.baseMac) return;
     }
     this.forward(untagged, port, vlan);
+  }
+
+  private handleBpdu(_port: Port, frame: Frame): boolean {
+    return frame.payload.kind === "bpdu";
+  }
+
+  /** Supplies a real control frame to Network's periodic background sender. */
+  backgroundFrame(port: Port): Frame | null {
+    const vlan = this.vlansOn(port)[0];
+    if (vlan === undefined) return null;
+    const payload: BpduPacket = {
+      kind: "bpdu",
+      vlan,
+      rootPriority: this.bridgePriority(vlan),
+      rootMac: this.baseMac,
+      rootPathCost: 0,
+      bridgePriority: this.bridgePriority(vlan),
+      bridgeMac: this.baseMac,
+      portId: port.shortName,
+    };
+    return { src: port.mac, dst: STP_MAC, payload };
   }
 
   /**

@@ -57,14 +57,29 @@ export interface CdpPacket {
   nativeVlan?: number;
 }
 
+/** A small PVST-style configuration BPDU. It is intentionally modeled as a
+ * control frame so switches can react to real topology changes rather than
+ * merely waiting out a fixed timer. */
+export interface BpduPacket {
+  kind: "bpdu";
+  vlan: number;
+  rootPriority: number;
+  rootMac: Mac;
+  rootPathCost: number;
+  bridgePriority: number;
+  bridgeMac: Mac;
+  portId: string;
+}
+
 export const CDP_MAC: Mac = "01000ccccccc";
+export const STP_MAC: Mac = "0180c2000000";
 
 export interface Frame {
   src: Mac;
   dst: Mac;
   /** The 802.1Q tag, present only while the frame crosses a trunk. */
   vlan?: number;
-  payload: ArpPacket | Ipv4Packet | CdpPacket;
+  payload: ArpPacket | Ipv4Packet | CdpPacket | BpduPacket;
 }
 
 /** A copy of the frame with an 802.1Q tag, or without one when `vlan` is undefined. */

@@ -78,6 +78,8 @@ export interface IosConfig {
   defaultGateway: Ipv4 | null;
   dhcpExcluded: { low: Ipv4; high: Ipv4 }[];
   dhcpPools: DhcpPool[];
+  /** PVST+ bridge priority overrides, keyed by VLAN ID. */
+  spanningTreePriority: Record<number, number>;
 }
 
 export function defaultLine(): LineConfig {
@@ -102,6 +104,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     defaultGateway: null,
     dhcpExcluded: [],
     dhcpPools: [],
+    spanningTreePriority: {},
   };
 }
 
