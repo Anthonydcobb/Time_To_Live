@@ -114,6 +114,9 @@ export interface IosConfig {
   /** PVST+ bridge priority overrides, keyed by VLAN ID. */
   spanningTreePriority: Record<number, number>;
   ipRouting: boolean;
+  /** VTP control-plane settings for switches. */
+  vtpMode: "server" | "client" | "transparent";
+  vtpDomain: string;
 }
 
 export function defaultLine(): LineConfig {
@@ -145,6 +148,8 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     dhcpPools: [],
     spanningTreePriority: {},
     ipRouting: false,
+    vtpMode: "server",
+    vtpDomain: "",
   };
 }
 

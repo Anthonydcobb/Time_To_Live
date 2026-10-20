@@ -63,6 +63,18 @@ describe("voice VLANs", () => {
   });
 });
 
+describe("VTP", () => {
+  it("reports VTP settings and prevents VLAN changes in client mode", () => {
+    const { s1 } = oneSwitch();
+    type(s1, "vtp domain CLINIC", "vtp mode client", "end");
+    expect(type(s1, "show vtp status")).toContain("VTP Operating Mode              : client");
+    expect(type(s1, "show vtp status")).toContain("VTP Domain Name                 : CLINIC");
+    expect(type(s1, "conf t", "vlan 150")).toContain("% VLAN configuration not allowed when device is in VTP client mode.");
+    type(s1, "vtp mode transparent", "vlan 150", "exit", "end");
+    expect(type(s1, "show vlan brief").some((line) => line.startsWith("150 "))).toBe(true);
+  });
+});
+
 describe("VLAN database", () => {
   it("creates a VLAN only when you leave config-vlan mode", () => {
     const { s1 } = oneSwitch();

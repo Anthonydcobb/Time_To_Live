@@ -403,6 +403,22 @@ export function showVlanBrief(sw: Switch): string[] {
   return vlanTable(sw);
 }
 
+export function showVtpStatus(sw: Switch): string[] {
+  return [
+    "VTP Version                     : 2",
+    `Configuration Revision          : ${sw.vlanDat ? 1 : 0}`,
+    `VTP Operating Mode              : ${sw.config.vtpMode}`,
+    "Maximum VLANs supported locally : 1005",
+    `Number of existing VLANs        : ${sw.vlans.size}`,
+    `VTP Domain Name                 : ${sw.config.vtpDomain}`,
+    "VTP Pruning Mode                : Disabled",
+    "VTP V2 Mode                     : Disabled",
+    "VTP Traps Generation            : Disabled",
+    "MD5 digest                      : 0x00000000000000000000000000000000",
+    "Configuration last modified by  : 0.0.0.0 at 0-00-00 00:00:00",
+  ];
+}
+
 export function showSpanningTree(sw: Switch): string[] {
   const switches = (sw.network?.devices ?? []).filter((d): d is Switch => d.kind === "switch");
   const out: string[] = [];

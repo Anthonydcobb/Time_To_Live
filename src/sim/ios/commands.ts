@@ -976,11 +976,19 @@ const switchCommands: Entry[] = [
   cmd(IF, [NO, CHANNEL_GROUP], (c) => eachSwitchport(c, (sp) => { sp.channelGroup = null; sp.channelMode = null; }), { devices: ["switch"], when: physicalPort }),
 
   cmd(CONFIG, [VLAN_KW, vlanListArg("ISL VLAN IDs 1-4094")], (c, [list]) => {
+    if (sw(c).config.vtpMode === "client") {
+      c.out.push("% VLAN configuration not allowed when device is in VTP client mode.");
+      return;
+    }
     c.console.vlanIds = list as number[];
     c.console.vlanName = null;
     c.console.setMode("config-vlan");
   }, { devices: ["switch"] }),
   cmd(CONFIG, [NO, VLAN_KW, vlanListArg("ISL VLAN IDs 1-4094")], (c, [list]) => {
+    if (sw(c).config.vtpMode === "client") {
+      c.out.push("% VLAN configuration not allowed when device is in VTP client mode.");
+      return;
+    }
     for (const id of list as number[]) {
       if (isDefaultVlan(id)) c.out.push(`%Default VLAN ${id} may not be deleted.`);
       else sw(c).deleteVlan(id);
@@ -991,6 +999,22 @@ const switchCommands: Entry[] = [
     for (const id of c.console.vlanIds.filter(isDefaultVlan)) c.out.push(`%Default VLAN ${id} may not have its name changed.`);
     c.console.vlanName = (name as string).slice(0, 32);
   }),
+
+  cmd(CONFIG, [kw("vtp", "Configure VTP domain parameters"), kw("mode", "Configure the device VTP mode"), kw("server", "Set VTP server mode")], (c) => {
+    sw(c).config.vtpMode = "server";
+  }, { devices: ["switch"] }),
+  cmd(CONFIG, [kw("vtp", "Configure VTP domain parameters"), kw("mode", "Configure the device VTP mode"), kw("client", "Set VTP client mode")], (c) => {
+    sw(c).config.vtpMode = "client";
+  }, { devices: ["switch"] }),
+  cmd(CONFIG, [kw("vtp", "Configure VTP domain parameters"), kw("mode", "Configure the device VTP mode"), kw("transparent", "Set VTP transparent mode")], (c) => {
+    sw(c).config.vtpMode = "transparent";
+  }, { devices: ["switch"] }),
+  cmd(CONFIG, [kw("vtp", "Configure VTP domain parameters"), kw("domain", "Set the VTP administrative domain"), wordArg("VTP domain name")], (c, [domain]) => {
+    sw(c).config.vtpDomain = domain as string;
+  }, { devices: ["switch"] }),
+  cmd(CONFIG, [NO, kw("vtp", "Configure VTP domain parameters"), kw("domain", "Set the VTP administrative domain")], (c) => {
+    sw(c).config.vtpDomain = "";
+  }, { devices: ["switch"] }),
   cmd(VLAN_MODE, [NO, kw("name", "Ascii name of the VLAN")], (c) => {
     c.console.vlanName = null;
   }),
@@ -1009,6 +1033,7 @@ const switchCommands: Entry[] = [
   ),
 
   cmd(EXEC, [SHOW, kw("vlan", "VTP VLAN status")], (c) => c.out.push(...show.showVlan(sw(c))), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("vtp", "VTP information"), kw("status", "VTP domain status")], (c) => c.out.push(...show.showVtpStatus(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("trunk", "Show interface trunk information")], (c) => c.out.push(...show.showInterfacesTrunk(sw(c))), {
     devices: ["switch"],
   }),
