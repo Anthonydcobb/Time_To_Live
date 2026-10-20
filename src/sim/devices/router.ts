@@ -57,11 +57,15 @@ export class Router extends IosDevice {
     return this.config.ospf.networks.find((n) => networkOf(iface.ip!, n.mask) === n.network) ?? null;
   }
 
-  private ospfAdvertisements() {
-    return this.l3Interfaces().flatMap((iface) => {
+  private ospfAdvertisements(excludeNextHop?: Ipv4) {
+    const connected = this.l3Interfaces().flatMap((iface) => {
       const n = this.ospfNetwork(iface);
       return n && iface.up() ? [{ network: n.network, mask: n.mask, nextHop: null, exitIface: null }] : [];
     });
+    const learned = this.ospfRoutes
+      .filter((route) => route.nextHop !== excludeNextHop)
+      .map(({ network, mask }) => ({ network, mask, nextHop: null, exitIface: null }));
+    return [...connected, ...learned.filter((route) => !connected.some((local) => local.network === route.network && local.mask === route.mask))];
   }
 
   private syncOspf(): void {
@@ -78,8 +82,10 @@ export class Router extends IosDevice {
       const theirsNet = theirs && peer.device.ospfNetwork(theirs);
       if (!ours || !theirs || !ours.up() || !theirs.up() || !oursNet || !theirsNet || oursNet.area !== theirsNet.area) continue;
       this.ospfNeighbors.push({ router: peer.device, localInterface: ours.name, remoteInterface: theirs.name, remoteAddress: theirs.ip! });
-      for (const route of peer.device.ospfAdvertisements()) {
-        if (!local.some((r) => r.network === route.network && r.mask === route.mask)) this.ospfRoutes.push({ ...route, nextHop: theirs.ip!, exitIface: ours.name });
+      for (const route of peer.device.ospfAdvertisements(ours.ip!)) {
+        if (!local.some((r) => r.network === route.network && r.mask === route.mask) && !this.ospfRoutes.some((r) => r.network === route.network && r.mask === route.mask && r.nextHop === theirs.ip)) {
+          this.ospfRoutes.push({ ...route, nextHop: theirs.ip!, exitIface: ours.name });
+        }
       }
     }
   }
