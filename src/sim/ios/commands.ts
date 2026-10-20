@@ -725,6 +725,7 @@ const SP_NATIVE = kw("native", "Set trunking native characteristics when interfa
 const SP_ALLOWED = kw("allowed", "Set allowed VLAN characteristics when interface is in trunking mode");
 const SP_ALLOWED_VLAN = kw("vlan", "Set allowed VLANs when interface is in trunking mode");
 const NONEGOTIATE = kw("nonegotiate", "Device will not engage in negotiation protocol on this interface");
+const CHANNEL_GROUP = kw("channel-group", "EtherChannel configuration");
 const VLAN_KW = kw("vlan", "Vlan commands");
 
 function setMode(c: Ctx, mode: "access" | "trunk" | "dynamic auto" | "dynamic desirable"): void {
@@ -747,6 +748,11 @@ function setAllowed(c: Ctx, change: (current: number[] | null) => number[] | nul
     const next = change(sp.allowed);
     sp.allowed = next && next.length === 4094 ? null : next;
   });
+}
+
+function setChannel(c: Ctx, group: number, mode: "on" | "active" | "passive" | "desirable" | "auto"): void {
+  const selected = c.console.ifaces.map((name) => c.device.findInterface(name)?.port).filter((p): p is NonNullable<typeof p> => !!p);
+  for (const port of selected) sw(c).setChannelGroup(port, group, mode);
 }
 
 const ALL_VLANS = Array.from({ length: 4094 }, (_, i) => i + 1);
@@ -824,6 +830,12 @@ const switchCommands: Entry[] = [
   cmd(IF, [NO, STP, kw("portfast", "Enable edge port behavior")], (c) => eachSwitchport(c, (sp) => { sp.portfast = false; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [STP, kw("bpduguard", "Enable BPDU Guard"), kw("enable", "Enable BPDU Guard")], (c) => eachSwitchport(c, (sp) => { sp.bpduGuard = true; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [NO, STP, kw("bpduguard", "Enable BPDU Guard"), kw("enable", "Enable BPDU Guard")], (c) => eachSwitchport(c, (sp) => { sp.bpduGuard = false; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [CHANNEL_GROUP, numArg(1, 64, "Channel group number"), kw("mode", "EtherChannel mode"), kw("on", "Force EtherChannel" )], (c, [group]) => setChannel(c, group as number, "on"), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [CHANNEL_GROUP, numArg(1, 64, "Channel group number"), kw("mode", "EtherChannel mode"), kw("active", "LACP active" )], (c, [group]) => setChannel(c, group as number, "active"), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [CHANNEL_GROUP, numArg(1, 64, "Channel group number"), kw("mode", "EtherChannel mode"), kw("passive", "LACP passive" )], (c, [group]) => setChannel(c, group as number, "passive"), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [CHANNEL_GROUP, numArg(1, 64, "Channel group number"), kw("mode", "EtherChannel mode"), kw("desirable", "PAgP desirable" )], (c, [group]) => setChannel(c, group as number, "desirable"), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [CHANNEL_GROUP, numArg(1, 64, "Channel group number"), kw("mode", "EtherChannel mode"), kw("auto", "PAgP auto" )], (c, [group]) => setChannel(c, group as number, "auto"), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, CHANNEL_GROUP], (c) => eachSwitchport(c, (sp) => { sp.channelGroup = null; sp.channelMode = null; }), { devices: ["switch"], when: physicalPort }),
 
   cmd(CONFIG, [VLAN_KW, vlanListArg("ISL VLAN IDs 1-4094")], (c, [list]) => {
     c.console.vlanIds = list as number[];
@@ -865,6 +877,7 @@ const switchCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("switchport", "Show interface switchport information")], (c) =>
     c.out.push(...show.showInterfacesSwitchport(sw(c))),
   { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("etherchannel", "EtherChannel information"), kw("summary", "EtherChannel summary")], (c) => c.out.push(...show.showEtherchannelSummary(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), ifaceArg, kw("switchport", "Show interface switchport information")], (c, [name]) =>
     c.out.push(...show.showInterfacesSwitchport(sw(c), name as string)),
   { devices: ["switch"] }),

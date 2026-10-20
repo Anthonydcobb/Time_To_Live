@@ -15,6 +15,7 @@ export interface LineConfig {
 }
 
 export type SwitchportMode = "access" | "trunk" | "dynamic auto" | "dynamic desirable";
+export type ChannelGroupMode = "on" | "active" | "passive" | "desirable" | "auto";
 
 /** Layer 2 settings on a switch's physical port. */
 export interface SwitchportConfig {
@@ -26,11 +27,13 @@ export interface SwitchportConfig {
   nonegotiate: boolean;
   portfast: boolean;
   bpduGuard: boolean;
+  channelGroup: number | null;
+  channelMode: ChannelGroupMode | null;
 }
 
 export function defaultSwitchport(): SwitchportConfig {
   // A Catalyst 2960 port is dynamic auto out of the box.
-  return { mode: "dynamic auto", accessVlan: 1, nativeVlan: 1, allowed: null, nonegotiate: false, portfast: false, bpduGuard: false };
+  return { mode: "dynamic auto", accessVlan: 1, nativeVlan: 1, allowed: null, nonegotiate: false, portfast: false, bpduGuard: false, channelGroup: null, channelMode: null };
 }
 
 export interface InterfaceConfig {

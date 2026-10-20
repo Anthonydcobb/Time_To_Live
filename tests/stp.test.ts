@@ -18,6 +18,34 @@ function triangle() {
 }
 
 describe("spanning tree", () => {
+  it("bundles parallel links and presents one logical STP path", () => {
+    const net = new Network();
+    const a = net.add(new Switch("A", "A"));
+    const b = net.add(new Switch("B", "B"));
+    for (const sw of [a, b]) type(sw, "", "en", "conf t", "int gi0/1", "switchport mode trunk", "channel-group 1 mode active", "int gi0/2", "switchport mode trunk", "channel-group 1 mode active", "end");
+    net.connect(a.port("Gi0/1"), b.port("Gi0/1"));
+    net.connect(a.port("Gi0/2"), b.port("Gi0/2"));
+    net.clock.advance(35_000);
+    expect(a.channelGroupActive(a.port("Gi0/1"))).toBe(true);
+    expect(a.channelGroupActive(a.port("Gi0/2"))).toBe(true);
+    expect(a.stpState(a.port("Gi0/1"), 1)).toBe("forwarding");
+    expect(a.stpState(a.port("Gi0/2"), 1)).toBe("forwarding");
+    expect(type(a, "show etherchannel summary").join("\n")).toContain("Po1-");
+    expect(type(a, "show etherchannel summary").join("\n")).toContain("(P)");
+  });
+
+  it("leaves an incompatible LACP/PAgP bundle suspended", () => {
+    const net = new Network();
+    const a = net.add(new Switch("A", "A"));
+    const b = net.add(new Switch("B", "B"));
+    type(a, "", "en", "conf t", "int gi0/1", "channel-group 1 mode active", "end");
+    type(b, "", "en", "conf t", "int gi0/1", "channel-group 1 mode desirable", "end");
+    net.connect(a.port("Gi0/1"), b.port("Gi0/1"));
+    net.clock.advance(3_000);
+    expect(a.channelGroupActive(a.port("Gi0/1"))).toBe(false);
+    expect(type(a, "show etherchannel summary").join("\n")).toContain("(s)");
+  });
+
   it("lets a PortFast access port forward as soon as the link is up", () => {
     const net = new Network();
     const sw = net.add(new Switch("S1"));

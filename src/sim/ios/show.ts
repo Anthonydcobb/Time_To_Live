@@ -119,6 +119,7 @@ function switchportLines(sp: SwitchportConfig): string[] {
   if (sp.nonegotiate) out.push(" switchport nonegotiate");
   if (sp.portfast) out.push(" spanning-tree portfast");
   if (sp.bpduGuard) out.push(" spanning-tree bpduguard enable");
+  if (sp.channelGroup !== null && sp.channelMode !== null) out.push(` channel-group ${sp.channelGroup} mode ${sp.channelMode}`);
   return out;
 }
 
@@ -385,6 +386,25 @@ export function showSpanningTree(sw: Switch): string[] {
     }
     out.push("");
   }
+  return out;
+}
+
+export function showEtherchannelSummary(sw: Switch): string[] {
+  const groups = new Map<number, typeof sw.ports>();
+  for (const port of sw.ports) {
+    const group = sw.switchport(port).channelGroup;
+    if (group !== null) groups.set(group, [...(groups.get(group) ?? []), port]);
+  }
+  const out = ["", "                Port-channel        Protocol    Ports", "Group  Port-channel   Protocol       Ports", "------+-------------+-----------+-----------------------------------------------"];
+  for (const [group, ports] of [...groups].sort(([a], [b]) => a - b)) {
+    const mode = sw.switchport(ports[0]).channelMode;
+    const protocol = mode === "active" || mode === "passive" ? "LACP" : mode === "desirable" || mode === "auto" ? "PAgP" : "-";
+    const active = sw.channelGroupActive(ports[0]);
+    const members = ports.map((port) => `${port.shortName}${active ? "(P)" : "(s)"}`).join(" ");
+    out.push(`${String(group).padStart(5)}  Po${group}-       ${protocol.padEnd(12)} ${members}`);
+  }
+  if (groups.size === 0) out.push("No EtherChannels configured.");
+  out.push("");
   return out;
 }
 

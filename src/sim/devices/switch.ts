@@ -1,7 +1,7 @@
 import { BROADCAST_MAC, nextMac, type Mac } from "../addr";
 import { retag, STP_MAC, type BpduPacket, type Frame } from "../frames";
 import { IpStack, type L3Interface } from "../ipstack";
-import { defaultConfig, defaultSwitchport, newInterfaceConfig, type IosConfig, type SwitchportConfig } from "../ios/config";
+import { defaultConfig, defaultSwitchport, newInterfaceConfig, type ChannelGroupMode, type IosConfig, type SwitchportConfig } from "../ios/config";
 import { Port } from "../network";
 import { DEFAULT_VLANS, MAX_NORMAL_VLAN, UNSUPPORTED_VLANS, defaultVlanName, formatVlanList, isDefaultVlan, sviVlan } from "../vlans";
 import { IosDevice, type InterfaceView } from "./ios-device";
@@ -189,6 +189,41 @@ export class Switch extends IosDevice {
     return "access";
   }
 
+  channelGroupActive(port: Port): boolean {
+    const sp = this.switchport(port);
+    if (sp.channelGroup === null || sp.channelMode === null) return false;
+    const members = this.ports.filter((p) => this.switchport(p).channelGroup === sp.channelGroup);
+    if (!members.length) return false;
+    return members.every((member) => {
+      const peer = member.peer;
+      if (!peer || !(peer.device instanceof Switch)) return false;
+      const other = peer.device.switchport(peer);
+      if (other.channelGroup !== sp.channelGroup || other.channelMode === null) return false;
+      if (sp.channelMode === "on" || other.channelMode === "on") return sp.channelMode === "on" && other.channelMode === "on";
+      if (sp.channelMode === "active" || sp.channelMode === "passive" || other.channelMode === "active" || other.channelMode === "passive") {
+        return (sp.channelMode === "active" || sp.channelMode === "passive") && (other.channelMode === "active" || other.channelMode === "passive") && (sp.channelMode === "active" || other.channelMode === "active");
+      }
+      return (sp.channelMode === "desirable" || sp.channelMode === "auto") && (other.channelMode === "desirable" || other.channelMode === "auto") && (sp.channelMode === "desirable" || other.channelMode === "desirable");
+    });
+  }
+
+  channelMembers(port: Port): Port[] {
+    const group = this.switchport(port).channelGroup;
+    if (group === null || !this.channelGroupActive(port)) return [port];
+    return this.ports.filter((p) => this.switchport(p).channelGroup === group).sort((a, b) => a.shortName.localeCompare(b.shortName));
+  }
+
+  channelRepresentative(port: Port): Port {
+    return this.channelMembers(port)[0] ?? port;
+  }
+
+  setChannelGroup(port: Port, group: number, mode: ChannelGroupMode): void {
+    const sp = this.switchport(port);
+    sp.channelGroup = group;
+    sp.channelMode = mode;
+    this.vlanConfigChanged();
+  }
+
   /** A VLAN that exists and can carry traffic. 1002 to 1005 exist but are unsupported. */
   vlanActive(vlan: number): boolean {
     return this.vlans.has(vlan) && !UNSUPPORTED_VLANS.has(vlan);
@@ -241,6 +276,7 @@ export class Switch extends IosDevice {
   /** Calculates PVST-style roles across the connected switch graph. */
   stpRole(port: Port, vlan: number): StpRole {
     if (!port.protocolUp || !this.vlansOn(port).includes(vlan)) return "disabled";
+    if (this.channelGroupActive(port) && this.channelRepresentative(port) !== port) return this.stpRole(this.channelRepresentative(port), vlan);
     const peer = port.peer?.device;
     if (!(peer instanceof Switch) || !port.peer) return "designated";
     const peerPort = port.peer;
@@ -259,6 +295,7 @@ export class Switch extends IosDevice {
           const other = candidate.peer?.device;
           if (!(other instanceof Switch) || !candidate.peer?.protocolUp || !candidate.protocolUp) continue;
           if (!sw.vlansOn(candidate).includes(vlan) || !(other as Switch).vlansOn(candidate.peer).includes(vlan)) continue;
+          if (sw.channelGroupActive(candidate) && sw.channelRepresentative(candidate) !== candidate) continue;
           const next = base + (candidate.shortName.startsWith("Gi") ? 4 : 19);
           if (next < (distances.get(other) ?? Infinity)) { distances.set(other, next); changed = true; }
         }
@@ -268,6 +305,7 @@ export class Switch extends IosDevice {
     const cost = (p: Port) => p.shortName.startsWith("Gi") ? 4 : 19;
     const rootPort = this.ports
       .filter((p) => p.peer?.device instanceof Switch && p.protocolUp && p.peer.protocolUp && this.vlansOn(p).includes(vlan) && (p.peer.device as Switch).vlansOn(p.peer).includes(vlan))
+      .filter((p) => !this.channelGroupActive(p) || this.channelRepresentative(p) === p)
       .sort((a, b) => {
         const ac = (distances.get(a.peer!.device as Switch) ?? Infinity) + cost(a);
         const bc = (distances.get(b.peer!.device as Switch) ?? Infinity) + cost(b);
