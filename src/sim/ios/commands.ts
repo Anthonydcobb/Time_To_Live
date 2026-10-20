@@ -190,6 +190,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("version", "System hardware and software status")], (c) => c.out.push(...show.showVersion(c.device))),
   cmd(EXEC, [SHOW, kw("clock", "Display the system clock")], (c) => c.out.push(...show.showClock(c.device))),
   cmd(EXEC, [SHOW, kw("ssh", "Status of SSH server connections")], (c) => c.out.push(...show.showSsh(c.device))),
+  cmd(EXEC, [SHOW, kw("access-lists", "List access lists")], (c) => c.out.push(...show.showAccessLists(c.device))),
   cmd(
     EXEC,
     [SHOW, kw("ip", "IP information"), kw("interface", "IP interface status and configuration"), kw("brief", "Brief summary of IP status and configuration")],
@@ -286,6 +287,10 @@ const DOMAIN = kw("domain-lookup", "Enable IP Domain Name System hostname transl
 const DOMAIN_NAME = kw("domain-name", "Define the default domain name");
 const ROUTE = kw("route", "Establish static routes");
 const STP = kw("spanning-tree", "Spanning Tree Protocol");
+const ACCESS_LIST = kw("access-list", "Add an access list entry");
+const PERMIT = kw("permit", "Permit access");
+const DENY = kw("deny", "Deny access");
+const ANY = kw("any", "Any source address");
 
 function addRoute(c: Ctx, network: Ipv4, mask: Ipv4, via: { nextHop: Ipv4 | null; exitIface: string | null }): void {
   if (maskToPrefix(mask) === null) {
@@ -363,6 +368,27 @@ const configCommands: Entry[] = [
   }),
   cmd(CONFIG, [NO, kw("username", "Establish User Name Authentication"), wordArg("User name")], (c, [name]) => {
     delete c.device.config.users[name as string];
+  }),
+  cmd(CONFIG, [ACCESS_LIST, numArg(1, 99, "Standard ACL number"), PERMIT, ANY], (c, [number]) => {
+    (c.device.config.standardAcls[number as number] ??= []).push({ action: "permit", network: null, wildcard: null });
+  }),
+  cmd(CONFIG, [ACCESS_LIST, numArg(1, 99, "Standard ACL number"), DENY, ANY], (c, [number]) => {
+    (c.device.config.standardAcls[number as number] ??= []).push({ action: "deny", network: null, wildcard: null });
+  }),
+  cmd(CONFIG, [ACCESS_LIST, numArg(1, 99, "Standard ACL number"), PERMIT, ipArg("Source address")], (c, [number, network]) => {
+    (c.device.config.standardAcls[number as number] ??= []).push({ action: "permit", network: network as Ipv4, wildcard: 0 });
+  }),
+  cmd(CONFIG, [ACCESS_LIST, numArg(1, 99, "Standard ACL number"), PERMIT, ipArg("Source network"), ipArg("Wildcard bits")], (c, [number, network, wildcard]) => {
+    (c.device.config.standardAcls[number as number] ??= []).push({ action: "permit", network: network as Ipv4, wildcard: wildcard as Ipv4 });
+  }),
+  cmd(CONFIG, [ACCESS_LIST, numArg(1, 99, "Standard ACL number"), DENY, ipArg("Source address")], (c, [number, network]) => {
+    (c.device.config.standardAcls[number as number] ??= []).push({ action: "deny", network: network as Ipv4, wildcard: 0 });
+  }),
+  cmd(CONFIG, [ACCESS_LIST, numArg(1, 99, "Standard ACL number"), DENY, ipArg("Source network"), ipArg("Wildcard bits")], (c, [number, network, wildcard]) => {
+    (c.device.config.standardAcls[number as number] ??= []).push({ action: "deny", network: network as Ipv4, wildcard: wildcard as Ipv4 });
+  }),
+  cmd(CONFIG, [NO, ACCESS_LIST, numArg(1, 99, "Standard ACL number")], (c, [number]) => {
+    delete c.device.config.standardAcls[number as number];
   }),
   cmd(CONFIG, [SERVICE, PWENC], (c) => {
     const cfg = c.device.config;
@@ -470,6 +496,18 @@ const IF_IP = kw("ip", "Interface Internet Protocol config commands");
 const ADDRESS = kw("address", "Set the IP address of an interface");
 
 const interfaceCommands: Entry[] = [
+  cmd(ANY_IF, [IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 99, "Standard ACL number"), kw("in", "Inbound packets")], (c, [number]) => {
+    forEachIface(c, (name) => { c.device.ifaceConfig(name).accessGroupIn = number as number; });
+  }, { when: routedIface }),
+  cmd(ANY_IF, [IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 99, "Standard ACL number"), kw("out", "Outbound packets")], (c, [number]) => {
+    forEachIface(c, (name) => { c.device.ifaceConfig(name).accessGroupOut = number as number; });
+  }, { when: routedIface }),
+  cmd(ANY_IF, [NO, IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 99, "Standard ACL number"), kw("in", "Inbound packets")], (c, [number]) => {
+    forEachIface(c, (name) => { if (c.device.ifaceConfig(name).accessGroupIn === number) c.device.ifaceConfig(name).accessGroupIn = null; });
+  }, { when: routedIface }),
+  cmd(ANY_IF, [NO, IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 99, "Standard ACL number"), kw("out", "Outbound packets")], (c, [number]) => {
+    forEachIface(c, (name) => { if (c.device.ifaceConfig(name).accessGroupOut === number) c.device.ifaceConfig(name).accessGroupOut = null; });
+  }, { when: routedIface }),
   cmd(ANY_IF, [IF_IP, kw("helper-address", "Specify a destination address for DHCP relay"), ipArg("DHCP server address")], (c, [server]) => {
     forEachIface(c, (name) => {
       const helpers = c.device.ifaceConfig(name).helperAddresses;

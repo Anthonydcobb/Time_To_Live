@@ -45,6 +45,8 @@ export interface InterfaceConfig {
   mask: Ipv4 | null;
   /** DHCP relay destinations configured with ip helper-address. */
   helperAddresses: Ipv4[];
+  accessGroupIn: number | null;
+  accessGroupOut: number | null;
   cdp: boolean;
   /** Switch physical ports only. */
   switchport?: SwitchportConfig;
@@ -53,7 +55,13 @@ export interface InterfaceConfig {
 }
 
 export function newInterfaceConfig(shutdown: boolean): InterfaceConfig {
-  return { shutdown, description: null, ip: null, mask: null, helperAddresses: [], cdp: true };
+  return { shutdown, description: null, ip: null, mask: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, cdp: true };
+}
+
+export interface StandardAclRule {
+  action: "permit" | "deny";
+  network: Ipv4 | null;
+  wildcard: Ipv4 | null;
 }
 
 export interface DhcpPool {
@@ -77,6 +85,7 @@ export interface IosConfig {
   domainName: string | null;
   users: Record<string, string>;
   rsaKeysGenerated: boolean;
+  standardAcls: Record<number, StandardAclRule[]>;
   enableSecret: string | null;
   enablePassword: StoredPassword | null;
   servicePasswordEncryption: boolean;
@@ -105,6 +114,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     domainName: null,
     users: {},
     rsaKeysGenerated: false,
+    standardAcls: {},
     enableSecret: null,
     enablePassword: null,
     servicePasswordEncryption: false,

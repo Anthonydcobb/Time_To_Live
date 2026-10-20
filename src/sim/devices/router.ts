@@ -6,6 +6,7 @@ import { defaultConfig, newInterfaceConfig, type IosConfig } from "../ios/config
 import { Port } from "../network";
 import { splitSubinterface } from "../vlans";
 import { IosDevice, type InterfaceView } from "./ios-device";
+import { permitsStandardAcl } from "../ios/acl";
 
 /** Cryptis CR-2911: three gigabit ports, all shut down out of the box. Subinterfaces carry 802.1Q VLANs. */
 export class Router extends IosDevice {
@@ -32,6 +33,7 @@ export class Router extends IosDevice {
       localRoutes: true,
       staticRoutes: () => this.config.staticRoutes,
       onDhcp: (iface, packet) => this.handleDhcp(iface, packet),
+      filter: (iface, packet, direction) => permitsStandardAcl(this.config, iface.name, packet, direction),
     });
     this.dhcp = new DhcpServer({
       clock: () => this.clock,

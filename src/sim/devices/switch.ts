@@ -5,6 +5,7 @@ import { defaultConfig, defaultSwitchport, newInterfaceConfig, type ChannelGroup
 import { Port } from "../network";
 import { DEFAULT_VLANS, MAX_NORMAL_VLAN, UNSUPPORTED_VLANS, defaultVlanName, formatVlanList, isDefaultVlan, sviVlan } from "../vlans";
 import { IosDevice, type InterfaceView } from "./ios-device";
+import { permitsStandardAcl } from "../ios/acl";
 
 export interface MacEntry {
   mac: Mac;
@@ -67,6 +68,7 @@ export class Switch extends IosDevice {
       initialTtl: 255,
       localRoutes: false,
       defaultGateway: () => this.config.defaultGateway,
+      filter: (iface, packet, direction) => permitsStandardAcl(this.config, iface.name, packet, direction),
     });
   }
 

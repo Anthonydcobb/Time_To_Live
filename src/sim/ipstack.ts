@@ -65,6 +65,8 @@ export interface IpStackOptions {
   defaultGateway?: () => Ipv4 | null;
   /** DHCP messages go here instead of through normal delivery. They arrive before the client has an address. */
   onDhcp?: (iface: L3Interface, packet: Ipv4Packet) => void;
+  /** Optional inbound/outbound IPv4 ACL gate supplied by the owning device. */
+  filter?: (iface: L3Interface, packet: Ipv4Packet, direction: "in" | "out") => boolean;
 }
 
 const MAX_QUEUED_PER_HOST = 4;
@@ -146,6 +148,7 @@ export class IpStack {
   }
 
   private sendVia(iface: L3Interface, nextHop: Ipv4, packet: Ipv4Packet): void {
+    if (this.opts.filter && !this.opts.filter(iface, packet, "out")) return;
     const isBroadcast = nextHop === BROADCAST_IP || (iface.ip !== null && nextHop === broadcastOf(iface.ip, iface.mask!));
     if (isBroadcast) {
       iface.transmit({ src: iface.mac, dst: BROADCAST_MAC, payload: packet });
@@ -201,6 +204,8 @@ export class IpStack {
       }
       return;
     }
+
+    if (this.opts.filter && !this.opts.filter(iface, p, "in")) return;
 
     if (p.dhcp) {
       this.opts.onDhcp?.(iface, p);

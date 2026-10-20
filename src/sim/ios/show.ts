@@ -5,7 +5,7 @@ import type { Router } from "../devices/router";
 import type { Switch } from "../devices/switch";
 import { UNSUPPORTED_VLANS, formatVlanList } from "../vlans";
 import type { Route } from "../ipstack";
-import type { IosConfig, LineConfig, StoredPassword, SwitchportConfig, SwitchportMode } from "./config";
+import type { IosConfig, LineConfig, StandardAclRule, StoredPassword, SwitchportConfig, SwitchportMode } from "./config";
 import { type7Encode } from "./passwords";
 
 const IOS_VERSION = "15.1(4)M4";
@@ -79,6 +79,8 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     if (ic.description) out.push(` description ${ic.description}`);
     for (const helper of ic.helperAddresses) out.push(` ip helper-address ${formatIpv4(helper)}`);
     if (ic.encapsulation) out.push(` encapsulation dot1Q ${ic.encapsulation.vlan}${ic.encapsulation.native ? " native" : ""}`);
+    if (ic.accessGroupIn !== null) out.push(" ip access-group " + ic.accessGroupIn + " in");
+    if (ic.accessGroupOut !== null) out.push(" ip access-group " + ic.accessGroupOut + " out");
     if (ic.switchport) out.push(...switchportLines(ic.switchport));
     else out.push(ic.ip !== null ? ` ip address ${formatIpv4(ic.ip)} ${formatIpv4(ic.mask!)}` : " no ip address");
     if (ic.shutdown) out.push(" shutdown");
@@ -95,6 +97,10 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     out.push(`ip route ${formatIpv4(r.network)} ${formatIpv4(r.mask)} ${target}`);
   }
   if (c.staticRoutes.length) out.push("!");
+  for (const [number, rules] of Object.entries(c.standardAcls).sort(([a], [b]) => Number(a) - Number(b))) {
+    for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + formatAclSource(rule));
+  }
+  if (Object.keys(c.standardAcls).length) out.push("!");
   if (!isSwitch) out.push("control-plane", "!");
 
   if (c.bannerMotd !== null) out.push("banner motd ^C", ...c.bannerMotd.split("\n"), "^C", "!");
@@ -128,6 +134,11 @@ function switchportLines(sp: SwitchportConfig): string[] {
   if (sp.bpduGuard) out.push(" spanning-tree bpduguard enable");
   if (sp.channelGroup !== null && sp.channelMode !== null) out.push(` channel-group ${sp.channelGroup} mode ${sp.channelMode}`);
   return out;
+}
+
+function formatAclSource(rule: StandardAclRule): string {
+  if (rule.network === null) return "any";
+  return rule.wildcard === 0 ? formatIpv4(rule.network) : formatIpv4(rule.network) + " " + formatIpv4(rule.wildcard!);
 }
 
 function byteCount(lines: string[]): number {
@@ -626,6 +637,15 @@ export function showSsh(device: IosDevice): string[] {
     `Local user authentication: ${c.vty.loginLocal ? "enabled" : "disabled"}`,
     `VTY transport input: ${c.vty.transportInput}`,
   ];
+}
+
+export function showAccessLists(device: IosDevice): string[] {
+  const out: string[] = [];
+  for (const [number, rules] of Object.entries(device.config.standardAcls).sort(([a], [b]) => Number(a) - Number(b))) {
+    out.push(`Standard IP access list ${number}`);
+    rules.forEach((rule, index) => out.push(`    ${(index + 1) * 10} ${rule.action} ${formatAclSource(rule)}`));
+  }
+  return out.length ? out : ["No access lists configured"];
 }
 
 // ---- DHCP ----------------------------------------------------------------------
