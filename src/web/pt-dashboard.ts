@@ -1,0 +1,203 @@
+type Device = { name: string; type: string; model: string; serialNumber?: string };
+type Link = { device: string; port: string; remotePort?: string; connectionType: string; portUp: boolean };
+
+const urlInput = document.querySelector<HTMLInputElement>("#bridge-url")!;
+const bridgeStatus = document.querySelector<HTMLElement>("#bridge-status")!;
+const deviceCount = document.querySelector<HTMLElement>("#device-count")!;
+const linkCount = document.querySelector<HTMLElement>("#link-count")!;
+const lastRefresh = document.querySelector<HTMLElement>("#last-refresh")!;
+const devicesEl = document.querySelector<HTMLElement>("#devices")!;
+const linksEl = document.querySelector<HTMLElement>("#links")!;
+const deviceSelect = document.querySelector<HTMLSelectElement>("#device-select")!;
+const output = document.querySelector<HTMLElement>("#output")!;
+const topologyMap = document.querySelector<HTMLElement>("#topology-map")!;
+const historyEl = document.querySelector<HTMLElement>("#history")!;
+const healthResults = document.querySelector<HTMLElement>("#health-results")!;
+const commandHistory: { device: string; command: string; status: string; at: string }[] = [];
+let liveDevices: Device[] = [];
+
+async function bridge(path: string, options?: RequestInit): Promise<any> {
+  const response = await fetch(`${urlInput.value.replace(/\/$/, "")}${path}`, options);
+  const body = await response.json();
+  if (!response.ok) throw new Error(body.error ?? `HTTP ${response.status}`);
+  return body;
+}
+
+function renderDevices(devices: Device[]): void {
+  const operational = devices.filter((device) => device.type !== "POWER_DISTRIBUTION_DEVICE");
+  deviceCount.textContent = String(operational.length);
+  devicesEl.replaceChildren();
+  deviceSelect.replaceChildren();
+  for (const device of operational) {
+    const row = document.createElement("div"); row.className = "device";
+    row.innerHTML = `<span>${device.name}<br><small class="type">${device.model} · ${device.serialNumber ?? "no serial"}</small></span><span class="up">ONLINE</span>`;
+    devicesEl.append(row);
+    if (device.type === "SWITCH" || device.type === "ROUTER" || device.type === "PC") deviceSelect.add(new Option(device.name, device.name));
+  }
+}
+
+function renderLinks(links: Link[]): void {
+  linkCount.textContent = String(links.length);
+  linksEl.replaceChildren();
+  for (const link of links) {
+    const row = document.createElement("div"); row.className = "link";
+    const state = link.portUp ? "UP" : "DOWN";
+    row.innerHTML = `<span>${link.device} / ${link.port}<br><small class="type">${link.connectionType}</small></span><span class="${link.portUp ? "up" : "down"}">${state}</span>`;
+    linksEl.append(row);
+  }
+}
+
+function renderTopology(devices: Device[], links: Link[]): void {
+  topologyMap.replaceChildren();
+  const deviceByName = new Map(devices.map((device) => [device.name, device]));
+  const operational = devices.filter((device) => device.type !== "POWER_DISTRIBUTION_DEVICE");
+  const esc = (value: string) => value.replace(/[&<>"']/g, (char) => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]!));
+  const node = (device: Device, x: number, y: number) => `<g><rect x="${x - 82}" y="${y - 27}" width="164" height="54" rx="8" class="svg-node"/><text x="${x}" y="${y - 2}" class="svg-name">${esc(device.name)}</text><text x="${x}" y="${y + 16}" class="svg-type">${esc(device.type)} · ${esc(device.model)}</text></g>`;
+  const portUp = (device: string, port: string) => links.some((link) => link.device === device && link.port === port && link.portUp);
+  const edge = (a: Device | undefined, aPort: string, b: Device | undefined, bPort: string, x1: number, y1: number, x2: number, y2: number) => {
+    if (!a || !b) return "";
+    const up = portUp(a.name, aPort) || portUp(b.name, bPort);
+    const label = `${aPort} ↔ ${bPort}`;
+    return `<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" class="svg-line ${up ? "" : "svg-line-down"}"/><text x="${(x1 + x2) / 2}" y="${(y1 + y2) / 2 - 5}" class="svg-port">${label}</text>`;
+  };
+
+  // Packet Tracer's IPC link object exposes the local endpoint but not the
+  // remote device. For the supported expanded lab, use the intentional port
+  // mapping instead of guessing from cable type.
+  const expanded = deviceByName.has("Switch0") && deviceByName.has("Switch1") && deviceByName.has("PC0") && deviceByName.has("PC1") && deviceByName.has("Router0");
+  if (expanded) {
+    const s0 = deviceByName.get("Switch0"); const s1 = deviceByName.get("Switch1");
+    const pc0 = deviceByName.get("PC0"); const pc1 = deviceByName.get("PC1"); const router = deviceByName.get("Router0");
+    const lines = [
+      edge(s0, "0/1", s1, "0/1", 462, 70, 598, 70),
+      edge(s0, "0/2", pc0, "0", 360, 98, 160, 205),
+      edge(s0, "0/3", router, "0/0", 380, 98, 380, 205),
+      edge(s1, "0/2", pc1, "0", 680, 98, 680, 205),
+    ].join("");
+    topologyMap.innerHTML = `<svg viewBox="0 0 760 300" role="img" aria-label="Live Packet Tracer topology"><text x="380" y="20" class="svg-caption">LIVE PACKET TRACER TOPOLOGY · EXPANDED LAB</text>${lines}${node(s0!, 380, 70)}${node(s1!, 680, 70)}${node(pc0!, 160, 235)}${node(router!, 380, 235)}${node(pc1!, 680, 235)}</svg>`;
+    return;
+  }
+
+  // Baseline lab fallback: show the known two-switch/PC layout when those
+  // devices are present; otherwise list the discovered devices without
+  // drawing potentially false edges.
+  if (deviceByName.has("Switch0") && deviceByName.has("Switch1") && deviceByName.has("PC0")) {
+    const s0 = deviceByName.get("Switch0"); const s1 = deviceByName.get("Switch1"); const pc0 = deviceByName.get("PC0");
+    const lines = [edge(s0, "0/1", s1, "0/1", 462, 70, 598, 70), edge(s0, "0/2", pc0, "0", 380, 98, 380, 205)].join("");
+    topologyMap.innerHTML = `<svg viewBox="0 0 760 300" role="img" aria-label="Live Packet Tracer topology"><text x="380" y="20" class="svg-caption">LIVE PACKET TRACER TOPOLOGY</text>${lines}${node(s0!, 380, 70)}${node(s1!, 680, 70)}${node(pc0!, 380, 235)}</svg>`;
+    return;
+  }
+  if (operational.length) topologyMap.innerHTML = `<p class="muted">Devices discovered; endpoint pairing is not available for this topology.</p>`;
+  else topologyMap.innerHTML = `<p class="muted">No live devices discovered.</p>`;
+}
+
+function addHistory(device: string, command: string, status: string): void {
+  commandHistory.unshift({ device, command, status, at: new Date().toLocaleTimeString() });
+  commandHistory.splice(10);
+  historyEl.replaceChildren();
+  for (const item of commandHistory) {
+    const row = document.createElement("div"); row.className = "history-row";
+    row.innerHTML = `<span>${item.at}</span><span class="history-command">${item.device} · ${item.command}</span><span class="history-status">${item.status}</span>`;
+    historyEl.append(row);
+  }
+}
+
+async function refresh(): Promise<void> {
+  try {
+    const health = await bridge("/health");
+    bridgeStatus.textContent = `ONLINE · ${health.pending} queued`;
+    bridgeStatus.className = "up";
+    const deviceResult = await run("__network__", "list devices", "enable");
+    const devices: Device[] = String(deviceResult.output ?? "").split("\n").filter(Boolean).map((line) => {
+      const [name, type, model, serialNumber] = line.split("|"); return { name, type, model, serialNumber };
+    });
+    liveDevices = devices;
+    renderDevices(devices);
+    const linkResult = await run("__network__", "list links", "enable");
+    const links: Link[] = String(linkResult.output ?? "").split("\n").filter(Boolean).map((line) => {
+      const [device, port, remotePort, connectionType, portUp] = line.split("|");
+      return { device, port, remotePort, connectionType, portUp: portUp === "true" };
+    });
+    renderLinks(links);
+    renderTopology(devices, links);
+    lastRefresh.textContent = new Date().toLocaleTimeString();
+  } catch (error) {
+    bridgeStatus.textContent = "OFFLINE"; bridgeStatus.className = "down";
+    output.textContent = error instanceof Error ? error.message : String(error);
+  }
+}
+
+async function run(device: string, line: string, mode = "enable"): Promise<any> {
+  const queued = await bridge("/v1/command", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({ device, line, mode }) });
+  const deadline = Date.now() + 15000;
+  while (Date.now() < deadline) {
+    const response = await fetch(`${urlInput.value.replace(/\/$/, "")}/v1/result/${encodeURIComponent(queued.id)}`);
+    if (response.ok) { const body = await response.json(); addHistory(device, line, body.result?.status ?? "OK"); return body.result; }
+    await new Promise((resolve) => setTimeout(resolve, 250));
+  }
+  throw new Error(`Timed out waiting for ${device} / ${line}`);
+}
+
+function showHealth(results: { label: string; ok: boolean; detail: string }[]): void {
+  healthResults.replaceChildren();
+  for (const result of results) {
+    const row = document.createElement("div"); row.className = "health-row";
+    row.innerHTML = `<span>${result.label}<small class="type"> · ${result.detail}</small></span><strong class="${result.ok ? "health-pass" : "health-fail"}">${result.ok ? "PASS" : "FAIL"}</strong>`;
+    healthResults.append(row);
+  }
+}
+
+async function healthCheck(): Promise<void> {
+  healthResults.innerHTML = `<p class="muted">Running live checks…</p>`;
+  try {
+    const text = (result: any) => String(result?.output ?? "");
+    const expanded = liveDevices.some((device) => device.name === "Router0") && liveDevices.some((device) => device.name === "PC1");
+    if (expanded) {
+      const pc0Ip = await run("PC0", "ipconfig", "");
+      const pc1Ip = await run("PC1", "ipconfig", "");
+      const interVlanPing = await run("PC0", "ping 192.168.20.10", "");
+      const routerInterfaces = await run("Router0", "show ip interface brief");
+      const trunk0 = await run("Switch0", "show interfaces trunk");
+      const trunk1 = await run("Switch1", "show interfaces trunk");
+      const pc0Text = text(pc0Ip); const pc1Text = text(pc1Ip);
+      const routerText = text(routerInterfaces); const trunks = `${text(trunk0)}\n${text(trunk1)}`;
+      showHealth([
+        { label: "PC0 IPv4 address", ok: /IPv4 Address.*192\.168\.10\.10/i.test(pc0Text), detail: "192.168.10.10 / VLAN 10" },
+        { label: "PC1 IPv4 address", ok: /IPv4 Address.*192\.168\.20\.10/i.test(pc1Text), detail: "192.168.20.10 / VLAN 20" },
+        { label: "Router VLAN 10 gateway", ok: /GigabitEthernet0\/0\.10\s+192\.168\.10\.1\s+YES\s+\w+\s+up\s+up/i.test(routerText), detail: "192.168.10.1 up/up" },
+        { label: "Router VLAN 20 gateway", ok: /GigabitEthernet0\/0\.20\s+192\.168\.20\.1\s+YES\s+\w+\s+up\s+up/i.test(routerText), detail: "192.168.20.1 up/up" },
+        { label: "Inter-VLAN connectivity", ok: /Reply from 192\.168\.20\.10/i.test(text(interVlanPing)), detail: "PC0 → PC1" },
+        { label: "Trunks forwarding", ok: /Fa0\/1\s+1,10,20/i.test(trunks) && /Fa0\/3\s+1,10,20/i.test(trunks), detail: "VLANs 10/20" },
+      ]);
+      return;
+    }
+    const ipconfig = await run("PC0", "ipconfig", "");
+    const ping = await run("PC0", "ping 192.168.10.1", "");
+    const interfaces = await run("Switch0", "show ip interface brief");
+    const macs = await run("Switch0", "show mac address-table");
+    const cdp = await run("Switch0", "show cdp neighbors");
+    const interfaceText = text(interfaces); const macText = text(macs);
+    showHealth([
+      { label: "PC0 IPv4 address", ok: /IPv4 Address.*192\.168\.10\.10/i.test(text(ipconfig)), detail: "192.168.10.10" },
+      { label: "PC0 reaches Switch0", ok: /Reply from 192\.168\.10\.1/i.test(text(ping)), detail: "ping 192.168.10.1" },
+      { label: "Switch0 management SVI", ok: /Vlan1\s+192\.168\.10\.1\s+YES\s+\w+\s+up\s+up/i.test(interfaceText), detail: "Vlan1 up/up" },
+      { label: "PC0 learned on VLAN 1 access port", ok: /\b1\s+00e0\.a379\.2d27\s+\w+\s+Fa0\/2/i.test(macText), detail: "VLAN 1 / Fa0/2" },
+      { label: "Switch1 neighbor present", ok: /Switch\s+Fas?\s*0\/1/i.test(text(cdp)), detail: "CDP via Fa0/1" },
+    ]);
+  } catch (error) {
+    healthResults.innerHTML = `<p class="health-fail">Health check failed: ${error instanceof Error ? error.message : String(error)}</p>`;
+  }
+}
+
+document.querySelector("#refresh")!.addEventListener("click", () => void refresh());
+document.querySelector("#health-check")!.addEventListener("click", () => void healthCheck());
+document.querySelector<HTMLFormElement>("#command-form")!.addEventListener("submit", async (event) => {
+  event.preventDefault(); output.textContent = "Running…";
+  try {
+    const mode = document.querySelector<HTMLSelectElement>("#mode-select")!.value;
+    const result = await run(deviceSelect.value, document.querySelector<HTMLInputElement>("#command")!.value, mode);
+    output.textContent = result.output ?? JSON.stringify(result, null, 2);
+  }
+  catch (error) { output.textContent = error instanceof Error ? error.message : String(error); }
+});
+void refresh();

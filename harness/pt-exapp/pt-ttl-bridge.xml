@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE PT_APP_META>
+<PT_APP_META>
+  <PT_VERSION>9.0.0</PT_VERSION>
+  <IPC_VERSION>1.2</IPC_VERSION>
+  <NAME>Time To Live Network Bridge</NAME>
+  <VERSION>0.1.0</VERSION>
+  <ID>com.timetolive.network.bridge</ID>
+  <KEY>CHANGE_ME_BEFORE_USE</KEY>
+  <DESCRIPTION>Local Packet Tracer bridge for the Time To Live network simulator.</DESCRIPTION>
+  <AUTHOR>Time To Live</AUTHOR>
+  <CONTACT>local-development</CONTACT>
+  <EXECUTABLE_PATH>PacketTracerSmoke.class</EXECUTABLE_PATH>
+  <SECURITY_SETTINGS>
+    <PRIVILEGE>GET_NETWORK_INFO</PRIVILEGE>
+    <PRIVILEGE>CHANGE_NETWORK_INFO</PRIVILEGE>
+    <PRIVILEGE>IPC</PRIVILEGE>
+  </SECURITY_SETTINGS>
+  <LOADING>ON_DEMAND</LOADING>
+  <SAVING>NEVER</SAVING>
+  <INSTANCES>1</INSTANCES>
+</PT_APP_META>

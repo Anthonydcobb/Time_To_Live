@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<body>
+<pre id="status">PT bridge starting...</pre>
+<script>
+var bridgeBase = "http://127.0.0.1:39092";
+var webViewId = null;
+var statusEl = document.getElementById("status");
+
+function log(text) {
+    statusEl.textContent = text;
+}
+
+function onCommandResult(id, statusCode, output) {
+    fetch(bridgeBase + "/v1/result", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: id, statusCode: statusCode, output: output })
+    }).then(function () {
+        log("Completed " + id + " (status " + statusCode + ")");
+        poll();
+    }).catch(function (error) {
+        log("Result upload failed: " + error);
+        setTimeout(poll, 2000);
+    });
+}
+
+function poll() {
+    fetch(bridgeBase + "/v1/commands/next").then(function (response) {
+        if (response.status === 204) {
+            setTimeout(poll, 250);
+            return null;
+        }
+        return response.json();
+    }).then(function (payload) {
+        if (!payload) return;
+        var command = payload.command;
+        log("Running " + command.device + ": " + command.line);
+        $se("executeCommand", webViewId, onCommandResult, command.id, command.device, command.line, command.mode);
+    }).catch(function (error) {
+        log("Bridge poll failed: " + error);
+        setTimeout(poll, 2000);
+    });
+}
+
+webView.ipcCallAsync("getWebViewId", function (id) {
+    webViewId = id;
+    log("Connected to local PT bridge");
+    poll();
+});
+</script>
+</body>
+</html>
