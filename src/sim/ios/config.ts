@@ -10,6 +10,8 @@ export interface StoredPassword {
 export interface LineConfig {
   password: StoredPassword | null;
   login: boolean;
+  loginLocal: boolean;
+  transportInput: "all" | "none" | "ssh" | "telnet";
   loggingSynchronous: boolean;
   execTimeout: [number, number] | null;
 }
@@ -70,6 +72,9 @@ export function newDhcpPool(name: string): DhcpPool {
 /** Everything `show running-config` prints. `reload` restores this from startup-config. */
 export interface IosConfig {
   hostname: string;
+  domainName: string | null;
+  users: Record<string, string>;
+  rsaKeysGenerated: boolean;
   enableSecret: string | null;
   enablePassword: StoredPassword | null;
   servicePasswordEncryption: boolean;
@@ -89,12 +94,15 @@ export interface IosConfig {
 }
 
 export function defaultLine(): LineConfig {
-  return { password: null, login: false, loggingSynchronous: false, execTimeout: null };
+  return { password: null, login: false, loginLocal: false, transportInput: "all", loggingSynchronous: false, execTimeout: null };
 }
 
 export function defaultConfig(hostname: string, interfaces: { name: string; shutdown: boolean }[]): IosConfig {
   return {
     hostname,
+    domainName: null,
+    users: {},
+    rsaKeysGenerated: false,
     enableSecret: null,
     enablePassword: null,
     servicePasswordEncryption: false,

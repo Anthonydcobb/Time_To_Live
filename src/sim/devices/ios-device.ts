@@ -5,6 +5,12 @@ import { cloneConfig, defaultConfig, type InterfaceConfig, type IosConfig } from
 import { IosConsole } from "../ios/console";
 import { showVersion } from "../ios/show";
 import { CDP_MAC, type Frame } from "../frames";
+import { type5Hash } from "../ios/passwords";
+
+export type RemoteProtocol = "ssh" | "telnet";
+export type RemoteLoginResult =
+  | { ok: true; protocol: RemoteProtocol; username: string }
+  | { ok: false; reason: "transport-disabled" | "ssh-not-ready" | "local-login-disabled" | "unknown-user" | "bad-password" };
 
 /** What `show ip interface brief` and friends need to know about any interface. */
 export interface InterfaceView {
@@ -140,6 +146,21 @@ export abstract class IosDevice extends Device {
       if (ip != null) return ip;
     }
     return null;
+  }
+
+  attemptRemoteLogin(protocol: RemoteProtocol, username: string, password: string): RemoteLoginResult {
+    const line = this.config.vty;
+    if (line.transportInput === "none" || (line.transportInput !== "all" && line.transportInput !== protocol)) {
+      return { ok: false, reason: "transport-disabled" };
+    }
+    if (protocol === "ssh" && (!this.config.domainName || !this.config.rsaKeysGenerated)) {
+      return { ok: false, reason: "ssh-not-ready" };
+    }
+    if (!line.loginLocal) return { ok: false, reason: "local-login-disabled" };
+    const stored = this.config.users[username];
+    if (!stored) return { ok: false, reason: "unknown-user" };
+    if (stored !== type5Hash(password, stored.split("$")[2])) return { ok: false, reason: "bad-password" };
+    return { ok: true, protocol, username };
   }
 
   private sendCdp(port: Port): void {

@@ -34,6 +34,9 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     "boot-end-marker",
     "!",
   );
+  if (c.domainName) out.push(`ip domain-name ${c.domainName}`);
+  for (const [name, secret] of Object.entries(c.users).sort(([a], [b]) => a.localeCompare(b))) out.push(`username ${name} secret 5 ${secret}`);
+  if (c.domainName || Object.keys(c.users).length) out.push("!");
   if (c.enableSecret) out.push(`enable secret 5 ${c.enableSecret}`);
   if (c.enablePassword) out.push(`enable password ${pw(c.enablePassword)}`);
   if (c.enableSecret || c.enablePassword) out.push("!");
@@ -100,7 +103,9 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     if (l.execTimeout) out.push(` exec-timeout ${l.execTimeout[0]} ${l.execTimeout[1]}`);
     if (l.password) out.push(` password ${pw(l.password)}`);
     if (l.loggingSynchronous) out.push(" logging synchronous");
-    if (l.login) out.push(" login");
+    if (l.loginLocal) out.push(" login local");
+    else if (l.login) out.push(" login");
+    if (l.transportInput !== "all") out.push(` transport input ${l.transportInput}`);
   };
   line("line con 0", c.con);
   if (!isSwitch) out.push("line aux 0");
@@ -610,6 +615,16 @@ export function showClock(device: IosDevice): string[] {
   const frac = ms % 1000;
   const pad = (n: number, w = 2) => String(n).padStart(w, "0");
   return [`*${pad(h)}:${pad(m)}:${pad(s)}.${pad(frac, 3)} UTC Mon Mar 1 1993`];
+}
+
+export function showSsh(device: IosDevice): string[] {
+  const c = device.config;
+  return [
+    c.rsaKeysGenerated && c.domainName ? "SSH Enabled - version 1.99" : "SSH Disabled - version 1.99",
+    "Authentication timeout: 120 secs; Authentication retries: 3",
+    `Local user authentication: ${c.vty.loginLocal ? "enabled" : "disabled"}`,
+    `VTY transport input: ${c.vty.transportInput}`,
+  ];
 }
 
 // ---- DHCP ----------------------------------------------------------------------

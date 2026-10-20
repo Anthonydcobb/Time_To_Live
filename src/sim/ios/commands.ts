@@ -189,6 +189,7 @@ const HELP_TEXT = [
 const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("version", "System hardware and software status")], (c) => c.out.push(...show.showVersion(c.device))),
   cmd(EXEC, [SHOW, kw("clock", "Display the system clock")], (c) => c.out.push(...show.showClock(c.device))),
+  cmd(EXEC, [SHOW, kw("ssh", "Status of SSH server connections")], (c) => c.out.push(...show.showSsh(c.device))),
   cmd(
     EXEC,
     [SHOW, kw("ip", "IP information"), kw("interface", "IP interface status and configuration"), kw("brief", "Brief summary of IP status and configuration")],
@@ -282,6 +283,7 @@ const PWENC = kw("password-encryption", "Encrypt system passwords");
 const BANNER = kw("banner", "Define a login banner");
 const MOTD = kw("motd", "Set Message of the Day banner");
 const DOMAIN = kw("domain-lookup", "Enable IP Domain Name System hostname translation");
+const DOMAIN_NAME = kw("domain-name", "Define the default domain name");
 const ROUTE = kw("route", "Establish static routes");
 const STP = kw("spanning-tree", "Spanning Tree Protocol");
 
@@ -356,6 +358,12 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [NO, ENABLE_KW, kw("password", "Assign the privileged level password")], (c) => {
     c.device.config.enablePassword = null;
   }),
+  cmd(CONFIG, [kw("username", "Establish User Name Authentication"), wordArg("User name"), kw("secret", "Specify the password for the user"), wordArg("The UNENCRYPTED (cleartext) password")], (c, [name, secret]) => {
+    c.device.config.users[name as string] = type5Hash(secret as string);
+  }),
+  cmd(CONFIG, [NO, kw("username", "Establish User Name Authentication"), wordArg("User name")], (c, [name]) => {
+    delete c.device.config.users[name as string];
+  }),
   cmd(CONFIG, [SERVICE, PWENC], (c) => {
     const cfg = c.device.config;
     cfg.servicePasswordEncryption = true;
@@ -380,6 +388,20 @@ const configCommands: Entry[] = [
   }),
   cmd(CONFIG, [NO, IP, DOMAIN], (c) => {
     c.device.config.ipDomainLookup = false;
+  }),
+  cmd(CONFIG, [IP, DOMAIN_NAME, wordArg("Default domain name")], (c, [name]) => {
+    c.device.config.domainName = name as string;
+  }),
+  cmd(CONFIG, [NO, IP, DOMAIN_NAME], (c) => {
+    c.device.config.domainName = null;
+  }),
+  cmd(CONFIG, [kw("crypto", "Encryption module commands"), kw("key", "Long term key operations"), kw("generate", "Generate new keys"), kw("rsa", "Generate RSA keys")], (c) => {
+    if (!c.device.config.domainName) {
+      c.out.push("% Please define a domain name first.");
+      return;
+    }
+    c.device.config.rsaKeysGenerated = true;
+    c.out.push("The name for the keys will be:", c.device.hostname + "." + c.device.config.domainName, "Generating 512 bit RSA keys, keys will be non-exportable...", "[OK]");
   }),
   cmd(CONFIG, [IP, kw("routing", "Enable IP routing")], (c) => {
     if (c.device.kind === "switch") c.device.config.ipRouting = true;
@@ -522,10 +544,23 @@ const lineCommands: Entry[] = [
   }),
   cmd(LINE, [kw("login", "Enable password checking")], (c) => {
     selectedLines(c).login = true;
+    selectedLines(c).loginLocal = false;
   }),
   cmd(LINE, [NO, kw("login", "Enable password checking")], (c) => {
     selectedLines(c).login = false;
+    selectedLines(c).loginLocal = false;
   }),
+  cmd(LINE, [kw("login", "Enable password checking"), kw("local", "Local user database")], (c) => {
+    selectedLines(c).login = true;
+    selectedLines(c).loginLocal = true;
+  }),
+  cmd(LINE, [NO, kw("login", "Enable password checking"), kw("local", "Local user database")], (c) => {
+    selectedLines(c).loginLocal = false;
+  }),
+  cmd(LINE, [kw("transport", "Define transport protocols for line"), kw("input", "Define which protocols to use to connect to the line"), kw("all", "All protocols")], (c) => { selectedLines(c).transportInput = "all"; }),
+  cmd(LINE, [kw("transport", "Define which protocols to use to connect to the line"), kw("input", "Define which protocols to use to connect to the line"), kw("none", "No protocols")], (c) => { selectedLines(c).transportInput = "none"; }),
+  cmd(LINE, [kw("transport", "Define which protocols to use to connect to the line"), kw("input", "Define which protocols to use to connect to the line"), kw("ssh", "TCP/IP SSH protocol")], (c) => { selectedLines(c).transportInput = "ssh"; }),
+  cmd(LINE, [kw("transport", "Define which protocols to use to connect to the line"), kw("input", "Define which protocols to use to connect to the line"), kw("telnet", "TCP/IP Telnet protocol")], (c) => { selectedLines(c).transportInput = "telnet"; }),
   cmd(LINE, [kw("logging", "Modify message logging facilities"), kw("synchronous", "Synchronized message output")], (c) => {
     selectedLines(c).loggingSynchronous = true;
   }),
