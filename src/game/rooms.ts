@@ -134,12 +134,10 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "chair", label: "Chair", x: 9, y: 8, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props", frame: 3 },
       { id: "chair", label: "Chair", x: 12, y: 7, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props", frame: 3 },
       { id: "chair", label: "Chair", x: 12, y: 9, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props", frame: 3 },
+      // The right-hand pod is one desk short, which opens the floor up toward the coffee.
       { id: "techdesks", label: "Tech\ndesks", x: 15, y: 6, w: 2, h: 2, verb: "", color: 0x55524a, decor: true, sprite: "office-props", frame: 0 },
-      { id: "techdesks", label: "Tech\ndesks", x: 15, y: 8, w: 2, h: 2, verb: "", color: 0x55524a, decor: true, sprite: "office-props", frame: 0 },
       { id: "chair", label: "Chair", x: 14, y: 6, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props", frame: 3 },
-      { id: "chair", label: "Chair", x: 14, y: 8, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props", frame: 3 },
       { id: "chair", label: "Chair", x: 17, y: 7, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props", frame: 3 },
-      { id: "chair", label: "Chair", x: 17, y: 9, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props", frame: 3 },
       { id: "files", label: "Files", x: 19, y: 5, w: 1, h: 2, verb: "", color: 0x50504a, decor: true, sprite: "store-decor", frame: 5 },
       { id: "files", label: "Files", x: 19, y: 7, w: 1, h: 1, verb: "", color: 0x50504a, decor: true, sprite: "office-props", frame: 11 },
       { id: "files", label: "Files", x: 19, y: 9, w: 1, h: 2, verb: "", color: 0x50504a, decor: true, sprite: "store-decor", frame: 5 },
