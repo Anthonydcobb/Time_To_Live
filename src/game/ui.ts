@@ -5,9 +5,12 @@ import { lightFor } from "../web/topology";
 import { TerminalView, iosSession, pcSession } from "../web/terminal";
 import { apparition, apparitionPlaying } from "./apparition";
 import { audio } from "./audio";
+import { crt } from "./crt";
 import { LaptopScreen } from "./laptop-screen";
+import { parseLine, renderRuns, visibleLength, type Run } from "./markup";
 import { TownMap, type SiteId } from "./town-map";
 import { PcScreen } from "./pc-screen";
+import { ROOMS } from "./rooms";
 import type { Point } from "../web/topology";
 
 /** One line of dialogue. `who` is printed above it. */
@@ -40,6 +43,38 @@ interface Entry extends Line {
 }
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
+/** Images fetched and decoded up front, kept alive so the browser keeps them cached. */
+const preloaded = new Map<string, HTMLImageElement>();
+function preload(src: string): void {
+  if (preloaded.has(src)) return;
+  const img = new Image();
+  img.src = src;
+  img.decode().catch(() => undefined);
+  preloaded.set(src, img);
+}
+
+/**
+ * Shows `src` in `img`, but only once it has decoded. Until then the element stays hidden,
+ * so it never shows the previous speaker's picture while the new one loads.
+ */
+function showImage(img: HTMLImageElement, src: string): void {
+  if (img.dataset.src === src && !img.hidden) return;
+  img.dataset.src = src;
+  img.hidden = true;
+  img.src = src;
+  img
+    .decode()
+    .catch(() => undefined)
+    .then(() => {
+      if (img.dataset.src === src) img.hidden = false;
+    });
+}
+
+function hideImage(img: HTMLImageElement): void {
+  img.hidden = true;
+  delete img.dataset.src;
+}
 /** Walter only ever talks over the radio, so his lines get static. */
 const isWalter = (line?: Line) => !!line?.who?.startsWith("WALTER");
 const TYPE_MS = 18;
@@ -56,6 +91,9 @@ export class Ui {
   private current: Entry | null = null;
   private typed = 0;
   private typer = 0;
+  /** The current line split into plain text and keywords, and how many characters it shows. */
+  private runs: Run[] = [];
+  private length = 0;
   private choices: Choice[] | null = null;
   private picked = 0;
   private card: (() => void) | null = null;
@@ -75,6 +113,8 @@ export class Ui {
   private readonly bound = new Set<Port>();
 
   constructor() {
+    for (const set of Object.values(PORTRAITS)) [...(set.busts ?? []), set.sheet].forEach((src) => src && preload(src));
+    for (const room of Object.values(ROOMS)) room.props.forEach((p) => p.card && preload(p.card));
     window.addEventListener("keydown", (e) => this.onKey(e), true);
     $("panel-close").addEventListener("click", () => this.closePanel());
     $("laptop-close").addEventListener("click", () => this.closeLaptop());
@@ -107,6 +147,7 @@ export class Ui {
     if (!next) {
       $("dialogue").hidden = true;
       this.hideCloseUp();
+      hideImage($("bust"));
       this.closedAt = performance.now();
       return;
     }
@@ -117,12 +158,14 @@ export class Ui {
     who.textContent = next.who ?? "";
     who.hidden = !next.who;
     this.showPortrait(next);
+    this.runs = parseLine(next.text);
+    this.length = visibleLength(this.runs);
     this.typed = 0;
     window.clearInterval(this.typer);
     this.typer = window.setInterval(() => {
       this.typed += 2;
       this.renderLine();
-      if (this.typed >= next.text.length) window.clearInterval(this.typer);
+      if (this.typed >= this.length) window.clearInterval(this.typer);
     }, TYPE_MS);
     this.renderLine();
   }
@@ -139,13 +182,11 @@ export class Ui {
 
   /** Shows an illustrated close-up until the dialogue it goes with closes. */
   showCloseUp(src: string): void {
-    const img = $<HTMLImageElement>("closeup");
-    if (!img.src.endsWith(src)) img.src = src;
-    img.hidden = false;
+    showImage($("closeup"), src);
   }
 
   hideCloseUp(): void {
-    $("closeup").hidden = true;
+    hideImage($("closeup"));
   }
 
   private showPortrait(line: Line): void {
@@ -154,8 +195,8 @@ export class Ui {
     const bust = set?.busts?.[mood];
     const sheet = bust ? undefined : set?.sheet;
     const img = $<HTMLImageElement>("bust");
-    img.hidden = !bust;
-    if (bust && !img.src.endsWith(bust)) img.src = bust;
+    if (bust) showImage(img, bust);
+    else hideImage(img);
     const el = $("portrait");
     el.hidden = !sheet;
     $("dialogue").classList.toggle("has-portrait", !!sheet);
@@ -166,15 +207,15 @@ export class Ui {
 
   private renderLine(): void {
     if (!this.current) return;
-    $("line").textContent = this.current.text.slice(0, this.typed);
-    $("more").hidden = this.typed < this.current.text.length;
+    renderRuns($("line"), this.runs, this.typed);
+    $("more").hidden = this.typed < this.length;
   }
 
   private advance(): void {
     const c = this.current;
     if (!c) return;
-    if (this.typed < c.text.length) {
-      this.typed = c.text.length;
+    if (this.typed < this.length) {
+      this.typed = this.length;
       window.clearInterval(this.typer);
       this.renderLine();
       return;
@@ -195,7 +236,7 @@ export class Ui {
     $("who").textContent = prompt.who ?? "";
     $("who").hidden = !prompt.who;
     this.showPortrait(prompt);
-    $("line").textContent = prompt.text;
+    renderRuns($("line"), parseLine(prompt.text));
     $("more").hidden = true;
     const list = $("choices");
     list.hidden = false;
@@ -221,6 +262,7 @@ export class Ui {
     $("choices").hidden = true;
     $("dialogue").hidden = true;
     this.hideCloseUp();
+    hideImage($("bust"));
     audio.walkie(false);
     this.closedAt = performance.now();
     options[i].run();
@@ -412,7 +454,10 @@ export class Ui {
 
   /** Static, and something in it. Input waits until it's over. */
   apparition(then?: () => void): void {
+    crt.on("haunted");
     apparition(() => {
+      // The screen doesn't snap back: the CRT look lingers while you walk around again.
+      crt.fade(8000);
       this.closedAt = performance.now();
       then?.();
     });

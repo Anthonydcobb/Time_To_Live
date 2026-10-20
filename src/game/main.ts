@@ -1,5 +1,6 @@
 import Phaser from "phaser";
 import { audio } from "./audio";
+import { crt } from "./crt";
 import { RoomScene } from "./room-scene";
 import { Story } from "./story";
 import { Ui } from "./ui";
@@ -8,8 +9,10 @@ const ui = new Ui();
 
 // The page needs one click before it gets the keyboard, especially inside a frame.
 const start = document.getElementById("start")!;
+crt.on("soft");
 start.addEventListener("click", () => {
   start.remove();
+  crt.fade(900);
   window.focus();
   // Browsers only allow sound after a click, so this is where it starts.
   audio.start();

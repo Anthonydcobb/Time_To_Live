@@ -155,7 +155,7 @@ export class Story {
         ui.say([{ text: "The coffee machine is warm and full. It isn't plugged in." }]);
         return;
       case "office:cabinet":
-        ui.say([{ text: "Invoices, all paid in full, all from addresses on Elm and Elm. The bottom drawer is labeled BELLWETHER and is empty." }]);
+        ui.say([{ text: "Invoices, all paid in full, all from addresses on Elm and Elm. The bottom drawer is labeled *BELLWETHER* and is empty." }]);
         return;
       case "office:exit":
         if (!this.flags.has("walkie")) ui.say([{ text: "You should grab the walkie-talkie off the charger first." }]);
@@ -188,7 +188,7 @@ export class Story {
         if (this.flags.has("haunt")) {
           ui.say([
             { text: "The cooler hums a little louder than before." },
-            { text: "An Ethernet cable runs out the back of it and into the wall. You didn't put it there. Nobody did." },
+            { text: "An Ethernet cable runs out the back of it and into the wall. You didn't put it there. ~Nobody did.~" },
           ]);
         } else {
           ui.say([{ text: "BACK COOLER. A handwritten sign: DO NOT RESTOCK. Inside is milk dated October 1987. It's very cold." }]);
@@ -196,17 +196,17 @@ export class Story {
         return;
       case "shop:shelf1":
       case "shop:shelf2":
-        ui.say([{ text: "Canned soup, motor oil, and a jar of something labeled TEETH (ASSORTED). Reasonably priced." }]);
+        ui.say([{ text: "Canned soup, motor oil, and a jar of something labeled ~TEETH (ASSORTED)~. Reasonably priced." }]);
         return;
       case "shop:jack":
         if (!this.flags.has("haunt")) {
           ui.say([{ text: "A wall jack. According to the work order, nothing in the shop uses it." }]);
           return;
         }
-        ui.choose({ text: "A blue cable is seated in the jack. Nobody ran it. The plastic is warm." }, [
+        ui.choose({ text: "A blue cable is seated in the jack. Nobody ran it. ~The plastic is warm.~" }, [
           {
             label: "Pull it out",
-            run: () => ui.apparition(() => ui.say([{ text: "The cable is still in the jack. Your hand is cold to the elbow." }])),
+            run: () => ui.apparition(() => ui.say([{ text: "The cable is *still in the jack*. Your hand is ~cold to the elbow~." }])),
           },
           { label: "Leave it", run: () => {} },
         ]);

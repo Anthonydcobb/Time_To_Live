@@ -59,6 +59,9 @@ Key ideas:
 | Incantations: unlearned commands show as runes in `?` help; jobs teach them and using one learns it (`src/sim/grimoire.ts`) | PR #4 |
 | DHCP server on the router (with IOS's ping check and conflicts), Windows-style DHCP client with APIPA fallback, job 2 (the laundromat) and a job picker | PR #5 |
 | VLANs, 802.1Q trunks, DTP, per-VLAN spanning tree timers, SVIs with autostate, router-on-a-stick subinterfaces, native VLAN mismatch, job 3 (the dentist) | PR #6 |
+| Portraits and inspect close-ups preload and only appear once decoded (no stale speaker); close-ups sit on top of the dialogue box | `src/game/ui.ts` |
+| CRT overlay: soft on the start screen, "haunted" during the apparition, then an 8 s fade while you walk (`crt.on` / `crt.fade`) | `src/game/crt.ts` |
+| Dialogue markup: `*word*` cold blue, `~word~` red; speaker name as a tab on the box | `src/game/markup.ts` |
 
 **PR state:** #1 → `main`, then #2 to #6 each stacked on the one before. None are merged yet. Merge them in order, #1 first.
 
