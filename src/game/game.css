@@ -31,6 +31,21 @@ body {
   inset: 0;
 }
 
+/* The room, smeared out into the letterbox bars (drawn in main.ts). Oversized so the blur has no hard edge. */
+#ambient {
+  position: fixed;
+  inset: -60px;
+  width: calc(100% + 120px);
+  height: calc(100% + 120px);
+  object-fit: cover;
+  filter: blur(24px) brightness(0.7) saturate(0.85);
+}
+
+/* A soft shadow where the game picture meets the smear, so the picture still reads as the window. */
+#stage canvas {
+  box-shadow: 0 0 48px 12px #000d;
+}
+
 [hidden] {
   display: none !important;
 }
@@ -48,40 +63,109 @@ kbd {
   font-size: 13px;
 }
 
+/* ---- Work order: a ticket stub in the corner that unfolds into the task list ---- */
+
 #work-order {
+  --paper: #d8cdb0;
+  --ink: #2a241c;
   position: fixed;
-  top: 10px;
-  right: 10px;
-  width: min(290px, 40vw);
-  padding: 10px 12px;
-  background: var(--panel);
-  border: 1px solid var(--line);
+  /* Inside the game picture's top-right corner, clear of the letterbox bars (set in main.ts). */
+  top: calc(var(--game-top, 0px) + 10px);
+  right: calc(var(--game-right, 0px) + 10px);
+  z-index: 25;
+  width: min(320px, calc(100vw - 20px));
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
   font-size: 12px;
 }
 
-#work-order h2 {
-  margin: 0;
-  color: var(--amber);
-  font-size: 13px;
-  letter-spacing: 0.08em;
+/* While a laptop or PC is open the stub drops to the bottom-right corner, clear of the screen's header. */
+/* The stub, and the unfolded ticket, are worn paper with ink on it. */
+#wo-stub,
+#wo-body {
+  position: relative;
+  color: var(--ink);
+  background:
+    var(--scratches) 0 0 / 260px,
+    linear-gradient(#e2d8bc, var(--paper) 40%, #c9bd9c);
+  -webkit-mask: var(--rough-edge) 0 0 / 100% 100%;
+  mask: var(--rough-edge) 0 0 / 100% 100%;
+  filter: drop-shadow(0 4px 8px #000a);
+}
+
+#wo-stub {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 14px;
+  padding: 8px 14px 9px;
+  border: 0;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+#wo-stub:hover {
+  background:
+    var(--scratches) 0 0 / 260px,
+    linear-gradient(#ece3c8, #e0d5b8 40%, #d0c4a3);
+}
+
+.wo-title {
+  font-weight: 700;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
-#work-order.collapsed {
-  width: auto;
-}
-
-#work-order.collapsed #wo-body {
-  display: none;
+.wo-where {
+  grid-column: 1;
+  color: #5a4f3c;
 }
 
 #wo-count {
-  color: var(--dim);
+  grid-row: 1 / span 2;
+  grid-column: 2;
+  align-self: center;
+  padding: 2px 6px;
+  border: 1px solid #5a4f3c;
+  font-weight: 700;
 }
 
-#work-order p {
-  margin: 2px 0 6px;
-  color: var(--dim);
+#wo-stub::after {
+  content: "\25BE";
+  position: absolute;
+  right: 4px;
+  bottom: 1px;
+  font-size: 10px;
+  color: #5a4f3c;
+}
+
+#wo-stub[aria-expanded="true"]::after {
+  content: "\25B4";
+}
+
+#wo-body {
+  width: 100%;
+  max-height: calc(100vh - 120px);
+  overflow-y: auto;
+  padding: 12px 16px 14px;
+  box-sizing: border-box;
+  animation: wo-unfold 160ms ease-out;
+}
+
+@keyframes wo-unfold {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+#wo-body p {
+  margin: 0 0 8px;
+  padding-bottom: 6px;
+  color: #5a4f3c;
+  border-bottom: 1px dashed #8a7d62;
 }
 
 #tasks {
@@ -91,86 +175,105 @@ kbd {
 }
 
 #tasks li {
-  padding-left: 1.4em;
-  text-indent: -1.4em;
-  margin: 3px 0;
+  padding-left: 1.5em;
+  text-indent: -1.5em;
+  margin: 4px 0;
 }
 
 #tasks li.task::before {
-  content: "☐ ";
+  content: "\2610  ";
 }
 
 #tasks li.task.done {
-  color: var(--dim);
+  color: #7a6e56;
+  text-decoration: line-through;
+  text-decoration-color: #2a241c88;
 }
 
 #tasks li.task.done::before {
-  content: "☑ ";
-  color: var(--green);
+  content: "\2611  ";
+  color: #2f6a2a;
 }
 
+/* The lines nobody typed: red ink, slanting. */
 #tasks li.flavor {
-  color: #b05050;
+  color: #8a1e1e;
   font-style: italic;
 }
 
-#dialogue {
-  position: fixed;
-  left: 50%;
-  bottom: 28px;
-  transform: translateX(-50%);
-  width: min(820px, calc(100vw - 32px));
-  min-height: 110px;
-  padding: 14px 18px;
-  background: var(--panel);
-  border: 2px solid var(--line);
+/* A task you just finished, briefly, by the stub. */
+#wo-toast {
+  margin: 0;
+  padding: 6px 12px;
+  max-width: 100%;
+  color: #c8f5c8;
+  background: #101a10ee;
+  border: 1px solid #3a6a3a;
+  box-shadow: 0 4px 10px #000a;
+  animation: wo-toast 3s ease-out forwards;
 }
 
-/* A speaker's 64 px portrait at 2x, inside the box on the left. */
-#dialogue.has-portrait {
-  min-height: 156px;
-  padding-left: 160px;
-}
-
-#portrait {
-  position: absolute;
-  left: 14px;
-  top: 14px;
-  width: 128px;
-  height: 128px;
-  background-repeat: no-repeat;
-  background-size: 300% 100%;
-  image-rendering: pixelated;
-  border: 2px solid var(--line);
-}
-
-/* An illustrated close-up of whatever you're inspecting, sitting on top of the dialogue box. */
-#closeup {
-  position: absolute;
-  left: 50%;
-  bottom: calc(100% + 6px);
-  transform: translateX(-50%);
-  height: min(400px, calc(100vh - 230px));
-  pointer-events: none;
-  filter: drop-shadow(0 10px 18px #000c);
-  animation: closeup-in 200ms ease-out;
-}
-
-@keyframes closeup-in {
-  from {
+@keyframes wo-toast {
+  0% {
     opacity: 0;
-    transform: translateX(-50%) translateY(12px) scale(0.97);
+    transform: translateY(-4px);
+  }
+  8%,
+  80% {
+    opacity: 1;
+    transform: none;
+  }
+  100% {
+    opacity: 0;
   }
 }
 
-/* An illustrated bust standing on the top-left of the box, over the room. */
+@media (prefers-reduced-motion: reduce) {
+  #wo-body,
+  #wo-toast {
+    animation: none;
+  }
+}
+
+/* ---- Dialogue: a framed portrait beside a battered console with a green screen ---- */
+
+#dialogue {
+  --phosphor: #8cf5a0;
+  --phosphor-dim: #8cf5a01f;
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  width: min(980px, calc(100vw - 32px));
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+}
+
+/* The speaker in an old picture frame. Busts are cropped to the head and shoulders. */
+#frame {
+  position: relative;
+  flex: 0 0 auto;
+  width: 188px;
+  height: 214px;
+  padding: 10px;
+  background: #2a2232;
+  border: 6px double #a8987a;
+  box-shadow:
+    inset 0 0 0 2px #5b4d38,
+    inset 0 0 28px #000c;
+  overflow: hidden;
+  /* Chipped at the edges; the scratches go over it in #frame::after. */
+  -webkit-mask: var(--rough-edge) 0 0 / 100% 100%;
+  mask: var(--rough-edge) 0 0 / 100% 100%;
+}
+
 #bust {
-  position: absolute;
-  left: 4px;
-  bottom: calc(100% - 2px);
-  height: min(280px, 42vh);
-  pointer-events: none;
-  filter: drop-shadow(0 6px 10px #000a);
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 8%;
+  filter: sepia(0.15) contrast(1.05);
 }
 
 #bust:not([hidden]) {
@@ -180,46 +283,209 @@ kbd {
 @keyframes bust-in {
   from {
     opacity: 0;
-    transform: translateY(10px);
   }
 }
 
-/* The speaker's name on a tab sitting on the box's top edge, in front of their bust. */
-#who {
+/* A 64 px pixel face, for speakers without a painted bust. */
+#portrait {
+  width: 100%;
+  height: 100%;
+  background-repeat: no-repeat;
+  background-size: 300% 100%;
+  image-rendering: pixelated;
+}
+
+/* The console: dark rusted metal, a screw in each corner. */
+.console {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  padding: 10px 16px 14px;
+  background:
+    radial-gradient(ellipse at 18% 0%, #6b4a2a33, transparent 55%),
+    radial-gradient(ellipse at 90% 100%, #5a3a2244, transparent 50%),
+    linear-gradient(#3b3a35, #2a2926 60%, #232220);
+  border: 2px solid #15140f;
+  border-radius: 6px;
+  box-shadow:
+    inset 0 1px 0 #ffffff1a,
+    inset 0 0 0 1px #4d4a40,
+    0 8px 22px #000c;
+}
+
+.screw {
   position: absolute;
-  left: 12px;
-  bottom: calc(100% - 2px);
-  z-index: 1;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #8a867a, #3a3832 70%);
+  box-shadow: 0 1px 1px #000a;
+}
+
+.screw::after {
+  content: "";
+  position: absolute;
+  left: 1px;
+  right: 1px;
+  top: 4px;
+  height: 1px;
+  background: #1a1916;
+  transform: rotate(35deg);
+}
+
+.screw.tl { left: 6px; top: 6px; }
+.screw.tr { right: 6px; top: 6px; }
+.screw.bl { left: 6px; bottom: 6px; }
+.screw.br { right: 6px; bottom: 6px; }
+
+.console header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 34px;
+  margin: 0 6px 8px;
+}
+
+/* The speaker's name on a worn paper label. */
+#who {
   margin: 0;
-  padding: 4px 12px 3px;
-  background: #12140f;
-  border: 2px solid var(--line);
-  border-bottom: 0;
-  color: var(--amber);
-  font-size: 13px;
+  padding: 4px 28px 3px;
+  background: linear-gradient(#ddd0b0, #c4b591);
+  color: #1c1a14;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  clip-path: polygon(1% 6%, 99% 0, 100% 94%, 0 100%);
+  box-shadow: inset 0 0 12px #6b5a3a88;
+}
+
+.leds {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  color: #b8b2a0;
+  font-size: 10px;
   letter-spacing: 0.06em;
+  text-align: right;
+}
+
+.leds i {
+  display: inline-block;
+  width: 10px;
+  height: 6px;
+  margin-left: 6px;
+  vertical-align: middle;
+  border-radius: 1px;
+  background: #3a1a18;
+}
+
+.led-rx i {
+  background: #1e3a1e;
+}
+
+#dialogue.typing .led-rx i {
+  background: #6dff6d;
+  box-shadow: 0 0 6px #6dff6d;
+  animation: led-blink 90ms steps(2) infinite;
+}
+
+#dialogue.walkie .led-err i {
+  background: #ff3b30;
+  box-shadow: 0 0 6px #ff3b30;
+  animation: led-blink 400ms steps(2) infinite;
+}
+
+#dialogue.err .led-err i {
+  background: #ff3b30;
+  box-shadow: 0 0 8px #ff3b30;
+  animation: none;
+}
+
+@keyframes led-blink {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+/* The green screen: dark glass, scanlines, glowing text. */
+.screen {
+  position: relative;
+  min-height: 132px;
+  padding: 14px 18px 30px;
+  background: radial-gradient(ellipse at center, #0f2214, #070d08 80%);
+  border: 2px solid #11120e;
+  border-radius: 8px;
+  box-shadow:
+    inset 0 0 24px #000,
+    inset 0 0 0 1px #2c3a2c,
+    0 0 0 3px #1e1d19;
+  overflow: hidden;
+  color: var(--phosphor);
+  text-shadow: 0 0 6px #8cf5a088;
+}
+
+.screen::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(to bottom, #00000040 0 1px, transparent 1px 3px);
+}
+
+/* Words burned into the screen from before. */
+#ghost span {
+  position: absolute;
+  color: var(--phosphor);
+  font-size: 12px;
+  white-space: nowrap;
+  text-shadow: none;
+  opacity: 0;
+  animation: ghost 7s ease-in-out infinite;
+}
+
+@keyframes ghost {
+  40%,
+  60% {
+    opacity: 0.13;
+  }
 }
 
 #line {
+  position: relative;
   margin: 0;
   white-space: pre-wrap;
+  font-size: 17px;
+  line-height: 1.5;
+}
+
+/* A block cursor after the text. */
+#line::after {
+  content: "█";
+  margin-left: 2px;
+  animation: blink 1s steps(2) infinite;
 }
 
 /* Keywords in a line: *word* stands out, ~word~ is wrong or dangerous. See markup.ts. */
 #line .key {
   color: #7ad0e8;
+  text-shadow: 0 0 6px #7ad0e888;
 }
 
 #line .warn {
-  color: #e8503c;
+  color: #ff5a44;
+  text-shadow: 0 0 6px #ff5a4488;
 }
 
 #more {
   position: absolute;
-  right: 12px;
-  bottom: 6px;
-  color: var(--amber);
-  animation: blink 1s steps(2) infinite;
+  right: 14px;
+  bottom: 8px;
+  font-size: 13px;
+  letter-spacing: 0.06em;
+  animation: blink 1.2s steps(2) infinite;
 }
 
 @keyframes blink {
@@ -229,6 +495,7 @@ kbd {
 }
 
 #choices {
+  position: relative;
   margin: 10px 0 0;
   padding: 0;
   list-style: none;
@@ -240,12 +507,74 @@ kbd {
 }
 
 #choices li.picked {
-  background: #3a3320;
-  color: var(--amber);
+  background: #8cf5a026;
+  color: #d8ffe0;
 }
 
 #choices li.picked::before {
-  content: "▶ ";
+  content: "> ";
+}
+
+/*
+ * An illustrated close-up of whatever you're inspecting, centred in the room above the dialogue
+ * box (which takes about 270 px at the bottom). Its edges are chipped and it's scratched over
+ * (grime.ts), so it looks handled rather than printed.
+ */
+#closeup-wrap {
+  --above: calc(100vh - 270px);
+  position: fixed;
+  left: 50%;
+  top: calc(var(--above) / 2);
+  z-index: 4;
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  filter: drop-shadow(0 12px 22px #000d);
+  animation: closeup-in 220ms ease-out;
+}
+
+#closeup-wrap:has(#closeup[hidden]) {
+  display: none;
+}
+
+#closeup {
+  display: block;
+  height: min(600px, calc(var(--above) - 40px));
+  -webkit-mask: var(--rough-edge) 0 0 / 100% 100%;
+  mask: var(--rough-edge) 0 0 / 100% 100%;
+}
+
+#closeup-wrap::after,
+#frame::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    var(--scratches) 0 0 / 320px,
+    radial-gradient(ellipse at center, transparent 58%, #0a0605a0 100%);
+  -webkit-mask: var(--rough-edge) 0 0 / 100% 100%;
+  mask: var(--rough-edge) 0 0 / 100% 100%;
+}
+
+@keyframes closeup-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-50% + 12px)) scale(0.97);
+  }
+}
+
+@media (max-width: 700px) {
+  #frame {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #ghost span,
+  #line::after,
+  #dialogue .leds i {
+    animation: none;
+  }
 }
 
 /* The laptop fills most of the view, but the room stays visible around it. */
@@ -257,37 +586,6 @@ kbd {
   display: grid;
   place-items: center;
   background: #00000066;
-}
-
-/* On a wide screen the work order gets its own column, so it never covers the room. */
-@media (min-width: 1100px) {
-  #stage {
-    right: 300px;
-  }
-
-  #work-order,
-  #work-order.collapsed {
-    top: 0;
-    right: 0;
-    bottom: 0;
-    width: 300px;
-    z-index: 6;
-    border-width: 0 0 0 1px;
-  }
-
-  #work-order.collapsed #wo-body {
-    display: block;
-  }
-
-  #dialogue {
-    left: calc((100vw - 300px) / 2);
-    width: min(820px, calc(100vw - 340px));
-  }
-
-  #laptop,
-  #panel {
-    right: 300px;
-  }
 }
 
 .lid {
@@ -1670,7 +1968,7 @@ kbd {
 #devtools {
   position: fixed;
   left: 8px;
-  bottom: 30px;
+  top: 8px;
   z-index: 60;
   max-width: 460px;
   padding: 8px 10px;
@@ -1682,6 +1980,29 @@ kbd {
 
 #devtools[hidden] {
   display: none;
+}
+
+/* Folded: just the DEV tab. */
+#devtools.folded {
+  padding: 0;
+  border: 0;
+  background: none;
+}
+
+#devtools.folded > :not(.dev-toggle) {
+  display: none;
+}
+
+#devtools .dev-toggle {
+  font-weight: 700;
+}
+
+#devtools .dev-toggle::after {
+  content: " \25BE";
+}
+
+#devtools.folded .dev-toggle::after {
+  content: " \25B8";
 }
 
 #devtools .row {
@@ -1800,4 +2121,16 @@ body.crt-jitter #stage {
   body.crt-jitter #stage {
     animation: none;
   }
+}
+
+/* Roots, cables and moss over the dialogue console (overgrowth.ts). Spills 26 px past its edges. */
+.console .growth {
+  position: absolute;
+  left: -26px;
+  top: -26px;
+  width: calc(100% + 52px);
+  height: calc(100% + 52px);
+  z-index: 2;
+  pointer-events: none;
+  image-rendering: pixelated;
 }

@@ -101,7 +101,7 @@ export function installDevTools(story: Story, ui: Ui): void {
   const panel = document.createElement("div");
   panel.id = "devtools";
   panel.innerHTML = `
-    <strong>DEV</strong> <span class="keyhint">\` hides</span>
+    <button class="dev-toggle" data-act="fold" title="Fold the dev panel (\`)">DEV</button> <span class="keyhint">\` folds</span>
     <div class="row">
       <button data-act="intro">Skip intro</button>
       <button data-act="office">Go to office</button>
@@ -117,6 +117,20 @@ export function installDevTools(story: Story, ui: Ui): void {
     <p class="note">Job 1 shortcut passwords: <code>${PW}</code></p>
   `;
   document.body.appendChild(panel);
+  /** Folds the panel down to its DEV tab, and remembers that across reloads. */
+  const fold = (folded: boolean) => {
+    panel.classList.toggle("folded", folded);
+    try {
+      localStorage.setItem("ttl-dev-folded", folded ? "1" : "");
+    } catch {
+      // Storage can be blocked; the panel just starts open next time.
+    }
+  };
+  try {
+    fold(localStorage.getItem("ttl-dev-folded") === "1");
+  } catch {
+    // As above.
+  }
   const actions: Record<string, () => void> = {
     intro: skipIntro,
     office: () => go("office"),
@@ -128,6 +142,7 @@ export function installDevTools(story: Story, ui: Ui): void {
     },
     time: () => net.clock.advance(30_000),
     close: closeDialogue,
+    fold: () => fold(!panel.classList.contains("folded")),
   };
   panel.addEventListener("click", (e) => {
     const act = (e.target as HTMLElement).closest("[data-act]")?.getAttribute("data-act");
@@ -135,7 +150,7 @@ export function installDevTools(story: Story, ui: Ui): void {
     (document.activeElement as HTMLElement | null)?.blur();
   });
   window.addEventListener("keydown", (e) => {
-    if (e.key === "`" && !ui.typing) panel.hidden = !panel.hidden;
+    if (e.key === "`" && !ui.typing) fold(!panel.classList.contains("folded"));
   });
   const status = panel.querySelector(".status")!;
   window.setInterval(() => {

@@ -10,6 +10,7 @@ import { LaptopScreen } from "./laptop-screen";
 import { parseLine, renderRuns, visibleLength, type Run } from "./markup";
 import { TownMap, type SiteId } from "./town-map";
 import { PcScreen } from "./pc-screen";
+import { Overgrowth } from "./overgrowth";
 import { ROOMS } from "./rooms";
 import type { Point } from "../web/topology";
 
@@ -75,6 +76,30 @@ function hideImage(img: HTMLImageElement): void {
   img.hidden = true;
   delete img.dataset.src;
 }
+
+/** Leftovers burned into the console's screen, half-visible behind whatever is being said. */
+const GHOST_WORDS = [
+  "dust", "static", "no route to host", "ttl exceeded", "bellwether", "who is there",
+  "0.0.0.0", "%LINK-3-UPDOWN", "packet loss", "it hears you", "request timed out", "%%",
+  "arp: incomplete", "keepalive", "do not unplug", "4,218", "echo", "carrier lost",
+];
+
+/** Scatters a few ghost words across the screen, each fading in and out on its own clock. */
+function haunt(el: HTMLElement): void {
+  const words = [...GHOST_WORDS].sort(() => Math.random() - 0.5).slice(0, 6);
+  el.replaceChildren(
+    ...words.map((w, i) => {
+      const s = document.createElement("span");
+      s.textContent = w;
+      // Alternate sides so they hug the edges and stay clear of the middle of the text.
+      s.style.left = i % 2 ? `${62 + Math.random() * 26}%` : `${Math.random() * 18}%`;
+      s.style.top = `${4 + Math.random() * 84}%`;
+      s.style.animationDelay = `${-Math.random() * 7}s`;
+      s.style.animationDuration = `${5 + Math.random() * 5}s`;
+      return s;
+    }),
+  );
+}
 /** Walter only ever talks over the radio, so his lines get static. */
 const isWalter = (line?: Line) => !!line?.who?.startsWith("WALTER");
 const TYPE_MS = 18;
@@ -109,6 +134,8 @@ export class Ui {
   private readonly pcScreen = new PcScreen(document.body);
   private readonly laptopScreen = new LaptopScreen(document.body);
   private readonly townMap = new TownMap(document.body);
+  /** Growth creeping over the dialogue console; it spreads as the town goes wrong. */
+  private readonly growth = new Overgrowth(document.querySelector<HTMLElement>("#dialogue .console")!);
   /** Cables that won't come out. */
   private readonly bound = new Set<Port>();
 
@@ -160,6 +187,8 @@ export class Ui {
     this.showPortrait(next);
     this.runs = parseLine(next.text);
     this.length = visibleLength(this.runs);
+    this.setLights(next, this.runs);
+    haunt($("ghost"));
     this.typed = 0;
     window.clearInterval(this.typer);
     this.typer = window.setInterval(() => {
@@ -180,6 +209,11 @@ export class Ui {
     this.townMap.open(here, wrapped, done, opts);
   }
 
+  /** How overgrown the dialogue console is, 0 to 1, easing there over `ms`. */
+  overgrow(level: number, ms = 0): void {
+    this.growth.grow(level, ms);
+  }
+
   /** Shows an illustrated close-up until the dialogue it goes with closes. */
   showCloseUp(src: string): void {
     showImage($("closeup"), src);
@@ -194,12 +228,12 @@ export class Ui {
     const set = line.who ? PORTRAITS[line.who] : undefined;
     const bust = set?.busts?.[mood];
     const sheet = bust ? undefined : set?.sheet;
+    $("frame").hidden = !bust && !sheet;
     const img = $<HTMLImageElement>("bust");
     if (bust) showImage(img, bust);
     else hideImage(img);
     const el = $("portrait");
     el.hidden = !sheet;
-    $("dialogue").classList.toggle("has-portrait", !!sheet);
     if (!sheet) return;
     el.style.backgroundImage = `url(${sheet})`;
     el.style.backgroundPosition = `${mood * 50}% 0`;
@@ -208,7 +242,16 @@ export class Ui {
   private renderLine(): void {
     if (!this.current) return;
     renderRuns($("line"), this.runs, this.typed);
-    $("more").hidden = this.typed < this.length;
+    const typing = this.typed < this.length;
+    $("more").hidden = typing;
+    $("dialogue").classList.toggle("typing", typing);
+  }
+
+  /** The console's status lights: RX/TX blinks while text comes in, LINK/ERR for the radio and anything wrong. */
+  private setLights(line: Line, runs: Run[]): void {
+    const box = $("dialogue");
+    box.classList.toggle("walkie", isWalter(line));
+    box.classList.toggle("err", runs.some((r) => r.cls === "warn"));
   }
 
   private advance(): void {
@@ -236,7 +279,11 @@ export class Ui {
     $("who").textContent = prompt.who ?? "";
     $("who").hidden = !prompt.who;
     this.showPortrait(prompt);
-    renderRuns($("line"), parseLine(prompt.text));
+    const runs = parseLine(prompt.text);
+    renderRuns($("line"), runs);
+    this.setLights(prompt, runs);
+    $("dialogue").classList.remove("typing");
+    haunt($("ghost"));
     $("more").hidden = true;
     const list = $("choices");
     list.hidden = false;

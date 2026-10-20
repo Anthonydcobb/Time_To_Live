@@ -61,6 +61,8 @@ Key ideas:
 | VLANs, 802.1Q trunks, DTP, per-VLAN spanning tree timers, SVIs with autostate, router-on-a-stick subinterfaces, native VLAN mismatch, job 3 (the dentist) | PR #6 |
 | Portraits and inspect close-ups preload and only appear once decoded (no stale speaker); close-ups sit on top of the dialogue box | `src/game/ui.ts` |
 | CRT overlay: soft on the start screen, "haunted" during the apparition, then an 8 s fade while you walk (`crt.on` / `crt.fade`) | `src/game/crt.ts` |
+| Work order as a folded paper ticket top right: J or a click unfolds the tasks, a "✓ task" note pops when one ticks off, pinned inside the game picture's corner and above any laptop, PC or panel | `src/game/main.ts`, `game.css` |
+| Dialogue as a rusted console (framed portrait, LEDs, green screen, ghost words) with roots and cables that spread on the haunt (`overgrowth.ts`); scratchy torn edges on portraits and close-ups (`grime.ts`); a blurred dark copy of the room fills the letterbox bars; the dev panel folds to a tab top left (backtick) | `src/game/` |
 | Dialogue markup: `*word*` cold blue, `~word~` red; speaker name as a tab on the box | `src/game/markup.ts` |
 
 **PR state:** #1 → `main`, then #2 to #6 each stacked on the one before. None are merged yet. Merge them in order, #1 first.
