@@ -31,7 +31,7 @@ export class Router extends IosDevice {
       initialTtl: 255,
       localRoutes: true,
       staticRoutes: () => this.config.staticRoutes,
-      onDhcp: (iface, packet) => this.dhcp.handle(iface, packet),
+      onDhcp: (iface, packet) => this.handleDhcp(iface, packet),
     });
     this.dhcp = new DhcpServer({
       clock: () => this.clock,
@@ -165,6 +165,35 @@ export class Router extends IosDevice {
     // Bindings live in RAM unless a DHCP database agent is configured.
     this.dhcp.clear();
     this.dhcp.clearConflicts();
+  }
+
+  private handleDhcp(iface: L3Interface, packet: import("../frames").Ipv4Packet): void {
+    const msg = packet.dhcp!;
+    // A response addressed to this router's client-facing interface is sent
+    // back as a broadcast on that LAN. The relay marker is not exposed to PCs.
+    const relayInterface = msg.relayIp === undefined ? null : this.l3Interfaces().find((candidate) => candidate.ip === msg.relayIp) ?? null;
+    if (relayInterface) {
+      const { relayIp: _relayIp, ...clientMessage } = msg;
+      relayInterface.transmit({
+        src: relayInterface.mac,
+        dst: "ffffffffffff",
+        payload: { ...packet, src: relayInterface.ip!, dst: 0xffffffff, dhcp: clientMessage },
+      });
+      return;
+    }
+    const helpers = this.config.interfaces[iface.name]?.helperAddresses ?? [];
+    if (msg.relayIp === undefined && helpers.length && iface.ip !== null) {
+      for (const helper of helpers) {
+        this.stack.send({
+          ...packet,
+          src: iface.ip,
+          dst: helper,
+          dhcp: { ...msg, relayIp: iface.ip },
+        });
+      }
+      return;
+    }
+    this.dhcp.handle(iface, packet);
   }
 
   receive(port: Port, frame: Frame): void {

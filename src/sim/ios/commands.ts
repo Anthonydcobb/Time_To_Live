@@ -470,6 +470,17 @@ const IF_IP = kw("ip", "Interface Internet Protocol config commands");
 const ADDRESS = kw("address", "Set the IP address of an interface");
 
 const interfaceCommands: Entry[] = [
+  cmd(ANY_IF, [IF_IP, kw("helper-address", "Specify a destination address for DHCP relay"), ipArg("DHCP server address")], (c, [server]) => {
+    forEachIface(c, (name) => {
+      const helpers = c.device.ifaceConfig(name).helperAddresses;
+      if (!helpers.includes(server as Ipv4)) helpers.push(server as Ipv4);
+    });
+  }, { when: routedIface }),
+  cmd(ANY_IF, [NO, IF_IP, kw("helper-address", "Specify a destination address for DHCP relay"), ipArg("DHCP server address")], (c, [server]) => {
+    forEachIface(c, (name) => {
+      c.device.ifaceConfig(name).helperAddresses = c.device.ifaceConfig(name).helperAddresses.filter((ip) => ip !== server);
+    });
+  }, { when: routedIface }),
   cmd(ANY_IF, [IF_IP, ADDRESS, ipArg("IP address"), ipArg("IP subnet mask")], (c, [ip, mask]) => {
     const a = ip as Ipv4;
     const m = mask as Ipv4;

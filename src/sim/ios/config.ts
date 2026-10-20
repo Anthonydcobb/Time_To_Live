@@ -43,6 +43,8 @@ export interface InterfaceConfig {
   description: string | null;
   ip: Ipv4 | null;
   mask: Ipv4 | null;
+  /** DHCP relay destinations configured with ip helper-address. */
+  helperAddresses: Ipv4[];
   cdp: boolean;
   /** Switch physical ports only. */
   switchport?: SwitchportConfig;
@@ -51,7 +53,7 @@ export interface InterfaceConfig {
 }
 
 export function newInterfaceConfig(shutdown: boolean): InterfaceConfig {
-  return { shutdown, description: null, ip: null, mask: null, cdp: true };
+  return { shutdown, description: null, ip: null, mask: null, helperAddresses: [], cdp: true };
 }
 
 export interface DhcpPool {

@@ -31,6 +31,8 @@ export interface DhcpMessage {
   dnsServers?: Ipv4[];
   domainName?: string;
   leaseSec?: number;
+  /** The client-facing interface address added by a DHCP relay. */
+  relayIp?: Ipv4;
 }
 
 /** An IPv4 packet carries either an ICMP message or a DHCP message. */

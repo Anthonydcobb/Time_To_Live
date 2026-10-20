@@ -77,6 +77,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     const physical = device.ports.some((p) => p.name === name);
     out.push(`interface ${name}`);
     if (ic.description) out.push(` description ${ic.description}`);
+    for (const helper of ic.helperAddresses) out.push(` ip helper-address ${formatIpv4(helper)}`);
     if (ic.encapsulation) out.push(` encapsulation dot1Q ${ic.encapsulation.vlan}${ic.encapsulation.native ? " native" : ""}`);
     if (ic.switchport) out.push(...switchportLines(ic.switchport));
     else out.push(ic.ip !== null ? ` ip address ${formatIpv4(ic.ip)} ${formatIpv4(ic.mask!)}` : " no ip address");
