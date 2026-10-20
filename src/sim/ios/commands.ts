@@ -105,6 +105,32 @@ const ifaceArgFor = (create: boolean): Arg<Ctx> => ({
 });
 const ifaceArg = ifaceArgFor(false);
 
+const ifaceRangeArg: Arg<Ctx> = {
+  type: "arg",
+  name: "interface-range",
+  help: "Interface range",
+  match: (words, i, ctx) => {
+    const text = words.slice(i).map((w) => w.text).join(" ");
+    const names: string[] = [];
+    for (const part of text.split(",").map((x) => x.trim()).filter(Boolean)) {
+      const m = /^([a-z-]+)(\d+)\/(\d+)(?:\s*-\s*(?:(?:([a-z-]+)(\d+)\/)?(\d+)))?$/i.exec(part);
+      if (!m) return null;
+      const typeText = m[1];
+      const type = ctx.device.interfaceTypes().find((x) => x.name.toLowerCase().startsWith(typeText.toLowerCase()));
+      if (!type) return null;
+      const first = Number(m[3]);
+      const last = m[6] === undefined ? first : Number(m[6]);
+      if (last < first) return null;
+      for (let n = first; n <= last; n++) {
+        const name = `${type.name}${m[2]}/${n}`;
+        if (!ctx.device.interfaces().some((x) => x.name === name && x.status() !== "deleted")) return null;
+        names.push(name);
+      }
+    }
+    return names.length ? { consumed: words.length - i, value: names } : null;
+  },
+};
+
 /** `10`, `10,20`, `30-35`. */
 const vlanListArg = (help: string, name = "<1-4094>"): Arg<Ctx> => ({
   type: "arg",
@@ -478,6 +504,10 @@ const configCommands: Entry[] = [
     c.console.ifaces = [n];
     c.console.setMode(splitSubinterface(n) && c.device.kind === "router" ? "config-subif" : "config-if");
   }),
+  cmd(CONFIG, [kw("interface", "Select an interface to configure"), kw("range", "Select a range of interfaces"), ifaceRangeArg], (c, [names]) => {
+    c.console.ifaces = names as string[];
+    c.console.setMode("config-if");
+  }, { devices: ["switch"] }),
   cmd(CONFIG, [NO, kw("interface", "Select an interface to configure"), ifaceArg], (c, [name]) => {
     const error = c.device.deleteInterface(name as string);
     if (error) c.out.push(error);

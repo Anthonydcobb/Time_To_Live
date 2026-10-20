@@ -53,6 +53,19 @@ describe("interface status", () => {
   });
 });
 
+describe("interface ranges", () => {
+  it("applies switchport commands to every selected port", () => {
+    const { s1 } = oneSwitch();
+    type(s1, "interface range fa0/1 - 3", "description EDGE", "switchport voice vlan 150", "end");
+    for (const n of [1, 2, 3]) {
+      const cfg = s1.ifaceConfig(`FastEthernet0/${n}`);
+      expect(cfg.description).toBe("EDGE");
+      expect(cfg.switchport?.voiceVlan).toBe(150);
+    }
+    expect(type(s1, "show interfaces status").filter((line) => line.includes("EDGE"))).toHaveLength(3);
+  });
+});
+
 describe("voice VLANs", () => {
   it("creates and reports a voice VLAN on an access port", () => {
     const { s1 } = oneSwitch();
