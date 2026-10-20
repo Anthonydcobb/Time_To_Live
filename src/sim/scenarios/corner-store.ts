@@ -61,7 +61,8 @@ export function cornerStore({ cabled = true } = {}) {
   const g00 = () => r1.config.interfaces["GigabitEthernet0/0"];
   const onSwitch = (p: { peer: { device: unknown } | null }) => p.peer?.device === s1;
   // A console password only protects anything once `login` makes the console ask for it.
-  const consoleLocked = (d: Router | Switch) => d.config.con.password !== null && d.config.con.login;
+  const lineLocked = (line: { password: unknown; login: boolean }) => line.password !== null && line.login;
+  const consoleLocked = (d: Router | Switch) => lineLocked(d.config.con);
   const tasks: Task[] = [
     ...(cabled
       ? []
@@ -95,6 +96,16 @@ export function cornerStore({ cabled = true } = {}) {
       done: () => g00().ip === R1 && g00().mask === MASK && r1.port("Gi0/0").protocolUp,
     },
     {
+      id: "r1-save",
+      text: "Router: save it with copy running-config startup-config.",
+      // The saved config has to hold the router's setup, so saving too early doesn't count.
+      done: () => {
+        const s = r1.startup;
+        const g = s?.interfaces["GigabitEthernet0/0"];
+        return !!s && s.hostname === "R1" && s.enableSecret !== null && lineLocked(s.con) && g?.ip === R1 && g.mask === MASK && !g.shutdown;
+      },
+    },
+    {
       id: "s1-name",
       text: "Switch: name it S1 with hostname.",
       done: () => s1.hostname === "S1",
@@ -108,6 +119,14 @@ export function cornerStore({ cabled = true } = {}) {
       id: "s1-console",
       text: "Switch: password-protect the console (line console 0, password, login).",
       done: () => consoleLocked(s1),
+    },
+    {
+      id: "s1-save",
+      text: "Switch: save it with copy running-config startup-config.",
+      done: () => {
+        const s = s1.startup;
+        return !!s && s.hostname === "S1" && s.enableSecret !== null && lineLocked(s.con);
+      },
     },
     {
       id: "register",

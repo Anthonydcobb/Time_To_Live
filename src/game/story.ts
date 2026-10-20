@@ -243,9 +243,11 @@ export class Story {
     else if (!done("r1-secret")) text = "Now lock the door. enable secret, then something only you know. Not 'password'. Gary used 'password'. Over.";
     else if (!done("r1-console")) text = "And the console port. line console 0, password, then login. Otherwise anybody with a blue cable walks right in. Anybody. Over.";
     else if (!done("router")) text = "Router next. In the rack, configure terminal, interface gi0/0, ip address, no shutdown. Incantations, kid! Over.";
+    else if (!done("r1-save")) text = "Now save it. copy running-config startup-config. Running config is what it's thinking; startup is what it remembers. Make it remember. Over.";
     else if (!done("s1-name")) text = "Router's done. Switch tab on your laptop, kid. Same three: hostname S1, enable secret, console password. Over.";
     else if (!done("s1-secret")) text = "Enable secret on the switch too. Different from the router's, if you're smart. Over.";
     else if (!done("s1-console")) text = "Switch console: line console 0, password, login. Then the PCs. Over.";
+    else if (!done("s1-save")) text = "Save the switch too, same incantation. Then the PCs. Over.";
     else if (!done("register")) text = "The register's at the counter. On a PC it's ipconfig, address, mask, gateway. Over.";
     else if (!done("office")) text = "Now the back office PC. Same deal, point one-one. Over.";
     else if (!done("ping-router")) text = "Ping the router from BOTH PCs. If the first one drops, that's ARP. Not ghosts. Usually. Over.";
@@ -263,6 +265,7 @@ export class Story {
     };
     once("cable", [{ who: W, text: "All plugged in! Hear that? That's the sound of lights thinking. Give the switch half a minute to trust everybody. Over." }]);
     once("r1-name", [{ who: W, text: "R1. Nice to meet it. It already knew your name. Over." }]);
+    once("r1-save", [{ who: W, text: "Saved! Now R1 remembers you even after a reboot. Everything here remembers. Over." }]);
     once("s1-console", [{ who: W, text: "Locked up tight. Remember those passwords, kid. Writing them on the rack is how Gary started. Over." }]);
     once("router", [{ who: W, text: "Ooh, a green light! I felt that one in my fillings. Now the PCs. Over." }]);
     if (done("register") && done("office")) once("office", [{ who: W, text: "Addresses on both PCs. Look at you, giving things names. Names are boundaries, kid. Boundaries are important. Over." }]);
