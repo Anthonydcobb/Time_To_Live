@@ -265,6 +265,24 @@ export function showInterfaces(device: IosDevice, only?: string): string[] {
   return out;
 }
 
+export function showInterfacesStatus(sw: Switch): string[] {
+  const out = [
+    "Port      Name               Status       Vlan       Duplex  Speed Type",
+  ];
+  for (const port of sw.ports) {
+    const sp = sw.switchport(port);
+    const status = port.adminDown ? "disabled" : port.protocolUp ? "connected" : "notconnect";
+    const vlan = sw.operationalMode(port) === "trunk" ? "trunk" : String(sp.accessVlan);
+    const duplex = port.protocolUp ? "a-full" : "auto";
+    const speed = port.protocolUp ? (port.name.startsWith("Gigabit") ? "a-1000" : "a-100") : "auto";
+    const type = port.name.startsWith("Gigabit") ? "10/100/1000BaseTX" : "10/100BaseTX";
+    out.push(
+      `${port.shortName.padEnd(10)}${(sw.config.interfaces[port.name].description ?? "").slice(0, 18).padEnd(19)}${status.padEnd(13)}${vlan.padEnd(11)}${duplex.padEnd(8)}${speed.padEnd(7)}${type}`,
+    );
+  }
+  return out;
+}
+
 const ROUTE_CODES = [
   "Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP",
   "       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area",

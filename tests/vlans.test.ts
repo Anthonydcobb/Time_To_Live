@@ -37,6 +37,22 @@ function twoSwitches(modeA: string, modeB: string) {
 /** Two pings, since a router drops the first packet while it ARPs for the next hop. */
 const pings = (from: Pc, to: string) => run(from, `ping -n 2 ${to}`).some((l) => l.startsWith(`Reply from ${to}`));
 
+describe("interface status", () => {
+  it("summarizes access ports, trunks, and disconnected ports", () => {
+    const { net, s1 } = oneSwitch();
+    const s2 = net.add(new Switch("S2"));
+    type(s1, "int fa0/1", "description register", "int gi0/1", "switchport mode trunk", "end");
+    type(s2, "en", "conf t", "int gi0/1", "switchport mode trunk", "end");
+    net.connect(s1.port("Gi0/1"), s2.port("Gi0/1"));
+    net.clock.advance(3_000);
+    const lines = type(s1, "show interfaces status");
+    expect(lines[0]).toContain("Port");
+    expect(lines.some((line) => line.includes("Fa0/1") && line.includes("connected") && line.includes("register"))).toBe(true);
+    expect(lines.some((line) => line.includes("Gi0/1") && line.includes("connected") && line.includes("trunk"))).toBe(true);
+    expect(lines.some((line) => line.includes("Fa0/4") && line.includes("notconnect") && line.includes("1"))).toBe(true);
+  });
+});
+
 describe("VLAN database", () => {
   it("creates a VLAN only when you leave config-vlan mode", () => {
     const { s1 } = oneSwitch();

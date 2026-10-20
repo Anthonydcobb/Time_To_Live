@@ -999,6 +999,9 @@ const switchCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("trunk", "Show interface trunk information")], (c) => c.out.push(...show.showInterfacesTrunk(sw(c))), {
     devices: ["switch"],
   }),
+  cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("status", "Interface status and configuration")], (c) => c.out.push(...show.showInterfacesStatus(sw(c))), {
+    devices: ["switch"],
+  }),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("switchport", "Show interface switchport information")], (c) =>
     c.out.push(...show.showInterfacesSwitchport(sw(c))),
   { devices: ["switch"] }),
