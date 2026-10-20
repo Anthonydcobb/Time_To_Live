@@ -35,7 +35,7 @@ export interface StaticRoute {
 }
 
 export interface Route {
-  code: "C" | "L" | "S";
+  code: "C" | "L" | "S" | "O";
   network: Ipv4;
   mask: Ipv4;
   nextHop: Ipv4 | null;
@@ -62,6 +62,7 @@ export interface IpStackOptions {
   /** Routers add local /32 routes to the table. */
   localRoutes: boolean;
   staticRoutes?: () => StaticRoute[];
+  ospfRoutes?: () => StaticRoute[];
   defaultGateway?: () => Ipv4 | null;
   /** DHCP messages go here instead of through normal delivery. They arrive before the client has an address. */
   onDhcp?: (iface: L3Interface, packet: Ipv4Packet) => void;
@@ -106,6 +107,11 @@ export class IpStack {
         if (iface) routes.push({ code: "S", network: s.network, mask: s.mask, nextHop: s.nextHop, iface });
       } else if (s.nextHop !== null && connected.some((r) => r.code === "C" && networkOf(s.nextHop!, r.mask) === r.network)) {
         routes.push({ code: "S", network: s.network, mask: s.mask, nextHop: s.nextHop, iface: null });
+      }
+    }
+    for (const s of this.opts.ospfRoutes?.() ?? []) {
+      if (s.nextHop !== null && connected.some((r) => r.code === "C" && networkOf(s.nextHop!, r.mask) === r.network)) {
+        routes.push({ code: "O", network: s.network, mask: s.mask, nextHop: s.nextHop, iface: null });
       }
     }
     return routes;

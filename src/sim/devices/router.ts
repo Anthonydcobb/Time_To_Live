@@ -1,8 +1,8 @@
-import { nextMac } from "../addr";
+import { networkOf, nextMac, type Ipv4 } from "../addr";
 import { retag, type Frame } from "../frames";
 import { IpStack, type L3Interface } from "../ipstack";
 import { DhcpServer } from "../dhcp";
-import { defaultConfig, newInterfaceConfig, type IosConfig } from "../ios/config";
+import { defaultConfig, newInterfaceConfig, type IosConfig, type OspfNetwork } from "../ios/config";
 import { Port } from "../network";
 import { splitSubinterface } from "../vlans";
 import { IosDevice, type InterfaceView } from "./ios-device";
@@ -19,6 +19,8 @@ export class Router extends IosDevice {
   private readonly subL3 = new Map<string, L3Interface>();
   /** Subinterfaces removed with `no interface`. IOS keeps listing them as deleted until a reload. */
   readonly deletedSubinterfaces = new Set<string>();
+  private ospfRoutes: { network: Ipv4; mask: Ipv4; nextHop: Ipv4 | null; exitIface: string | null }[] = [];
+  readonly ospfNeighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv4 }[] = [];
 
   constructor(id: string, hostname = "Router") {
     super(id);
@@ -32,6 +34,7 @@ export class Router extends IosDevice {
       initialTtl: 255,
       localRoutes: true,
       staticRoutes: () => this.config.staticRoutes,
+      ospfRoutes: () => this.ospfRoutes,
       onDhcp: (iface, packet) => this.handleDhcp(iface, packet),
       filter: (iface, packet, direction) => permitsStandardAcl(this.config, iface.name, packet, direction),
     });
@@ -41,6 +44,44 @@ export class Router extends IosDevice {
       stack: this.stack,
       l3Interfaces: () => this.l3Interfaces(),
     });
+  }
+
+  onAttach(): void {
+    super.onAttach();
+    const tick = () => { this.syncOspf(); this.clock.schedule(1000, tick); };
+    this.clock.schedule(1000, tick);
+  }
+
+  private ospfNetwork(iface: L3Interface): OspfNetwork | null {
+    if (!this.config.ospf || iface.ip === null || iface.mask === null) return null;
+    return this.config.ospf.networks.find((n) => networkOf(iface.ip!, n.mask) === n.network) ?? null;
+  }
+
+  private ospfAdvertisements() {
+    return this.l3Interfaces().flatMap((iface) => {
+      const n = this.ospfNetwork(iface);
+      return n && iface.up() ? [{ network: n.network, mask: n.mask, nextHop: null, exitIface: null }] : [];
+    });
+  }
+
+  private syncOspf(): void {
+    this.ospfNeighbors.length = 0;
+    this.ospfRoutes = [];
+    if (!this.config.ospf) return;
+    const local = this.ospfAdvertisements();
+    for (const port of this.ports) {
+      const peer = port.peer;
+      if (!peer || !(peer.device instanceof Router)) continue;
+      const ours = this.l3.get(port);
+      const theirs = peer.device.l3.get(peer);
+      const oursNet = ours && this.ospfNetwork(ours);
+      const theirsNet = theirs && peer.device.ospfNetwork(theirs);
+      if (!ours || !theirs || !ours.up() || !theirs.up() || !oursNet || !theirsNet || oursNet.area !== theirsNet.area) continue;
+      this.ospfNeighbors.push({ router: peer.device, localInterface: ours.name, remoteInterface: theirs.name, remoteAddress: theirs.ip! });
+      for (const route of peer.device.ospfAdvertisements()) {
+        if (!local.some((r) => r.network === route.network && r.mask === route.mask)) this.ospfRoutes.push({ ...route, nextHop: theirs.ip!, exitIface: ours.name });
+      }
+    }
   }
 
   protected factoryConfig(hostname: string): IosConfig {

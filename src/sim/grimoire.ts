@@ -22,6 +22,8 @@ export function bookFor(mode: Mode): Book {
       return "dhcp";
     case "config-vlan":
       return "vlan";
+    case "config-router":
+      return "config";
   }
 }
 

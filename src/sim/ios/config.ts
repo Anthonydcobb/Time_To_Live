@@ -75,6 +75,12 @@ export interface ExtendedAclRule {
   destination: AclAddress;
 }
 
+export interface OspfNetwork {
+  network: Ipv4;
+  mask: Ipv4;
+  area: number;
+}
+
 export interface DhcpPool {
   name: string;
   network: Ipv4 | null;
@@ -114,6 +120,7 @@ export interface IosConfig {
   /** PVST+ bridge priority overrides, keyed by VLAN ID. */
   spanningTreePriority: Record<number, number>;
   ipRouting: boolean;
+  ospf: { processId: number; networks: OspfNetwork[] } | null;
   /** VTP control-plane settings for switches. */
   vtpMode: "server" | "client" | "transparent";
   vtpDomain: string;
@@ -148,6 +155,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     dhcpPools: [],
     spanningTreePriority: {},
     ipRouting: false,
+    ospf: null,
     vtpMode: "server",
     vtpDomain: "",
   };

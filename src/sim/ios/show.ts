@@ -305,6 +305,7 @@ function classfulPrefix(ip: Ipv4): number {
 function routeTail(r: Route, withPrefix: boolean): string {
   const net = formatIpv4(r.network) + (withPrefix ? `/${maskToPrefix(r.mask)}` : "");
   if (r.code === "S" && r.nextHop !== null) return `${net} [1/0] via ${formatIpv4(r.nextHop)}`;
+  if (r.code === "O" && r.nextHop !== null) return `${net} [110/2] via ${formatIpv4(r.nextHop)}`;
   return `${net} is directly connected, ${r.iface!.name}`;
 }
 
@@ -345,6 +346,28 @@ export function showIpRoute(device: IosDevice): string[] {
   if (defaultRoute) out.push(`S*    0.0.0.0/0 [1/0] via ${formatIpv4(defaultRoute.nextHop ?? 0)}`);
   out.push("");
   return out;
+}
+
+export function showIpOspfNeighbor(router: Router): string[] {
+  const out = ["", "Neighbor ID     Pri   State           Dead Time   Address         Interface"];
+  for (const n of router.ospfNeighbors) {
+    out.push(`${n.router.config.hostname.padEnd(16)}1     FULL/ -         00:00:34    ${formatIpv4(n.remoteAddress).padEnd(16)}${n.localInterface}`);
+  }
+  return out;
+}
+
+export function showIpProtocols(device: IosDevice): string[] {
+  if (device.kind !== "router" || !device.config.ospf) return ["Routing Protocol is \"connected\"", "  Routing Protocol is \"static\"", ""];
+  return [
+    `Routing Protocol is \"ospf ${device.config.ospf.processId}\"`,
+    "  Outgoing update filter list for all interfaces is not set",
+    "  Incoming update filter list for all interfaces is not set",
+    `  Routing for Networks: ${device.config.ospf.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`,
+    "  Routing Information Sources:",
+    "    Gateway         Distance      Last Update",
+    "  Distance: (default is 110)",
+    "",
+  ];
 }
 
 export function showArp(device: IosDevice): string[] {

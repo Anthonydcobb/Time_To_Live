@@ -9,7 +9,7 @@ import { showVersionBanner } from "./show";
 import { Job } from "../job";
 import { bookFor, type Grimoire } from "../grimoire";
 
-export type Mode = "user" | "enable" | "config" | "config-if" | "config-subif" | "config-line" | "dhcp-config" | "config-vlan";
+export type Mode = "user" | "enable" | "config" | "config-if" | "config-subif" | "config-line" | "dhcp-config" | "config-vlan" | "config-router";
 
 type Pending =
   | { kind: "press-return" }
@@ -32,10 +32,11 @@ const SUFFIX: Record<Mode, string> = {
   "config-line": "(config-line)#",
   "dhcp-config": "(dhcp-config)#",
   "config-vlan": "(config-vlan)#",
+  "config-router": "(config-router)#",
 };
 
 /** Sub-modes where an unknown command is tried again as a global config command. */
-const SUB_MODES: Mode[] = ["config-if", "config-subif", "config-line", "dhcp-config", "config-vlan"];
+const SUB_MODES: Mode[] = ["config-if", "config-subif", "config-line", "dhcp-config", "config-vlan", "config-router"];
 
 const DNS_LOOKUP_MS = 5000;
 
@@ -95,6 +96,7 @@ const HELP_HEADINGS: Record<Mode, string> = {
   "config-line": "Line configuration commands:",
   "dhcp-config": "DHCP pool configuration commands:",
   "config-vlan": "VLAN configuration commands:",
+  "config-router": "Router configuration commands:",
 };
 
 export class IosConsole {

@@ -159,7 +159,8 @@ const ANY_IF: Mode[] = ["config-if", "config-subif"];
 const VLAN_MODE: Mode[] = ["config-vlan"];
 const LINE: Mode[] = ["config-line"];
 const DHCP: Mode[] = ["dhcp-config"];
-const SUB: Mode[] = ["config", "config-if", "config-subif", "config-line", "dhcp-config", "config-vlan"];
+const ROUTER_CFG: Mode[] = ["config-router"];
+const SUB: Mode[] = ["config", "config-if", "config-subif", "config-line", "dhcp-config", "config-vlan", "config-router"];
 
 const NO = kw("no", "Negate a command or set its defaults");
 const SHOW = kw("show", "Show running system information");
@@ -247,6 +248,8 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("route", "IP routing table")], (c) => c.out.push(...show.showIpRoute(c.device)), {
     when: (c) => c.device.kind === "router" || (c.device.kind === "switch" && c.device.config.ipRouting),
   }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("ospf", "OSPF information"), kw("neighbor", "OSPF neighbor list")], (c) => c.out.push(...show.showIpOspfNeighbor(c.device as Router)), { devices: ["router"] }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("protocols", "Active routing protocols")], (c) => c.out.push(...show.showIpProtocols(c.device)), { devices: ["router"] }),
   cmd(
     EXEC,
     [SHOW, kw("mac", "MAC configuration"), kw("address-table", "MAC forwarding table")],
@@ -318,6 +321,7 @@ const exitEnd: Entry[] = [
   cmd(VLAN_MODE, [kw("exit", "Apply changes, bump revision number, and exit mode")], (c) => c.console.setMode("config")),
   cmd(LINE, [kw("exit", "Exit from line configuration mode")], (c) => c.console.setMode("config")),
   cmd(DHCP, [kw("exit", "Exit from DHCP pool configuration mode")], (c) => c.console.setMode("config")),
+  cmd(ROUTER_CFG, [kw("exit", "Exit from routing protocol configuration mode")], (c) => c.console.setMode("config")),
 ];
 
 const ENABLE_KW = kw("enable", "Modify enable password parameters");
@@ -504,6 +508,14 @@ const configCommands: Entry[] = [
     c.console.ifaces = [n];
     c.console.setMode(splitSubinterface(n) && c.device.kind === "router" ? "config-subif" : "config-if");
   }),
+  cmd(CONFIG, [kw("router", "Enable a routing protocol"), kw("ospf", "Open Shortest Path First"), numArg(1, 65535, "Process ID")], (c, [processId]) => {
+    c.device.config.ospf ??= { processId: processId as number, networks: [] };
+    c.device.config.ospf.processId = processId as number;
+    c.console.setMode("config-router");
+  }, { devices: ["router"] }),
+  cmd(CONFIG, [NO, kw("router", "Enable a routing protocol"), kw("ospf", "Open Shortest Path First")], (c) => {
+    c.device.config.ospf = null;
+  }, { devices: ["router"] }),
   cmd(CONFIG, [kw("interface", "Select an interface to configure"), kw("range", "Select a range of interfaces"), ifaceRangeArg], (c, [names]) => {
     c.console.ifaces = names as string[];
     c.console.setMode("config-if");
@@ -1114,7 +1126,20 @@ function deleteFile(c: Ctx, file: string): void {
   });
 }
 
-const ALL: Entry[] = [...showCommands, ...execCommands, ...exitEnd, ...configCommands, ...interfaceCommands, ...lineCommands, ...dhcpCommands, ...switchCommands];
+const ospfCommands: Entry[] = [
+  cmd(ROUTER_CFG, [kw("network", "Enable OSPF on an IP network"), ipArg("Network number"), ipArg("Wildcard bits"), kw("area", "OSPF area ID"), numArg(0, 4294967295, "OSPF area ID")], (c, [network, wildcard, area]) => {
+    const mask = (~(wildcard as Ipv4)) >>> 0;
+    const normalized = networkOf(network as Ipv4, mask);
+    const cfg = c.device.config.ospf!;
+    if (!cfg.networks.some((n) => n.network === normalized && n.mask === mask && n.area === area)) cfg.networks.push({ network: normalized, mask, area: area as number });
+  }, { devices: ["router"] }),
+  cmd(ROUTER_CFG, [NO, kw("network", "Enable OSPF on an IP network"), ipArg("Network number"), ipArg("Wildcard bits"), kw("area", "OSPF area ID"), numArg(0, 4294967295, "OSPF area ID")], (c, [network, wildcard, area]) => {
+    const mask = (~(wildcard as Ipv4)) >>> 0;
+    c.device.config.ospf!.networks = c.device.config.ospf!.networks.filter((n) => !(n.network === networkOf(network as Ipv4, mask) && n.mask === mask && n.area === area));
+  }, { devices: ["router"] }),
+];
+
+const ALL: Entry[] = [...showCommands, ...execCommands, ...exitEnd, ...configCommands, ...interfaceCommands, ...lineCommands, ...dhcpCommands, ...switchCommands, ...ospfCommands];
 
 const cache = new Map<string, Cmd[]>();
 
