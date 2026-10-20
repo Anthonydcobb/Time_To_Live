@@ -109,6 +109,41 @@ class GameAudio {
     if (big) this.thump(t, 0.25);
   }
 
+  /** The apparition: a wall of loud static that tears and drops, with a sub-bass fall under it. */
+  burst(seconds: number): void {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const src = this.noiseSource();
+    const hp = ctx.createBiquadFilter();
+    hp.type = "highpass";
+    hp.frequency.value = 500;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.22, t + 0.25);
+    // Tear it up: the signal keeps cutting out and slamming back.
+    for (let i = 0; i < 18; i++) {
+      const at = t + 0.3 + Math.random() * (seconds - 0.9);
+      g.gain.setValueAtTime(0.02, at);
+      g.gain.setValueAtTime(0.18 + Math.random() * 0.1, at + 0.03 + Math.random() * 0.08);
+    }
+    g.gain.setValueAtTime(0.2, t + seconds - 0.6);
+    g.gain.linearRampToValueAtTime(0, t + seconds);
+    src.connect(hp).connect(g).connect(this.master);
+    src.start(t);
+    src.stop(t + seconds + 0.1);
+    const sub = ctx.createOscillator();
+    sub.frequency.setValueAtTime(90, t);
+    sub.frequency.exponentialRampToValueAtTime(24, t + seconds);
+    const sg = ctx.createGain();
+    sg.gain.setValueAtTime(0, t);
+    sg.gain.linearRampToValueAtTime(0.35, t + 0.4);
+    sg.gain.linearRampToValueAtTime(0, t + seconds);
+    sub.connect(sg).connect(this.master);
+    sub.start(t);
+    sub.stop(t + seconds + 0.1);
+  }
+
   /** Walter's radio: squelch in, static under his voice, squelch out. Safe to call repeatedly. */
   walkie(on: boolean): void {
     const ctx = this.ctx;

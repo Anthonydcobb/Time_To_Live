@@ -3,6 +3,7 @@ import type { Pc } from "../sim/devices/pc";
 import { CableError, type Device, type Network, type Port } from "../sim/network";
 import { lightFor } from "../web/topology";
 import { TerminalView, iosSession, pcSession } from "../web/terminal";
+import { apparition, apparitionPlaying } from "./apparition";
 import { audio } from "./audio";
 import { LaptopScreen } from "./laptop-screen";
 import { TownMap, type SiteId } from "./town-map";
@@ -70,6 +71,8 @@ export class Ui {
   private readonly pcScreen = new PcScreen(document.body);
   private readonly laptopScreen = new LaptopScreen(document.body);
   private readonly townMap = new TownMap(document.body);
+  /** Cables that won't come out. */
+  private readonly bound = new Set<Port>();
 
   constructor() {
     window.addEventListener("keydown", (e) => this.onKey(e), true);
@@ -83,7 +86,7 @@ export class Ui {
   }
 
   get busy(): boolean {
-    return !!(this.current || this.choices || this.card || this.screen || this.panelOpen || this.townMap.isOpen);
+    return !!(this.current || this.choices || this.card || this.screen || this.panelOpen || this.townMap.isOpen || apparitionPlaying());
   }
 
   /** Whether a terminal or the port panel has the keyboard. */
@@ -375,6 +378,11 @@ export class Ui {
 
   private clickPort(p: Port): void {
     if (!this.net || p.kind === "console") return;
+    if (p.peer && (this.bound.has(p) || this.bound.has(p.peer))) {
+      this.flash("It won't come out. Something on the other end is holding on.");
+      this.apparition();
+      return;
+    }
     if (p === this.holding) {
       this.holding = null;
     } else if (p.peer) {
@@ -397,6 +405,19 @@ export class Ui {
     this.updatePanel();
   }
 
+  /** Marks a cable that can't be pulled out: clicking either end gets the apparition instead. */
+  bindCable(port: Port): void {
+    this.bound.add(port);
+  }
+
+  /** Static, and something in it. Input waits until it's over. */
+  apparition(then?: () => void): void {
+    apparition(() => {
+      this.closedAt = performance.now();
+      then?.();
+    });
+  }
+
   /** Shows a message in place of the usual hint until the next click. */
   private flash(text: string): void {
     this.hintHeld = true;
@@ -407,6 +428,12 @@ export class Ui {
 
   private onKey(e: KeyboardEvent): void {
     const confirm = e.key === "e" || e.key === "E" || e.key === " " || e.key === "Enter";
+    if (apparitionPlaying()) {
+      // Nothing gets through while it's on screen.
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     if (this.townMap.isOpen) {
       if (this.townMap.driving && confirm) {
         e.preventDefault();

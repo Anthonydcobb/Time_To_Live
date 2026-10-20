@@ -199,7 +199,17 @@ export class Story {
         ui.say([{ text: "Canned soup, motor oil, and a jar of something labeled TEETH (ASSORTED). Reasonably priced." }]);
         return;
       case "shop:jack":
-        ui.say([{ text: "A wall jack. According to the work order, nothing in the shop uses it." }]);
+        if (!this.flags.has("haunt")) {
+          ui.say([{ text: "A wall jack. According to the work order, nothing in the shop uses it." }]);
+          return;
+        }
+        ui.choose({ text: "A blue cable is seated in the jack. Nobody ran it. The plastic is warm." }, [
+          {
+            label: "Pull it out",
+            run: () => ui.apparition(() => ui.say([{ text: "The cable is still in the jack. Your hand is cold to the elbow." }])),
+          },
+          { label: "Leave it", run: () => {} },
+        ]);
         return;
       case "shop:exit":
         if (this.flags.has("done")) ui.openTownMap("quikstop", { bobs: () => this.travel("office") }, { haunted: this.flags.has("haunt") });
@@ -281,6 +291,8 @@ export class Story {
       events.emit("flicker");
       this.phantom.configure(ip("192.168.1.66"), ip("255.255.255.0"), null);
       net.connect(this.phantom.nic, s1.port("FastEthernet0/24"));
+      // It doesn't come out. Trying, at the rack or at the wall, gets you the apparition.
+      this.ui.bindCable(s1.port("FastEthernet0/24"));
       events.emit("haunt");
       // Once spanning tree lets it through, it says hello to the register now and then.
       const hello = () => {
