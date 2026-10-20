@@ -157,10 +157,12 @@ async function healthCheck(): Promise<void> {
       const pc1Ip = await run("PC1", "ipconfig", "");
       const interVlanPing = await run("PC0", "ping 192.168.20.10", "");
       const routerInterfaces = await run("Router0", "show ip interface brief");
+      const sshStatus = await run("Router0", "show ssh");
+      const routerConfig = await run("Router0", "show running-config");
       const trunk0 = await run("Switch0", "show interfaces trunk");
       const trunk1 = await run("Switch1", "show interfaces trunk");
       const pc0Text = text(pc0Ip); const pc1Text = text(pc1Ip);
-      const routerText = text(routerInterfaces); const trunks = `${text(trunk0)}\n${text(trunk1)}`;
+      const routerText = text(routerInterfaces); const sshText = text(sshStatus); const configText = text(routerConfig); const trunks = `${text(trunk0)}\n${text(trunk1)}`;
       showHealth([
         { label: "PC0 IPv4 address", ok: /IPv4 Address.*192\.168\.10\.10/i.test(pc0Text), detail: "192.168.10.10 / VLAN 10" },
         { label: "PC1 IPv4 address", ok: /IPv4 Address.*192\.168\.20\.10/i.test(pc1Text), detail: "192.168.20.10 / VLAN 20" },
@@ -168,6 +170,8 @@ async function healthCheck(): Promise<void> {
         { label: "Router VLAN 20 gateway", ok: /GigabitEthernet0\/0\.20\s+192\.168\.20\.1\s+YES\s+\w+\s+up\s+up/i.test(routerText), detail: "192.168.20.1 up/up" },
         { label: "Inter-VLAN connectivity", ok: /Reply from 192\.168\.20\.10/i.test(text(interVlanPing)), detail: "PC0 → PC1" },
         { label: "Trunks forwarding", ok: /Fa0\/1\s+1,10,20/i.test(trunks) && /Fa0\/3\s+1,10,20/i.test(trunks), detail: "VLANs 10/20" },
+        { label: "Router SSH service", ok: /SSH Enabled/i.test(sshText), detail: "show ssh" },
+        { label: "VTY local authentication", ok: /login local/i.test(configText) && /transport input ssh/i.test(configText), detail: "line vty 0 4" },
       ]);
       return;
     }
