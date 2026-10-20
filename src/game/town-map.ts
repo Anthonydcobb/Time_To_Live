@@ -144,6 +144,8 @@ export class TownMap {
     place(close, CLOSE_BOX);
     close.addEventListener("click", () => this.cancel());
     spots.appendChild(close);
+    // Load both vans now, so a trip never starts as just a pair of headlights.
+    for (const src of ["assets/ui/van-normal.webp", "assets/ui/van-haunted.webp"]) new Image().src = src;
     // A click anywhere while the van drives skips the trip.
     this.el.addEventListener("click", () => this.finishDrive?.(), true);
   }
@@ -222,6 +224,7 @@ export class TownMap {
     // Now and then a trip goes a little wrong.
     const omen = Math.random();
     van.classList.toggle("flicker", omen < 0.25 || this.haunted);
+    van.classList.toggle("haunted", this.haunted);
     const followed = omen >= 0.25 && omen < 0.42;
     this.el.classList.add("in-transit");
     this.caption(followed ? `Driving to ${name}... someone's behind you.` : `Driving to ${name}...`);

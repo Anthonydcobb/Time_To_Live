@@ -1498,7 +1498,7 @@ kbd {
 /* The B&B van driving across the town map. It's drawn facing left; --face 1 flips it right. */
 #townmap .van {
   position: absolute;
-  width: 6%;
+  width: 8%;
   aspect-ratio: 260 / 158;
   --face: -1;
   transform: translate(-50%, -78%) scaleX(calc(-1 * var(--face)));
@@ -1514,7 +1514,12 @@ kbd {
   position: relative;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 3px 3px #000a);
+  /* A pale rim, like streetlight on the roof, so it reads on the dark road. */
+  filter: drop-shadow(0 0 1px #f0e8d0) drop-shadow(0 0 2px #f0e8d0aa) drop-shadow(0 3px 3px #000a);
+}
+
+#townmap .van.haunted img {
+  filter: brightness(1.35) drop-shadow(0 0 1px #d8c8f0) drop-shadow(0 0 4px #9a5ad8aa) drop-shadow(0 3px 3px #000a);
 }
 
 /* Headlights, thrown ahead of the van's nose. */
