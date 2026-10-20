@@ -228,7 +228,7 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "bins", label: "Bins", x: 19, y: 11, w: 1, h: 2, verb: "", color: 0x3a3a36, decor: true, sprite: "store-decor", frame: 12 },
       { id: "boxes", label: "Boxes", x: 17, y: 12, w: 1, h: 1, verb: "", color: 0x5e5240, decor: true, sprite: "store-decor", frame: 6 },
       { id: "baskets", label: "Baskets", x: 8, y: 12, w: 2, h: 1, verb: "", color: 0x5a3a3a, decor: true, sprite: "store-decor", frame: 10 },
-      { id: "exit", label: "Door", x: 14, y: 13, w: 2, h: 1, verb: "Leave", color: 0x3a3428, onWall: true },
+      { id: "exit", label: "Door", x: 14, y: 13, w: 2, h: 1, verb: "Leave", color: 0x3a3428, onWall: true, sprite: "store-decor", frame: 15 },
     ],
     spawn: { x: 14, y: 12 },
     tiles: "store-tiles",

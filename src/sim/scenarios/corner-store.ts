@@ -70,6 +70,22 @@ export function cornerStore({ cabled = true } = {}) {
             done: () => r1.port("Gi0/0").peer?.device === s1 && onSwitch(register.nic) && onSwitch(office.nic),
           },
         ]),
+    // Identity and security before interfaces, the way you'd set up any new box.
+    {
+      id: "names",
+      text: "Name the router R1 and the switch S1 with hostname.",
+      done: () => r1.hostname === "R1" && s1.hostname === "S1",
+    },
+    {
+      id: "secrets",
+      text: "Lock privileged mode on both with an enable secret.",
+      done: () => r1.config.enableSecret !== null && s1.config.enableSecret !== null,
+    },
+    {
+      id: "console",
+      text: "Password-protect the console on both: line console 0, password, login.",
+      done: () => [r1, s1].every((d) => d.config.con.password !== null && d.config.con.login),
+    },
     {
       id: "router",
       text: "On the router, give Gi0/0 the address 192.168.1.1 255.255.255.0 and turn it on with no shutdown.",

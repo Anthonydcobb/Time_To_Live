@@ -23,16 +23,38 @@ describe("work order", () => {
     const store = cornerStore();
     const { net, r1, register, office, tasks } = store;
     const done = () => tasks.map((t) => t.done?.() ?? null);
-    expect(done()).toEqual([false, false, false, false, false, null]);
+    // names, secrets, console, router, register, office, ping-router, ping-pcs, and the flavor line
+    expect(done()).toEqual([false, false, false, false, false, false, false, false, null]);
     type(r1, "en", "conf t", "int g0/0", "ip address 192.168.1.1 255.255.255.0", "no shutdown", "end");
     run(register, "ipconfig 192.168.1.10 255.255.255.0 192.168.1.1");
     run(office, "ipconfig 192.168.1.11 255.255.255.0 192.168.1.1");
     net.clock.advance(35_000);
-    expect(done()).toEqual([true, true, true, false, false, null]);
+    expect(done()).toEqual([false, false, false, true, true, true, false, false, null]);
     run(register, "ping 192.168.1.1");
     run(office, "ping 192.168.1.1");
     run(register, "ping 192.168.1.11");
-    expect(done()).toEqual([true, true, true, true, true, null]);
+    expect(done()).toEqual([false, false, false, true, true, true, true, true, null]);
+  });
+
+  it("ticks off hostnames, enable secrets and console passwords once both boxes have them", () => {
+    const { r1, s1, tasks } = cornerStore();
+    const task = (id: string) => tasks.find((t) => t.id === id)!.done!();
+    type(r1, "", "en", "conf t", "hostname R1", "end");
+    expect(task("names")).toBe(false);
+    type(s1, "", "en", "conf t", "hostname S1", "end");
+    expect(task("names")).toBe(true);
+
+    type(r1, "conf t", "enable secret quiet-hours", "end");
+    expect(task("secrets")).toBe(false);
+    type(s1, "conf t", "enable secret quiet-hours", "end");
+    expect(task("secrets")).toBe(true);
+
+    // A password alone isn't enough; the console only asks for it with login.
+    type(r1, "conf t", "line console 0", "password static", "login", "end");
+    type(s1, "conf t", "line console 0", "password static", "end");
+    expect(task("console")).toBe(false);
+    type(s1, "conf t", "line console 0", "login", "end");
+    expect(task("console")).toBe(true);
   });
 });
 
