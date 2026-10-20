@@ -1573,3 +1573,9 @@ kbd {
 #townmap.in-transit {
   cursor: pointer;
 }
+
+#fieldkit .devs {
+  display: flex;
+  gap: 6px;
+}
+

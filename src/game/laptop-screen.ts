@@ -52,7 +52,7 @@ export class LaptopScreen {
                 <header>
                   <span class="title"></span>
                   <nav>
-                    <button data-tab="console">CONSOLE</button>
+                    <span class="devs"></span>
                     <button data-tab="topology">TOPOLOGY</button>
                   </nav>
                 </header>
@@ -73,8 +73,18 @@ export class LaptopScreen {
     `);
     parent.appendChild(this.el);
     this.el.addEventListener("click", (e) => {
-      const tab = (e.target as HTMLElement).closest("[data-tab]")?.getAttribute("data-tab") as Tab | null;
+      const target = e.target as HTMLElement;
+      const tab = target.closest("[data-tab]")?.getAttribute("data-tab") as Tab | null;
       if (tab) this.show(tab);
+      // A device tab: move the console to that box without closing the laptop.
+      const dev = target.closest("[data-dev]")?.getAttribute("data-dev");
+      if (dev !== null && dev !== undefined) {
+        const device = this.consoleDevices()[Number(dev)];
+        if (device) {
+          this.useDevice(device);
+          this.show("console");
+        }
+      }
     });
   }
 
@@ -97,10 +107,14 @@ export class LaptopScreen {
     this.el.classList.remove("closing", "awake");
     this.el.classList.add("waking");
     this.useDevice(device, title);
+    this.renderDeviceTabs();
     this.show("console");
     this.signature = "";
     this.refresh();
-    this.refresher = window.setInterval(() => this.refresh(), 250);
+    this.refresher = window.setInterval(() => {
+      this.refresh();
+      this.labelDeviceTabs();
+    }, 250);
     this.later(() => {
       this.el.classList.remove("waking");
       this.el.classList.add("awake");
@@ -154,10 +168,40 @@ export class LaptopScreen {
     this.viewHome = null;
   }
 
+  /** The routers and switches you can console into from here, one tab each. */
+  private consoleDevices(): IosDevice[] {
+    return this.known.filter((d): d is IosDevice => d instanceof IosDevice && this.views.has(d));
+  }
+
+  private renderDeviceTabs(): void {
+    const devs = this.el.querySelector(".devs")!;
+    devs.replaceChildren(
+      ...this.consoleDevices().map((_, i) => {
+        const b = document.createElement("button");
+        b.dataset.dev = String(i);
+        return b;
+      }),
+    );
+    this.labelDeviceTabs();
+  }
+
+  /** Keeps the tab labels on each box's current hostname, so they follow `hostname R1`. */
+  private labelDeviceTabs(): void {
+    const devices = this.consoleDevices();
+    this.el.querySelectorAll<HTMLElement>("[data-dev]").forEach((b) => {
+      const d = devices[Number(b.dataset.dev)];
+      if (!d) return;
+      const label = `${d.hostname} · ${d.model}`;
+      if (b.textContent !== label) b.textContent = label;
+      b.classList.toggle("on", this.tab === "console" && d === this.device);
+    });
+  }
+
   private show(tab: Tab): void {
     this.tab = tab;
     this.el.querySelectorAll<HTMLElement>("[data-pane]").forEach((p) => (p.hidden = p.dataset.pane !== tab));
     this.el.querySelectorAll<HTMLElement>("[data-tab]").forEach((b) => b.classList.toggle("on", b.dataset.tab === tab));
+    this.labelDeviceTabs();
     this.el.querySelector("footer")!.textContent = tab === "console" ? this.hint : "The map follows the cables as you plug them in. Esc closes the laptop.";
     if (tab === "console" && !this.el.classList.contains("waking")) this.view?.show();
     else this.view?.hide();

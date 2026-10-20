@@ -60,6 +60,8 @@ export function cornerStore({ cabled = true } = {}) {
   const MASK = ip("255.255.255.0")!;
   const g00 = () => r1.config.interfaces["GigabitEthernet0/0"];
   const onSwitch = (p: { peer: { device: unknown } | null }) => p.peer?.device === s1;
+  // A console password only protects anything once `login` makes the console ask for it.
+  const consoleLocked = (d: Router | Switch) => d.config.con.password !== null && d.config.con.login;
   const tasks: Task[] = [
     ...(cabled
       ? []
@@ -70,26 +72,42 @@ export function cornerStore({ cabled = true } = {}) {
             done: () => r1.port("Gi0/0").peer?.device === s1 && onSwitch(register.nic) && onSwitch(office.nic),
           },
         ]),
-    // Identity and security before interfaces, the way you'd set up any new box.
+    // One box at a time, the way a tech works: finish the router, then the switch, then the PCs.
+    // On each, identity and security come before interfaces.
     {
-      id: "names",
-      text: "Name the router R1 and the switch S1 with hostname.",
-      done: () => r1.hostname === "R1" && s1.hostname === "S1",
+      id: "r1-name",
+      text: "Router: name it R1 with hostname.",
+      done: () => r1.hostname === "R1",
     },
     {
-      id: "secrets",
-      text: "Lock privileged mode on both with an enable secret.",
-      done: () => r1.config.enableSecret !== null && s1.config.enableSecret !== null,
+      id: "r1-secret",
+      text: "Router: lock privileged mode with an enable secret.",
+      done: () => r1.config.enableSecret !== null,
     },
     {
-      id: "console",
-      text: "Password-protect the console on both: line console 0, password, login.",
-      done: () => [r1, s1].every((d) => d.config.con.password !== null && d.config.con.login),
+      id: "r1-console",
+      text: "Router: password-protect the console (line console 0, password, login).",
+      done: () => consoleLocked(r1),
     },
     {
       id: "router",
-      text: "On the router, give Gi0/0 the address 192.168.1.1 255.255.255.0 and turn it on with no shutdown.",
+      text: "Router: give Gi0/0 the address 192.168.1.1 255.255.255.0 and turn it on with no shutdown.",
       done: () => g00().ip === R1 && g00().mask === MASK && r1.port("Gi0/0").protocolUp,
+    },
+    {
+      id: "s1-name",
+      text: "Switch: name it S1 with hostname.",
+      done: () => s1.hostname === "S1",
+    },
+    {
+      id: "s1-secret",
+      text: "Switch: lock privileged mode with an enable secret.",
+      done: () => s1.config.enableSecret !== null,
+    },
+    {
+      id: "s1-console",
+      text: "Switch: password-protect the console (line console 0, password, login).",
+      done: () => consoleLocked(s1),
     },
     {
       id: "register",
