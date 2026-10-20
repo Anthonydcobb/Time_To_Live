@@ -5,6 +5,7 @@ import { Device, Port } from "../network";
 import { IosDevice } from "./ios-device";
 import { PcShell } from "../pc/shell";
 import { apipaFor, DhcpClient, type DhcpLease } from "../dhcp";
+import { PcTerminal } from "../pc/terminal";
 
 /** Windows tries DHCP again this long after it fell back to a link-local address. */
 export const DHCP_RETRY_MS = 5 * 60_000;
@@ -27,6 +28,7 @@ export class Pc extends Device {
   readonly rs232: Port;
   readonly stack: IpStack;
   readonly shell: PcShell;
+  readonly terminal: PcTerminal;
   private readonly l3: L3Interface;
 
   constructor(id: string, readonly name = id, mac: Mac = nextMac("0060a8")) {
@@ -64,6 +66,7 @@ export class Pc extends Device {
       transmit: (frame) => this.send(this.nic, frame),
     });
     this.shell = new PcShell(this);
+    this.terminal = new PcTerminal(this);
   }
 
   get hostname(): string {

@@ -22,7 +22,13 @@ export class PcShell {
   execute(line: string): ShellOutput {
     const [cmd, ...args] = line.trim().split(/\s+/);
     if (!cmd) return { lines: [] };
+    if (this.pc.terminal.active) {
+      if (cmd.toLowerCase() === "disconnect") return this.pc.terminal.close();
+      return this.pc.terminal.input(line);
+    }
     switch (cmd.toLowerCase()) {
+      case "terminal":
+        return this.pc.terminal.open();
       case "ipconfig":
         return this.ipconfig(args);
       case "ping":
@@ -45,6 +51,8 @@ export class PcShell {
           "  ipconfig <ip> <mask> [<gw>]    Set a static IP address",
           "  ping [-n count] <ip>           Send ICMP echo requests",
           "  tracert <ip>                   Trace the route to a host",
+          "  terminal                       Open the console cable terminal",
+          "  disconnect                     Close the console terminal",
         ] };
       default:
         return { lines: ["Invalid Command."] };
