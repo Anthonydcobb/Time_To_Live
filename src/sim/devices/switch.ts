@@ -375,6 +375,20 @@ export class Switch extends IosDevice {
     if (!this.vlans.has(id) || name !== undefined) this.vlans.set(id, name ?? defaultVlanName(id));
     this.vlanDat = true;
     this.vlanConfigChanged();
+    this.propagateVtpVlan(id, this.vlans.get(id)!);
+  }
+
+  private propagateVtpVlan(id: number, name: string): void {
+    if (this.config.vtpMode !== "server" || !this.config.vtpDomain) return;
+    for (const port of this.ports) {
+      const peer = port.peer;
+      if (!peer || this.operationalMode(port) !== "trunk" || !(peer.device instanceof Switch)) continue;
+      const other = peer.device;
+      if (other.operationalMode(peer) !== "trunk" || other.config.vtpMode !== "client" || other.config.vtpDomain !== this.config.vtpDomain) continue;
+      other.vlans.set(id, name);
+      other.vlanDat = true;
+      other.vlanConfigChanged();
+    }
   }
 
   /**

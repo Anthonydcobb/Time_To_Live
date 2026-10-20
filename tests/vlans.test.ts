@@ -73,6 +73,14 @@ describe("VTP", () => {
     type(s1, "vtp mode transparent", "vlan 150", "exit", "end");
     expect(type(s1, "show vlan brief").some((line) => line.startsWith("150 "))).toBe(true);
   });
+
+  it("propagates a server VLAN to a same-domain client across a trunk", () => {
+    const { a, b } = twoSwitches("switchport mode trunk", "switchport mode trunk");
+    type(a, "en", "conf t", "vtp domain LAB", "vtp mode server", "end");
+    type(b, "en", "conf t", "vtp domain LAB", "vtp mode client", "end");
+    type(a, "conf t", "vlan 150", "name PHONES", "exit", "end");
+    expect(b.vlans.get(150)).toBe("PHONES");
+  });
 });
 
 describe("VLAN database", () => {
