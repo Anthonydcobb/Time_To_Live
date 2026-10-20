@@ -52,7 +52,7 @@ export interface IpStackOptions {
   clock: () => Clock;
   interfaces: () => L3Interface[];
   /** Routers forward packets that aren't addressed to them. */
-  forwarding: boolean;
+  forwarding: boolean | (() => boolean);
   /**
    * PCs hold a packet while they ARP for the next hop. Routers drop it,
    * which is why the first ping from a router is often a `.`.
@@ -215,7 +215,8 @@ export class IpStack {
       this.deliver(iface, p);
       return;
     }
-    if (!this.opts.forwarding || iface.ip === null) return;
+    const forwarding = typeof this.opts.forwarding === "function" ? this.opts.forwarding() : this.opts.forwarding;
+    if (!forwarding || iface.ip === null) return;
 
     const ttl = p.ttl - 1;
     if (ttl <= 0) {

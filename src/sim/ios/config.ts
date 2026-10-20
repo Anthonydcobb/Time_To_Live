@@ -85,6 +85,7 @@ export interface IosConfig {
   dhcpPools: DhcpPool[];
   /** PVST+ bridge priority overrides, keyed by VLAN ID. */
   spanningTreePriority: Record<number, number>;
+  ipRouting: boolean;
 }
 
 export function defaultLine(): LineConfig {
@@ -110,6 +111,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     dhcpExcluded: [],
     dhcpPools: [],
     spanningTreePriority: {},
+    ipRouting: false,
   };
 }
 

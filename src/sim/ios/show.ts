@@ -62,6 +62,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   if (!isSwitch) out.push("ip cef", "no ipv6 cef", "!", "multilink bundle-name authenticated", "!");
   if (!c.cdpRun) out.push("no cdp run", "!");
   if (isSwitch) {
+    if (c.ipRouting) out.push("ip routing");
     out.push("spanning-tree mode pvst", "spanning-tree extend system-id");
     for (const [vlan, priority] of Object.entries(c.spanningTreePriority).sort(([a], [b]) => Number(a) - Number(b))) out.push(`spanning-tree vlan ${vlan} priority ${priority}`);
     out.push("!", "vlan internal allocation policy ascending", "!");
@@ -268,8 +269,8 @@ function routeTail(r: Route, withPrefix: boolean): string {
   return `${net} is directly connected, ${r.iface!.name}`;
 }
 
-export function showIpRoute(router: Router): string[] {
-  const routes = router.stack.routes();
+export function showIpRoute(device: IosDevice): string[] {
+  const routes = device.stack.routes();
   const defaultRoute = routes.find((r) => r.mask === 0 && r.network === 0);
   const out = [...ROUTE_CODES, ""];
   if (defaultRoute) {
@@ -348,7 +349,7 @@ function vlanTable(sw: Switch): string[] {
   ];
   for (const [id, name] of [...sw.vlans].sort((a, b) => a[0] - b[0])) {
     // Trunks aren't listed under any VLAN. Access ports are, even when they're down.
-    const ports = sw.ports.filter((p) => sw.operationalMode(p) !== "trunk" && sw.switchport(p).accessVlan === id).map((p) => p.shortName);
+    const ports = sw.ports.filter((p) => sw.operationalMode(p) !== "trunk" && sw.config.interfaces[p.name].switchport?.accessVlan === id).map((p) => p.shortName);
     const chunks: string[] = [];
     for (let i = 0; i < ports.length; i += 4) chunks.push(ports.slice(i, i + 4).join(", "));
     const status = UNSUPPORTED_VLANS.has(id) ? "act/unsup" : "active";
@@ -468,6 +469,10 @@ export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
   for (const p of sw.ports) {
     if (only && p.name !== only) continue;
     const sp = sw.switchport(p);
+    if (!sp) {
+      out.push(`Name: ${p.shortName}`, "Switchport: Disabled", "");
+      continue;
+    }
     const op = sw.operationalMode(p);
     out.push(
       `Name: ${p.shortName}`,

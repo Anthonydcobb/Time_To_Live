@@ -200,8 +200,8 @@ const showCommands: Entry[] = [
   ),
   cmd(EXEC, [SHOW, kw("arp", "Arp table")], (c) => c.out.push(...show.showArp(c.device))),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("arp", "IP ARP table")], (c) => c.out.push(...show.showArp(c.device))),
-  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("route", "IP routing table")], (c) => c.out.push(...show.showIpRoute(c.device as Router)), {
-    devices: ["router"],
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("route", "IP routing table")], (c) => c.out.push(...show.showIpRoute(c.device)), {
+    when: (c) => c.device.kind === "router" || (c.device.kind === "switch" && c.device.config.ipRouting),
   }),
   cmd(
     EXEC,
@@ -381,6 +381,12 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [NO, IP, DOMAIN], (c) => {
     c.device.config.ipDomainLookup = false;
   }),
+  cmd(CONFIG, [IP, kw("routing", "Enable IP routing")], (c) => {
+    if (c.device.kind === "switch") c.device.config.ipRouting = true;
+  }, { devices: ["switch"] }),
+  cmd(CONFIG, [NO, IP, kw("routing", "Enable IP routing")], (c) => {
+    if (c.device.kind === "switch") c.device.config.ipRouting = false;
+  }, { devices: ["switch"] }),
   cmd(CONFIG, [IP, kw("domain", "IP DNS Resolver"), kw("lookup", "Enable IP Domain Name System hostname translation")], (c) => {
     c.device.config.ipDomainLookup = true;
   }),
@@ -758,6 +764,10 @@ function setChannel(c: Ctx, group: number, mode: "on" | "active" | "passive" | "
 const ALL_VLANS = Array.from({ length: 4094 }, (_, i) => i + 1);
 
 const switchCommands: Entry[] = [
+  cmd(IF, [NO, SWITCHPORT], (c) => {
+    for (const name of c.console.ifaces) c.device.ifaceConfig(name).switchport = undefined;
+    sw(c).vlanConfigChanged();
+  }, { devices: ["switch"], when: physicalPort }),
   cmd(IF, [SWITCHPORT, SP_MODE, kw("access", "Set trunking mode to ACCESS unconditionally")], (c) => setMode(c, "access"), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [SWITCHPORT, SP_MODE, kw("trunk", "Set trunking mode to TRUNK unconditionally")], (c) => setMode(c, "trunk"), { devices: ["switch"], when: physicalPort }),
   cmd(
