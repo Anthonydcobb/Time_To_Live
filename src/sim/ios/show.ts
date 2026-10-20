@@ -137,6 +137,10 @@ function switchportLines(sp: SwitchportConfig): string[] {
   if (sp.portfast) out.push(" spanning-tree portfast");
   if (sp.bpduGuard) out.push(" spanning-tree bpduguard enable");
   if (sp.channelGroup !== null && sp.channelMode !== null) out.push(` channel-group ${sp.channelGroup} mode ${sp.channelMode}`);
+  if (sp.portSecurity) out.push(" switchport port-security");
+  if (sp.portSecurityMaximum !== 1) out.push(` switchport port-security maximum ${sp.portSecurityMaximum}`);
+  if (sp.portSecurityViolation !== "shutdown") out.push(` switchport port-security violation ${sp.portSecurityViolation}`);
+  if (sp.portSecuritySticky) out.push(" switchport port-security mac-address sticky");
   return out;
 }
 
@@ -564,6 +568,11 @@ export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
       `Trunking Native Mode VLAN: ${vlanLabel(sp.nativeVlan)}`,
       "Administrative Native VLAN tagging: enabled",
       `Voice VLAN: ${sp.voiceVlan === null ? "none" : vlanLabel(sp.voiceVlan)}`,
+      `Port Security: ${sp.portSecurity ? "Enabled" : "Disabled"}`,
+      `Port Security Maximum: ${sp.portSecurityMaximum}`,
+      `Port Security Violation Mode: ${sp.portSecurityViolation}`,
+      `Sticky MAC Addresses: ${sp.portSecuritySticky ? "Enabled" : "Disabled"}`,
+      `Secure MAC Addresses: ${sp.secureMacs.length}`,
       "Administrative private-vlan host-association: none ",
       "Administrative private-vlan mapping: none ",
       "Administrative private-vlan trunk native VLAN: none",

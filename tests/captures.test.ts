@@ -216,9 +216,9 @@ describe("captured from real IOS", () => {
     type(s1, "", "en", "conf t", "int g0/1");
     const help = s1.console.help("switchport ").lines;
     const i = help.findIndex((l) => l.startsWith("  nonegotiate"));
-    // Our list is narrower than IOL's (no port-security), so this exactly fits in 79 columns.
-    expect(help[i]).toBe("  nonegotiate  Device will not engage in negotiation protocol on this interface");
-    expect(help[i].length).toBe(79);
+    // The added port-security keywords widen this help table and change the wrap point.
+    expect(help[i]).toBe("  nonegotiate    Device will not engage in negotiation protocol on this");
+    expect(help[i].length).toBe(71);
     expect(s1.console.help("switchport mode dynamic ").lines).toEqual([
       "  auto       Set trunking mode dynamic negotiation parameter to AUTO",
       "  desirable  Set trunking mode dynamic negotiation parameter to DESIRABLE",

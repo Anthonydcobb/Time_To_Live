@@ -538,6 +538,18 @@ export class Switch extends IosDevice {
     if (vlan === null) return;
     const state = this.stpState(port, vlan);
     if (state === "disabled" || state === "listening") return;
+    const sp = this.switchport(port);
+    if (sp.portSecurity && frame.src !== BROADCAST_MAC) {
+      if (!sp.secureMacs.includes(frame.src)) {
+        if (sp.secureMacs.length >= sp.portSecurityMaximum) {
+          this.emit(`%PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address ${frame.src} on port ${port.shortName}.`);
+          if (sp.portSecurityViolation === "shutdown") this.setShutdown(port.name, true);
+          if (sp.portSecurityViolation !== "protect") return;
+        } else {
+          sp.secureMacs.push(frame.src);
+        }
+      }
+    }
     if (frame.src !== BROADCAST_MAC) this.macTable.set(`${vlan}:${frame.src}`, { mac: frame.src, vlan, port, learnedAt: this.clock.now });
     if (state === "learning") return;
 

@@ -32,11 +32,16 @@ export interface SwitchportConfig {
   bpduGuard: boolean;
   channelGroup: number | null;
   channelMode: ChannelGroupMode | null;
+  portSecurity: boolean;
+  portSecurityMaximum: number;
+  portSecurityViolation: "shutdown" | "restrict" | "protect";
+  portSecuritySticky: boolean;
+  secureMacs: string[];
 }
 
 export function defaultSwitchport(): SwitchportConfig {
   // A Catalyst 2960 port is dynamic auto out of the box.
-  return { mode: "dynamic auto", accessVlan: 1, voiceVlan: null, nativeVlan: 1, allowed: null, nonegotiate: false, portfast: false, bpduGuard: false, channelGroup: null, channelMode: null };
+  return { mode: "dynamic auto", accessVlan: 1, voiceVlan: null, nativeVlan: 1, allowed: null, nonegotiate: false, portfast: false, bpduGuard: false, channelGroup: null, channelMode: null, portSecurity: false, portSecurityMaximum: 1, portSecurityViolation: "shutdown", portSecuritySticky: false, secureMacs: [] };
 }
 
 export interface InterfaceConfig {

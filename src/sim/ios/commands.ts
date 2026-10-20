@@ -1006,6 +1006,13 @@ const switchCommands: Entry[] = [
       sp.nonegotiate = false;
     }),
   { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, kw("port-security", "Control port security features")], (c) => eachSwitchport(c, (sp) => { sp.portSecurity = true; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, SWITCHPORT, kw("port-security", "Control port security features")], (c) => eachSwitchport(c, (sp) => { sp.portSecurity = false; sp.secureMacs = []; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, kw("port-security", "Control port security features"), kw("maximum", "Max secure addresses"), numArg(1, 1024, "Maximum secure addresses")], (c, [max]) => eachSwitchport(c, (sp) => { sp.portSecurityMaximum = max as number; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, kw("port-security", "Control port security features"), kw("violation", "Security violation mode"), kw("shutdown", "Shutdown the port" )], (c) => eachSwitchport(c, (sp) => { sp.portSecurityViolation = "shutdown"; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, kw("port-security", "Control port security features"), kw("violation", "Security violation mode"), kw("restrict", "Drop and count violating traffic" )], (c) => eachSwitchport(c, (sp) => { sp.portSecurityViolation = "restrict"; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, kw("port-security", "Control port security features"), kw("violation", "Security violation mode"), kw("protect", "Drop violating traffic" )], (c) => eachSwitchport(c, (sp) => { sp.portSecurityViolation = "protect"; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [SWITCHPORT, kw("port-security", "Control port security features"), kw("mac-address", "Secure MAC address"), kw("sticky", "Learn secure addresses dynamically")], (c) => eachSwitchport(c, (sp) => { sp.portSecuritySticky = true; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [STP, kw("portfast", "Enable edge port behavior")], (c) => eachSwitchport(c, (sp) => { sp.portfast = true; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [NO, STP, kw("portfast", "Enable edge port behavior")], (c) => eachSwitchport(c, (sp) => { sp.portfast = false; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [STP, kw("bpduguard", "Enable BPDU Guard"), kw("enable", "Enable BPDU Guard")], (c) => eachSwitchport(c, (sp) => { sp.bpduGuard = true; }), { devices: ["switch"], when: physicalPort }),

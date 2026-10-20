@@ -66,6 +66,21 @@ describe("interface ranges", () => {
   });
 });
 
+describe("port security", () => {
+  it("enforces a secure MAC limit and shuts down on violation", () => {
+    const { net, s1, pcs } = oneSwitch();
+    const pc1 = pcs[0];
+    type(s1, "interface fa0/1", "switchport port-security", "switchport port-security maximum 1", "switchport port-security mac-address sticky", "end");
+    net.clock.advance(35_000);
+    const frame = { src: pc1.nic.mac, dst: "ffffffffffff", payload: { kind: "arp" as const, op: "request" as const, senderMac: pc1.nic.mac, senderIp: ip("10.0.0.1")!, targetMac: "000000000000", targetIp: ip("10.0.0.2")! } };
+    s1.receive(s1.port("Fa0/1"), frame);
+    expect(s1.switchport(s1.port("Fa0/1")).secureMacs).toContain(pc1.nic.mac);
+    s1.receive(s1.port("Fa0/1"), { ...frame, src: "001122334455", payload: { ...frame.payload, senderMac: "001122334455" } });
+    expect(s1.port("Fa0/1").adminDown).toBe(true);
+    expect(type(s1, "show interfaces fa0/1 switchport")).toContain("Port Security: Enabled");
+  });
+});
+
 describe("voice VLANs", () => {
   it("creates and reports a voice VLAN on an access port", () => {
     const { s1 } = oneSwitch();
