@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { Network } from "../src/sim/network";
 import { Switch } from "../src/sim/devices/switch";
+import { Pc } from "../src/sim/devices/pc";
 import { type } from "./helpers";
 
 function triangle() {
@@ -17,6 +18,28 @@ function triangle() {
 }
 
 describe("spanning tree", () => {
+  it("lets a PortFast access port forward as soon as the link is up", () => {
+    const net = new Network();
+    const sw = net.add(new Switch("S1"));
+    const pc = net.add(new Pc("PC"));
+    type(sw, "", "en", "conf t", "int gi0/1", "switchport mode access", "spanning-tree portfast", "end");
+    net.connect(sw.port("Gi0/1"), pc.nic);
+    net.clock.advance(3_000);
+    expect(sw.switchport(sw.port("Gi0/1")).portfast).toBe(true);
+    expect(sw.stpState(sw.port("Gi0/1"), 1)).toBe("forwarding");
+  });
+
+  it("shuts a PortFast BPDU Guard port when a BPDU arrives", () => {
+    const net = new Network();
+    const edge = net.add(new Switch("EDGE"));
+    const upstream = net.add(new Switch("UPSTREAM"));
+    type(edge, "", "en", "conf t", "int gi0/1", "switchport mode access", "spanning-tree portfast", "spanning-tree bpduguard enable", "end");
+    net.connect(edge.port("Gi0/1"), upstream.port("Gi0/1"));
+    net.clock.advance(6_000);
+    expect(edge.port("Gi0/1").adminDown).toBe(true);
+    expect(type(edge, "show running-config").join("\n")).toContain(" spanning-tree bpduguard enable");
+  });
+
   it("elects a root and blocks one side of a switch loop", () => {
     const { a, b, c } = triangle();
     expect(a.stpRole(a.port("Gi0/1"), 1)).toBe("designated");

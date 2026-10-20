@@ -820,6 +820,10 @@ const switchCommands: Entry[] = [
       sp.nonegotiate = false;
     }),
   { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [STP, kw("portfast", "Enable edge port behavior")], (c) => eachSwitchport(c, (sp) => { sp.portfast = true; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, STP, kw("portfast", "Enable edge port behavior")], (c) => eachSwitchport(c, (sp) => { sp.portfast = false; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [STP, kw("bpduguard", "Enable BPDU Guard"), kw("enable", "Enable BPDU Guard")], (c) => eachSwitchport(c, (sp) => { sp.bpduGuard = true; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, STP, kw("bpduguard", "Enable BPDU Guard"), kw("enable", "Enable BPDU Guard")], (c) => eachSwitchport(c, (sp) => { sp.bpduGuard = false; }), { devices: ["switch"], when: physicalPort }),
 
   cmd(CONFIG, [VLAN_KW, vlanListArg("ISL VLAN IDs 1-4094")], (c, [list]) => {
     c.console.vlanIds = list as number[];

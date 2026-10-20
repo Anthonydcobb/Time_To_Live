@@ -216,6 +216,7 @@ export class Switch extends IosDevice {
     const since = timers?.get(vlan);
     if (since === undefined) return "disabled";
     if (this.stpRole(port, vlan) === "alternate") return "blocking";
+    if (this.switchport(port).portfast) return "forwarding";
     const elapsed = this.clock.now - since;
     if (elapsed < STP_LISTENING_MS) return "listening";
     if (elapsed < STP_LISTENING_MS + STP_LEARNING_MS) return "learning";
@@ -444,7 +445,12 @@ export class Switch extends IosDevice {
     this.forward(untagged, port, vlan);
   }
 
-  private handleBpdu(_port: Port, frame: Frame): boolean {
+  private handleBpdu(port: Port, frame: Frame): boolean {
+    const sp = this.switchport(port);
+    if (frame.payload.kind === "bpdu" && sp.portfast && sp.bpduGuard && !port.adminDown) {
+      this.emit(`%SPANTREE-2-BLOCK_BPDUGUARD: Received BPDU on port ${port.shortName} with BPDU Guard enabled. Disabling port.`);
+      this.setShutdown(port.name, true);
+    }
     return frame.payload.kind === "bpdu";
   }
 

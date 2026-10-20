@@ -117,6 +117,8 @@ function switchportLines(sp: SwitchportConfig): string[] {
   if (sp.allowed !== null) out.push(` switchport trunk allowed vlan ${sp.allowed.length ? formatVlanList(sp.allowed) : "none"}`);
   if (sp.mode !== "dynamic auto") out.push(` switchport mode ${sp.mode}`);
   if (sp.nonegotiate) out.push(" switchport nonegotiate");
+  if (sp.portfast) out.push(" spanning-tree portfast");
+  if (sp.bpduGuard) out.push(" spanning-tree bpduguard enable");
   return out;
 }
 

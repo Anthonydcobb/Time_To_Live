@@ -24,11 +24,13 @@ export interface SwitchportConfig {
   /** VLANs allowed on a trunk, or null for all of them. */
   allowed: number[] | null;
   nonegotiate: boolean;
+  portfast: boolean;
+  bpduGuard: boolean;
 }
 
 export function defaultSwitchport(): SwitchportConfig {
   // A Catalyst 2960 port is dynamic auto out of the box.
-  return { mode: "dynamic auto", accessVlan: 1, nativeVlan: 1, allowed: null, nonegotiate: false };
+  return { mode: "dynamic auto", accessVlan: 1, nativeVlan: 1, allowed: null, nonegotiate: false, portfast: false, bpduGuard: false };
 }
 
 export interface InterfaceConfig {
