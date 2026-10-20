@@ -39,11 +39,12 @@ export interface SwitchportConfig {
   secureMacs: string[];
   dhcpTrust: boolean;
   dhcpRateLimit: number | null;
+  arpInspectionTrust: boolean;
 }
 
 export function defaultSwitchport(): SwitchportConfig {
   // A Catalyst 2960 port is dynamic auto out of the box.
-  return { mode: "dynamic auto", accessVlan: 1, voiceVlan: null, nativeVlan: 1, allowed: null, nonegotiate: false, portfast: false, bpduGuard: false, channelGroup: null, channelMode: null, portSecurity: false, portSecurityMaximum: 1, portSecurityViolation: "shutdown", portSecuritySticky: false, secureMacs: [], dhcpTrust: false, dhcpRateLimit: null };
+  return { mode: "dynamic auto", accessVlan: 1, voiceVlan: null, nativeVlan: 1, allowed: null, nonegotiate: false, portfast: false, bpduGuard: false, channelGroup: null, channelMode: null, portSecurity: false, portSecurityMaximum: 1, portSecurityViolation: "shutdown", portSecuritySticky: false, secureMacs: [], dhcpTrust: false, dhcpRateLimit: null, arpInspectionTrust: false };
 }
 
 export interface InterfaceConfig {
@@ -134,6 +135,7 @@ export interface IosConfig {
   dhcpSnooping: boolean;
   dhcpSnoopingVlans: number[];
   dhcpSnoopingBindings: { mac: string; ip: Ipv4; vlan: number; port: string; learnedAt: number }[];
+  arpInspectionVlans: number[];
 }
 
 export function defaultLine(): LineConfig {
@@ -171,6 +173,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     dhcpSnooping: false,
     dhcpSnoopingVlans: [],
     dhcpSnoopingBindings: [],
+    arpInspectionVlans: [],
   };
 }
 

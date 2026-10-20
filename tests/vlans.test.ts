@@ -111,6 +111,22 @@ describe("DHCP snooping", () => {
   });
 });
 
+describe("Dynamic ARP Inspection", () => {
+  it("permits a bound ARP source and blocks spoofed IP/MAC pairs", () => {
+    const { net, s1, pcs } = oneSwitch();
+    const pc1 = pcs[0];
+    type(s1, "ip dhcp snooping", "ip dhcp snooping vlan 1", "ip arp inspection vlan 1", "end");
+    s1.config.dhcpSnoopingBindings.push({ mac: pc1.nic.mac, ip: ip("10.0.0.1")!, vlan: 1, port: "Fa0/1", learnedAt: 0 });
+    net.clock.advance(35_000);
+    const logs = captureLogs(s1);
+    const valid = { src: pc1.nic.mac, dst: "ffffffffffff", payload: { kind: "arp" as const, op: "request" as const, senderMac: pc1.nic.mac, senderIp: ip("10.0.0.1")!, targetMac: "000000000000", targetIp: ip("10.0.0.2")! } };
+    s1.receive(s1.port("Fa0/1"), valid);
+    s1.receive(s1.port("Fa0/1"), { ...valid, payload: { ...valid.payload, senderIp: ip("10.0.0.99")! } });
+    expect(logs.some((line) => line.includes("SW_DAI-4-DHCP_SNOOPING_DENY"))).toBe(true);
+    expect(type(s1, "show ip arp inspection").join("\n")).toContain("Inspection VLANs: 1");
+  });
+});
+
 describe("voice VLANs", () => {
   it("creates and reports a voice VLAN on an access port", () => {
     const { s1 } = oneSwitch();

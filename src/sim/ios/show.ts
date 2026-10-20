@@ -68,6 +68,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     if (c.ipRouting) out.push("ip routing");
     if (c.dhcpSnooping) out.push("ip dhcp snooping");
     if (c.dhcpSnoopingVlans.length) out.push(`ip dhcp snooping vlan ${formatVlanList(c.dhcpSnoopingVlans)}`);
+    if (c.arpInspectionVlans.length) out.push(`ip arp inspection vlan ${formatVlanList(c.arpInspectionVlans)}`);
     out.push("spanning-tree mode pvst", "spanning-tree extend system-id");
     for (const [vlan, priority] of Object.entries(c.spanningTreePriority).sort(([a], [b]) => Number(a) - Number(b))) out.push(`spanning-tree vlan ${vlan} priority ${priority}`);
     out.push("!", "vlan internal allocation policy ascending", "!");
@@ -145,6 +146,7 @@ function switchportLines(sp: SwitchportConfig): string[] {
   if (sp.portSecuritySticky) out.push(" switchport port-security mac-address sticky");
   if (sp.dhcpTrust) out.push(" ip dhcp snooping trust");
   if (sp.dhcpRateLimit !== null) out.push(` ip dhcp snooping limit rate ${sp.dhcpRateLimit}`);
+  if (sp.arpInspectionTrust) out.push(" ip arp inspection trust");
   return out;
 }
 
@@ -579,6 +581,7 @@ export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
       `Secure MAC Addresses: ${sp.secureMacs.length}`,
       `DHCP Snooping Trust: ${sp.dhcpTrust ? "trusted" : "untrusted"}`,
       `DHCP Snooping Rate Limit: ${sp.dhcpRateLimit ?? "none"}`,
+      `ARP Inspection Trust: ${sp.arpInspectionTrust ? "trusted" : "untrusted"}`,
       "Administrative private-vlan host-association: none ",
       "Administrative private-vlan mapping: none ",
       "Administrative private-vlan trunk native VLAN: none",
@@ -624,6 +627,19 @@ export function showIpDhcpSnoopingBinding(sw: Switch): string[] {
   for (const b of sw.config.dhcpSnoopingBindings) {
     out.push(`${formatMacCisco(b.mac).padEnd(20)}${formatIpv4(b.ip).padEnd(17)}${"-".padEnd(12)}${"dhcp-snooping".padEnd(15)}${String(b.vlan).padEnd(6)}${b.port}`);
   }
+  return out;
+}
+
+export function showIpArpInspection(sw: Switch): string[] {
+  const out = [
+    `Source MAC validation: ${sw.config.arpInspectionVlans.length ? "enabled" : "disabled"}`,
+    `Destination MAC validation: ${sw.config.arpInspectionVlans.length ? "enabled" : "disabled"}`,
+    `IP address validation: ${sw.config.arpInspectionVlans.length ? "enabled" : "disabled"}`,
+    `Inspection VLANs: ${sw.config.arpInspectionVlans.length ? formatVlanList(sw.config.arpInspectionVlans) : "none"}`,
+    "",
+    "Interface                  Trusted",
+  ];
+  for (const p of sw.ports) out.push(`${p.shortName.padEnd(27)}${sw.switchport(p).arpInspectionTrust ? "yes" : "no"}`);
   return out;
 }
 

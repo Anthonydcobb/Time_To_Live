@@ -557,6 +557,14 @@ export class Switch extends IosDevice {
         }
       }
     }
+    const arp = frame.payload.kind === "arp" ? frame.payload : undefined;
+    if (arp && this.config.arpInspectionVlans.includes(vlan) && !sp.arpInspectionTrust) {
+      const valid = this.config.dhcpSnoopingBindings.some((b) => b.vlan === vlan && b.port === port.shortName && b.mac === arp.senderMac && b.ip === arp.senderIp);
+      if (!valid) {
+        this.emit(`%SW_DAI-4-DHCP_SNOOPING_DENY: ARP packet denied on ${port.shortName}; source MAC ${arp.senderMac} and IP ${arp.senderIp} do not match a DHCP snooping binding.`);
+        return;
+      }
+    }
     if (sp.portSecurity && frame.src !== BROADCAST_MAC) {
       if (!sp.secureMacs.includes(frame.src)) {
         if (sp.secureMacs.length >= sp.portSecurityMaximum) {
