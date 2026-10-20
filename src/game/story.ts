@@ -3,7 +3,10 @@ import { parseIpv4 as ip } from "../sim/addr";
 import { Pc } from "../sim/devices/pc";
 import { BASICS, Grimoire } from "../sim/grimoire";
 import { cornerStore } from "../sim/scenarios/corner-store";
+import { laundromat } from "../sim/scenarios/laundromat";
+import type { Scenario } from "../sim/scenarios/types";
 import type { RoomId } from "./rooms";
+import type { SiteId } from "./town-map";
 import type { Line, Ui } from "./ui";
 
 /** Scene events: "goto" (room), "flicker", "haunt". */
@@ -12,7 +15,10 @@ export const events = new Phaser.Events.EventEmitter();
 const W = "WALTER (walkie)";
 const G = "GARY (through the door)";
 const F = "MRS. FINCH";
+const GUS = "GUS";
 const PC_HINT = "On a PC: ipconfig 192.168.1.10 255.255.255.0 192.168.1.1   ·   Esc closes the laptop";
+const DHCP_HINT = "ipconfig /renew asks the router for a lease   ·   ipconfig shows what you got   ·   Esc closes";
+const PRINTER_HINT = "Fixed address: ipconfig 192.168.20.5 255.255.255.0 192.168.20.1   ·   Esc closes";
 const IOS_HINT = "? lists commands   ·   Tab completes   ·   Esc closes the laptop";
 
 const GARY_TIPS: Line[][] = [
@@ -24,34 +30,59 @@ const GARY_TIPS: Line[][] = [
 ];
 
 /**
- * The corner store slice: who says what, and when. It owns the job's
- * network and reads it to decide what happens next.
+ * The slice: who says what, and when. It owns each job's network and reads it to decide
+ * what happens next. Job 1 is the corner store; job 2, the laundromat, starts from the board.
  */
 export class Story {
-  readonly job = cornerStore({ cabled: false });
+  readonly store = cornerStore({ cabled: false });
+  /** Job 2, once you've taken it off the board. */
+  private wash: ReturnType<typeof laundromat> | null = null;
   /** Plugged into S1 Fa0/24 when the job is done. The cable goes into the wall. */
   readonly phantom = new Pc("PHANTOM", "?", "666666666666");
   room: RoomId = "office";
   private readonly flags = new Set<string>();
+  /** Everything you've learned carries from job to job. */
+  private readonly grimoire: Grimoire;
   private garyTip = 0;
   private finchLine = 0;
+  private gusLine = 0;
   private told = new Set<string>();
 
   constructor(private readonly ui: Ui) {
-    this.job.net.add(this.phantom);
-    const grimoire = new Grimoire([...BASICS, ...this.job.incantations]);
-    const { r1, s1, register, office } = this.job;
-    r1.console.grimoire = grimoire;
-    s1.console.grimoire = grimoire;
-    // Story Mode: the setup dialog gets angrier each time you say yes.
-    r1.console.story = true;
-    s1.console.story = true;
-    ui.attach(this.job.net, [r1, s1, register, office], this.job.layout);
+    this.store.net.add(this.phantom);
+    this.grimoire = new Grimoire([...BASICS, ...this.store.incantations]);
+    const { r1, s1, register, office } = this.store;
+    this.wire([r1, s1]);
+    ui.attach(this.store.net, [r1, s1, register, office], this.store.layout);
+  }
+
+  /** The job you're on now: its network, tasks and work order. */
+  get job(): Scenario {
+    return this.wash ?? this.store;
+  }
+
+  /** Gives consoles the shared grimoire and Story Mode (the setup dialog gets angrier each time you say yes). */
+  private wire(devices: { console: { grimoire: Grimoire | null; story: boolean } }[]): void {
+    for (const d of devices) {
+      d.console.grimoire = this.grimoire;
+      d.console.story = true;
+    }
+  }
+
+  /** Takes work order #0002: builds the laundromat's network and points the laptop at it. */
+  takeLaundromat(): void {
+    if (this.wash) return;
+    const job = laundromat();
+    for (const i of job.incantations) this.grimoire.teach(i);
+    this.wire([job.r1, job.s1]);
+    this.ui.attach(job.net, [job.r1, job.s1, job.kiosk, job.office, job.printer], job.layout);
+    this.wash = job;
+    this.flags.add("job2");
   }
 
   /** Whether the work order line with this id is done right now. */
   private done(id: string): boolean {
-    return !!this.job.tasks.find((t) => t.id === id)?.done?.();
+    return !!this.store.tasks.find((t) => t.id === id)?.done?.();
   }
 
   has(flag: string): boolean {
@@ -81,10 +112,29 @@ export class Story {
           { who: W, text: "...You didn't see anything weird out there, did you? No? Good. Good." },
           { who: G, text: "You did really well today. I'm proud of you." },
           { who: W, text: "DON'T LISTEN TO HIM. Over." },
+          { who: W, text: "Oh, and kid? Fresh ticket on the job board. The laundromat out on Route 9. Gus has been calling since... well. Since. Over." },
+        ],
+      );
+    }
+    if (room === "laundromat" && !this.flags.has("arrived2")) {
+      this.flags.add("arrived2");
+      this.ui.say([
+        { who: W, text: "Spin Cycle Eternal! Open twenty-four hours a day, every day, fifty-one years running. Gus has never closed it. Gus has never LEFT it." },
+        { who: W, text: "Good news: it's all cabled. Bad news: the PCs want an address *handed* to them, automatic-like. That's DHCP. The router does the handing." },
+        { who: W, text: "Rack's in Gus's back office, on the left. And kid? Don't stare into the dryers. They stare back, and it's awkward for everybody. Over." },
+      ]);
+    }
+    if (room === "office" && this.flags.has("done2") && !this.flags.has("home2")) {
+      this.flags.add("home2");
+      this.ui.say(
+        [
+          { who: W, text: "Two for two! You're a natural, kid. A natural what, I haven't decided." },
+          { who: W, text: "Bob's going to be thrilled. Bob is going to be... somewhere. Over." },
+          { who: G, text: "Did Dryer 4 get an address? I hope it did. Everybody should have somewhere to be." },
         ],
         () =>
           this.ui.showCard(
-            `<p class="big">End of the corner store slice</p><p>Thanks for playing the grey box. Press E to keep walking around.</p>`,
+            `<p class="big">End of the laundromat slice</p><p>Thanks for playing the grey box. Press E to keep walking around.</p>`,
           ),
       );
     }
@@ -92,8 +142,11 @@ export class Story {
 
   /** Press E on a prop. */
   interact(id: string): void {
-    const { r1, s1, register, office } = this.job;
+    const { r1, s1, register, office } = this.store;
     const ui = this.ui;
+    // Close-ups that change after a look (like Dryer 4) only play their first look once.
+    this.flags.add(`seen:${this.room}:${id}`);
+    if (this.room === "laundromat") return this.interactLaundromat(id);
     switch (`${this.room}:${id}`) {
       // ---- home base ----
       case "office:walkie":
@@ -112,6 +165,20 @@ export class Story {
         } else ui.say([{ text: "The charger is empty. The walkie is on your belt." }]);
         return;
       case "office:board":
+        if (this.flags.has("home") && !this.flags.has("job2")) {
+          ui.say(
+            [
+              { text: "WORK ORDER #0002. Spin Cycle Eternal, the 24-hour laundromat on Route 9. Night manager: Gus." },
+              { text: "Everything is cabled. The PCs are set to get an address automatically, but nothing on the router is set up to give them one." },
+              { text: "Someone has added in pen: Dryer 4 is not a customer." },
+            ],
+            () => {
+              this.takeLaundromat();
+              events.emit("job");
+            },
+          );
+          return;
+        }
         if (this.flags.has("job")) {
           ui.say([{ text: "The board is empty except for a pin with a bit of paper still under it." }]);
           return;
@@ -160,7 +227,11 @@ export class Story {
       case "office:exit":
         if (!this.flags.has("walkie")) ui.say([{ text: "You should grab the walkie-talkie off the charger first." }]);
         else if (!this.flags.has("job")) ui.say([{ who: W, text: "Whoa whoa whoa. No ticket, no trip. Job board, kid. Over." }]);
-        else ui.openTownMap("bobs", { quikstop: () => this.travel("shop") }, { haunted: this.flags.has("haunt") });
+        else {
+          const go: Partial<Record<SiteId, () => void>> = { quikstop: () => this.travel("shop") };
+          if (this.flags.has("job2")) go.laundromat = () => this.travel("laundromat");
+          ui.openTownMap("bobs", go, { haunted: this.flags.has("haunt") });
+        }
         return;
 
       // ---- the shop ----
@@ -218,6 +289,110 @@ export class Story {
     }
   }
 
+  /** Press E on something in the laundromat. */
+  private interactLaundromat(id: string): void {
+    const job = this.wash;
+    const ui = this.ui;
+    if (!job) return;
+    const { r1, s1, kiosk, office, printer } = job;
+    switch (id) {
+      case "gus":
+      case "counter":
+        return this.talkToGus();
+      case "rack":
+        ui.choose({ text: "Gus's rack. Everything's cabled already, neat as a pin. The labels are typewritten, from 1974." }, [
+          { label: `Console into R1 (${r1.model})`, run: () => ui.openLaptop(r1, `R1 · ${r1.model} · console`, IOS_HINT) },
+          { label: `Console into S1 (${s1.model})`, run: () => ui.openLaptop(s1, `S1 · ${s1.model} · console`, IOS_HINT) },
+          { label: "Check the cables", run: () => ui.openPanel([r1, s1, kiosk, office, printer]) },
+          { label: "Never mind", run: () => {} },
+        ]);
+        return;
+      case "kiosk":
+        ui.openLaptop(kiosk, "PC0 · Change kiosk", DHCP_HINT);
+        return;
+      case "office":
+        ui.openLaptop(office, "PC1 · Gus's office", DHCP_HINT);
+        return;
+      case "printer":
+        ui.openLaptop(printer, "PRN · Printer", PRINTER_HINT);
+        return;
+      case "desk":
+        ui.say([{ text: "Gus's desk. A coffee mug that says WORLD'S OKAYEST MANAGER, still steaming. The coffee is from 1974 too." }]);
+        return;
+      case "logbook":
+        ui.say([
+          { text: "GUS'S SHIFT LOG. The first page: 10/14/1974, Gus on shift. All machines spinning." },
+          { text: "Every page after it says the same thing, in the same handwriting, with the same pen." },
+          { text: "The newest entry is in capitals: DRYER 4 WON'T STOP ASKING FOR AN ADDRESS. ~0.0.0.0~" },
+          ...(this.flags.has("walkie")
+            ? [{ who: W, text: "Zero-dot-zero-dot-zero-dot-zero. That's what a machine calls itself before anybody's given it a name. Weird thing for a dryer to say. Over." }]
+            : []),
+        ]);
+        return;
+      case "archive":
+        ui.say([{ text: "Boxes of old logbooks, labeled by year. 1974. 1974. 1974. 1974. 1974." }]);
+        return;
+      case "dryer4":
+        if (this.flags.has("seen-dryer4")) {
+          ui.say([{ text: "Dryer 4 is still turning. Fog on the glass, clothes going round. *Nothing else.* You're nearly sure." }]);
+          return;
+        }
+        this.flags.add("seen-dryer4");
+        ui.say([
+          { text: "DRYER 4. A sign taped to it says OUT OF ORDER, in handwriting from 1974. It's running anyway." },
+          { text: "There was ~something against the glass~. Now there's only fog, and somebody's clothes going round." },
+        ]);
+        return;
+      case "dryers":
+        ui.say([{ text: "Industrial dryers, every one of them running, every one of them empty. The coin slots were taped over a long time ago." }]);
+        return;
+      case "washers":
+        ui.say([{ text: "Top-loaders, back to back. One is full of grey water that isn't moving, even though the drum is." }]);
+        return;
+      case "lostfound":
+        ui.say([{ text: "LOST & FOUND. Socks, cracked glasses, two watches stopped at 3:14, a phone handset. And Polaroids of this room, ~taken from inside the dryers~." }]);
+        return;
+      case "change":
+        ui.say([{ text: "CHANGE MACHINE. A light says OUT OF CHANGE. It gives you a quarter anyway. The quarter is warm, and dated 1974." }]);
+        return;
+      case "soap":
+        ui.say([{ text: "Detergent, at 1974 prices. Every box rattles like it's full of something smaller than soap." }]);
+        return;
+      case "toilet":
+        ui.say([{ text: "The restroom. A sign on the door: CUSTOMERS ONLY. The guest book inside has one name in it, over and over. Gus." }]);
+        return;
+      case "exit":
+        if (this.flags.has("done2")) ui.openTownMap("laundromat", { bobs: () => this.travel("office"), quikstop: () => this.travel("shop") }, { haunted: true });
+        else ui.say([{ who: W, text: "Not yet, kid. Gus has been waiting fifty-one years for somebody to finish a job. Don't make it fifty-two. Over." }]);
+        return;
+    }
+  }
+
+  private talkToGus(): void {
+    const ui = this.ui;
+    if (!this.flags.has("gus")) {
+      this.flags.add("gus");
+      ui.say([
+        { who: GUS, text: "You're from Bob's. Good. Good. I called it in on... what's today?" },
+        { who: GUS, text: "Doesn't matter. The computers keep asking for an address and nobody answers them. I know how they feel." },
+        { who: GUS, text: "The kiosk out front, the PC in my office, and the printer. The printer likes its own spot, point five. The others take whatever they're given." },
+        { who: GUS, text: "Don't mind the dryers. They run on their own. They always have." },
+      ]);
+      return;
+    }
+    if (this.flags.has("haunt2")) {
+      ui.say([{ who: GUS, text: "Everybody's got an address now. Even the ones that oughtn't. Thank you, kid. Shift's not over, though. It never is." }]);
+      return;
+    }
+    const lines = [
+      "Fifty-one years and I've never seen the end of a shift. Funny how that is.",
+      "Coffee's in the back if you want it. It's still hot. It's always still hot.",
+      "Dryer 4 asks me for an address every night. I tell it I haven't got one to give.",
+      "Gave up on the radio in '74. It only ever plays the spin cycle.",
+    ];
+    ui.say([{ who: GUS, text: lines[this.gusLine++ % lines.length] }]);
+  }
+
   private talkToFinch(): void {
     if (!this.flags.has("finch")) {
       this.flags.add("finch");
@@ -243,9 +418,11 @@ export class Story {
   /** Q: Walter's hint for wherever you are. */
   callWalter(): void {
     if (!this.flags.has("walkie")) return;
+    if (this.wash) return this.ui.say([{ who: W, text: this.laundromatHint(this.wash) }]);
     const done = (id: string) => this.done(id);
     let text: string;
-    if (!this.flags.has("job")) text = "The JOB BOARD, kid. The big cork thing on the wall. Over.";
+    if (this.flags.has("home")) text = "Fresh ticket on the job board, kid. Over.";
+    else if (!this.flags.has("job")) text = "The JOB BOARD, kid. The big cork thing on the wall. Over.";
     else if (this.room === "office" && !this.flags.has("done")) text = "Front door, kid. The store won't network itself. It's tried. Over.";
     else if (this.flags.has("done")) text = "You're done! Go home. Don't look at the cooler on the way out. Over.";
     else if (!done("cable")) text = "Cables first! Back of the rack. Router Gi zero slash zero to the switch, and both PC cables into the switch. Amber light means it's thinking about it. Over.";
@@ -265,8 +442,22 @@ export class Story {
     this.ui.say([{ who: W, text }]);
   }
 
+  /** Walter's hint for job 2, by the first task that isn't done. */
+  private laundromatHint(job: Scenario): string {
+    const ok = (i: number) => !!job.tasks[i].done?.();
+    if (this.flags.has("done2")) return "You're done! Come on home. And don't take any socks from the lost and found. Over.";
+    if (this.room !== "laundromat") return "Route 9, kid. The van's out front. Over.";
+    if (!ok(0)) return "Router first. interface gi0/0, ip address 192.168.20.1 255.255.255.0, no shutdown. Same as last time, new numbers. Over.";
+    if (!ok(1)) return "Now fence off the low addresses so DHCP doesn't hand out the printer's spot. ip dhcp excluded-address 192.168.20.1 192.168.20.20, in global config. Over.";
+    if (!ok(2)) return "Now the pool. ip dhcp pool, any name you like, then network 192.168.20.0 255.255.255.0 and default-router 192.168.20.1. That's the router promising to answer. Over.";
+    if (!ok(3)) return "The printer doesn't take handouts. On the printer: ipconfig 192.168.20.5 255.255.255.0 192.168.20.1. A fixed address, like a house. Over.";
+    if (!ok(4)) return "The PCs asked once, nobody answered, and they sulked. On each one: ipconfig /renew. Over.";
+    return "Last thing: ping the printer, 192.168.20.5, from both PCs. Over.";
+  }
+
   /** Watches the network a few times a second and reacts as tasks get done. */
   tick(): void {
+    if (this.wash) return this.tickLaundromat(this.wash);
     const done = (id: string) => this.done(id);
     const once = (id: string, lines: Line[]) => {
       if (this.told.has(id) || !done(id)) return;
@@ -280,13 +471,13 @@ export class Story {
     once("router", [{ who: W, text: "Ooh, a green light! I felt that one in my fillings. Now the PCs. Over." }]);
     if (done("register") && done("office")) once("office", [{ who: W, text: "Addresses on both PCs. Look at you, giving things names. Names are boundaries, kid. Boundaries are important. Over." }]);
     once("ping-router", [{ who: W, text: "The router answers! Of course it answers. It's polite. Too polite, some would say. Over." }]);
-    if (this.job.tasks.every((t) => !t.done || t.done()) && !this.flags.has("haunt")) this.haunt();
+    if (this.store.tasks.every((t) => !t.done || t.done()) && !this.flags.has("haunt")) this.haunt();
   }
 
   /** The job's done, so something else plugs in. */
   private haunt(): void {
     this.flags.add("haunt");
-    const { net, s1 } = this.job;
+    const { net, s1 } = this.store;
     window.setTimeout(() => {
       events.emit("flicker");
       this.phantom.configure(ip("192.168.1.66"), ip("255.255.255.0"), null);
@@ -322,8 +513,64 @@ export class Story {
     }, 1500);
   }
 
+  private tickLaundromat(job: ReturnType<typeof laundromat>): void {
+    const ok = (i: number) => !!job.tasks[i].done?.();
+    const once = (i: number, lines: Line[]) => {
+      if (this.told.has(`wash${i}`) || !ok(i)) return;
+      this.told.add(`wash${i}`);
+      this.ui.say(lines);
+    };
+    once(0, [{ who: W, text: "Gi0/0 is up. The router's awake. That's the easy part. Over." }]);
+    once(2, [{ who: W, text: "The pool's open! Now anything that asks gets an answer. ANYTHING. ...Ha. Over." }]);
+    once(4, [{ who: W, text: "Leases! Both PCs got addresses. show ip dhcp binding on the router lists who's got what. Over." }]);
+    if (job.tasks.every((t) => !t.done || t.done()) && !this.flags.has("haunt2")) this.hauntLaundromat(job);
+  }
+
+  /** Job 2's done, so something else asks for an address, and gets one. */
+  private hauntLaundromat(job: ReturnType<typeof laundromat>): void {
+    this.flags.add("haunt2");
+    window.setTimeout(() => {
+      events.emit("flicker");
+      // Nobody plugged it in. Spanning tree holds its port for 30 s and its first request is
+      // lost, so it asks again once the port opens, and Walter notices when the lease lands.
+      const dryer = new Pc("DRYER4", "?", "666666666604");
+      dryer.dhcp = true;
+      job.net.add(dryer);
+      job.net.connect(dryer.nic, job.s1.port("FastEthernet0/24"));
+      this.ui.bindCable(job.s1.port("FastEthernet0/24"));
+      job.net.clock.schedule(35_000, () =>
+        dryer.renew((lease) => {
+          if (!lease) return;
+          this.ui.say([
+            { who: W, text: "Huh. The router just handed out another lease. Six-six-six-six dot... that's not one of ours." },
+            { who: W, text: "show ip dhcp binding, if you want to see who. I wouldn't. Over." },
+          ]);
+        }),
+      );
+      events.emit("haunt");
+      this.ui.say(
+        [
+          { text: "Every dryer stops at once. In the quiet, one of them starts up again. You don't have to look to know which." },
+          { who: W, text: "Ticket's DONE, kid! Tell Gus and come on home. Over." },
+        ],
+        () => {
+          this.flags.add("done2");
+          const card = this.ui.showCard(
+            `<p class="big">Work order #0002 complete</p>
+             <p>LEASES ISSUED <b>3</b></p>
+             <p>CUSTOMER SATISFACTION <b>ETERNAL</b></p>
+             <p class="vanish">BOUNDARY INTEGRITY <b>99.6%</b></p>`,
+            undefined,
+            4000,
+          );
+          window.setTimeout(() => card.querySelector(".vanish")?.classList.add("gone"), 2500);
+        },
+      );
+    }, 1500);
+  }
+
   private travel(to: RoomId): void {
-    const pop = to === "office" && this.flags.has("done") ? "4,219" : "4,218";
+    const pop = (4218 + (this.flags.has("done") ? 1 : 0) + (to === "office" && this.flags.has("done2") ? 1 : 0)).toLocaleString("en-US");
     this.ui.showCard(`<p class="sign">WELCOME TO<br>STATIC SPRINGS</p><p class="sign small">POP. ${pop}</p>`, () => events.emit("goto", to), 1500);
   }
 }

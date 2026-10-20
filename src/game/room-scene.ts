@@ -301,7 +301,13 @@ export class RoomScene extends Phaser.Scene {
     // Ignore the press that just closed a dialogue box.
     const fresh = performance.now() - this.ui.closedAt > 200;
     if (!frozen && fresh && Phaser.Input.Keyboard.JustDown(k.e) && this.near) {
-      if (this.near.card) this.ui.showCloseUp(this.near.card);
+      // A close-up with a "gone" version plays its first look once; after that it's just gone.
+      const { card, cardGone } = this.near;
+      if (card) {
+        const seen = this.story.has(`seen:${this.room.id}:${this.near.id}`);
+        if (seen && cardGone) this.ui.showCloseUp(cardGone);
+        else this.ui.showCloseUp(card, cardGone);
+      }
       this.story.interact(this.near.id);
       // If inspecting it didn't open any dialogue, don't leave the close-up hanging.
       if (!this.ui.busy) this.ui.hideCloseUp();

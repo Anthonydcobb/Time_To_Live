@@ -73,9 +73,33 @@ function scratches(): string {
   return c.toDataURL();
 }
 
+/** TV snow: grey specks with the odd bright streak, for a picture losing its signal. */
+function snow(): string {
+  const r = rng(909);
+  const s = 160;
+  const c = document.createElement("canvas");
+  c.width = s;
+  c.height = s;
+  const ctx = c.getContext("2d")!;
+  const img = ctx.createImageData(s, s);
+  for (let y = 0; y < s; y++) {
+    // Whole lines run brighter now and then, like interference.
+    const band = r() < 0.08 ? 60 : 0;
+    for (let x = 0; x < s; x++) {
+      const v = Math.min(255, r() * 200 + band);
+      const i = (y * s + x) * 4;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = v;
+      img.data[i + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  return c.toDataURL();
+}
+
 /** Draws the textures and publishes them as CSS variables on the page. */
 export function installGrime(): void {
   const root = document.documentElement.style;
   root.setProperty("--rough-edge", `url(${roughEdge()})`);
   root.setProperty("--scratches", `url(${scratches()})`);
+  root.setProperty("--snow", `url(${snow()})`);
 }

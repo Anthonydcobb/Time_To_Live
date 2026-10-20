@@ -5,7 +5,7 @@
  * Browsers only allow sound after a click, so nothing plays until `start()` is called from
  * the "Click to play" button. Calls made before that are remembered or quietly ignored.
  */
-type RoomId = "office" | "shop";
+import type { RoomId } from "./rooms";
 
 /** Where sounds come from, in tiles, so they get louder as you walk up to them. */
 const FRIDGES = { x: 13, y: 2.5 };
@@ -388,7 +388,8 @@ class GameAudio {
     rumble.start();
     return {
       update: (px, py) => {
-        const c = near(px, py, GARY_DOOR, 7);
+        // Only Bob's office has Gary's door; elsewhere this is just the tube hum.
+        const c = this.room === "office" ? near(px, py, GARY_DOOR, 7) : 0;
         throb.gain.setTargetAtTime(0.09 * c * c, ctx.currentTime, 0.4);
         pulseDepth.gain.setTargetAtTime(0.05 * c * c, ctx.currentTime, 0.4);
       },

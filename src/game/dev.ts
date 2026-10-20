@@ -1,5 +1,4 @@
 import type { IosDevice } from "../sim/devices/ios-device";
-import type { Pc } from "../sim/devices/pc";
 import { parseIpv4 as ip } from "../sim/addr";
 import type { Job } from "../sim/job";
 import { events, type Story } from "./story";
@@ -55,7 +54,7 @@ function finish(net: { clock: { advance(ms: number): void } }, job: Job | undefi
 export function installDevTools(story: Story, ui: Ui): void {
   const s = story as unknown as StoryInternals;
   const u = ui as unknown as UiInternals;
-  const { net, r1, s1, register, office } = story.job as typeof story.job & { register: Pc; office: Pc };
+  const { net, r1, s1, register, office } = story.store;
 
   const closeDialogue = () => {
     u.current = null;
@@ -78,7 +77,7 @@ export function installDevTools(story: Story, ui: Ui): void {
   const finishJob1 = () => {
     skipIntro();
     // Skip Walter's running commentary; the haunt's own lines still play.
-    for (const t of story.job.tasks) if (t.id) s.told.add(t.id);
+    for (const t of story.store.tasks) if (t.id) s.told.add(t.id);
     // Cables: router to switch, both PCs into the switch.
     if (!r1.port("Gi0/0").peer) net.connect(r1.port("Gi0/0"), s1.port("Gi0/1"));
     if (!register.nic.peer) net.connect(register.nic, s1.port("Fa0/1"));
@@ -112,6 +111,7 @@ export function installDevTools(story: Story, ui: Ui): void {
       <button data-act="haunt">Haunt now</button>
       <button data-act="time">+30 s</button>
       <button data-act="close">Close dialogue</button>
+      <button data-act="job2">Job 2</button>
     </div>
     <p class="status"></p>
     <p class="note">Job 1 shortcut passwords: <code>${PW}</code></p>
@@ -142,6 +142,15 @@ export function installDevTools(story: Story, ui: Ui): void {
     },
     time: () => net.clock.advance(30_000),
     close: closeDialogue,
+    // Skips job 1 as if it went fine, takes work order #0002 and drives to the laundromat.
+    job2: () => {
+      for (const f of ["intro", "walkie", "job", "haunt", "done", "home"]) s.flags.add(f);
+      events.emit("walkie");
+      story.takeLaundromat();
+      events.emit("job");
+      closeDialogue();
+      events.emit("goto", "laundromat");
+    },
     fold: () => fold(!panel.classList.contains("folded")),
   };
   panel.addEventListener("click", (e) => {

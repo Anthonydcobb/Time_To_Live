@@ -63,6 +63,7 @@ Key ideas:
 | CRT overlay: soft on the start screen, "haunted" during the apparition, then an 8 s fade while you walk (`crt.on` / `crt.fade`) | `src/game/crt.ts` |
 | Work order as a folded paper ticket top right: J or a click unfolds the tasks, a "✓ task" note pops when one ticks off, pinned inside the game picture's corner and above any laptop, PC or panel | `src/game/main.ts`, `game.css` |
 | Dialogue as a rusted console (framed portrait, LEDs, green screen, ghost words) with roots and cables that spread on the haunt (`overgrowth.ts`); scratchy torn edges on portraits and close-ups (`grime.ts`); a blurred dark copy of the room fills the letterbox bars; the dev panel folds to a tab top left (backtick) | `src/game/` |
+| Job 2 in the game: after the store, work order #0002 goes up on the board and the van goes to Spin Cycle Eternal (grey box from `art/concepts/locations/spin-cycle-laundromat-layout.jpg`). Gus (bust from his concept), DHCP hints from Walter, Dryer 4's close-up that breaks up like a bad TV signal into an empty window (`cardGone` on a prop, first look only), the lost and found and the shift logbook. When it's done a phantom DRYER4 (MAC 6666.6666.6604) plugs into S1 Fa0/24 and takes a DHCP lease. `Story.job` is whichever job is current; the work order and network clock follow it. Dev panel: **Job 2** jumps straight there | `src/game/story.ts`, `rooms.ts` |
 | Dialogue markup: `*word*` cold blue, `~word~` red; speaker name as a tab on the box | `src/game/markup.ts` |
 
 **PR state:** #1 → `main`, then #2 to #6 each stacked on the one before. None are merged yet. Merge them in order, #1 first.
@@ -104,6 +105,12 @@ Phase 2 is the vertical slice. Ant picked 16 px art (drawn at 4x) and Phaser on 
 - Art style. Ant likes Welcome to Elderfield and is collecting reference screenshots. Who makes the art is also undecided: AI, asset packs or an artist.
 - Story beats per job, and where automation topics go on the job ladder.
 - Whether to keep building simulator depth first or start the Phase 2 slice next.
+- **Cult books for the know-only CCNA topics** (Ant loves this; still to brainstorm). Bookshelves and books you can read that teach concepts you understand rather than configure, written as cult and horror texts. The library (job 4) is the natural home, with strays elsewhere (a hymnal at the funeral home, a field manual in Gus's office). Reading one could add a lore entry to the grimoire, so the concepts are collectible and reviewable for real study. Seeds so far:
+  - *The Seven Floors*: the OSI model as a seven-layer descent. Each floor up, the message forgets more of what carried it. It still teaches what each layer does and encapsulation.
+  - NTP strata as keepers of time: "Stratum 0 is the source. No one has seen it." It could tie into Gus being stuck in 1974 because his clock synced to the wrong source.
+  - JSON as a summoning grammar: braces bind, keys name, values give. "Name a thing without quotes and it will not answer." It sets up Cryptis and the controller.
+  - TTL, the game's title: packets that live a fixed number of hops and die, and the ones that don't. Save it for late in the game.
+  - Other know-only topics from Hermes's CCNA split: SDN and controllers, REST APIs, AAA (RADIUS/TACACS+), SNMP (MIBs, traps), syslog severity levels, QoS concepts, wireless architecture, threat types.
 
 ## Job ladder
 

@@ -32,6 +32,8 @@ const PORTRAITS: Record<string, { busts?: (string | undefined)[]; sheet?: string
   "WALTER (walkie)": { busts: ["assets/portraits/walter-bust.webp"] },
   // The contractor. She has no spoken lines yet.
   SIMONE: { busts: ["assets/portraits/simone-bust.webp"] },
+  // The laundromat's night manager, on shift since 1974.
+  GUS: { busts: ["assets/portraits/gus-bust.webp"] },
 };
 
 export interface Choice {
@@ -214,13 +216,40 @@ export class Ui {
     this.growth.grow(level, ms);
   }
 
-  /** Shows an illustrated close-up until the dialogue it goes with closes. */
-  showCloseUp(src: string): void {
-    showImage($("closeup"), src);
+  /**
+   * Shows an illustrated close-up until the dialogue it goes with closes. With `gone`, the
+   * picture holds for a moment, tears up like a bad TV signal, and comes back as `gone`.
+   */
+  showCloseUp(src: string, gone?: string): void {
+    const img = $<HTMLImageElement>("closeup");
+    this.stopGlitch();
+    showImage(img, src);
+    if (!gone) return;
+    preload(gone);
+    const at = (ms: number, fn: () => void) => this.glitchTimers.push(window.setTimeout(fn, ms));
+    at(1600, () => {
+      if (img.dataset.src !== src) return;
+      $("closeup-wrap").classList.add("glitch");
+      audio.crackle(true);
+      // Swap mid-tear, while the static hides it. It's preloaded, so it's ready to paint.
+      at(450, () => {
+        img.dataset.src = gone;
+        img.src = gone;
+      });
+      at(800, () => $("closeup-wrap").classList.remove("glitch"));
+    });
   }
 
   hideCloseUp(): void {
+    this.stopGlitch();
     hideImage($("closeup"));
+  }
+
+  private glitchTimers: number[] = [];
+  private stopGlitch(): void {
+    this.glitchTimers.forEach((t) => clearTimeout(t));
+    this.glitchTimers = [];
+    $("closeup-wrap").classList.remove("glitch");
   }
 
   private showPortrait(line: Line): void {

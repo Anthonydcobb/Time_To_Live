@@ -59,24 +59,36 @@ game.events.on(Phaser.Core.Events.POST_RENDER, () => {
 });
 
 // Real time drives the network, so link lights and spanning tree take as long as they really do.
-const net = story.job.net;
 let last = performance.now();
 function tick(now: number): void {
-  net.clock.advance(Math.min(1000, now - last));
+  // Whichever job you're on. A job you've left stands still.
+  story.job.net.clock.advance(Math.min(1000, now - last));
   last = now;
   requestAnimationFrame(tick);
 }
 requestAnimationFrame(tick);
 
-// The work order ticks itself off as the network starts working.
+// The work order ticks itself off as the network starts working. It's rebuilt when you take a new job.
 const tasksEl = document.getElementById("tasks")!;
-const rows = story.job.tasks.map((task) => {
-  const li = document.createElement("li");
-  li.textContent = task.text;
-  li.className = task.done ? "task" : "flavor";
-  tasksEl.appendChild(li);
-  return { li, task };
-});
+let shown: typeof story.job | null = null;
+let rows: { li: HTMLLIElement; task: (typeof story.job.tasks)[number] }[] = [];
+let wasDone = new Map<(typeof rows)[number], boolean>();
+function showJob(): void {
+  const job = (shown = story.job);
+  document.querySelector("#wo-stub .wo-title")!.textContent = `Work order #${job.workOrder.number}`;
+  document.querySelector("#wo-stub .wo-where")!.textContent = job.workOrder.client;
+  document.querySelector("#wo-body p")!.textContent = job.workOrder.place;
+  rows = job.tasks.map((task) => {
+    const li = document.createElement("li");
+    li.textContent = task.text;
+    li.className = task.done ? "task" : "flavor";
+    return { li, task };
+  });
+  tasksEl.replaceChildren(...rows.map((r) => r.li));
+  // Only tasks that tick off after this point get a "done" note.
+  wasDone = new Map(rows.map((r) => [r, !!r.task.done?.()]));
+}
+showJob();
 const workOrder = document.getElementById("work-order")!;
 const stub = document.getElementById("wo-stub")!;
 const body = document.getElementById("wo-body")!;
@@ -102,8 +114,8 @@ const toast = (text: string) => {
   workOrder.appendChild(p);
   window.setTimeout(() => p.remove(), 3000);
 };
-const wasDone = new Map(rows.map((r) => [r, !!r.task.done?.()]));
 window.setInterval(() => {
+  if (story.job !== shown) showJob();
   workOrder.hidden = !story.has("job");
   const real = rows.filter((r) => r.task.done);
   count.textContent = `${real.filter((r) => r.task.done!()).length}/${real.length}`;
