@@ -12,6 +12,13 @@ function Test-Bridge($port) {
     } catch { return $false }
 }
 
+function Test-Dashboard {
+    try {
+        $response = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:5173/pt-dashboard.html" -TimeoutSec 2
+        return $response.StatusCode -eq 200
+    } catch { return $false }
+}
+
 if (-not (Test-Bridge $bridgePort)) {
     $nodeCommand = "Set-Location '$project'; `$env:PT_BRIDGE_PORT='$bridgePort'; node tools\pt-bridge.mjs"
     Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $nodeCommand -WorkingDirectory $project | Out-Null
@@ -29,6 +36,13 @@ if (-not (Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction Silent
     $viteCommand = "Set-Location '$project'; npm run dev"
     Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $viteCommand -WorkingDirectory $project | Out-Null
 }
+
+$dashboardReady = $false
+for ($i = 0; $i -lt 20; $i++) {
+    Start-Sleep -Milliseconds 250
+    if (Test-Dashboard) { $dashboardReady = $true; break }
+}
+if (-not $dashboardReady) { throw "Vite dashboard did not become ready at http://127.0.0.1:5173/pt-dashboard.html" }
 
 $javaCommand = "`$env:PT_TTL_AUTH_SECRET='$secret'; & '$project\harness\pt-exapp\build-bridge.ps1' 127.0.0.1 $ptPort $bridgePort"
 Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $javaCommand -WorkingDirectory $project | Out-Null
