@@ -41,6 +41,11 @@ export class Router extends IosDevice {
     return [...this.patSessions.values()];
   }
 
+  /** Clears dynamic PAT state while leaving configured static translations intact. */
+  clearNatTranslations(): void {
+    this.patSessions.clear();
+  }
+
   ospfRouterId(): Ipv4 | null {
     if (this.config.ospf?.routerId !== null && this.config.ospf?.routerId !== undefined) return this.config.ospf.routerId;
     return this.l3Interfaces().map((iface) => iface.ip).filter((ip): ip is Ipv4 => ip !== null).sort((a, b) => b - a)[0] ?? null;

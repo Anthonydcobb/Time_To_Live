@@ -366,6 +366,7 @@ const execCommands: Entry[] = [
   cmd(ENABLE, [kw("erase", "Erase a filesystem"), kw("startup-config", "Erase contents of configuration memory")], (c) => c.console.askErase()),
   cmd(ENABLE, [kw("reload", "Halt and perform a cold restart")], (c) => c.console.askReload()),
   cmd(ENABLE, [kw("clear", "Reset functions"), kw("arp-cache", "Clear the entire ARP cache")], (c) => c.device.stack.arp.clear()),
+  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), kw("nat", "Network Address Translation"), kw("translation", "NAT translation table"), kw("*", "Clear dynamic translations")], (c) => (c.device as Router).clearNatTranslations(), { devices: ["router"] }),
   cmd(ENABLE, [kw("clear", "Reset functions"), kw("logging", "Clear the logging buffer")], (c) => c.device.logBuffer.splice(0)),
   cmd(
     ENABLE,

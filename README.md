@@ -71,7 +71,7 @@ npm run build    # typecheck and production build
 - VLANs and trunks: access ports drop tagged frames, trunks tag every VLAN but the native one, and the MAC table is per VLAN. DTP follows the real matrix: two dynamic auto ports stay access ports, and routers never negotiate, so the switch port to a router must be forced to trunk. Each VLAN on a port runs its own 30 second spanning-tree wait, so moving a port to a new VLAN goes amber again. Deleting a VLAN strands its ports.
 - PCs drop tagged frames. Routers deliver tagged frames to the matching subinterface, and the first packet routed to a new host is dropped while the router ARPs.
 - OSPF, EIGRP and OSPFv3 form simulated adjacencies, advertise routes and expose troubleshooting state through IOS-style show commands.
-- ACLs, NAT/PAT, first-hop redundancy, DHCP relay and access-layer protections affect actual simulated traffic, not only running-config text.
+- ACLs, NAT/PAT, first-hop redundancy, DHCP relay and access-layer protections affect actual simulated traffic, not only running-config text; dynamic PAT state can be inspected and cleared.
 
 ## Layout
 
