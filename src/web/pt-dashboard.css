@@ -24,6 +24,7 @@ h2 { margin:0 0 12px; color:var(--amber); font-size:13px; text-transform:upperca
 pre { min-height:180px; max-height:420px; overflow:auto; margin:16px 0 0; padding:14px; background:#080906; border:1px solid var(--line); white-space:pre-wrap; }
 .topology-panel, .history-panel { margin-top:16px; }
 .health-panel { margin-top:16px; } .panel-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.coverage-panel { margin-top:16px; } .coverage-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; } .coverage-grid > div { border-top:1px solid var(--line); padding-top:10px; } .coverage-grid h3 { margin:0 0 6px; color:var(--amber); font-size:12px; text-transform:uppercase; } .coverage-grid p { margin:0; color:var(--dim); }
 .health-row { display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-top:1px solid var(--line); }
 .health-row:first-child { border-top:0; } .health-pass { color:var(--green); } .health-fail { color:var(--red); }
 .health-evidence { margin-top:6px; color:var(--dim); font-size:11px; } .health-evidence summary { cursor:pointer; color:var(--amber); } .health-evidence pre { min-height:0; max-height:180px; margin:6px 0 0; padding:8px; font-size:11px; }
@@ -44,4 +45,4 @@ pre { min-height:180px; max-height:420px; overflow:auto; margin:16px 0 0; paddin
 .svg-caption { fill:var(--dim); font:10px ui-monospace,Consolas,monospace; text-anchor:middle; letter-spacing:2px; }
 .history-row { display:grid; grid-template-columns:160px 1fr auto; gap:12px; padding:9px 0; border-top:1px solid var(--line); }
 .history-row:first-child { border-top:0; } .history-command { color:var(--amber); } .history-status { color:var(--green); }
-@media (max-width:800px) { .header { display:block; } .controls { margin-top:16px; } .status-row, .grid { grid-template-columns:1fr 1fr; } main { padding:16px; } }
+@media (max-width:800px) { .header { display:block; } .controls { margin-top:16px; } .status-row, .grid, .coverage-grid { grid-template-columns:1fr 1fr; } main { padding:16px; } }
