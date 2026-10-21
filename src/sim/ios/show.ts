@@ -208,6 +208,17 @@ export function showIpv6Route(device: IosDevice): string[] {
   return out;
 }
 
+export function showIpv6Neighbors(device: IosDevice): string[] {
+  const out = [
+    "IPv6 Address                              Age Link-layer Addr State Interface",
+  ];
+  for (const entry of device.stack.ipv6NeighborEntries().sort((a, b) => a.address.localeCompare(b.address))) {
+    const age = Math.floor((device.clock.now - entry.learnedAt) / 1000);
+    out.push(`${formatIpv6(entry.address).padEnd(42)}${String(age).padStart(3)} ${formatMacCisco(entry.mac).padEnd(17)} REACH ${entry.iface.name}`);
+  }
+  return out;
+}
+
 /** How long ago, the way `show interfaces` prints it: 00:00:08, 1d02h, 3w2d, or never. */
 export function sinceText(now: number, at: number | null): string {
   if (at === null) return "never";

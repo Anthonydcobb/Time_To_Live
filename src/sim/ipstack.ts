@@ -85,7 +85,7 @@ export class IpStack {
   private waiters = new Map<string, (r: PingResult) => void>();
   private nextPingId = 1;
   private ipv6Waiters = new Map<string, (r: PingResult) => void>();
-  private ipv6Neighbors = new Map<string, { mac: Mac; iface: L3Interface }>();
+  private ipv6Neighbors = new Map<string, { mac: Mac; iface: L3Interface; learnedAt: number }>();
   private ipv6Queued = new Map<string, { iface: L3Interface; packet: Ipv6Packet; nextHop: Ipv6 }[]>();
 
   constructor(private readonly opts: IpStackOptions) {}
@@ -123,6 +123,10 @@ export class IpStack {
       }
     }
     return routes;
+  }
+
+  ipv6NeighborEntries(): { address: Ipv6; mac: Mac; iface: L3Interface; learnedAt: number }[] {
+    return [...this.ipv6Neighbors.entries()].map(([address, entry]) => ({ address, ...entry }));
   }
 
   /** Longest-prefix match. Resolves recursive static routes to an exit interface. */
@@ -309,14 +313,14 @@ export class IpStack {
     if (icmp?.type === "neighbor-solicitation" && icmp.target) {
       const target = this.ipv6Local(icmp.target);
       if (target) {
-        if (packet.src !== "::") this.ipv6Neighbors.set(packet.src, { mac: sourceMac, iface });
+        if (packet.src !== "::") this.ipv6Neighbors.set(packet.src, { mac: sourceMac, iface, learnedAt: this.clock.now });
         const local = target.ipv6Addresses.find((a) => a.address === icmp.target)!;
         target.transmit({ src: target.mac, dst: sourceMac, payload: { kind: "ipv6", src: local.address, dst: packet.src, hopLimit: 255, icmpv6: { type: "neighbor-advertisement", id: 0, seq: 0, target: local.address, targetMac: target.mac } } });
       }
       return;
     }
     if (icmp?.type === "neighbor-advertisement" && icmp.target && icmp.targetMac) {
-      this.ipv6Neighbors.set(icmp.target, { mac: icmp.targetMac, iface });
+      this.ipv6Neighbors.set(icmp.target, { mac: icmp.targetMac, iface, learnedAt: this.clock.now });
       const waiting = this.ipv6Queued.get(icmp.target) ?? [];
       this.ipv6Queued.delete(icmp.target);
       for (const item of waiting) item.iface.transmit({ src: item.iface.mac, dst: icmp.targetMac, payload: item.packet });

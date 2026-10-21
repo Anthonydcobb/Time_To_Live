@@ -93,4 +93,17 @@ describe("IPv6 interface configuration", () => {
     net.clock.advance(100);
     expect(result).toBe("ttl-expired");
   });
+
+  it("shows learned IPv6 neighbors after discovery", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1"));
+    const r2 = net.add(new Router("R2"));
+    net.connect(r1.port("Gi0/0"), r2.port("Gi0/0"));
+    type(r1, "", "en", "conf t", "interface g0/0", "ipv6 address 2001:db8:100::1/64", "no shutdown", "end");
+    type(r2, "", "en", "conf t", "interface g0/0", "ipv6 address 2001:db8:100::2/64", "no shutdown", "end");
+    net.clock.advance(3_000);
+    r1.stack.probeIpv6(parseIpv6("2001:db8:100::2")!, { id: 5, seq: 1, timeoutMs: 100, source: parseIpv6("2001:db8:100::1")! }, () => undefined);
+    net.clock.advance(100);
+    expect(type(r1, "show ipv6 neighbors").join("\n")).toContain("2001:0db8:0100:0000:0000:0000:0000:0002");
+  });
 });
