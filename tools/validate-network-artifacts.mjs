@@ -14,6 +14,7 @@ const expected = [
   "sim-routing-scenario.json",
   "sim-services-scenario.json",
   "sim-access-security-scenario.json",
+  "sim-switching-scenario.json",
 ];
 
 const checks = [];

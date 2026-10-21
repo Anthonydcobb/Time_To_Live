@@ -86,6 +86,7 @@ node tools/run-sim-acl-scenario.mjs
 node tools/run-sim-routing-scenario.mjs
 node tools/run-sim-services-scenario.mjs
 node tools/run-sim-access-security-scenario.mjs
+node tools/run-sim-switching-scenario.mjs
 npm run audit:network
 node tools/run-pt-adapter-spike.mjs
 ```
@@ -112,3 +113,6 @@ The services runner writes `harness/artifacts/sim-services-scenario.json` with
 DNS, NTP, syslog, SNMP, SSH, and management-LAN verification evidence.
 The access-security runner writes `harness/artifacts/sim-access-security-scenario.json`
 with port security, DHCP snooping, and Dynamic ARP Inspection evidence.
+The switching runner writes `harness/artifacts/sim-switching-scenario.json` with
+VLAN access, 802.1Q trunk, STP, and reachability evidence; EtherChannel remains
+covered by the dedicated switching regression tests.
