@@ -147,6 +147,8 @@ describe("IPv6 interface configuration", () => {
     expect(type(r1, "show ipv6 ospf neighbor").join("\n")).toContain("Router");
     expect(type(r1, "show ipv6 ospf interface").join("\n")).toContain("OSPFv3 process 1, Area 0");
     expect(type(r1, "show ipv6 ospf interface").join("\n")).toContain("Neighbor count 1");
+    expect(type(r1, "show ipv6 protocols").join("\n")).toContain("IPv6 Routing Protocol is \"ospf 1\"");
+    expect(type(r1, "show ipv6 protocols").join("\n")).toContain("Interfaces: GigabitEthernet0/0, GigabitEthernet0/1");
     expect(type(r1, "show ipv6 route").join("\n")).toContain("2001:0db8:0020");
   });
 });

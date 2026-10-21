@@ -632,6 +632,21 @@ export function showIpProtocols(device: IosDevice): string[] {
   ];
 }
 
+export function showIpv6Protocols(router: Router): string[] {
+  const out = ["IPv6 Routing Protocol is \"connected\"", "IPv6 Routing Protocol is \"static\""];
+  const ospfv3 = router.config.ospfv3;
+  if (!ospfv3) return [...out, ""];
+  const interfaces = router.l3Interfaces().filter((iface) => router.config.interfaces[iface.name]?.ipv6OspfArea !== null && router.config.interfaces[iface.name]?.ipv6OspfArea !== undefined);
+  out.push(
+    `IPv6 Routing Protocol is \"ospf ${ospfv3.processId}\"`,
+    `  Interfaces: ${interfaces.map((iface) => iface.name).join(", ") || "none"}`,
+    `  Areas: ${[...new Set(interfaces.map((iface) => router.config.interfaces[iface.name].ipv6OspfArea))].join(", ") || "none"}`,
+    "  Administrative distance: 110",
+    "",
+  );
+  return out;
+}
+
 export function showArp(device: IosDevice): string[] {
   const out = ["Protocol  Address          Age (min)  Hardware Addr   Type   Interface"];
   const row = (ip: Ipv4, age: string, mac: string, iface: string) =>
