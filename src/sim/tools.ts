@@ -50,6 +50,38 @@ export function iosPing(host: Host, target: Ipv4, count = 5): Job {
   return job;
 }
 
+/** `ping ipv6` on IOS: five ICMPv6 echoes with IOS-style result marks. */
+export function iosIpv6Ping(host: Host, target: Ipv6, count = 5): Job {
+  const job = new Job();
+  const id = host.stack.newPingId();
+  const rtts: number[] = [];
+  let sent = 0;
+  const source = host.stack.sourceForIpv6(target);
+  job.write(`Type escape sequence to abort.\nSending ${count}, 100-byte ICMP Echos to ${formatIpv6(target)}, timeout is 2 seconds:\n`);
+  const next = () => {
+    if (job.done) return;
+    if (sent === count || !source) {
+      const pct = sent ? Math.round((rtts.length / sent) * 100) : 0;
+      let line = `\nSuccess rate is ${pct} percent (${rtts.length}/${sent})`;
+      if (rtts.length) {
+        const avg = rtts.reduce((a, b) => a + b, 0) / rtts.length;
+        line += `, round-trip min/avg/max = ${ms(Math.min(...rtts))}/${ms(avg)}/${ms(Math.max(...rtts))} ms`;
+      }
+      job.write(`${line}\n`);
+      job.finish();
+      return;
+    }
+    host.stack.probeIpv6(target, { id, seq: sent++, timeoutMs: 2000, source }, (result) => {
+      if (job.done) return;
+      if (result.kind === "reply") rtts.push(result.rttMs);
+      job.write(result.kind === "reply" ? "!" : result.kind === "unreachable" ? "U" : result.kind === "ttl-expired" ? "&" : ".");
+      next();
+    });
+  };
+  next();
+  return job;
+}
+
 function iosMark(r: PingResult): string {
   switch (r.kind) {
     case "reply":

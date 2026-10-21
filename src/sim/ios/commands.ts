@@ -10,7 +10,7 @@ import { kw, type Arg, type Command, type Token, type Word } from "./parser";
 import { type5Hash } from "./passwords";
 import * as show from "./show";
 import type { Job } from "../job";
-import { iosIpv6Traceroute, iosPing, iosTraceroute } from "../tools";
+import { iosIpv6Ping, iosIpv6Traceroute, iosPing, iosTraceroute } from "../tools";
 import { MAX_NORMAL_VLAN, isDefaultVlan, parseVlanList, splitSubinterface } from "../vlans";
 
 /** IOS's [confirm]: Return or y means yes. */
@@ -210,6 +210,10 @@ function ping(ctx: Ctx, target: Ipv4): void {
   ctx.job = iosPing({ stack: ctx.device.stack, clock: ctx.device.clock }, target);
 }
 
+function pingIpv6(ctx: Ctx, target: Ipv6): void {
+  ctx.job = iosIpv6Ping({ stack: ctx.device.stack, clock: ctx.device.clock }, target);
+}
+
 function traceroute(ctx: Ctx, target: Ipv4): void {
   ctx.out.push("Type escape sequence to abort.", `Tracing the route to ${formatIpv4(target)}`, "VRF info: (vrf in name/id, vrf out name/id)");
   ctx.job = iosTraceroute({ stack: ctx.device.stack, clock: ctx.device.clock }, target);
@@ -296,6 +300,7 @@ const execCommands: Entry[] = [
   cmd(EXEC, [kw("logout", "Exit from the EXEC")], (c) => c.console.logout()),
   cmd(EXEC, [kw("help", "Description of the interactive help system")], (c) => c.out.push(...HELP_TEXT)),
   cmd(EXEC, [kw("ping", "Send echo messages"), ipArg("Ping destination address or hostname")], (c, [ip]) => ping(c, ip as Ipv4)),
+  cmd(EXEC, [kw("ping", "Send echo messages"), kw("ipv6", "IPv6 destination"), ipv6Arg("IPv6 destination address")], (c, [ip]) => pingIpv6(c, ip as Ipv6)),
   cmd(EXEC, [kw("traceroute", "Trace route to destination"), ipArg("Trace route to destination address or hostname")], (c, [ip]) =>
     traceroute(c, ip as Ipv4),
   ),
