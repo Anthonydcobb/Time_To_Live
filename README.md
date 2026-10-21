@@ -93,7 +93,7 @@ tests/              Vitest tests
 
 ## Deliberate scope limits
 
-- SSH/VTY and AAA configuration is modeled and verified through configuration/show output; there is no separate remote SSH session transport yet.
+- SSH/VTY and AAA configuration is modeled and verified through configuration/show output, with authenticated simulated SSH/Telnet sessions available through the simulator API. These sessions reuse the IOS console; they are not real TCP transports.
 - Wireless RF behavior, production QoS under congestion, full SNMP polling/traps, and cloud/controller integrations remain concept-only or simplified, matching Packet Tracer's limitations.
 - REST/JSON automation is represented by the local simulator and Packet Tracer bridge harness; it is not a production network controller.
 

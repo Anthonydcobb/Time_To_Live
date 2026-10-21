@@ -63,4 +63,22 @@ describe("remote management access", () => {
     expect(session.close().lines).toEqual(["Connection closed by remote host."]);
     expect(session.input("show version").lines).toEqual(["% Session is closed."]);
   });
+
+  it("returns the normal login error instead of opening a failed session", () => {
+    const r = new Router("R1", "R1");
+    new Network().add(r);
+    type(r, "", "en", "conf t", "username admin secret cisco", "line vty 0 4", "login local", "transport input telnet", "end");
+    expect(r.openRemoteSession("ssh", "admin", "cisco")).toEqual({ ok: false, reason: "transport-disabled" });
+  });
+
+  it("opens an authenticated Telnet session when VTY transport permits it", () => {
+    const r = new Router("R1", "R1");
+    new Network().add(r);
+    type(r, "", "en", "conf t", "username admin secret cisco", "line vty 0 4", "login local", "transport input telnet", "end");
+    const session = r.openRemoteSession("telnet", "admin", "cisco");
+    expect(session).toBeInstanceOf(RemoteSession);
+    if (!(session instanceof RemoteSession)) return;
+    expect(session.protocol).toBe("telnet");
+    expect(session.input("show running-config").lines.join("\n")).toContain("username admin secret 5 $1$");
+  });
 });
