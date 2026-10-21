@@ -16,7 +16,7 @@ const healthResults = document.querySelector<HTMLElement>("#health-results")!;
 const commandHistory: { device: string; command: string; status: string; at: string }[] = [];
 let liveDevices: Device[] = [];
 let refreshInFlight = false;
-const commandOutputs = new Map<string, string>();
+const commandOutputs = new Map<string, { output: string; status: string }>();
 
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 5000): Promise<Response> {
   const controller = new AbortController();
@@ -157,8 +157,9 @@ async function run(device: string, line: string, mode = "enable"): Promise<any> 
     if (response.ok) {
       const body = await response.json();
       const result = body.result ?? {};
-      commandOutputs.set(line, String(result.output ?? ""));
-      addHistory(device, line, result.status ?? "OK");
+      const status = result.status ?? "OK";
+      commandOutputs.set(line, { output: String(result.output ?? ""), status });
+      addHistory(device, line, status);
       return result;
     }
     await new Promise((resolve) => setTimeout(resolve, 250));
@@ -175,7 +176,7 @@ function showHealth(results: { label: string; ok: boolean; detail: string }[]): 
     if (evidence) {
       const details = document.createElement("details"); details.className = "health-evidence";
       const summary = document.createElement("summary"); summary.textContent = "Show command output";
-      const pre = document.createElement("pre"); pre.textContent = evidence;
+      const pre = document.createElement("pre"); pre.textContent = `Status: ${evidence.status}\n${evidence.output || "(no command output returned)"}`;
       details.append(summary, pre);
       row.firstElementChild?.append(details);
     }
