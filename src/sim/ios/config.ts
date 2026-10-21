@@ -149,6 +149,7 @@ export interface IosConfig {
   ntpServers: Ipv4[];
   loggingHosts: Ipv4[];
   loggingTrap: number;
+  snmpCommunities: { community: string; access: "ro" | "rw" }[];
 }
 
 export function defaultLine(): LineConfig {
@@ -196,6 +197,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     ntpServers: [],
     loggingHosts: [],
     loggingTrap: 6,
+    snmpCommunities: [],
   };
 }
 

@@ -15,4 +15,14 @@ describe("operations services", () => {
     expect(router.config.ntpServers).toEqual([ip("192.0.2.10")]);
     expect(router.config.loggingTrap).toBe(4);
   });
+
+  it("configures read-only and read-write SNMP communities", () => {
+    const net = new Network();
+    const router = net.add(new Router("R1"));
+    type(router, "", "en", "conf t", "snmp-server community monitor ro", "snmp-server community automation rw", "end");
+    const output = type(router, "show snmp").join("\n");
+    expect(output).toContain("monitor (ro)");
+    expect(output).toContain("automation (rw)");
+    expect(router.config.snmpCommunities).toHaveLength(2);
+  });
 });

@@ -117,6 +117,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   for (const server of c.ntpServers) out.push(`ntp server ${formatIpv4(server)}`);
   for (const host of c.loggingHosts) out.push(`logging host ${formatIpv4(host)}`);
   out.push(`logging trap ${c.loggingTrap}`);
+  for (const snmp of c.snmpCommunities) out.push(`snmp-server community ${snmp.community} ${snmp.access}`);
   for (const [number, rules] of Object.entries(c.standardAcls).sort(([a], [b]) => Number(a) - Number(b))) {
     for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + formatAclSource(rule));
   }
@@ -862,6 +863,12 @@ export function showNtpAssociations(device: IosDevice): string[] {
 
 export function showLogging(device: IosDevice): string[] {
   return ["Syslog logging: enabled", `  Logging to ${device.config.loggingHosts.length ? device.config.loggingHosts.map(formatIpv4).join(", ") : "none"}`, `  Trap logging: level ${device.config.loggingTrap}`];
+}
+
+export function showSnmp(device: IosDevice): string[] {
+  const out = ["Chassis: CR-2911", "0 SNMP packets input", "0 SNMP packets output", `SNMP communities configured: ${device.config.snmpCommunities.length}`];
+  for (const snmp of device.config.snmpCommunities) out.push(`  ${snmp.community} (${snmp.access})`);
+  return out;
 }
 
 // ---- DHCP ----------------------------------------------------------------------

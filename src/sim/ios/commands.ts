@@ -255,6 +255,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("ntp", "NTP status"), kw("status", "NTP status")], (c) => c.out.push(...show.showNtpStatus(c.device))),
   cmd(EXEC, [SHOW, kw("ntp", "NTP status"), kw("associations", "NTP associations")], (c) => c.out.push(...show.showNtpAssociations(c.device))),
   cmd(EXEC, [SHOW, kw("logging", "Logging status")], (c) => c.out.push(...show.showLogging(c.device))),
+  cmd(EXEC, [SHOW, kw("snmp", "SNMP status")], (c) => c.out.push(...show.showSnmp(c.device))),
   cmd(EXEC, [SHOW, kw("ssh", "Status of SSH server connections")], (c) => c.out.push(...show.showSsh(c.device))),
   cmd(EXEC, [SHOW, kw("access-lists", "List access lists")], (c) => c.out.push(...show.showAccessLists(c.device))),
   cmd(
@@ -419,6 +420,17 @@ const configCommands: Entry[] = [
     c.device.config.loggingHosts = c.device.config.loggingHosts.filter((address) => address !== host);
   }),
   cmd(CONFIG, [kw("logging", "Configure system logging"), kw("trap", "Set trap logging level"), numArg(0, 7, "Severity level")], (c, [level]) => { c.device.config.loggingTrap = level as number; }),
+  cmd(CONFIG, [kw("snmp-server", "Configure SNMP"), kw("community", "SNMP community string"), wordArg("Community string"), kw("ro", "Read-only access")], (c, [community]) => {
+    c.device.config.snmpCommunities = c.device.config.snmpCommunities.filter((entry) => entry.community !== community);
+    c.device.config.snmpCommunities.push({ community: community as string, access: "ro" });
+  }),
+  cmd(CONFIG, [kw("snmp-server", "Configure SNMP"), kw("community", "SNMP community string"), wordArg("Community string"), kw("rw", "Read-write access")], (c, [community]) => {
+    c.device.config.snmpCommunities = c.device.config.snmpCommunities.filter((entry) => entry.community !== community);
+    c.device.config.snmpCommunities.push({ community: community as string, access: "rw" });
+  }),
+  cmd(CONFIG, [NO, kw("snmp-server", "Configure SNMP"), kw("community", "SNMP community string"), wordArg("Community string")], (c, [community]) => {
+    c.device.config.snmpCommunities = c.device.config.snmpCommunities.filter((entry) => entry.community !== community);
+  }),
   cmd(CONFIG, [NO, kw("hostname", "Set system's network name")], (c) => {
     c.device.config.hostname = c.device.kind === "router" ? "Router" : "Switch";
   }),
