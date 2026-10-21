@@ -207,6 +207,7 @@ async function healthCheck(): Promise<void> {
       const ipv6Neighbors = await run("Router0", "show ipv6 neighbors");
       const ipv6Ospf = await run("Router0", "show ipv6 ospf neighbor");
       const ipv6OspfInterfaces = await run("Router0", "show ipv6 ospf interface");
+      const ipv6Protocols = await run("Router0", "show ipv6 protocols");
       const natTranslations = await run("Router0", "show ip nat translations");
       const natStatistics = await run("Router0", "show ip nat statistics");
       const snmpStatus = await run("Router0", "show snmp");
@@ -224,7 +225,7 @@ async function healthCheck(): Promise<void> {
       const pc0Text = text(pc0Ip); const pc1Text = text(pc1Ip);
       const routerText = text(routerInterfaces); const sshText = text(sshStatus); const configText = text(routerConfig); const trunks = `${text(trunk0)}\n${text(trunk1)}`;
       const ipv6InterfaceText = text(ipv6Interfaces); const ipv6RouteText = text(ipv6Routes); const ipv6NeighborText = text(ipv6Neighbors);
-      const ipv6OspfText = text(ipv6Ospf); const ipv6OspfInterfaceText = text(ipv6OspfInterfaces);
+      const ipv6OspfText = text(ipv6Ospf); const ipv6OspfInterfaceText = text(ipv6OspfInterfaces); const ipv6ProtocolsText = text(ipv6Protocols);
       const natText = text(natTranslations); const natStatisticsText = text(natStatistics); const snmpText = text(snmpStatus); const standbyText = text(standby); const vrrpText = text(vrrp); const glbpText = text(glbp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
       const dhcpSnoopingStatisticsText = text(dhcpSnoopingStatistics); const arpInspectionStatisticsText = text(arpInspectionStatistics);
       const routingText = text(routingProtocols); const eigrpInterfaceText = text(eigrpInterfaces); const eigrpTopologyText = text(eigrpTopology); const ospfInterfaceText = text(ospfInterfaces); const routeText = text(ipRoutes); const dnsText = text(dnsHosts); const ipv6AclText = text(ipv6AccessLists);
@@ -253,6 +254,7 @@ async function healthCheck(): Promise<void> {
         /Name\/address lookup uses|Host\s+Address/i.test(dnsText) && !/No hosts configured/i.test(dnsText) ? { label: "DNS host records", ok: /Host\s+Address/i.test(dnsText), detail: "show hosts" } : null,
         /default-information originate|Area ranges:/i.test(routingText + configText) ? { label: "OSPF edge policy", ok: /default-information originate|Area ranges:/i.test(configText + routingText), detail: "default route / area summary" } : null,
         /IPv6 access list/i.test(ipv6AclText) ? { label: "IPv6 ACL attachment", ok: /ipv6 traffic-filter .* (in|out)/i.test(configText), detail: "show ipv6 access-list" } : null,
+        /IPv6 Routing Protocol is/i.test(ipv6ProtocolsText) ? { label: "IPv6 routing protocols", ok: /connected|static/i.test(ipv6ProtocolsText), detail: "show ipv6 protocols" } : null,
         /0\.0\.0\.0\/0/i.test(routeText) ? { label: "Default route present", ok: /(?:^|\n)O\*?\s+.*0\.0\.0\.0\/0|(?:^|\n)S\*\s+0\.0\.0\.0\/0/i.test(routeText), detail: "show ip route" } : null,
         /DHCP snooping statistics:/i.test(dhcpSnoopingStatisticsText) ? { label: "DHCP snooping counters", ok: /Packets processed:/i.test(dhcpSnoopingStatisticsText), detail: "show ip dhcp snooping statistics" } : null,
         /Dynamic ARP inspection statistics:/i.test(arpInspectionStatisticsText) ? { label: "DAI counters", ok: /ARP packets inspected:/i.test(arpInspectionStatisticsText), detail: "show ip arp inspection statistics" } : null,
