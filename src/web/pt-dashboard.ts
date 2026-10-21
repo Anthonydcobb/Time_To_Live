@@ -52,6 +52,31 @@ async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}
   }
 }
 
+async function detectCurrentBridge(): Promise<void> {
+  if (bridgeFromQuery) return;
+  const current = urlInput.value.replace(/\/$/, "");
+  try {
+    const response = await fetchWithTimeout(`${current}/health`, {}, 1000);
+    const health = await response.json();
+    if (health?.ok !== true || Object.hasOwn(health, "pollerConnected")) return;
+    for (let port = 39095; port <= 39105; port += 1) {
+      const candidate = `http://127.0.0.1:${port}`;
+      try {
+        const candidateResponse = await fetchWithTimeout(`${candidate}/health`, {}, 800);
+        const candidateHealth = await candidateResponse.json();
+        if (candidateHealth?.ok === true && Object.hasOwn(candidateHealth, "pollerConnected")) {
+          urlInput.value = candidate;
+          return;
+        }
+      } catch {
+        // Keep scanning the replacement-port range.
+      }
+    }
+  } catch {
+    // The normal refresh path reports the offline state.
+  }
+}
+
 async function bridge(path: string, options?: RequestInit): Promise<any> {
   const response = await fetchWithTimeout(`${urlInput.value.replace(/\/$/, "")}${path}`, options);
   const body = await response.json();
@@ -397,5 +422,8 @@ document.querySelector<HTMLFormElement>("#command-form")!.addEventListener("subm
   }
   catch (error) { output.textContent = error instanceof Error ? error.message : String(error); }
 });
-void refresh();
+void (async () => {
+  await detectCurrentBridge();
+  await refresh();
+})();
 window.setInterval(() => void refresh(), 10000);
