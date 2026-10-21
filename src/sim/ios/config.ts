@@ -59,6 +59,7 @@ export interface InterfaceConfig {
   accessGroupIn: number | null;
   accessGroupOut: number | null;
   cdp: boolean;
+  natRole: "inside" | "outside" | null;
   /** Switch physical ports only. */
   switchport?: SwitchportConfig;
   /** Router subinterfaces only: `encapsulation dot1Q <vlan> [native]`. */
@@ -66,7 +67,7 @@ export interface InterfaceConfig {
 }
 
 export function newInterfaceConfig(shutdown: boolean): InterfaceConfig {
-  return { shutdown, description: null, ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, cdp: true };
+  return { shutdown, description: null, ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, cdp: true, natRole: null };
 }
 
 export interface AclAddress {
@@ -141,6 +142,7 @@ export interface IosConfig {
   dhcpSnoopingBindings: { mac: string; ip: Ipv4; vlan: number; port: string; learnedAt: number }[];
   arpInspectionVlans: number[];
   ipv6StaticRoutes: { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[];
+  staticNat: { insideLocal: Ipv4; insideGlobal: Ipv4 }[];
 }
 
 export function defaultLine(): LineConfig {
@@ -182,6 +184,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     dhcpSnoopingBindings: [],
     arpInspectionVlans: [],
     ipv6StaticRoutes: [],
+    staticNat: [],
   };
 }
 

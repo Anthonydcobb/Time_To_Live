@@ -269,6 +269,7 @@ const showCommands: Entry[] = [
   ),
   cmd(EXEC, [SHOW, kw("arp", "Arp table")], (c) => c.out.push(...show.showArp(c.device))),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("arp", "IP ARP table")], (c) => c.out.push(...show.showArp(c.device))),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("nat", "Network Address Translation"), kw("translations", "NAT translation table")], (c) => c.out.push(...show.showIpNatTranslations(c.device)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("route", "IP routing table")], (c) => c.out.push(...show.showIpRoute(c.device)), {
     when: (c) => c.device.kind === "router" || (c.device.kind === "switch" && c.device.config.ipRouting),
   }),
@@ -613,6 +614,13 @@ const configCommands: Entry[] = [
     if (!parsed || !via) return;
     c.device.config.ipv6StaticRoutes = c.device.config.ipv6StaticRoutes.filter((r) => !(r.network === parsed.address && r.prefix === parsed.prefix && r.nextHop === via.address));
   }, { devices: ["router"] }),
+  cmd(CONFIG, [IP, kw("nat", "Configure Network Address Translation"), kw("inside", "Inside address"), kw("source", "Source address"), kw("static", "Static translation"), ipArg("Inside local address"), ipArg("Inside global address")], (c, [local, global]) => {
+    const nat = { insideLocal: local as Ipv4, insideGlobal: global as Ipv4 };
+    if (!c.device.config.staticNat.some((n) => n.insideLocal === nat.insideLocal && n.insideGlobal === nat.insideGlobal)) c.device.config.staticNat.push(nat);
+  }, { devices: ["router"] }),
+  cmd(CONFIG, [NO, IP, kw("nat", "Configure Network Address Translation"), kw("inside", "Inside address"), kw("source", "Source address"), kw("static", "Static translation"), ipArg("Inside local address"), ipArg("Inside global address")], (c, [local, global]) => {
+    c.device.config.staticNat = c.device.config.staticNat.filter((n) => n.insideLocal !== local || n.insideGlobal !== global);
+  }, { devices: ["router"] }),
 ];
 
 const routedIface = (c: Ctx) => c.console.ifaces.every((n) => c.device.findInterface(n)?.routed);
@@ -625,6 +633,9 @@ const interfaceCommands: Entry[] = [
     forEachIface(c, (name) => { c.device.ifaceConfig(name).ipv6OspfArea = area as number; });
   }, { devices: ["router"] }),
   cmd(ANY_IF, [NO, kw("ipv6", "IPv6 interface configuration"), kw("ospf", "Enable IPv6 OSPF")], (c) => forEachIface(c, (name) => { c.device.ifaceConfig(name).ipv6OspfArea = null; }), { devices: ["router"] }),
+  cmd(ANY_IF, [kw("ip", "IP configuration"), kw("nat", "Network Address Translation"), kw("inside", "Mark as NAT inside")], (c) => forEachIface(c, (name) => { c.device.ifaceConfig(name).natRole = "inside"; }), { devices: ["router"] }),
+  cmd(ANY_IF, [kw("ip", "IP configuration"), kw("nat", "Network Address Translation"), kw("outside", "Mark as NAT outside")], (c) => forEachIface(c, (name) => { c.device.ifaceConfig(name).natRole = "outside"; }), { devices: ["router"] }),
+  cmd(ANY_IF, [NO, kw("ip", "IP configuration"), kw("nat", "Network Address Translation")], (c) => forEachIface(c, (name) => { c.device.ifaceConfig(name).natRole = null; }), { devices: ["router"] }),
   cmd(ANY_IF, [kw("ipv6", "IPv6 interface configuration"), kw("address", "Set the IPv6 address"), wordArg("IPv6 address/prefix")], (c, [text]) => {
     const parsed = parseIpv6Prefix(text as string);
     if (!parsed) {

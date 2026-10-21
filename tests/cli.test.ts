@@ -129,7 +129,7 @@ describe("help and completion", () => {
     const r = router();
     type(r, "en");
     const lines = r.console.help("show ip ").lines.map((l) => l.trim().split(/\s+/)[0]);
-    expect(lines).toEqual(["arp", "dhcp", "interface", "ospf", "protocols", "route", ""]);
+    expect(lines).toEqual(["arp", "dhcp", "interface", "nat", "ospf", "protocols", "route", ""]);
     expect(r.console.help("show ip interface brief ").lines).toEqual(["  <cr>", ""]);
   });
 

@@ -136,6 +136,29 @@ export class Router extends IosDevice {
     }
   }
 
+  private natRole(port: Port): "inside" | "outside" | null {
+    return this.config.interfaces[port.name]?.natRole ?? null;
+  }
+
+  private translateOutbound(frame: Frame, port: Port): Frame {
+    const payload = frame.payload;
+    if (this.natRole(port) !== "outside" || payload.kind !== "ipv4") return frame;
+    const nat = this.config.staticNat.find((entry) => entry.insideLocal === payload.src);
+    if (!nat) return frame;
+    return { ...frame, payload: { ...payload, src: nat.insideGlobal } };
+  }
+
+  private translateInbound(frame: Frame, port: Port): Frame {
+    const payload = frame.payload;
+    if (this.natRole(port) !== "outside" || payload.kind !== "ipv4") return frame;
+    const nat = this.config.staticNat.find((entry) => entry.insideGlobal === payload.dst);
+    return nat ? { ...frame, payload: { ...payload, dst: nat.insideLocal } } : frame;
+  }
+
+  send(port: Port, frame: Frame): void {
+    super.send(port, this.translateOutbound(frame, port));
+  }
+
   protected factoryConfig(hostname: string): IosConfig {
     return defaultConfig(hostname, this.ports.map((p) => ({ name: p.name, shutdown: true })));
   }
@@ -299,8 +322,16 @@ export class Router extends IosDevice {
 
   receive(port: Port, frame: Frame): void {
     if (this.handleCdp(port, frame)) return;
+    const payload = frame.payload;
+    if (this.natRole(port) === "outside" && payload.kind === "arp" && payload.op === "request") {
+      const nat = this.config.staticNat.find((entry) => entry.insideGlobal === payload.targetIp);
+      if (nat) {
+        this.send(port, { src: port.mac, dst: frame.src, payload: { kind: "arp", op: "reply", senderMac: port.mac, senderIp: nat.insideGlobal, targetMac: payload.senderMac, targetIp: payload.senderIp } });
+        return;
+      }
+    }
     const iface = this.ingressInterface(port, frame.vlan);
-    if (iface?.up()) this.stack.handleFrame(iface, retag(frame, undefined));
+    if (iface?.up()) this.stack.handleFrame(iface, retag(this.translateInbound(frame, port), undefined));
   }
 
   /**

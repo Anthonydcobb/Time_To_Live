@@ -86,6 +86,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     for (const helper of ic.helperAddresses) out.push(` ip helper-address ${formatIpv4(helper)}`);
     for (const address of ic.ipv6Addresses) out.push(` ipv6 address ${formatIpv6(address.address)}/${address.prefix}`);
     if (ic.ipv6OspfArea !== null) out.push(` ipv6 ospf ${c.ospfv3?.processId ?? 1} area ${ic.ipv6OspfArea}`);
+    if (ic.natRole) out.push(` ip nat ${ic.natRole}`);
     if (ic.encapsulation) out.push(` encapsulation dot1Q ${ic.encapsulation.vlan}${ic.encapsulation.native ? " native" : ""}`);
     if (ic.accessGroupIn !== null) out.push(" ip access-group " + ic.accessGroupIn + " in");
     if (ic.accessGroupOut !== null) out.push(" ip access-group " + ic.accessGroupOut + " out");
@@ -105,6 +106,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     out.push(`ip route ${formatIpv4(r.network)} ${formatIpv4(r.mask)} ${target}`);
   }
   if (c.staticRoutes.length) out.push("!");
+  for (const nat of c.staticNat) out.push(`ip nat inside source static ${formatIpv4(nat.insideLocal)} ${formatIpv4(nat.insideGlobal)}`);
   for (const [number, rules] of Object.entries(c.standardAcls).sort(([a], [b]) => Number(a) - Number(b))) {
     for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + formatAclSource(rule));
   }
@@ -809,6 +811,12 @@ export function showAccessLists(device: IosDevice): string[] {
     rules.forEach((rule, index) => out.push("    " + ((index + 1) * 10) + " " + rule.action + " " + rule.protocol + " " + formatAclSource(rule.source) + " " + formatAclSource(rule.destination)));
   }
   return out.length ? out : ["No access lists configured"];
+}
+
+export function showIpNatTranslations(device: IosDevice): string[] {
+  const out = ["Pro Inside global      Pro Inside local       Outside local      Outside global", "--- -------------------- -------------------- --------------- ---------------"];
+  for (const nat of device.config.staticNat) out.push(`--- ${formatIpv4(nat.insideGlobal).padEnd(20)} ${formatIpv4(nat.insideLocal).padEnd(20)} ---               ---`);
+  return out;
 }
 
 // ---- DHCP ----------------------------------------------------------------------
