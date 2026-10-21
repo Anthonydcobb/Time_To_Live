@@ -91,6 +91,8 @@ export abstract class IosDevice extends Device {
   startupStamps: { changed: number | null; nvram: number | null } = { changed: null, nvram: null };
   readonly cdpNeighbors = new Map<Port, CdpNeighbor>();
   readonly lldpNeighbors = new Map<Port, LldpNeighbor>();
+  /** Recent IOS messages retained by the local log buffer. */
+  readonly logBuffer: string[] = [];
   /** Interface whose `shutdown` state is being changed right now, for log wording. */
   protected adminChanging: string | null = null;
 
@@ -304,7 +306,12 @@ export abstract class IosDevice extends Device {
 
   /** Console log messages carry IOS's default timestamp: `*Mar  1 00:01:02.345: `. */
   emit(text: string): void {
-    super.emit(text.startsWith("%") ? `*${logTimestamp(this.clock.now)}: ${text}` : text);
+    const formatted = text.startsWith("%") ? `*${logTimestamp(this.clock.now)}: ${text}` : text;
+    if (text.startsWith("%")) {
+      this.logBuffer.push(formatted);
+      if (this.logBuffer.length > 100) this.logBuffer.shift();
+    }
+    super.emit(formatted);
   }
 
   saveConfig(): void {

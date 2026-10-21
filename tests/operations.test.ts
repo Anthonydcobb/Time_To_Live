@@ -25,4 +25,22 @@ describe("operations services", () => {
     expect(output).toContain("automation (rw)");
     expect(router.config.snmpCommunities).toHaveLength(2);
   });
+
+  it("retains interface events in the IOS log buffer", () => {
+    const net = new Network();
+    const router = net.add(new Router("R1"));
+    const peer = net.add(new Router("R2"));
+    type(router, "", "en", "conf t", "interface Gi0/0", "no shutdown", "end");
+    type(peer, "", "en", "conf t", "interface Gi0/0", "no shutdown", "end");
+    net.connect(router.port("Gi0/0"), peer.port("Gi0/0"));
+    net.clock.advance(3_000);
+
+    const output = type(router, "show logging").join("\n");
+    expect(output).toContain("Log buffer: 3 messages (maximum 100)");
+    expect(output).toContain("%LINK-3-UPDOWN: Interface GigabitEthernet0/0, changed state to up");
+    expect(output).toContain("%LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/0, changed state to up");
+
+    net.disconnect(router.port("Gi0/0"));
+    expect(type(router, "show logging").join("\n")).toContain("changed state to down");
+  });
 });

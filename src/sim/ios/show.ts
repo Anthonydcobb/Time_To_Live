@@ -1093,7 +1093,13 @@ export function showNtpAssociations(device: IosDevice): string[] {
 }
 
 export function showLogging(device: IosDevice): string[] {
-  return ["Syslog logging: enabled", `  Logging to ${device.config.loggingHosts.length ? device.config.loggingHosts.map(formatIpv4).join(", ") : "none"}`, `  Trap logging: level ${device.config.loggingTrap}`];
+  return [
+    "Syslog logging: enabled",
+    `  Logging to ${device.config.loggingHosts.length ? device.config.loggingHosts.map(formatIpv4).join(", ") : "none"}`,
+    `  Trap logging: level ${device.config.loggingTrap}`,
+    `  Log buffer: ${device.logBuffer.length} messages (maximum 100)`,
+    ...(device.logBuffer.length ? ["Log Buffer:", ...device.logBuffer] : []),
+  ];
 }
 
 export function showSnmp(device: IosDevice): string[] {
