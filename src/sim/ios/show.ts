@@ -261,6 +261,23 @@ export function showIpInterfaceBrief(device: IosDevice): string[] {
   return out;
 }
 
+export function showIpInterfaces(device: IosDevice, only?: string): string[] {
+  const out: string[] = [];
+  for (const iface of device.interfaces()) {
+    if (only && iface.name !== only) continue;
+    const c = device.config.interfaces[iface.name];
+    out.push(`${iface.name} is ${iface.status()}, line protocol is ${iface.protocol()}`);
+    if (c?.ip !== null && c?.ip !== undefined) out.push(`  Internet address is ${formatIpv4(c.ip)}/${maskToPrefix(c.mask!)}`);
+    if (c?.accessGroupIn) out.push(`  Inbound access list is ${c.accessGroupIn}`);
+    if (c?.accessGroupOut) out.push(`  Outgoing access list is ${c.accessGroupOut}`);
+    if (c?.ipv6AccessGroupIn) out.push(`  Inbound IPv6 access list is ${c.ipv6AccessGroupIn}`);
+    if (c?.ipv6AccessGroupOut) out.push(`  Outgoing IPv6 access list is ${c.ipv6AccessGroupOut}`);
+    for (const helper of c?.helperAddresses ?? []) out.push(`  DHCP relay is ${formatIpv4(helper)}`);
+    if (c?.natRole) out.push(`  IP NAT ${c.natRole}`);
+  }
+  return out;
+}
+
 export function showIpv6InterfaceBrief(device: IosDevice): string[] {
   const out = [`${"Interface".padEnd(23)}${"IPv6-Address".padEnd(42)}${"Status".padEnd(22)}Protocol`];
   for (const i of device.interfaces()) {

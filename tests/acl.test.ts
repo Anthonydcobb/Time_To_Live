@@ -20,6 +20,7 @@ describe("standard IPv4 ACLs", () => {
     expect(config).toContain("ip access-list standard BLOCKED");
     expect(config).toContain(" ip access-group BLOCKED in");
     expect(type(router, "show interfaces g0/0")).toContain("  Inbound access list is BLOCKED");
+    expect(type(router, "show ip interface g0/0")).toContain("  Inbound access list is BLOCKED");
   });
 
   it("blocks a matching source and permits later sources", () => {

@@ -25,6 +25,7 @@ describe("static NAT", () => {
     const interfaceOutput = type(router, "show interfaces g0/0").join("\n");
     expect(interfaceOutput).toContain("IP NAT inside");
     expect(type(router, "show interfaces g0/1")).toContain("  IP NAT outside");
+    expect(type(router, "show ip interface g0/0")).toContain("  IP NAT inside");
   });
 
   it("overloads inside ICMP flows on the outside interface", () => {
