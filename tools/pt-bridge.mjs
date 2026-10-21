@@ -2,7 +2,7 @@ import { createServer } from "node:http";
 import { randomUUID } from "node:crypto";
 
 const host = "127.0.0.1";
-const port = Number(process.env.PT_BRIDGE_PORT ?? 39091);
+const port = Number(process.env.PT_BRIDGE_PORT ?? 39094);
 const pending = [];
 const results = new Map();
 

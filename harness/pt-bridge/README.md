@@ -6,6 +6,10 @@ The local bridge is intentionally loopback-only. Start it with:
 node tools/pt-bridge.mjs
 ```
 
+The default loopback port is `39094`; override it with `PT_BRIDGE_PORT` when
+another local bridge is already using that port. Client tools can use
+`PT_BRIDGE_URL` for the same override.
+
 It exposes:
 
 - `GET /health`

@@ -1,4 +1,4 @@
-const baseUrl = process.env.PT_BRIDGE_URL ?? "http://127.0.0.1:39092";
+const baseUrl = process.env.PT_BRIDGE_URL ?? "http://127.0.0.1:39094";
 
 async function request(path, options) {
   const response = await fetch(`${baseUrl}${path}`, options);
