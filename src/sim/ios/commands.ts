@@ -291,6 +291,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("ipv6", "IPv6 information"), kw("route", "IPv6 routing table")], (c) => c.out.push(...show.showIpv6Route(c.device))),
   cmd(EXEC, [SHOW, kw("ipv6", "IPv6 information"), kw("neighbors", "IPv6 neighbor cache")], (c) => c.out.push(...show.showIpv6Neighbors(c.device))),
   cmd(EXEC, [SHOW, kw("ipv6", "IPv6 information"), kw("ospf", "IPv6 OSPF information"), kw("neighbor", "IPv6 OSPF neighbors")], (c) => c.out.push(...show.showIpv6OspfNeighbor(c.device as Router)), { devices: ["router"] }),
+  cmd(EXEC, [SHOW, kw("ipv6", "IPv6 information"), kw("ospf", "IPv6 OSPF information"), kw("interface", "IPv6 OSPF interface information")], (c) => c.out.push(...show.showIpv6OspfInterface(c.device as Router)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration")], (c) => c.out.push(...show.showInterfaces(c.device))),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), ifaceArg], (c, [name]) =>
     c.out.push(...show.showInterfaces(c.device, name as string)),

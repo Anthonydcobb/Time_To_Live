@@ -144,6 +144,8 @@ describe("IPv6 interface configuration", () => {
     type(r2, "", "en", "conf t", "ipv6 unicast-routing", "interface g0/0", "ipv6 address 2001:db8:12::2/64", "no shutdown", "interface g0/1", "ipv6 address 2001:db8:20::1/64", "no shutdown", "ipv6 router ospf 1", "end", "conf t", "interface g0/0", "ipv6 ospf 1 area 0", "interface g0/1", "ipv6 ospf 1 area 0", "end");
     net.clock.advance(3_000);
     expect(type(r1, "show ipv6 ospf neighbor").join("\n")).toContain("Router");
+    expect(type(r1, "show ipv6 ospf interface").join("\n")).toContain("OSPFv3 process 1, Area 0");
+    expect(type(r1, "show ipv6 ospf interface").join("\n")).toContain("Neighbor count 1");
     expect(type(r1, "show ipv6 route").join("\n")).toContain("2001:0db8:0020");
   });
 });

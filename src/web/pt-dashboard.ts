@@ -170,6 +170,7 @@ async function healthCheck(): Promise<void> {
       const ipv6Routes = await run("Router0", "show ipv6 route");
       const ipv6Neighbors = await run("Router0", "show ipv6 neighbors");
       const ipv6Ospf = await run("Router0", "show ipv6 ospf neighbor");
+      const ipv6OspfInterfaces = await run("Router0", "show ipv6 ospf interface");
       const natTranslations = await run("Router0", "show ip nat translations");
       const standby = await run("Router0", "show standby");
       const vrrp = await run("Router0", "show vrrp");
@@ -183,7 +184,7 @@ async function healthCheck(): Promise<void> {
       const pc0Text = text(pc0Ip); const pc1Text = text(pc1Ip);
       const routerText = text(routerInterfaces); const sshText = text(sshStatus); const configText = text(routerConfig); const trunks = `${text(trunk0)}\n${text(trunk1)}`;
       const ipv6InterfaceText = text(ipv6Interfaces); const ipv6RouteText = text(ipv6Routes); const ipv6NeighborText = text(ipv6Neighbors);
-      const ipv6OspfText = text(ipv6Ospf);
+      const ipv6OspfText = text(ipv6Ospf); const ipv6OspfInterfaceText = text(ipv6OspfInterfaces);
       const natText = text(natTranslations); const standbyText = text(standby); const vrrpText = text(vrrp); const glbpText = text(glbp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
       const routingText = text(routingProtocols); const eigrpInterfaceText = text(eigrpInterfaces); const eigrpTopologyText = text(eigrpTopology); const ospfInterfaceText = text(ospfInterfaces); const routeText = text(ipRoutes); const dnsText = text(dnsHosts); const ipv6AclText = text(ipv6AccessLists);
       const ipv6Configured = /[0-9a-f]{1,4}:[0-9a-f:]+\/\d+/i.test(ipv6InterfaceText);
@@ -192,6 +193,7 @@ async function healthCheck(): Promise<void> {
         { label: "IPv6 routing table", ok: /(?:^|\n)[CLSOD]\s+[0-9a-f:]+\/\d+/i.test(ipv6RouteText), detail: "show ipv6 route" },
         { label: "IPv6 neighbor discovery", ok: /(?:^|\n)[0-9a-f]{1,4}:[0-9a-f:]+\s+\d+\s+[0-9a-f.]+\s+REACH/i.test(ipv6NeighborText), detail: "show ipv6 neighbors" },
         { label: "IPv6 OSPFv3 adjacency", ok: /FULL/i.test(ipv6OspfText), detail: "show ipv6 ospf neighbor" },
+        { label: "IPv6 OSPFv3 interfaces", ok: /OSPFv3 process/i.test(ipv6OspfInterfaceText) && /Neighbor count/i.test(ipv6OspfInterfaceText), detail: "show ipv6 ospf interface" },
       ] : [];
       const optionalChecks = [
         /Pro Inside global/i.test(natText) ? { label: "NAT translation table", ok: natText.split("\n").slice(2).some((line: string) => /^(?:---|icmp)\s+/i.test(line)), detail: "show ip nat translations" } : null,

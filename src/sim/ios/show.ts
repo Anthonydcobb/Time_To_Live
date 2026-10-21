@@ -299,6 +299,26 @@ export function showIpv6OspfNeighbor(router: Router): string[] {
   return out;
 }
 
+export function showIpv6OspfInterface(router: Router): string[] {
+  const ospfv3 = router.config.ospfv3;
+  if (!ospfv3) return ["OSPFv3 is not configured"];
+  const out: string[] = [];
+  for (const iface of router.l3Interfaces()) {
+    const area = router.config.interfaces[iface.name]?.ipv6OspfArea;
+    if (!iface.up() || area === null || area === undefined || !iface.ipv6Addresses.length) continue;
+    const peers = router.ospfv3Neighbors.filter((neighbor) => neighbor.localInterface === iface.name).length;
+    out.push(
+      `${iface.name} is up, line protocol is up`,
+      `  OSPFv3 process ${ospfv3.processId}, Area ${area}, Instance ID 0`,
+      `  IPv6 link-local address ${iface.ipv6Addresses[0].address}`,
+      `  Network Type POINT-TO-POINT, Cost 1, State ${peers ? "FULL" : "DOWN"}`,
+      `  Neighbor count ${peers}`,
+      "",
+    );
+  }
+  return out.length ? out : ["No OSPFv3 interfaces are active"];
+}
+
 /** How long ago, the way `show interfaces` prints it: 00:00:08, 1d02h, 3w2d, or never. */
 export function sinceText(now: number, at: number | null): string {
   if (at === null) return "never";
