@@ -13,6 +13,7 @@ const expected = [
   "sim-acl-scenario.json",
   "sim-routing-scenario.json",
   "sim-services-scenario.json",
+  "sim-access-security-scenario.json",
 ];
 
 const checks = [];
