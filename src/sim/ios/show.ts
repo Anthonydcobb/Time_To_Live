@@ -112,6 +112,8 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     if (ic.encapsulation) out.push(` encapsulation dot1Q ${ic.encapsulation.vlan}${ic.encapsulation.native ? " native" : ""}`);
     if (ic.accessGroupIn !== null) out.push(" ip access-group " + ic.accessGroupIn + " in");
     if (ic.accessGroupOut !== null) out.push(" ip access-group " + ic.accessGroupOut + " out");
+    if (ic.ipv6AccessGroupIn !== null) out.push(" ipv6 traffic-filter " + ic.ipv6AccessGroupIn + " in");
+    if (ic.ipv6AccessGroupOut !== null) out.push(" ipv6 traffic-filter " + ic.ipv6AccessGroupOut + " out");
     if (ic.switchport) out.push(...switchportLines(ic.switchport));
     else out.push(ic.ip !== null ? ` ip address ${formatIpv4(ic.ip)} ${formatIpv4(ic.mask!)}` : " no ip address");
     if (ic.shutdown) out.push(" shutdown");
@@ -169,7 +171,15 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
       for (const rule of rules) out.push(` ${rule.action} ${rule.protocol} ${formatAclSource(rule.source)} ${formatAclSource(rule.destination)}`);
     }
   }
-  if (Object.keys(c.standardAcls).length || Object.keys(c.extendedAcls).length) out.push("!");
+  for (const [name, rules] of Object.entries(c.ipv6Acls).sort(([a], [b]) => a.localeCompare(b))) {
+    out.push(`ipv6 access-list ${name}`);
+    for (const rule of rules) {
+      const source = rule.source.address === null ? "any" : `${formatIpv6(rule.source.address)}/${rule.source.prefix}`;
+      const destination = rule.destination.address === null ? "any" : `${formatIpv6(rule.destination.address)}/${rule.destination.prefix}`;
+      out.push(` ${rule.action} ${rule.protocol === "icmpv6" ? "icmp" : "ipv6"} ${source} ${destination}`);
+    }
+  }
+  if (Object.keys(c.standardAcls).length || Object.keys(c.extendedAcls).length || Object.keys(c.ipv6Acls).length) out.push("!");
   if (!isSwitch) out.push("control-plane", "!");
 
   if (c.bannerMotd !== null) out.push("banner motd ^C", ...c.bannerMotd.split("\n"), "^C", "!");
@@ -944,6 +954,15 @@ export function showAccessLists(device: IosDevice): string[] {
     rules.forEach((rule, index) => out.push("    " + ((index + 1) * 10) + " " + rule.action + " " + rule.protocol + " " + formatAclSource(rule.source) + " " + formatAclSource(rule.destination)));
   }
   return out.length ? out : ["No access lists configured"];
+}
+
+export function showIpv6AccessLists(device: IosDevice): string[] {
+  const out: string[] = [];
+  for (const [name, rules] of Object.entries(device.config.ipv6Acls).sort(([a], [b]) => a.localeCompare(b))) {
+    out.push(`IPv6 access list ${name}`);
+    rules.forEach((rule, index) => out.push(`    ${(index + 1) * 10} ${rule.action} ${rule.protocol} ${rule.source.address === null ? "any" : `${formatIpv6(rule.source.address)}/${rule.source.prefix}`} ${rule.destination.address === null ? "any" : `${formatIpv6(rule.destination.address)}/${rule.destination.prefix}`}`));
+  }
+  return out.length ? out : ["No IPv6 access lists configured"];
 }
 
 export function showIpNatTranslations(device: IosDevice): string[] {

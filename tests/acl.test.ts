@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { parseIpv4 as ip } from "../src/sim/addr";
+import { parseIpv4 as ip, parseIpv6 } from "../src/sim/addr";
 import { Pc } from "../src/sim/devices/pc";
 import { Router } from "../src/sim/devices/router";
 import { Network } from "../src/sim/network";
 import { permitsStandardAcl } from "../src/sim/ios/acl";
+import { permitsIpv6Acl } from "../src/sim/ios/acl";
 import { run, type } from "./helpers";
 
 describe("standard IPv4 ACLs", () => {
@@ -83,5 +84,24 @@ describe("standard IPv4 ACLs", () => {
     expect(type(router, "show access-lists")).toContain(
       "Extended IP access list 101",
     );
+  });
+});
+
+describe("IPv6 ACLs", () => {
+  it("blocks IPv6 echo traffic, preserves neighbor discovery, and permits it after reconfiguration", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1"));
+    const r2 = net.add(new Router("R2"));
+    net.connect(r1.port("Gi0/0"), r2.port("Gi0/0"));
+    type(r1, "", "en", "conf t", "interface g0/0", "ipv6 address 2001:db8:100::1/64", "no shutdown", "end");
+    type(r2, "", "en", "conf t", "interface g0/0", "ipv6 address 2001:db8:100::2/64", "no shutdown", "ipv6 access-list BLOCK6 deny icmp any any", "interface g0/0", "ipv6 traffic-filter BLOCK6 in", "end");
+    net.clock.advance(3_000);
+    expect(type(r1, "ping ipv6 2001:db8:100::2").join("\n")).toContain("Success rate is 0 percent");
+    expect(permitsIpv6Acl(r2.config, "GigabitEthernet0/0", { kind: "ipv6", src: parseIpv6("2001:db8:100::1")!, dst: parseIpv6("2001:db8:100::2")!, hopLimit: 64, icmpv6: { type: "echo-request", id: 1, seq: 1 } }, "in")).toBe(false);
+    type(r2, "conf t", "no ipv6 access-list BLOCK6", "ipv6 access-list ALLOW6 permit icmp any any", "interface g0/0", "ipv6 traffic-filter ALLOW6 in", "end");
+    expect(type(r1, "ping ipv6 2001:db8:100::2").join("\n")).toContain("Success rate is 100 percent");
+    const running = type(r2, "show running-config").join("\n");
+    expect(running).toContain("ipv6 traffic-filter ALLOW6 in");
+    expect(type(r2, "show ipv6 access-list").join("\n")).toContain("IPv6 access list ALLOW6");
   });
 });

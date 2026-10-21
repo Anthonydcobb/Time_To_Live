@@ -1,4 +1,5 @@
-import type { Ipv4Packet } from "../frames";
+import type { Ipv4Packet, Ipv6Packet } from "../frames";
+import { ipv6InPrefix } from "../addr";
 import type { AclAddress, IosConfig } from "./config";
 
 export type AclDirection = "in" | "out";
@@ -14,6 +15,22 @@ export function permitsStandardAcl(config: IosConfig, ifaceName: string, packet:
   for (const rule of rules) {
     const matches = rule.network === null || (((packet.src ^ rule.network) & (~rule.wildcard! >>> 0)) >>> 0) === 0;
     if (matches) return rule.action === "permit";
+  }
+  return false;
+}
+
+export function permitsIpv6Acl(config: IosConfig, ifaceName: string, packet: Ipv6Packet, direction: AclDirection): boolean {
+  const iface = config.interfaces[ifaceName];
+  const name = direction === "in" ? iface?.ipv6AccessGroupIn : iface?.ipv6AccessGroupOut;
+  if (name === null || name === undefined) return true;
+  // Neighbor discovery must continue to work when an IPv6 ACL is attached.
+  if (packet.icmpv6?.type === "neighbor-solicitation" || packet.icmpv6?.type === "neighbor-advertisement") return true;
+  const rules = config.ipv6Acls[name] ?? [];
+  for (const rule of rules) {
+    const protocol = packet.icmpv6 ? "icmpv6" : "ipv6";
+    const source = rule.source.address === null || ipv6InPrefix(packet.src, rule.source.address, rule.source.prefix);
+    const destination = rule.destination.address === null || ipv6InPrefix(packet.dst, rule.destination.address, rule.destination.prefix);
+    if ((rule.protocol === "ipv6" || rule.protocol === protocol) && source && destination) return rule.action === "permit";
   }
   return false;
 }

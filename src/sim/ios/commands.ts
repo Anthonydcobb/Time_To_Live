@@ -56,6 +56,18 @@ const ipv6Arg = (help: string): Arg<Ctx> => ({
   partial: (t) => /^[0-9a-f:]+$/i.test(t),
 });
 
+const ipv6PrefixArg = (help: string): Arg<Ctx> => ({
+  type: "arg",
+  name: "X:X::X:X/nn or any",
+  help,
+  match: (w, i) => {
+    if (w[i].text.toLowerCase() === "any") return { consumed: 1, value: { address: null, prefix: 0 } };
+    const parsed = parseIpv6Prefix(w[i].text);
+    return parsed ? { consumed: 1, value: parsed } : null;
+  },
+  partial: (t) => /^(any|[0-9a-f:]+\/?\d{0,3})$/i.test(t),
+});
+
 const wordArg = (help: string, name = "WORD"): Arg<Ctx> => ({
   type: "arg",
   name,
@@ -269,6 +281,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("hosts", "DNS host table")], (c) => c.out.push(...show.showHosts(c.device))),
   cmd(EXEC, [SHOW, kw("ssh", "Status of SSH server connections")], (c) => c.out.push(...show.showSsh(c.device))),
   cmd(EXEC, [SHOW, kw("access-lists", "List access lists")], (c) => c.out.push(...show.showAccessLists(c.device))),
+  cmd(EXEC, [SHOW, kw("ipv6", "IPv6 information"), kw("access-list", "IPv6 access lists")], (c) => c.out.push(...show.showIpv6AccessLists(c.device))),
   cmd(
     EXEC,
     [SHOW, kw("ip", "IP information"), kw("interface", "IP interface status and configuration"), kw("brief", "Brief summary of IP status and configuration")],
@@ -512,6 +525,19 @@ const configCommands: Entry[] = [
     c.console.setMode("config-acl");
     c.device.config.extendedAcls[c.console.aclName] ??= [];
   }),
+  cmd(CONFIG, [kw("ipv6", "IPv6 global configuration"), kw("access-list", "IPv6 access list"), wordArg("Access list name"), PERMIT, kw("ipv6", "Any IPv6 protocol"), ipv6PrefixArg("Source prefix"), ipv6PrefixArg("Destination prefix")], (c, [name, source, destination]) => {
+    (c.device.config.ipv6Acls[name as string] ??= []).push({ action: "permit", protocol: "ipv6", source: source as { address: Ipv6; prefix: number }, destination: destination as { address: Ipv6; prefix: number } });
+  }),
+  cmd(CONFIG, [kw("ipv6", "IPv6 global configuration"), kw("access-list", "IPv6 access list"), wordArg("Access list name"), DENY, kw("ipv6", "Any IPv6 protocol"), ipv6PrefixArg("Source prefix"), ipv6PrefixArg("Destination prefix")], (c, [name, source, destination]) => {
+    (c.device.config.ipv6Acls[name as string] ??= []).push({ action: "deny", protocol: "ipv6", source: source as { address: Ipv6; prefix: number }, destination: destination as { address: Ipv6; prefix: number } });
+  }),
+  cmd(CONFIG, [kw("ipv6", "IPv6 global configuration"), kw("access-list", "IPv6 access list"), wordArg("Access list name"), PERMIT, kw("icmp", "IPv6 ICMP protocol"), ipv6PrefixArg("Source prefix"), ipv6PrefixArg("Destination prefix")], (c, [name, source, destination]) => {
+    (c.device.config.ipv6Acls[name as string] ??= []).push({ action: "permit", protocol: "icmpv6", source: source as { address: Ipv6; prefix: number }, destination: destination as { address: Ipv6; prefix: number } });
+  }),
+  cmd(CONFIG, [kw("ipv6", "IPv6 global configuration"), kw("access-list", "IPv6 access list"), wordArg("Access list name"), DENY, kw("icmp", "IPv6 ICMP protocol"), ipv6PrefixArg("Source prefix"), ipv6PrefixArg("Destination prefix")], (c, [name, source, destination]) => {
+    (c.device.config.ipv6Acls[name as string] ??= []).push({ action: "deny", protocol: "icmpv6", source: source as { address: Ipv6; prefix: number }, destination: destination as { address: Ipv6; prefix: number } });
+  }),
+  cmd(CONFIG, [NO, kw("ipv6", "IPv6 global configuration"), kw("access-list", "IPv6 access list"), wordArg("Access list name")], (c, [name]) => { delete c.device.config.ipv6Acls[name as string]; }),
   cmd(CONFIG, [ACCESS_LIST, numArg(1, 99, "Standard ACL number"), PERMIT, ANY], (c, [number]) => {
     (c.device.config.standardAcls[number as number] ??= []).push({ action: "permit", network: null, wildcard: null });
   }),
@@ -910,6 +936,10 @@ const lineCommands: Entry[] = [
   cmd(LINE, [kw("password", "Set a password"), wordArg("The UNENCRYPTED (cleartext) line password", "LINE")], (c, [p]) => {
     selectedLines(c).password = setPassword(c, p as string);
   }),
+  cmd(ANY_IF, [kw("ipv6", "IPv6 interface commands"), kw("traffic-filter", "Apply an IPv6 access list"), wordArg("IPv6 ACL name"), kw("in", "Inbound packets")], (c, [name]) => forEachIface(c, (iface) => { c.device.ifaceConfig(iface).ipv6AccessGroupIn = name as string; })),
+  cmd(ANY_IF, [kw("ipv6", "IPv6 interface commands"), kw("traffic-filter", "Apply an IPv6 access list"), wordArg("IPv6 ACL name"), kw("out", "Outbound packets")], (c, [name]) => forEachIface(c, (iface) => { c.device.ifaceConfig(iface).ipv6AccessGroupOut = name as string; })),
+  cmd(ANY_IF, [NO, kw("ipv6", "IPv6 interface commands"), kw("traffic-filter", "Apply an IPv6 access list"), wordArg("IPv6 ACL name"), kw("in", "Inbound packets")], (c) => forEachIface(c, (iface) => { c.device.ifaceConfig(iface).ipv6AccessGroupIn = null; })),
+  cmd(ANY_IF, [NO, kw("ipv6", "IPv6 interface commands"), kw("traffic-filter", "Apply an IPv6 access list"), wordArg("IPv6 ACL name"), kw("out", "Outbound packets")], (c) => forEachIface(c, (iface) => { c.device.ifaceConfig(iface).ipv6AccessGroupOut = null; })),
   cmd(LINE, [NO, kw("password", "Set a password")], (c) => {
     selectedLines(c).password = null;
   }),

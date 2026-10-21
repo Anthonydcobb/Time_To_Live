@@ -85,6 +85,7 @@ export interface IpStackOptions {
   onDns?: (iface: L3Interface, packet: Ipv4Packet) => void;
   /** Optional inbound/outbound IPv4 ACL gate supplied by the owning device. */
   filter?: (iface: L3Interface, packet: Ipv4Packet, direction: "in" | "out") => boolean;
+  ipv6Filter?: (iface: L3Interface, packet: Ipv6Packet, direction: "in" | "out") => boolean;
 }
 
 const MAX_QUEUED_PER_HOST = 4;
@@ -320,6 +321,7 @@ export class IpStack {
     if (!route) return false;
     const neighbor = this.ipv6Neighbors.get(route.nextHop);
     if (neighbor?.iface === route.iface) {
+      if (this.opts.ipv6Filter && !this.opts.ipv6Filter(route.iface, packet, "out")) return false;
       route.iface.transmit({ src: route.iface.mac, dst: neighbor.mac, payload: packet });
     } else {
       const waiting = this.ipv6Queued.get(route.nextHop) ?? [];
@@ -331,6 +333,7 @@ export class IpStack {
   }
 
   private handleIpv6(iface: L3Interface, packet: Ipv6Packet, sourceMac: Mac): void {
+    if (this.opts.ipv6Filter && !this.opts.ipv6Filter(iface, packet, "in")) return;
     const icmp = packet.icmpv6;
     if (icmp?.type === "neighbor-solicitation" && icmp.target) {
       const target = this.ipv6Local(icmp.target);

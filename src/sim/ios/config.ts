@@ -58,6 +58,8 @@ export interface InterfaceConfig {
   helperAddresses: Ipv4[];
   accessGroupIn: string | null;
   accessGroupOut: string | null;
+  ipv6AccessGroupIn: string | null;
+  ipv6AccessGroupOut: string | null;
   cdp: boolean;
   natRole: "inside" | "outside" | null;
   hsrp: { group: number; ip: Ipv4; priority: number; preempt: boolean } | null;
@@ -70,7 +72,7 @@ export interface InterfaceConfig {
 }
 
 export function newInterfaceConfig(shutdown: boolean): InterfaceConfig {
-  return { shutdown, description: null, ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, cdp: true, natRole: null, hsrp: null, vrrp: null, glbp: null };
+  return { shutdown, description: null, ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, ipv6AccessGroupIn: null, ipv6AccessGroupOut: null, cdp: true, natRole: null, hsrp: null, vrrp: null, glbp: null };
 }
 
 export interface AclAddress {
@@ -87,6 +89,18 @@ export interface ExtendedAclRule {
   protocol: "ip" | "icmp";
   source: AclAddress;
   destination: AclAddress;
+}
+
+export interface Ipv6AclAddress {
+  address: Ipv6 | null;
+  prefix: number;
+}
+
+export interface Ipv6AclRule {
+  action: "permit" | "deny";
+  protocol: "ipv6" | "icmpv6";
+  source: Ipv6AclAddress;
+  destination: Ipv6AclAddress;
 }
 
 export interface OspfNetwork {
@@ -128,6 +142,7 @@ export interface IosConfig {
   rsaKeysGenerated: boolean;
   standardAcls: Record<string, StandardAclRule[]>;
   extendedAcls: Record<string, ExtendedAclRule[]>;
+  ipv6Acls: Record<string, Ipv6AclRule[]>;
   enableSecret: string | null;
   enablePassword: StoredPassword | null;
   servicePasswordEncryption: boolean;
@@ -181,6 +196,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     rsaKeysGenerated: false,
     standardAcls: {},
     extendedAcls: {},
+    ipv6Acls: {},
     enableSecret: null,
     enablePassword: null,
     servicePasswordEncryption: false,
