@@ -21,6 +21,8 @@ describe("EIGRP", () => {
     type(r2, "", "en", "conf t", "interface g0/0", "ip address 10.0.2.1 255.255.255.0", "no shutdown", "interface g0/1", "ip address 10.0.12.2 255.255.255.252", "no shutdown", "router eigrp 100", "network 10.0.2.0 0.0.0.255", "network 10.0.12.0 0.0.0.3", "end");
     net.clock.advance(5_000);
     expect(type(r1, "show ip eigrp neighbors").join("\n")).toContain("10.0.12.2");
+    expect(type(r1, "show ip eigrp interfaces").join("\n")).toContain("GigabitEthernet0/1");
+    expect(type(r1, "show ip eigrp interfaces").join("\n")).toContain("1        0");
     expect(type(r1, "show ip route").join("\n")).toContain("D");
     expect(run(pc1, "ping -n 8 10.0.2.10").some((line) => line.startsWith("Reply from 10.0.2.10"))).toBe(true);
   });

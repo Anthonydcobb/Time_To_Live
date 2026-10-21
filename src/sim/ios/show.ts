@@ -528,6 +528,20 @@ export function showIpEigrpNeighbor(router: Router): string[] {
   return out;
 }
 
+export function showIpEigrpInterfaces(router: Router): string[] {
+  const eigrp = router.config.eigrp;
+  if (!eigrp) return ["EIGRP is not configured"];
+  const out = [`EIGRP-IPv4 Interfaces for AS(${eigrp.as})`, "Interface        Peers   Xmit Queue   Mean   Pacing Time   Multicast   Pending"];
+  for (const iface of router.l3Interfaces()) {
+    if (!iface.up() || iface.ip === null || iface.mask === null) continue;
+    const enabled = eigrp.networks.some((network) => networkOf(iface.ip!, network.mask) === network.network);
+    if (!enabled) continue;
+    const peers = router.eigrpNeighbors.filter((neighbor) => neighbor.localInterface === iface.name).length;
+    out.push(`${iface.name.padEnd(18)}${String(peers).padEnd(9)}0             0      0 ms          0           0`);
+  }
+  return out;
+}
+
 export function showIpProtocols(device: IosDevice): string[] {
   if (device.kind !== "router" || (!device.config.ospf && !device.config.eigrp)) return ["Routing Protocol is \"connected\"", "  Routing Protocol is \"static\"", ""];
   if (device.config.eigrp) return [`Routing Protocol is \"eigrp ${device.config.eigrp.as}\"`, "  Outgoing update filter list for all interfaces is not set", `  Routing for Networks: ${device.config.eigrp.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`, `  Passive Interfaces: ${device.config.eigrp.passiveInterfaces.join(", ") || "none"}`, ""];
