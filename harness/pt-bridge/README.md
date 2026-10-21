@@ -7,8 +7,10 @@ node tools/pt-bridge.mjs
 ```
 
 The default loopback port is `39094`; override it with `PT_BRIDGE_PORT` when
-another local bridge is already using that port. Client tools can use
-`PT_BRIDGE_URL` for the same override.
+another local bridge is already using that port. The stack launcher detects
+that legacy/default listener and selects a current replacement from 39095
+through 39105. Client tools can use `PT_BRIDGE_URL` for an explicit override,
+or discover the current replacement automatically.
 
 It exposes:
 

@@ -31,11 +31,25 @@ Set the matching secret in the same PowerShell window first:
 $env:PT_TTL_AUTH_SECRET = "your-local-secret"
 ```
 
-To run the live queue bridge, keep `tools\pt-bridge.mjs` running on port
-`39094`, then start a second PowerShell window with the same secret:
+For the normal live workflow, let the launcher choose a free current bridge
+port and start the dashboard plus Java bridge windows:
 
 ```powershell
-& .\harness\pt-exapp\build-bridge.ps1 127.0.0.1 39000 39094
+Set-Location C:\Users\antho\Documents\Time_To_Live
+$env:PT_TTL_AUTH_SECRET = "your-local-secret"
+& .\tools\start-pt-stack.ps1
+```
+
+Use the exact bridge port and dashboard URL printed by that command. If port
+39094 is occupied by an older bridge, the launcher selects a replacement such
+as 39095. Do not paste the `PS C:\...>` prompt text into PowerShell.
+
+For the manual live queue workflow, keep `tools\pt-bridge.mjs` running on the
+selected bridge port, then start a second PowerShell window with the same
+secret:
+
+```powershell
+& .\harness\pt-exapp\build-bridge.ps1 127.0.0.1 39000 39095
 ```
 
 The dashboard's bridge status is separate from the ExApp status. A bridge can
@@ -46,6 +60,10 @@ The full launcher uses port 5173 by default and binds it strictly. Set
 `$env:PT_TTL_DASHBOARD_PORT` before running `tools\start-pt-stack.ps1` when
 another process already owns that port; the printed dashboard URL will use the
 selected port.
+
+Run `npm run pt:status` to discover the current bridge automatically. A
+healthy HTTP bridge with `poller: "not-connected"` still needs the Packet
+Tracer ExApp to poll it.
 
 Optional arguments are host, port, and command:
 
