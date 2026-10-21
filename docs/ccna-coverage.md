@@ -77,6 +77,7 @@ node tools/run-sim-stp-scenario.mjs
 node tools/run-sim-ipv6-scenario.mjs
 node tools/run-sim-ipv6-ospf.mjs
 node tools/run-sim-dhcp-scenario.mjs
+node tools/run-sim-nat-scenario.mjs
 node tools/run-pt-adapter-spike.mjs
 ```
 
@@ -92,3 +93,5 @@ The OSPFv3 runner writes `harness/artifacts/sim-ipv6-ospf.json` with the
 adjacency, learned route, and end-to-end IPv6 ping.
 The DHCP runner writes `harness/artifacts/sim-dhcp-scenario.json` with the
 PC lease, excluded-range validation, binding table, and topology snapshot.
+The NAT runner writes `harness/artifacts/sim-nat-scenario.json` with inbound
+static translation, outbound reachability, translations, and statistics.
