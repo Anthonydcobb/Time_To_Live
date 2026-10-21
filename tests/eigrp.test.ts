@@ -23,6 +23,8 @@ describe("EIGRP", () => {
     expect(type(r1, "show ip eigrp neighbors").join("\n")).toContain("10.0.12.2");
     expect(type(r1, "show ip eigrp interfaces").join("\n")).toContain("GigabitEthernet0/1");
     expect(type(r1, "show ip eigrp interfaces").join("\n")).toContain("1        0");
+    expect(type(r1, "show ip eigrp topology").join("\n")).toContain("10.0.2.0/24");
+    expect(type(r1, "show ip eigrp topology").join("\n")).toContain("via 10.0.12.2");
     expect(type(r1, "show ip route").join("\n")).toContain("D");
     expect(run(pc1, "ping -n 8 10.0.2.10").some((line) => line.startsWith("Reply from 10.0.2.10"))).toBe(true);
   });

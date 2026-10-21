@@ -310,6 +310,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("ospf", "OSPF information"), kw("interface", "OSPF interface information"), ifaceArg], (c, [name]) => c.out.push(...show.showIpOspfInterface(c.device as Router, name as string)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("eigrp", "EIGRP information"), kw("neighbors", "EIGRP neighbor list")], (c) => c.out.push(...show.showIpEigrpNeighbor(c.device as Router)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("eigrp", "EIGRP information"), kw("interfaces", "EIGRP interface information")], (c) => c.out.push(...show.showIpEigrpInterfaces(c.device as Router)), { devices: ["router"] }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("eigrp", "EIGRP information"), kw("topology", "EIGRP topology table")], (c) => c.out.push(...show.showIpEigrpTopology(c.device as Router)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("protocols", "Active routing protocols")], (c) => c.out.push(...show.showIpProtocols(c.device)), { devices: ["router"] }),
   cmd(
     EXEC,

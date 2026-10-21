@@ -542,6 +542,17 @@ export function showIpEigrpInterfaces(router: Router): string[] {
   return out;
 }
 
+export function showIpEigrpTopology(router: Router): string[] {
+  const eigrp = router.config.eigrp;
+  if (!eigrp) return ["EIGRP is not configured"];
+  const out = [`EIGRP-IPv4 Topology Table for AS(${eigrp.as})`, "Codes: P - Passive, A - Active, U - Update, Q - Query, R - Reply, r - Reply status"];
+  for (const route of router.eigrpTopology()) {
+    const via = route.nextHop === null ? "connected" : `via ${formatIpv4(route.nextHop)}`;
+    out.push(`P ${formatIpv4(route.network)}/${maskToPrefix(route.mask)}, ${via}, ${route.exitIface ?? "-"}`);
+  }
+  return out;
+}
+
 export function showIpProtocols(device: IosDevice): string[] {
   if (device.kind !== "router" || (!device.config.ospf && !device.config.eigrp)) return ["Routing Protocol is \"connected\"", "  Routing Protocol is \"static\"", ""];
   if (device.config.eigrp) return [`Routing Protocol is \"eigrp ${device.config.eigrp.as}\"`, "  Outgoing update filter list for all interfaces is not set", `  Routing for Networks: ${device.config.eigrp.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`, `  Passive Interfaces: ${device.config.eigrp.passiveInterfaces.join(", ") || "none"}`, ""];

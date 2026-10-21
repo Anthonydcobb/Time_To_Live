@@ -27,6 +27,10 @@ export class Router extends IosDevice {
   private nextPatId = 40000;
   readonly ospfNeighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv4; localRole: "DR" | "BDR" | "DROTHER" | "P2P"; remoteRole: "DR" | "BDR" | "DROTHER" | "P2P" }[] = [];
   readonly eigrpNeighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv4 }[] = [];
+
+  eigrpTopology(): { network: Ipv4; mask: Ipv4; nextHop: Ipv4 | null; exitIface: string | null }[] {
+    return this.eigrpRoutes.map((route) => ({ ...route }));
+  }
   readonly ospfv3Neighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv6 }[] = [];
 
   ipv6OspfRoutes() {
