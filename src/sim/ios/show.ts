@@ -107,6 +107,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   }
   if (c.staticRoutes.length) out.push("!");
   for (const nat of c.staticNat) out.push(`ip nat inside source static ${formatIpv4(nat.insideLocal)} ${formatIpv4(nat.insideGlobal)}`);
+  for (const rule of c.natOverloads) out.push(`ip nat inside source list ${rule.acl} interface ${rule.outsideInterface} overload`);
   for (const [number, rules] of Object.entries(c.standardAcls).sort(([a], [b]) => Number(a) - Number(b))) {
     for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + formatAclSource(rule));
   }
@@ -816,6 +817,7 @@ export function showAccessLists(device: IosDevice): string[] {
 export function showIpNatTranslations(device: IosDevice): string[] {
   const out = ["Pro Inside global      Pro Inside local       Outside local      Outside global", "--- -------------------- -------------------- --------------- ---------------"];
   for (const nat of device.config.staticNat) out.push(`--- ${formatIpv4(nat.insideGlobal).padEnd(20)} ${formatIpv4(nat.insideLocal).padEnd(20)} ---               ---`);
+  if (device.kind === "router") for (const nat of (device as Router).natPatTranslations()) out.push(`icmp ${formatIpv4(nat.globalIp).padEnd(20)} ${formatIpv4(nat.localIp).padEnd(20)} ---               ---`);
   return out;
 }
 

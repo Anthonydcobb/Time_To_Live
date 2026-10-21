@@ -21,11 +21,17 @@ export class Router extends IosDevice {
   readonly deletedSubinterfaces = new Set<string>();
   private ospfRoutes: { network: Ipv4; mask: Ipv4; nextHop: Ipv4 | null; exitIface: string | null }[] = [];
   private ospfv3Routes: { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[] = [];
+  private patSessions = new Map<number, { localIp: Ipv4; localId: number; globalIp: Ipv4 }>();
+  private nextPatId = 40000;
   readonly ospfNeighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv4 }[] = [];
   readonly ospfv3Neighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv6 }[] = [];
 
   ipv6OspfRoutes() {
     return [...this.ospfv3Routes];
+  }
+
+  natPatTranslations() {
+    return [...this.patSessions.values()];
   }
 
   constructor(id: string, hostname = "Router") {
@@ -140,19 +146,46 @@ export class Router extends IosDevice {
     return this.config.interfaces[port.name]?.natRole ?? null;
   }
 
+  private natAclPermits(acl: number, packet: import("../frames").Ipv4Packet): boolean {
+    for (const rule of this.config.standardAcls[acl] ?? []) {
+      const matches = rule.network === null || (((packet.src ^ rule.network) & (~rule.wildcard! >>> 0)) >>> 0) === 0;
+      if (matches) return rule.action === "permit";
+    }
+    return false;
+  }
+
+  private outsideAddress(interfaceName: string): Ipv4 | null {
+    return this.config.interfaces[interfaceName]?.ip ?? null;
+  }
+
   private translateOutbound(frame: Frame, port: Port): Frame {
     const payload = frame.payload;
     if (this.natRole(port) !== "outside" || payload.kind !== "ipv4") return frame;
     const nat = this.config.staticNat.find((entry) => entry.insideLocal === payload.src);
-    if (!nat) return frame;
-    return { ...frame, payload: { ...payload, src: nat.insideGlobal } };
+    if (nat) return { ...frame, payload: { ...payload, src: nat.insideGlobal } };
+    const overload = this.config.natOverloads.find((rule) => rule.outsideInterface === port.name && this.natAclPermits(rule.acl, payload));
+    if (!overload || !payload.icmp) return frame;
+    let session = [...this.patSessions.values()].find((entry) => entry.localIp === payload.src && entry.localId === payload.icmp!.id && entry.globalIp === this.outsideAddress(overload.outsideInterface));
+    if (!session) {
+      const globalIp = this.outsideAddress(overload.outsideInterface);
+      if (globalIp === null) return frame;
+      const globalId = this.nextPatId++;
+      session = { localIp: payload.src, localId: payload.icmp.id, globalIp };
+      this.patSessions.set(globalId, session);
+      return { ...frame, payload: { ...payload, src: globalIp, icmp: { ...payload.icmp, id: globalId } } };
+    }
+    const globalId = [...this.patSessions.entries()].find(([, entry]) => entry === session)?.[0];
+    return globalId === undefined ? frame : { ...frame, payload: { ...payload, src: session.globalIp, icmp: { ...payload.icmp, id: globalId } } };
   }
 
   private translateInbound(frame: Frame, port: Port): Frame {
     const payload = frame.payload;
     if (this.natRole(port) !== "outside" || payload.kind !== "ipv4") return frame;
     const nat = this.config.staticNat.find((entry) => entry.insideGlobal === payload.dst);
-    return nat ? { ...frame, payload: { ...payload, dst: nat.insideLocal } } : frame;
+    if (nat) return { ...frame, payload: { ...payload, dst: nat.insideLocal } };
+    if (!payload.icmp) return frame;
+    const session = this.patSessions.get(payload.icmp.id);
+    return session && session.globalIp === payload.dst ? { ...frame, payload: { ...payload, dst: session.localIp, icmp: { ...payload.icmp, id: session.localId } } } : frame;
   }
 
   send(port: Port, frame: Frame): void {

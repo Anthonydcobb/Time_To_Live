@@ -143,6 +143,7 @@ export interface IosConfig {
   arpInspectionVlans: number[];
   ipv6StaticRoutes: { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[];
   staticNat: { insideLocal: Ipv4; insideGlobal: Ipv4 }[];
+  natOverloads: { acl: number; outsideInterface: string }[];
 }
 
 export function defaultLine(): LineConfig {
@@ -185,6 +186,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     arpInspectionVlans: [],
     ipv6StaticRoutes: [],
     staticNat: [],
+    natOverloads: [],
   };
 }
 

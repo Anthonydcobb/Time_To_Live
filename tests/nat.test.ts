@@ -23,4 +23,20 @@ describe("static NAT", () => {
     expect(outbound.some((line) => line.startsWith("Reply from 203.0.113.2"))).toBe(true);
     expect(type(router, "show ip nat translations").join("\n")).toContain("203.0.113.100");
   });
+
+  it("overloads inside ICMP flows on the outside interface", () => {
+    const net = new Network();
+    const inside = net.add(new Pc("Inside"));
+    const outside = net.add(new Pc("Outside"));
+    const router = net.add(new Router("R1"));
+    inside.configure(ip("10.0.0.10"), ip("255.255.255.0"), ip("10.0.0.1"));
+    outside.configure(ip("203.0.113.2"), ip("255.255.255.0"), ip("203.0.113.1"));
+    net.connect(inside.nic, router.port("Gi0/0"));
+    net.connect(outside.nic, router.port("Gi0/1"));
+    type(router, "", "en", "conf t", "interface g0/0", "ip address 10.0.0.1 255.255.255.0", "ip nat inside", "no shutdown", "interface g0/1", "ip address 203.0.113.1 255.255.255.0", "ip nat outside", "no shutdown", "access-list 1 permit 10.0.0.0 0.0.0.255", "ip nat inside source list 1 interface g0/1 overload", "end");
+    net.clock.advance(3_000);
+    const ping = run(inside, "ping -n 4 203.0.113.2");
+    expect(ping.some((line) => line.startsWith("Reply from 203.0.113.2"))).toBe(true);
+    expect(type(router, "show ip nat translations").join("\n")).toContain("icmp 203.0.113.1");
+  });
 });

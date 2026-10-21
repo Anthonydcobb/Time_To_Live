@@ -621,6 +621,13 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [NO, IP, kw("nat", "Configure Network Address Translation"), kw("inside", "Inside address"), kw("source", "Source address"), kw("static", "Static translation"), ipArg("Inside local address"), ipArg("Inside global address")], (c, [local, global]) => {
     c.device.config.staticNat = c.device.config.staticNat.filter((n) => n.insideLocal !== local || n.insideGlobal !== global);
   }, { devices: ["router"] }),
+  cmd(CONFIG, [IP, kw("nat", "Configure Network Address Translation"), kw("inside", "Inside address"), kw("source", "Source address"), kw("list", "Access list"), numArg(1, 99, "Standard ACL number"), kw("interface", "Outside interface"), ifaceArg, kw("overload", "Overload translations")], (c, [acl, iface]) => {
+    const rule = { acl: acl as number, outsideInterface: iface as string };
+    if (!c.device.config.natOverloads.some((r) => r.acl === rule.acl && r.outsideInterface === rule.outsideInterface)) c.device.config.natOverloads.push(rule);
+  }, { devices: ["router"] }),
+  cmd(CONFIG, [NO, IP, kw("nat", "Configure Network Address Translation"), kw("inside", "Inside address"), kw("source", "Source address"), kw("list", "Access list"), numArg(1, 99, "Standard ACL number"), kw("interface", "Outside interface"), ifaceArg, kw("overload", "Overload translations")], (c, [acl, iface]) => {
+    c.device.config.natOverloads = c.device.config.natOverloads.filter((r) => r.acl !== acl || r.outsideInterface !== iface);
+  }, { devices: ["router"] }),
 ];
 
 const routedIface = (c: Ctx) => c.console.ifaces.every((n) => c.device.findInterface(n)?.routed);
