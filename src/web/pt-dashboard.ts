@@ -139,6 +139,11 @@ async function refresh(): Promise<void> {
     });
     renderLinks(links);
     renderTopology(devices, links);
+    const currentHealth = await bridge("/health");
+    pollerStatus.textContent = currentHealth.pollerConnected
+      ? `CONNECTED - polled ${currentHealth.lastPollAt ? new Date(currentHealth.lastPollAt).toLocaleTimeString() : "just now"}`
+      : "NOT CONNECTED";
+    pollerStatus.className = currentHealth.pollerConnected ? "up" : "down";
     lastRefresh.textContent = new Date().toLocaleTimeString();
   } catch (error) {
     bridgeStatus.textContent = "OFFLINE"; bridgeStatus.className = "down";
