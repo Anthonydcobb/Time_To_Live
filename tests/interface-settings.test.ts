@@ -36,4 +36,14 @@ describe("interface speed and duplex", () => {
     expect(config.match(/ speed 10/g)?.length).toBe(2);
     expect(config.match(/ duplex half/g)?.length).toBe(2);
   });
+
+  it("uses no speed and no duplex to restore negotiation", () => {
+    const router = new Router("R1", "R1");
+    new Network().add(router);
+
+    type(router, "", "en", "conf t", "int gi0/0", "speed 100", "duplex half", "no speed", "no duplex", "end");
+    const config = type(router, "show running-config").join("\n");
+    expect(config).toContain(" duplex auto");
+    expect(config).toContain(" speed auto");
+  });
 });

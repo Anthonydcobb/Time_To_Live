@@ -827,9 +827,11 @@ const interfaceCommands: Entry[] = [
   cmd(ANY_IF, [kw("speed", "Configure interface speed"), kw("10", "10 Mbps")], (c) => setInterfaceSpeed(c, 10), { when: physicalPort }),
   cmd(ANY_IF, [kw("speed", "Configure interface speed"), kw("100", "100 Mbps")], (c) => setInterfaceSpeed(c, 100), { when: physicalPort }),
   cmd(ANY_IF, [kw("speed", "Configure interface speed"), kw("1000", "1000 Mbps")], (c) => setInterfaceSpeed(c, 1000), { when: physicalPort }),
+  cmd(ANY_IF, [NO, kw("speed", "Configure interface speed")], (c) => setInterfaceSpeed(c, "auto"), { when: physicalPort }),
   cmd(ANY_IF, [kw("duplex", "Configure duplex operation"), kw("auto", "Negotiate duplex operation")], (c) => setInterfaceDuplex(c, "auto"), { when: physicalPort }),
   cmd(ANY_IF, [kw("duplex", "Configure duplex operation"), kw("half", "Half-duplex operation")], (c) => setInterfaceDuplex(c, "half"), { when: physicalPort }),
   cmd(ANY_IF, [kw("duplex", "Configure duplex operation"), kw("full", "Full-duplex operation")], (c) => setInterfaceDuplex(c, "full"), { when: physicalPort }),
+  cmd(ANY_IF, [NO, kw("duplex", "Configure duplex operation")], (c) => setInterfaceDuplex(c, "auto"), { when: physicalPort }),
   cmd(ANY_IF, [kw("ipv6", "IPv6 interface configuration"), kw("ospf", "Enable IPv6 OSPF"), numArg(1, 65535, "OSPFv3 process ID"), kw("area", "OSPF area"), numArg(0, 4294967295, "OSPF area ID")], (c, [processId, area]) => {
     if (c.device.kind !== "router" || !c.device.config.ospfv3 || c.device.config.ospfv3.processId !== processId) { c.out.push("% OSPFv3 process is not configured."); return; }
     forEachIface(c, (name) => { c.device.ifaceConfig(name).ipv6OspfArea = area as number; });
