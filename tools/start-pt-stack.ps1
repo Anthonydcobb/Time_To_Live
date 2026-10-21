@@ -80,6 +80,11 @@ if ($pollerReady) {
     Write-Warning "Bridge is running, but the Packet Tracer ExApp has not checked in. Open Packet Tracer, enable external IPC, and verify the Java bridge window."
 }
 
-Start-Process "http://localhost:$dashboardPort/pt-dashboard.html?bridge=http://127.0.0.1:$bridgePort" | Out-Null
-Write-Host "Packet Tracer stack starting. Bridge: http://127.0.0.1:$bridgePort/health"
-Write-Host "Dashboard: http://localhost:$dashboardPort/pt-dashboard.html?bridge=http://127.0.0.1:$bridgePort"
+$dashboardUrl = "http://localhost:$dashboardPort/pt-dashboard.html?bridge=http://127.0.0.1:$bridgePort"
+try {
+    Start-Process $dashboardUrl -ErrorAction Stop | Out-Null
+} catch {
+    Write-Warning "Could not open the dashboard automatically: $($_.Exception.Message)"
+}
+Write-Host "Packet Tracer stack started. Bridge: http://127.0.0.1:$bridgePort/health"
+Write-Host "Dashboard: $dashboardUrl"
