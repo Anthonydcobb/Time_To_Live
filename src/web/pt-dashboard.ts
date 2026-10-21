@@ -256,6 +256,8 @@ async function healthCheck(): Promise<void> {
       const eigrpInterfaces = await run("Router0", "show ip eigrp interfaces");
       const eigrpTopology = await run("Router0", "show ip eigrp topology");
       const ospfInterfaces = await run("Router0", "show ip ospf interface");
+      const ospfNeighbors = await run("Router0", "show ip ospf neighbor");
+      const eigrpNeighbors = await run("Router0", "show ip eigrp neighbors");
       const ipRoutes = await run("Router0", "show ip route");
       const routerArp = await run("Router0", "show ip arp");
       const switch0Macs = await run("Switch0", "show mac address-table");
@@ -291,6 +293,7 @@ async function healthCheck(): Promise<void> {
       const routerText = text(routerInterfaces); const sshText = text(sshStatus); const configText = text(routerConfig); const trunks = `${text(trunk0)}\n${text(trunk1)}`;
       const ipv6InterfaceText = text(ipv6Interfaces); const ipv6RouteText = text(ipv6Routes); const ipv6NeighborText = text(ipv6Neighbors);
       const ipv6OspfText = text(ipv6Ospf); const ipv6OspfInterfaceText = text(ipv6OspfInterfaces); const ipv6ProtocolsText = text(ipv6Protocols);
+      const ospfNeighborText = text(ospfNeighbors); const eigrpNeighborText = text(eigrpNeighbors);
       const natText = text(natTranslations); const natStatisticsText = text(natStatistics); const snmpText = text(snmpStatus); const standbyText = text(standby); const vrrpText = text(vrrp); const glbpText = text(glbp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
       const switch0StatusText = text(switch0Status); const switch0CountersText = text(switch0Counters); const switch0ErrorsText = text(switch0Errors);
       const spanningText = `${text(spanning0)}\n${text(spanning1)}`;
@@ -319,6 +322,8 @@ async function healthCheck(): Promise<void> {
         /Routing Protocol is "(?:ospf|eigrp)/i.test(routingText) ? { label: "Dynamic routing protocol", ok: /Routing Protocol is "(?:ospf|eigrp)/i.test(routingText), detail: "show ip protocols" } : null,
         /EIGRP-IPv4 Interfaces for AS/i.test(eigrpInterfaceText) ? { label: "EIGRP interfaces", ok: !/EIGRP is not configured/i.test(eigrpInterfaceText), detail: "show ip eigrp interfaces" } : null,
         /EIGRP-IPv4 Topology Table for AS/i.test(eigrpTopologyText) ? { label: "EIGRP topology", ok: !/EIGRP is not configured/i.test(eigrpTopologyText), detail: "show ip eigrp topology" } : null,
+        /Routing Protocol is "ospf/i.test(routingText) ? { label: "OSPF neighbor adjacency", ok: /FULL\//i.test(ospfNeighborText), detail: "show ip ospf neighbor" } : null,
+        /Routing Protocol is "eigrp/i.test(routingText) ? { label: "EIGRP neighbor adjacency", ok: /^\s*\d+\s+\d{1,3}(?:\.\d+){3}/m.test(eigrpNeighborText), detail: "show ip eigrp neighbors" } : null,
         /Designated Router \(ID\)/i.test(ospfInterfaceText) ? { label: "OSPF DR/BDR state", ok: /State (DR|BDR|DROTHER)/i.test(ospfInterfaceText) && /Designated Router \(ID\)/i.test(ospfInterfaceText), detail: "show ip ospf interface" } : null,
         /Global LLDP information/i.test(lldpText) ? { label: "LLDP neighbor discovery", ok: /Device ID\s+Local Intf/i.test(lldpNeighborText) && !/not enabled/i.test(lldpNeighborText), detail: "show lldp neighbors" } : null,
         /Name\/address lookup uses|Host\s+Address/i.test(dnsText) && !/No hosts configured/i.test(dnsText) ? { label: "DNS host records", ok: /Host\s+Address/i.test(dnsText), detail: "show hosts" } : null,
