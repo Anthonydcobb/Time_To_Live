@@ -42,5 +42,8 @@ describe("operations services", () => {
 
     net.disconnect(router.port("Gi0/0"));
     expect(type(router, "show logging").join("\n")).toContain("changed state to down");
+
+    type(router, "clear logging");
+    expect(type(router, "show logging").join("\n")).toContain("Log buffer: 0 messages (maximum 100)");
   });
 });
