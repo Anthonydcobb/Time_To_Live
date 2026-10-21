@@ -280,6 +280,7 @@ async function healthCheck(): Promise<void> {
       const logging = await run("Router0", "show logging");
       const lldpStatus = await run("Router0", "show lldp");
       const lldpNeighbors = await run("Router0", "show lldp neighbors");
+      const cdpNeighbors = await run("Switch0", "show cdp neighbors");
       const trunk0 = await run("Switch0", "show interfaces trunk");
       const trunk1 = await run("Switch1", "show interfaces trunk");
       const spanning0 = await run("Switch0", "show spanning-tree");
@@ -295,7 +296,7 @@ async function healthCheck(): Promise<void> {
       const ipv6InterfaceText = text(ipv6Interfaces); const ipv6RouteText = text(ipv6Routes); const ipv6NeighborText = text(ipv6Neighbors);
       const ipv6OspfText = text(ipv6Ospf); const ipv6OspfInterfaceText = text(ipv6OspfInterfaces); const ipv6ProtocolsText = text(ipv6Protocols);
       const ospfNeighborText = text(ospfNeighbors); const eigrpNeighborText = text(eigrpNeighbors);
-      const natText = text(natTranslations); const natStatisticsText = text(natStatistics); const snmpText = text(snmpStatus); const standbyText = text(standby); const vrrpText = text(vrrp); const glbpText = text(glbp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
+      const natText = text(natTranslations); const natStatisticsText = text(natStatistics); const snmpText = text(snmpStatus); const standbyText = text(standby); const vrrpText = text(vrrp); const glbpText = text(glbp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors); const cdpNeighborText = text(cdpNeighbors);
       const switch0StatusText = text(switch0Status); const switch0CountersText = text(switch0Counters); const switch0ErrorsText = text(switch0Errors); const switch0PortSecurityText = text(switch0PortSecurity);
       const spanningText = `${text(spanning0)}\n${text(spanning1)}`;
       const switch0ErrorRows = switch0ErrorsText.split("\n").filter((line: string) => /^\S+\s+\d/.test(line));
@@ -327,6 +328,7 @@ async function healthCheck(): Promise<void> {
         /Routing Protocol is "eigrp/i.test(routingText) ? { label: "EIGRP neighbor adjacency", ok: /^\s*\d+\s+\d{1,3}(?:\.\d+){3}/m.test(eigrpNeighborText), detail: "show ip eigrp neighbors" } : null,
         /Designated Router \(ID\)/i.test(ospfInterfaceText) ? { label: "OSPF DR/BDR state", ok: /State (DR|BDR|DROTHER)/i.test(ospfInterfaceText) && /Designated Router \(ID\)/i.test(ospfInterfaceText), detail: "show ip ospf interface" } : null,
         /Global LLDP information/i.test(lldpText) ? { label: "LLDP neighbor discovery", ok: /Device ID\s+Local Intf/i.test(lldpNeighborText) && !/not enabled/i.test(lldpNeighborText), detail: "show lldp neighbors" } : null,
+        /Device ID\s+Local Intrfce/i.test(cdpNeighborText) ? { label: "CDP neighbor discovery", ok: /Switch\s+Fas?\s*0\/1/i.test(cdpNeighborText), detail: "show cdp neighbors" } : null,
         /Name\/address lookup uses|Host\s+Address/i.test(dnsText) && !/No hosts configured/i.test(dnsText) ? { label: "DNS host records", ok: /Host\s+Address/i.test(dnsText), detail: "show hosts" } : null,
         /default-information originate|Area ranges:/i.test(routingText + configText) ? { label: "OSPF edge policy", ok: /default-information originate|Area ranges:/i.test(configText + routingText), detail: "default route / area summary" } : null,
         /IPv6 access list/i.test(ipv6AclText) ? { label: "IPv6 ACL attachment", ok: /ipv6 traffic-filter .* (in|out)/i.test(configText), detail: "show ipv6 access-list" } : null,
