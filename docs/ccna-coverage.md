@@ -73,10 +73,13 @@ npm test -- --run
 npm run build
 node tools/run-sim-spike.mjs
 node tools/run-sim-fault-scenarios.mjs
+node tools/run-sim-stp-scenario.mjs
 node tools/run-pt-adapter-spike.mjs
 ```
 
-The first four are local checks. The simulator fault runner writes
+The first five are local checks. The simulator fault runner writes
 `harness/artifacts/sim-fault-scenarios.json` with before/during/after evidence
 for an access-port shutdown and a forced speed mismatch. The Packet Tracer adapter command requires
 Packet Tracer's Java ExApp to be connected and polling the bridge.
+The STP runner writes `harness/artifacts/sim-stp-scenario.json` with raw
+`show spanning-tree` output before, during, and after a root-link failure.
