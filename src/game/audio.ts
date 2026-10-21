@@ -144,6 +144,25 @@ class GameAudio {
     sub.stop(t + seconds + 0.1);
   }
 
+  /** Barely-there static, like something on the line that isn't the radio. */
+  hiss(seconds: number): void {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    const t = ctx.currentTime;
+    const src = this.noiseSource();
+    const bp = ctx.createBiquadFilter();
+    bp.type = "bandpass";
+    bp.frequency.value = 3200;
+    bp.Q.value = 0.6;
+    const g = ctx.createGain();
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.012, t + 0.15);
+    g.gain.linearRampToValueAtTime(0, t + seconds);
+    src.connect(bp).connect(g).connect(this.master);
+    src.start(t);
+    src.stop(t + seconds + 0.1);
+  }
+
   /** Walter's radio: squelch in, static under his voice, squelch out. Safe to call repeatedly. */
   walkie(on: boolean): void {
     const ctx = this.ctx;

@@ -10,7 +10,7 @@ import type { RoomId } from "./rooms";
 import type { SiteId } from "./town-map";
 import type { Line, Ui } from "./ui";
 
-/** Scene events: "goto" (room), "flicker", "haunt". */
+/** Scene events: "goto" (room), "flicker", "blackout" and "lights", "haunt". */
 export const events = new Phaser.Events.EventEmitter();
 
 const W = "WALTER (walkie)";
@@ -115,7 +115,7 @@ export class Story {
     this.room = room;
     if (room === "office" && !this.flags.has("intro")) {
       this.flags.add("intro");
-      this.ui.say([{ text: "The office is empty. Somewhere on a desk, a walkie-talkie crackles." }]);
+      this.ui.say([{ text: "The office is empty. Somewhere nearby, a walkie-talkie crackles." }]);
     }
     if (room === "shop" && !this.flags.has("arrived")) {
       this.flags.add("arrived");
@@ -174,15 +174,21 @@ export class Story {
         if (!this.flags.has("walkie")) {
           this.flags.add("walkie");
           events.emit("walkie");
-          ui.say([
-            { who: W, text: "Is this thing on? Course it's on. Everything's on. That's the trouble with everything." },
-            { who: W, text: "WELCOME, welcome, welcome, new hire, to Bob's Bandwidth and Bloodletting! Ding ding ding! You have unlocked: a job!" },
-            { who: W, text: "Name's Walter. Senior technician. Very senior. Senior like a cheese, kid." },
-            { who: W, text: "Bob's not in. Bob's never in. Bob is a concept, like weekends." },
-            { who: W, text: "Ticket's on the job board. Go to the store, make the little lights go green. Green is good. Amber is thinking. Off is... we don't talk about off." },
-            { who: W, text: "And whatever you hear behind that red door, you do NOT open it. Not that you could. Ha! Ha. Over." },
-            { text: "You clip the walkie to your belt. Press Q to call Walter." },
-          ]);
+          // The lights go out as you pick it up. Walter shouts at Gary in the dark, and the lights
+          // come back with a hiss under them before he starts his welcome as if nothing happened.
+          events.emit("blackout");
+          ui.hold(900, () =>
+            ui.say(
+              [
+                { who: W, text: "~GARY!~ GET AWAY FROM THE NEW KID!" },
+                { who: G, text: "I was only saying hello." },
+              ],
+              () => {
+                events.emit("lights");
+                ui.hold(800, () => this.walterIntro());
+              },
+            ),
+          );
         } else ui.say([{ text: "The charger is empty. The walkie is on your belt." }]);
         return;
       case "office:board":
@@ -449,6 +455,19 @@ export class Story {
       "My late husband used to say a store's only as good as its network. He said it after he was late, too.",
     ];
     this.ui.say([{ who: F, text: lines[this.finchLine++ % lines.length] }]);
+  }
+
+  /** Walter's welcome, once the lights are back after you pick up the walkie. */
+  private walterIntro(): void {
+    this.ui.say([
+      { who: W, text: "Is this thing on? Course it's on. Everything's on. That's the trouble with everything." },
+      { who: W, text: "WELCOME, welcome, welcome, new hire, to Bob's Bandwidth and Bloodletting! Ding ding ding! You have unlocked: a job!" },
+      { who: W, text: "Name's Walter. Senior technician. Very senior. Senior like a cheese, kid." },
+      { who: W, text: "Bob's not in. Bob's never in. Bob is a concept, like weekends." },
+      { who: W, text: "Ticket's on the job board. Go to the store, make the little lights go green. Green is good. Amber is thinking. Off is... we don't talk about off." },
+      { who: W, text: "And whatever you hear behind that red door, you do NOT open it. Not that you could. Ha! Ha. Over." },
+      { text: "You clip the walkie to your belt. Press Q to call Walter." },
+    ]);
   }
 
   /** Q: Walter's hint for wherever you are. */

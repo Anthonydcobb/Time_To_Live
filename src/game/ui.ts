@@ -131,6 +131,8 @@ export class Ui {
   closedAt = 0;
   private queue: Entry[] = [];
   private current: Entry | null = null;
+  /** True while `hold` keeps you still. */
+  private held = false;
   private typed = 0;
   private typer = 0;
   /** The current line split into plain text and keywords, and how many characters it shows. */
@@ -170,8 +172,17 @@ export class Ui {
     });
   }
 
+  /** Freezes you for a moment (the lights going out, say), then runs `then`. */
+  hold(ms: number, then: () => void): void {
+    this.held = true;
+    window.setTimeout(() => {
+      this.held = false;
+      then();
+    }, ms);
+  }
+
   get busy(): boolean {
-    return !!(this.current || this.choices || this.card || this.screen || this.panelOpen || this.townMap.isOpen || this.book.isOpen || apparitionPlaying());
+    return !!(this.held || this.current || this.choices || this.card || this.screen || this.panelOpen || this.townMap.isOpen || this.book.isOpen || apparitionPlaying());
   }
 
   /** Whether a terminal or the port panel has the keyboard. */

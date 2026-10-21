@@ -74,8 +74,8 @@ export class RoomScene extends Phaser.Scene {
     this.load.spritesheet("store-counter", "assets/sprites/props/store-counter.png", { frameWidth: 16, frameHeight: 80 });
     this.load.spritesheet("store-rack", "assets/sprites/props/store-rack.png", { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("store-jack", "assets/sprites/props/store-jack.png", { frameWidth: 16, frameHeight: 16 });
-    // Frame 0 the walkie on its charger, frame 1 the charger once you've taken it.
-    this.load.spritesheet("walkie", "assets/sprites/props/walkie.png", { frameWidth: 16, frameHeight: 16 });
+    // Frame 0 the walkie on its charger, frame 1 the charger once you've taken it, both on a side table.
+    this.load.spritesheet("walkie", "assets/sprites/props/walkie.png", { frameWidth: 16, frameHeight: 32 });
     this.load.spritesheet("office-tiles", "assets/sprites/tiles/office-tiles.png", { frameWidth: 16, frameHeight: 16 });
     // Bob's office props: 80x48 cells, each piece standing at the bottom centre of its cell.
     this.load.spritesheet("office-props", "assets/sprites/props/office-props.png", { frameWidth: 80, frameHeight: 48 });
@@ -170,6 +170,8 @@ export class RoomScene extends Phaser.Scene {
 
     const onGoto = (to: RoomId) => this.scene.restart({ room: to });
     const onFlicker = () => this.flicker();
+    const onBlackout = () => this.blackout();
+    const onLights = () => this.lightsBack();
     const onHaunt = () => {
       audio.haunt();
       if (this.room.id === "shop") this.drawPhantomCable();
@@ -178,12 +180,16 @@ export class RoomScene extends Phaser.Scene {
     const onOpen = (id: string) => this.openDoor(id);
     events.on("goto", onGoto);
     events.on("flicker", onFlicker);
+    events.on("blackout", onBlackout);
+    events.on("lights", onLights);
     events.on("haunt", onHaunt);
     events.on("walkie", onWalkie);
     events.on("open", onOpen);
     this.events.once("shutdown", () => {
       events.off("goto", onGoto);
       events.off("flicker", onFlicker);
+      events.off("blackout", onBlackout);
+      events.off("lights", onLights);
       events.off("haunt", onHaunt);
       events.off("walkie", onWalkie);
       events.off("open", onOpen);
@@ -318,6 +324,20 @@ export class RoomScene extends Phaser.Scene {
     audio.crackle(true);
     const steps = [0.85, 0, 0.6, 0, 0.9, 0.2, 0];
     steps.forEach((a, i) => this.time.delayedCall(i * 110 + Math.random() * 60, () => this.dark.setFillStyle(0x000000, a)));
+  }
+
+  /** The lights stutter and go out, and stay out until "lights". */
+  private blackout(): void {
+    audio.crackle(true);
+    const steps = [0.85, 0, 0.7, 0.1, 0.95, 0.4, 1];
+    steps.forEach((a, i) => this.time.delayedCall(i * 100 + Math.random() * 50, () => this.dark.setFillStyle(0x000000, a)));
+  }
+
+  /** The lights come back after a blackout, under a hiss that shouldn't be there. */
+  private lightsBack(): void {
+    audio.hiss(1.6);
+    const steps = [0.3, 0.9, 0.15, 0.6, 0];
+    steps.forEach((a, i) => this.time.delayedCall(i * 90 + Math.random() * 40, () => this.dark.setFillStyle(0x000000, a)));
   }
 
   update(_time: number, delta: number): void {

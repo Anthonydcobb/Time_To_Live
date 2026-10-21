@@ -125,9 +125,9 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "storage", label: "Storage", x: 3, y: 7, w: 1, h: 1, verb: "", color: 0x50504a, decor: true, sprite: "store-decor", frame: 8 },
       { id: "chair", label: "Chair", x: 2, y: 8, w: 1, h: 1, verb: "", color: 0x3a3a36, decor: true, sprite: "office-props", frame: 2 },
       { id: "desk", label: "Bob's desk", x: 1, y: 9, w: 3, h: 1, verb: "Look at", color: 0x55524a, sprite: "office-props", frame: 1, card: "assets/cards/bobs-desk.webp" },
-      // Listed after the desk so the walkie wins the spot it sits on.
-      { id: "walkie", label: "Walkie", x: 2, y: 9, w: 1, h: 1, verb: "Pick up", color: 0x4a5a4a, sprite: "walkie" },
       { id: "armchair", label: "Armchair", x: 1, y: 12, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props", frame: 2 },
+      // The walkie's charger sits on a side table by the armchair (the table is part of its sprite).
+      { id: "walkie", label: "Walkie", x: 2, y: 12, w: 1, h: 1, verb: "Pick up", color: 0x4a5a4a, sprite: "walkie" },
       // Main office
       { id: "files", label: "Files", x: 8, y: 5, w: 1, h: 1, verb: "", color: 0x50504a, decor: true, sprite: "office-props", frame: 11 },
       { id: "files", label: "Files", x: 8, y: 7, w: 1, h: 2, verb: "", color: 0x50504a, decor: true, sprite: "store-decor", frame: 5 },
