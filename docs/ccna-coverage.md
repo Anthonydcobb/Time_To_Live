@@ -68,6 +68,9 @@ simulation proves production behavior.
 
 ## Verification commands
 
+For the complete local simulator gate, run `npm run verify:network`. It runs
+the build, all tests, and every repeatable topology/fault scenario below.
+
 ```powershell
 npm test -- --run
 npm run build
