@@ -20,6 +20,11 @@ let refreshInFlight = false;
 let lastBridgeHealth: { pending: number; pollerConnected?: boolean; lastPollAt?: string | null } | null = null;
 const commandOutputs = new Map<string, { device: string; line: string; output: string; status: string }>();
 
+const bridgeFromQuery = new URLSearchParams(window.location.search).get("bridge");
+if (bridgeFromQuery) {
+  urlInput.value = bridgeFromQuery.startsWith("http") ? bridgeFromQuery : `http://${bridgeFromQuery}`;
+}
+
 function renderPollerStatus(health: { pollerConnected?: boolean; lastPollAt?: string | null }): void {
   if (health.pollerConnected === true) {
     pollerStatus.textContent = `CONNECTED - polled ${health.lastPollAt ? new Date(health.lastPollAt).toLocaleTimeString() : "just now"}`;

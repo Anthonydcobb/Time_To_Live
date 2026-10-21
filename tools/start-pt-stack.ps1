@@ -6,11 +6,15 @@ $ptPort = 39000
 $dashboardPort = if ($env:PT_TTL_DASHBOARD_PORT) { [int]$env:PT_TTL_DASHBOARD_PORT } else { 5173 }
 $secret = if ($env:PT_TTL_AUTH_SECRET) { $env:PT_TTL_AUTH_SECRET } else { "CHANGE_ME_BEFORE_USE" }
 
-function Test-Bridge($port) {
+function Get-BridgeHealth($port) {
     try {
-        $health = Invoke-RestMethod -Uri "http://127.0.0.1:$port/health" -TimeoutSec 2
-        return $health.ok -eq $true
-    } catch { return $false }
+        return Invoke-RestMethod -Uri "http://127.0.0.1:$port/health" -TimeoutSec 2
+    } catch { return $null }
+}
+
+function Test-Bridge($port) {
+    $health = Get-BridgeHealth $port
+    return $null -ne $health -and $health.ok -eq $true
 }
 
 function Test-Dashboard {
@@ -18,6 +22,20 @@ function Test-Dashboard {
         $response = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$dashboardPort/pt-dashboard.html" -TimeoutSec 2
         return $response.StatusCode -eq 200
     } catch { return $false }
+}
+
+$existingBridge = Get-BridgeHealth $bridgePort
+if ($null -ne $existingBridge -and $existingBridge.ok -eq $true -and $null -eq $existingBridge.pollerConnected) {
+    $selectedPort = $null
+    for ($candidate = 39095; $candidate -le 39105; $candidate++) {
+        if (-not (Get-NetTCPConnection -LocalPort $candidate -State Listen -ErrorAction SilentlyContinue)) {
+            $selectedPort = $candidate
+            break
+        }
+    }
+    if ($null -eq $selectedPort) { throw "The default bridge is a legacy process and no replacement port is available from 39095 through 39105" }
+    Write-Warning "Legacy bridge detected on port 39094; starting the current bridge on port $selectedPort"
+    $bridgePort = $selectedPort
 }
 
 if (-not (Test-Bridge $bridgePort)) {
@@ -62,5 +80,6 @@ if ($pollerReady) {
     Write-Warning "Bridge is running, but the Packet Tracer ExApp has not checked in. Open Packet Tracer, enable external IPC, and verify the Java bridge window."
 }
 
-Start-Process "http://localhost:$dashboardPort/pt-dashboard.html" | Out-Null
-Write-Host "Packet Tracer stack starting. Dashboard: http://localhost:$dashboardPort/pt-dashboard.html"
+Start-Process "http://localhost:$dashboardPort/pt-dashboard.html?bridge=http://127.0.0.1:$bridgePort" | Out-Null
+Write-Host "Packet Tracer stack starting. Bridge: http://127.0.0.1:$bridgePort/health"
+Write-Host "Dashboard: http://localhost:$dashboardPort/pt-dashboard.html?bridge=http://127.0.0.1:$bridgePort"
