@@ -1,7 +1,7 @@
 const baseUrl = process.env.PT_BRIDGE_URL ?? "http://127.0.0.1:39094";
 
-async function request(path, options) {
-  const response = await fetch(`${baseUrl}${path}`, options);
+async function request(path, options = {}) {
+  const response = await fetch(`${baseUrl}${path}`, { ...options, signal: options.signal ?? AbortSignal.timeout(5000) });
   if (response.status === 204) return null;
   const body = await response.json();
   if (!response.ok) throw new Error(`${response.status}: ${JSON.stringify(body)}`);

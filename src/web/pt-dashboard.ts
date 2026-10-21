@@ -17,8 +17,18 @@ const commandHistory: { device: string; command: string; status: string; at: str
 let liveDevices: Device[] = [];
 let refreshInFlight = false;
 
+async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 5000): Promise<Response> {
+  const controller = new AbortController();
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } finally {
+    window.clearTimeout(timer);
+  }
+}
+
 async function bridge(path: string, options?: RequestInit): Promise<any> {
-  const response = await fetch(`${urlInput.value.replace(/\/$/, "")}${path}`, options);
+  const response = await fetchWithTimeout(`${urlInput.value.replace(/\/$/, "")}${path}`, options);
   const body = await response.json();
   if (!response.ok) throw new Error(body.error ?? `HTTP ${response.status}`);
   return body;
@@ -142,7 +152,7 @@ async function run(device: string, line: string, mode = "enable"): Promise<any> 
   const queued = await bridge("/v1/command", { method:"POST", headers:{"content-type":"application/json"}, body:JSON.stringify({ device, line, mode }) });
   const deadline = Date.now() + 15000;
   while (Date.now() < deadline) {
-    const response = await fetch(`${urlInput.value.replace(/\/$/, "")}/v1/result/${encodeURIComponent(queued.id)}`);
+    const response = await fetchWithTimeout(`${urlInput.value.replace(/\/$/, "")}/v1/result/${encodeURIComponent(queued.id)}`);
     if (response.ok) { const body = await response.json(); addHistory(device, line, body.result?.status ?? "OK"); return body.result; }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
