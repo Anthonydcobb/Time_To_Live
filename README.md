@@ -42,8 +42,14 @@ npm run build    # typecheck and production build
 - Console login and enable passwords, including lockouts after three wrong tries.
 
 - CDP: `cdp run`, `cdp enable` and their `no` forms.
+- LLDP: `lldp run`, `show lldp neighbors [detail]` and interface discovery.
+- Dynamic routing: OSPF (including router IDs, passive interfaces, DR/BDR, summaries and default injection), EIGRP, and OSPFv3.
+- IPv6: interface addressing, static routes, neighbor discovery, IPv6 ACLs and OSPFv3.
+- Security: standard/extended IPv4 ACLs, IPv6 ACLs, port security, DHCP snooping and Dynamic ARP Inspection.
+- Gateway and services: HSRP, VRRP, GLBP, NAT/PAT, DNS host records, NTP, syslog and SNMP configuration.
+- Switching operations: STP root/role election, PortFast, BPDU Guard, EtherChannel, VTP, voice VLANs, interface ranges, Layer-3 switching and DHCP relay.
 
-**Show commands:** `running-config`, `startup-config`, `ip interface brief`, `interfaces`, `ip route`, `arp`, `mac address-table`, `vlan`, `vlan brief`, `interfaces trunk`, `interfaces [if] switchport`, `ip dhcp binding`, `ip dhcp pool`, `ip dhcp conflict`, `cdp`, `cdp neighbors [detail]`, `version`, `clock`.
+**Show commands:** `running-config`, `startup-config`, `ip interface brief`, `interfaces`, `ip route`, `ipv6 route`, `arp`, `mac address-table`, `vlan`, `vlan brief`, `interfaces trunk`, `interfaces [if] switchport`, `interfaces status`, `ip dhcp binding`, `ip dhcp pool`, `ip dhcp conflict`, `cdp`, `cdp neighbors [detail]`, `lldp`, `lldp neighbors [detail]`, `spanning-tree`, `etherchannel summary`, `ip protocols`, `ip ospf neighbor|interface`, `ip eigrp neighbors|interfaces|topology`, `ipv6 ospf neighbor|interface`, `access-lists`, `ipv6 access-list`, `nat translations`, `standby`, `vrrp`, `glbp`, `ntp`, `logging`, `snmp`, `hosts`, `version`, `clock`.
 
 **Commands that take real time:** `ping` and `traceroute` on IOS, `ping` and `tracert` on PCs, and the DNS lookup on a typo all run on the simulation clock, so a timeout really is two seconds of standing in the dark. `Ctrl+Shift+6` aborts on IOS and `Ctrl+C` on a PC.
 
@@ -63,6 +69,8 @@ npm run build    # typecheck and production build
 - Devices exchange CDP every 60 seconds with a 180 second holdtime, and switches don't forward it. Switches log `%CDP-4-NATIVE_VLAN_MISMATCH` when the two ends disagree.
 - VLANs and trunks: access ports drop tagged frames, trunks tag every VLAN but the native one, and the MAC table is per VLAN. DTP follows the real matrix: two dynamic auto ports stay access ports, and routers never negotiate, so the switch port to a router must be forced to trunk. Each VLAN on a port runs its own 30 second spanning-tree wait, so moving a port to a new VLAN goes amber again. Deleting a VLAN strands its ports.
 - PCs drop tagged frames. Routers deliver tagged frames to the matching subinterface, and the first packet routed to a new host is dropped while the router ARPs.
+- OSPF, EIGRP and OSPFv3 form simulated adjacencies, advertise routes and expose troubleshooting state through IOS-style show commands.
+- ACLs, NAT/PAT, first-hop redundancy, DHCP relay and access-layer protections affect actual simulated traffic, not only running-config text.
 
 ## Layout
 
@@ -82,11 +90,11 @@ src/web/            The bench terminal (xterm.js)
 tests/              Vitest tests
 ```
 
-## Not yet
+## Deliberate scope limits
 
-- Real spanning tree (BPDUs, root election and loop blocking): job 4.
-- VTP (`vtp mode transparent` would allow extended VLANs), voice VLANs, `show interfaces status`.
-- `interface range`, SSH, `ip helper-address` (DHCP relay), LLDP.
-- A terminal program on the PC that uses the console cable.
+- SSH/VTY and AAA configuration is modeled and verified through configuration/show output; there is no separate remote SSH session transport yet.
+- Wireless RF behavior, production QoS under congestion, full SNMP polling/traps, and cloud/controller integrations remain concept-only or simplified, matching Packet Tracer's limitations.
+- REST/JSON automation is represented by the local simulator and Packet Tracer bridge harness; it is not a production network controller.
+- A terminal program on the PC that uses the console cable is not implemented yet.
 
 Cryptis Systems is fictional. This project is not affiliated with Cisco Systems.
