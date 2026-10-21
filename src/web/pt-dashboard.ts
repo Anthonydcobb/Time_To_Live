@@ -14,6 +14,7 @@ const output = document.querySelector<HTMLElement>("#output")!;
 const topologyMap = document.querySelector<HTMLElement>("#topology-map")!;
 const historyEl = document.querySelector<HTMLElement>("#history")!;
 const healthResults = document.querySelector<HTMLElement>("#health-results")!;
+const healthSummary = document.querySelector<HTMLElement>("#health-summary")!;
 const autoHealth = document.querySelector<HTMLInputElement>("#auto-health")!;
 const commandHistory: { device: string; command: string; status: string; at: string }[] = [];
 let liveDevices: Device[] = [];
@@ -218,6 +219,9 @@ type HealthResult = {
 
 function showHealth(results: HealthResult[]): void {
   healthResults.replaceChildren();
+  const passed = results.filter((result) => result.ok).length;
+  healthSummary.textContent = `${passed}/${results.length} pass · ${new Date().toLocaleTimeString()}`;
+  healthSummary.className = passed === results.length ? "up" : "down";
   for (const result of results) {
     const row = document.createElement("div"); row.className = "health-row";
     row.innerHTML = `<span>${result.label}<small class="type"> · ${result.detail}</small></span><strong class="${result.ok ? "health-pass" : "health-fail"}">${result.ok ? "PASS" : "FAIL"}</strong>`;
@@ -241,6 +245,8 @@ async function healthCheck(): Promise<void> {
   if (healthRunInFlight) return;
   healthRunInFlight = true;
   lastHealthRunAt = Date.now();
+  healthSummary.textContent = "Running…";
+  healthSummary.className = "muted";
   healthResults.innerHTML = `<p class="muted">Running live checks…</p>`;
   try {
     const text = (result: any) => String(result?.output ?? "");
@@ -372,6 +378,8 @@ async function healthCheck(): Promise<void> {
       { label: "Switch1 neighbor present", ok: /Switch\s+Fas?\s*0\/1/i.test(text(cdp)), detail: "CDP via Fa0/1", evidenceDevice: "Switch0", evidenceLine: "show cdp neighbors" },
     ]);
   } catch (error) {
+    healthSummary.textContent = "Health check error";
+    healthSummary.className = "down";
     healthResults.innerHTML = `<p class="health-fail">Health check failed: ${error instanceof Error ? error.message : String(error)}</p>`;
   } finally {
     healthRunInFlight = false;
