@@ -76,6 +76,7 @@ node tools/run-sim-fault-scenarios.mjs
 node tools/run-sim-stp-scenario.mjs
 node tools/run-sim-ipv6-scenario.mjs
 node tools/run-sim-ipv6-ospf.mjs
+node tools/run-sim-dhcp-scenario.mjs
 node tools/run-pt-adapter-spike.mjs
 ```
 
@@ -89,3 +90,5 @@ The IPv6 runner writes `harness/artifacts/sim-ipv6-scenario.json` with an
 IPv6 ping, neighbor-discovery output, and a topology snapshot.
 The OSPFv3 runner writes `harness/artifacts/sim-ipv6-ospf.json` with the
 adjacency, learned route, and end-to-end IPv6 ping.
+The DHCP runner writes `harness/artifacts/sim-dhcp-scenario.json` with the
+PC lease, excluded-range validation, binding table, and topology snapshot.

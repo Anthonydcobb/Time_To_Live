@@ -15,6 +15,7 @@
     "sim:stp": "node tools/run-sim-stp-scenario.mjs",
     "sim:ipv6": "node tools/run-sim-ipv6-scenario.mjs",
     "sim:ipv6-ospf": "node tools/run-sim-ipv6-ospf.mjs",
+    "sim:dhcp": "node tools/run-sim-dhcp-scenario.mjs",
     "pt:topology": "node tools/run-pt-topology-spike.mjs",
     "pt:health": "node tools/run-pt-expanded-health.mjs",
     "pt:status": "node tools/check-pt-stack.mjs"
