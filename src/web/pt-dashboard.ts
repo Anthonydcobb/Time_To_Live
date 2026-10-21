@@ -17,6 +17,7 @@ const healthResults = document.querySelector<HTMLElement>("#health-results")!;
 const commandHistory: { device: string; command: string; status: string; at: string }[] = [];
 let liveDevices: Device[] = [];
 let refreshInFlight = false;
+let lastBridgeHealth: { pending: number; pollerConnected?: boolean; lastPollAt?: string | null } | null = null;
 const commandOutputs = new Map<string, { output: string; status: string }>();
 
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 5000): Promise<Response> {
@@ -118,8 +119,11 @@ function addHistory(device: string, command: string, status: string): void {
 async function refresh(): Promise<void> {
   if (refreshInFlight) return;
   refreshInFlight = true;
+  let healthRead = false;
   try {
     const health = await bridge("/health");
+    healthRead = true;
+    lastBridgeHealth = health;
     bridgeStatus.textContent = `ONLINE · ${health.pending} queued`;
     bridgeStatus.className = "up";
     pollerStatus.textContent = health.pollerConnected
@@ -146,8 +150,16 @@ async function refresh(): Promise<void> {
     pollerStatus.className = currentHealth.pollerConnected ? "up" : "down";
     lastRefresh.textContent = new Date().toLocaleTimeString();
   } catch (error) {
-    bridgeStatus.textContent = "OFFLINE"; bridgeStatus.className = "down";
-    pollerStatus.textContent = "UNAVAILABLE"; pollerStatus.className = "down";
+    if (healthRead && lastBridgeHealth) {
+      bridgeStatus.textContent = `ONLINE · ${lastBridgeHealth.pending} queued`;
+      bridgeStatus.className = "up";
+      pollerStatus.textContent = "NOT CONNECTED";
+      pollerStatus.className = "down";
+    } else {
+      lastBridgeHealth = null;
+      bridgeStatus.textContent = "OFFLINE"; bridgeStatus.className = "down";
+      pollerStatus.textContent = "UNAVAILABLE"; pollerStatus.className = "down";
+    }
     liveDevices = [];
     deviceCount.textContent = "0";
     linkCount.textContent = "0";
