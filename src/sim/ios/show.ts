@@ -348,6 +348,11 @@ export function showInterfaces(device: IosDevice, only?: string): string[] {
     out.push(`  Hardware is ${hw}, address is ${mac} (bia ${mac})`);
     if (c?.description) out.push(`  Description: ${c.description}`);
     if (c?.ip != null) out.push(`  Internet address is ${formatIpv4(c.ip)}/${maskToPrefix(c.mask!)}`);
+    if (c?.accessGroupIn) out.push(`  Inbound access list is ${c.accessGroupIn}`);
+    if (c?.accessGroupOut) out.push(`  Outgoing access list is ${c.accessGroupOut}`);
+    if (c?.ipv6AccessGroupIn) out.push(`  Inbound IPv6 access list is ${c.ipv6AccessGroupIn}`);
+    if (c?.ipv6AccessGroupOut) out.push(`  Outgoing IPv6 access list is ${c.ipv6AccessGroupOut}`);
+    if (c?.natRole) out.push(`  IP NAT ${c.natRole}`);
     const fast = i.name.startsWith("Fast");
     out.push(
       `  MTU 1500 bytes, BW ${fast ? 100000 : 1000000} Kbit/sec, DLY ${fast ? 100 : 10} usec, `,

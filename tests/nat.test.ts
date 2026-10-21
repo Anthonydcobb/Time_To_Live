@@ -22,6 +22,9 @@ describe("static NAT", () => {
     const outbound = run(inside, "ping -n 4 203.0.113.2");
     expect(outbound.some((line) => line.startsWith("Reply from 203.0.113.2"))).toBe(true);
     expect(type(router, "show ip nat translations").join("\n")).toContain("203.0.113.100");
+    const interfaceOutput = type(router, "show interfaces g0/0").join("\n");
+    expect(interfaceOutput).toContain("IP NAT inside");
+    expect(type(router, "show interfaces g0/1")).toContain("  IP NAT outside");
   });
 
   it("overloads inside ICMP flows on the outside interface", () => {
