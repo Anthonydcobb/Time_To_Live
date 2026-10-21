@@ -244,6 +244,8 @@ async function healthCheck(): Promise<void> {
       const lldpNeighbors = await run("Router0", "show lldp neighbors");
       const trunk0 = await run("Switch0", "show interfaces trunk");
       const trunk1 = await run("Switch1", "show interfaces trunk");
+      const switch0Status = await run("Switch0", "show interfaces status");
+      const switch0Errors = await run("Switch0", "show interfaces counters errors");
       const dhcpSnoopingStatistics = await run("Switch0", "show ip dhcp snooping statistics");
       const arpInspectionStatistics = await run("Switch0", "show ip arp inspection statistics");
       const pc0Text = text(pc0Ip); const pc1Text = text(pc1Ip);
@@ -251,6 +253,9 @@ async function healthCheck(): Promise<void> {
       const ipv6InterfaceText = text(ipv6Interfaces); const ipv6RouteText = text(ipv6Routes); const ipv6NeighborText = text(ipv6Neighbors);
       const ipv6OspfText = text(ipv6Ospf); const ipv6OspfInterfaceText = text(ipv6OspfInterfaces); const ipv6ProtocolsText = text(ipv6Protocols);
       const natText = text(natTranslations); const natStatisticsText = text(natStatistics); const snmpText = text(snmpStatus); const standbyText = text(standby); const vrrpText = text(vrrp); const glbpText = text(glbp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
+      const switch0StatusText = text(switch0Status); const switch0ErrorsText = text(switch0Errors);
+      const switch0ErrorRows = switch0ErrorsText.split("\n").filter((line: string) => /^\S+\s+\d/.test(line));
+      const interfaceErrorsClean = switch0ErrorRows.length > 0 && switch0ErrorRows.every((line: string) => /^\S+\s+(?:0\s+){5}0\s*$/.test(line));
       const dhcpSnoopingStatisticsText = text(dhcpSnoopingStatistics); const arpInspectionStatisticsText = text(arpInspectionStatistics);
       const routingText = text(routingProtocols); const eigrpInterfaceText = text(eigrpInterfaces); const eigrpTopologyText = text(eigrpTopology); const ospfInterfaceText = text(ospfInterfaces); const routeText = text(ipRoutes); const dnsText = text(dnsHosts); const ipv6AclText = text(ipv6AccessLists);
       const ipv6Configured = /[0-9a-f]{1,4}:[0-9a-f:]+\/\d+/i.test(ipv6InterfaceText);
@@ -282,6 +287,8 @@ async function healthCheck(): Promise<void> {
         /0\.0\.0\.0\/0/i.test(routeText) ? { label: "Default route present", ok: /(?:^|\n)O\*?\s+.*0\.0\.0\.0\/0|(?:^|\n)S\*\s+0\.0\.0\.0\/0/i.test(routeText), detail: "show ip route" } : null,
         /DHCP snooping statistics:/i.test(dhcpSnoopingStatisticsText) ? { label: "DHCP snooping counters", ok: /Packets processed:/i.test(dhcpSnoopingStatisticsText), detail: "show ip dhcp snooping statistics" } : null,
         /Dynamic ARP inspection statistics:/i.test(arpInspectionStatisticsText) ? { label: "DAI counters", ok: /ARP packets inspected:/i.test(arpInspectionStatisticsText), detail: "show ip arp inspection statistics" } : null,
+        /Port\s+Name\s+Status\s+Vlan/i.test(switch0StatusText) ? { label: "Switch physical links", ok: /Fa0\/2\s+.*connected\s+\d+\s+(?:a-full|a-half)\s+a-\d+/i.test(switch0StatusText), detail: "show interfaces status" } : null,
+        /Align-Err\s+FCS-Err/i.test(switch0ErrorsText) ? { label: "Interface error counters", ok: interfaceErrorsClean, detail: "show interfaces counters errors" } : null,
       ].filter((check): check is { label: string; ok: boolean; detail: string } => check !== null);
       showHealth([
         { label: "PC0 IPv4 address", ok: /IPv4 Address.*192\.168\.10\.10/i.test(pc0Text), detail: "192.168.10.10 / VLAN 10" },
