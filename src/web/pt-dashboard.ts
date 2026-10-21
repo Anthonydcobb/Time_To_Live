@@ -20,6 +20,19 @@ let refreshInFlight = false;
 let lastBridgeHealth: { pending: number; pollerConnected?: boolean; lastPollAt?: string | null } | null = null;
 const commandOutputs = new Map<string, { device: string; line: string; output: string; status: string }>();
 
+function renderPollerStatus(health: { pollerConnected?: boolean; lastPollAt?: string | null }): void {
+  if (health.pollerConnected === true) {
+    pollerStatus.textContent = `CONNECTED - polled ${health.lastPollAt ? new Date(health.lastPollAt).toLocaleTimeString() : "just now"}`;
+    pollerStatus.className = "up";
+  } else if (health.pollerConnected === false) {
+    pollerStatus.textContent = "NOT CONNECTED";
+    pollerStatus.className = "down";
+  } else {
+    pollerStatus.textContent = "LEGACY BRIDGE · PT status unavailable";
+    pollerStatus.className = "muted";
+  }
+}
+
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 5000): Promise<Response> {
   const controller = new AbortController();
   const timer = window.setTimeout(() => controller.abort(), timeoutMs);
@@ -126,10 +139,7 @@ async function refresh(): Promise<void> {
     lastBridgeHealth = health;
     bridgeStatus.textContent = `ONLINE · ${health.pending} queued`;
     bridgeStatus.className = "up";
-    pollerStatus.textContent = health.pollerConnected
-      ? `CONNECTED - polled ${health.lastPollAt ? new Date(health.lastPollAt).toLocaleTimeString() : "just now"}`
-      : "NOT CONNECTED";
-    pollerStatus.className = health.pollerConnected ? "up" : "down";
+    renderPollerStatus(health);
     const deviceResult = await run("__network__", "list devices", "enable");
     const devices: Device[] = String(deviceResult.output ?? "").split("\n").filter(Boolean).map((line) => {
       const [name, type, model, serialNumber] = line.split("|"); return { name, type, model, serialNumber };
@@ -144,10 +154,7 @@ async function refresh(): Promise<void> {
     renderLinks(links);
     renderTopology(devices, links);
     const currentHealth = await bridge("/health");
-    pollerStatus.textContent = currentHealth.pollerConnected
-      ? `CONNECTED - polled ${currentHealth.lastPollAt ? new Date(currentHealth.lastPollAt).toLocaleTimeString() : "just now"}`
-      : "NOT CONNECTED";
-    pollerStatus.className = currentHealth.pollerConnected ? "up" : "down";
+    renderPollerStatus(currentHealth);
     lastRefresh.textContent = new Date().toLocaleTimeString();
   } catch (error) {
     if (healthRead && lastBridgeHealth) {
