@@ -82,6 +82,7 @@ node tools/run-sim-ipv6-ospf.mjs
 node tools/run-sim-dhcp-scenario.mjs
 node tools/run-sim-nat-scenario.mjs
 node tools/run-sim-acl-scenario.mjs
+node tools/run-sim-routing-scenario.mjs
 node tools/run-pt-adapter-spike.mjs
 ```
 
@@ -101,3 +102,5 @@ The NAT runner writes `harness/artifacts/sim-nat-scenario.json` with inbound
 static translation, outbound reachability, translations, and statistics.
 The ACL runner writes `harness/artifacts/sim-acl-scenario.json` with baseline
 reachability, an applied ICMP deny, ACL output, and restored reachability.
+The routing runner writes `harness/artifacts/sim-routing-scenario.json` with
+EIGRP adjacency and learned-route evidence plus HSRP active-gateway failover.
