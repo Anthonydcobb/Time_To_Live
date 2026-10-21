@@ -67,12 +67,29 @@ export class Router extends IosDevice {
     return (candidates.sort((a, b) => b.priority - a.priority || b.ip - a.ip)[0]?.router) ?? this;
   }
 
+  glbpActive(interfaceName: string): Router {
+    const localIface = this.l3Interfaces().find((iface) => iface.name === interfaceName);
+    const local = this.config.interfaces[interfaceName]?.glbp;
+    if (!localIface || !local || localIface.ip === null || localIface.mask === null) return this;
+    const candidates = (this.network?.devices ?? []).filter((device): device is Router => device instanceof Router).flatMap((router) =>
+      router.l3Interfaces().flatMap((iface) => {
+        const g = router.config.interfaces[iface.name]?.glbp;
+        return g && g.group === local.group && g.ip === local.ip && iface.ip !== null && iface.mask !== null && iface.up() && networkOf(iface.ip, iface.mask) === networkOf(localIface.ip!, localIface.mask!) ? [{ router, priority: g.priority, ip: iface.ip }] : [];
+      }),
+    );
+    return (candidates.sort((a, b) => b.priority - a.priority || b.ip - a.ip)[0]?.router) ?? this;
+  }
+
   private hsrpMac(group: number): string {
     return `00000c07ac${group.toString(16).padStart(2, "0")}`;
   }
 
   private vrrpMac(group: number): string {
     return `00005e0001${group.toString(16).padStart(2, "0")}`;
+  }
+
+  private glbpMac(group: number): string {
+    return `0007b400${group.toString(16).padStart(4, "0")}`;
   }
 
   constructor(id: string, hostname = "Router") {
@@ -507,6 +524,23 @@ export class Router extends IosDevice {
         frame = { ...frame, dst: port.mac };
         if (payload.kind === "ipv4" && payload.dst === v.ip && payload.icmp?.type === "echo-request") {
           this.stack.send({ kind: "ipv4", src: v.ip, dst: payload.src, ttl: 255, icmp: { type: "echo-reply", id: payload.icmp.id, seq: payload.icmp.seq } });
+          return;
+        }
+      }
+    }
+    const g = iface ? this.config.interfaces[iface.name]?.glbp : null;
+    if (iface && g) {
+      const active = this.glbpActive(iface.name);
+      const vmac = this.glbpMac(g.group);
+      if (payload.kind === "arp" && payload.op === "request" && payload.targetIp === g.ip && active === this) {
+        this.send(port, { src: vmac, dst: frame.src, payload: { kind: "arp", op: "reply", senderMac: vmac, senderIp: g.ip, targetMac: payload.senderMac, targetIp: payload.senderIp } });
+        return;
+      }
+      if (active !== this && frame.dst === vmac) return;
+      if (active === this && frame.dst === vmac) {
+        frame = { ...frame, dst: port.mac };
+        if (payload.kind === "ipv4" && payload.dst === g.ip && payload.icmp?.type === "echo-request") {
+          this.stack.send({ kind: "ipv4", src: g.ip, dst: payload.src, ttl: 255, icmp: { type: "echo-reply", id: payload.icmp.id, seq: payload.icmp.seq } });
           return;
         }
       }

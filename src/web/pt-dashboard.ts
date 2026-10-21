@@ -167,6 +167,7 @@ async function healthCheck(): Promise<void> {
       const natTranslations = await run("Router0", "show ip nat translations");
       const standby = await run("Router0", "show standby");
       const vrrp = await run("Router0", "show vrrp");
+      const glbp = await run("Router0", "show glbp");
       const ntpStatus = await run("Router0", "show ntp status");
       const logging = await run("Router0", "show logging");
       const lldpStatus = await run("Router0", "show lldp");
@@ -177,7 +178,7 @@ async function healthCheck(): Promise<void> {
       const routerText = text(routerInterfaces); const sshText = text(sshStatus); const configText = text(routerConfig); const trunks = `${text(trunk0)}\n${text(trunk1)}`;
       const ipv6InterfaceText = text(ipv6Interfaces); const ipv6RouteText = text(ipv6Routes); const ipv6NeighborText = text(ipv6Neighbors);
       const ipv6OspfText = text(ipv6Ospf);
-      const natText = text(natTranslations); const standbyText = text(standby); const vrrpText = text(vrrp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
+      const natText = text(natTranslations); const standbyText = text(standby); const vrrpText = text(vrrp); const glbpText = text(glbp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
       const routingText = text(routingProtocols);
       const ipv6Configured = /[0-9a-f]{1,4}:[0-9a-f:]+\/\d+/i.test(ipv6InterfaceText);
       const ipv6Checks = ipv6Configured ? [
@@ -190,6 +191,7 @@ async function healthCheck(): Promise<void> {
         /Pro Inside global/i.test(natText) ? { label: "NAT translation table", ok: natText.split("\n").slice(2).some((line: string) => /^(?:---|icmp)\s+/i.test(line)), detail: "show ip nat translations" } : null,
         /Virtual IP address/i.test(standbyText) ? { label: "HSRP gateway state", ok: /State is (Active|Standby)/i.test(standbyText), detail: "show standby" } : null,
         /Virtual IP address/i.test(vrrpText) ? { label: "VRRP gateway state", ok: /State is (Master|Backup)/i.test(vrrpText), detail: "show vrrp" } : null,
+        /Virtual IP address/i.test(glbpText) ? { label: "GLBP gateway state", ok: /State is (Active|Standby)/i.test(glbpText), detail: "show glbp" } : null,
         /Clock is synchronized/i.test(ntpText) ? { label: "NTP synchronization", ok: true, detail: "show ntp status" } : null,
         /Logging to (?!none)/i.test(loggingText) ? { label: "Syslog destination", ok: /Syslog logging: enabled/i.test(loggingText), detail: "show logging" } : null,
         /Routing Protocol is "(?:ospf|eigrp)/i.test(routingText) ? { label: "Dynamic routing protocol", ok: /Routing Protocol is "(?:ospf|eigrp)/i.test(routingText), detail: "show ip protocols" } : null,

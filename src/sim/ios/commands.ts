@@ -288,6 +288,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("nat", "Network Address Translation"), kw("translations", "NAT translation table")], (c) => c.out.push(...show.showIpNatTranslations(c.device)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("standby", "Hot Standby Router Protocol")], (c) => c.out.push(...show.showStandby(c.device as Router)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("vrrp", "Virtual Router Redundancy Protocol")], (c) => c.out.push(...show.showVrrp(c.device as Router)), { devices: ["router"] }),
+  cmd(EXEC, [SHOW, kw("glbp", "Gateway Load Balancing Protocol")], (c) => c.out.push(...show.showGlbp(c.device as Router)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("route", "IP routing table")], (c) => c.out.push(...show.showIpRoute(c.device)), {
     when: (c) => c.device.kind === "router" || (c.device.kind === "switch" && c.device.config.ipRouting),
   }),
@@ -805,6 +806,15 @@ const interfaceCommands: Entry[] = [
       if (!addresses.some((a) => a.address === parsed.address && a.prefix === parsed.prefix)) addresses.push(parsed);
     });
   }),
+  cmd(ANY_IF, [kw("glbp", "Gateway Load Balancing Protocol"), numArg(1, 1023, "GLBP group"), kw("ip", "Virtual IP address"), ipArg("Virtual IP address")], (c, [group, ip]) => {
+    forEachIface(c, (name) => { const current = c.device.ifaceConfig(name).glbp; c.device.ifaceConfig(name).glbp = { group: group as number, ip: ip as Ipv4, priority: current?.priority ?? 100, preempt: current?.preempt ?? false }; });
+  }, { devices: ["router"] }),
+  cmd(ANY_IF, [kw("glbp", "Gateway Load Balancing Protocol"), numArg(1, 1023, "GLBP group"), kw("priority", "GLBP priority"), numArg(1, 255, "Priority")], (c, [group, priority]) => {
+    forEachIface(c, (name) => { const g = c.device.ifaceConfig(name).glbp; if (g && g.group === group) g.priority = priority as number; });
+  }, { devices: ["router"] }),
+  cmd(ANY_IF, [kw("glbp", "Gateway Load Balancing Protocol"), numArg(1, 1023, "GLBP group"), kw("preempt", "Preempt active router")], (c, [group]) => {
+    forEachIface(c, (name) => { const g = c.device.ifaceConfig(name).glbp; if (g && g.group === group) g.preempt = true; });
+  }, { devices: ["router"] }),
   cmd(ANY_IF, [NO, kw("ipv6", "IPv6 interface configuration"), kw("address", "Set the IPv6 address")], (c) => {
     forEachIface(c, (name) => { c.device.ifaceConfig(name).ipv6Addresses = []; });
   }),

@@ -104,6 +104,11 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
       if (ic.vrrp.priority !== 100) out.push(` vrrp ${ic.vrrp.group} priority ${ic.vrrp.priority}`);
       if (ic.vrrp.preempt) out.push(` vrrp ${ic.vrrp.group} preempt`);
     }
+    if (ic.glbp) {
+      out.push(` glbp ${ic.glbp.group} ip ${formatIpv4(ic.glbp.ip)}`);
+      if (ic.glbp.priority !== 100) out.push(` glbp ${ic.glbp.group} priority ${ic.glbp.priority}`);
+      if (ic.glbp.preempt) out.push(` glbp ${ic.glbp.group} preempt`);
+    }
     if (ic.encapsulation) out.push(` encapsulation dot1Q ${ic.encapsulation.vlan}${ic.encapsulation.native ? " native" : ""}`);
     if (ic.accessGroupIn !== null) out.push(" ip access-group " + ic.accessGroupIn + " in");
     if (ic.accessGroupOut !== null) out.push(" ip access-group " + ic.accessGroupOut + " out");
@@ -968,6 +973,17 @@ export function showVrrp(router: Router): string[] {
     out.push(`${iface.name} - Group ${v.group}`, `  State is ${active === router ? "Master" : "Backup"}`, `  Virtual IP address is ${formatIpv4(v.ip)}`, `  Priority ${v.priority}`, `  Master router is ${active.hostname}`);
   }
   return out.length ? out : ["VRRP is not configured"];
+}
+
+export function showGlbp(router: Router): string[] {
+  const out: string[] = [];
+  for (const iface of router.interfaces()) {
+    const g = router.config.interfaces[iface.name]?.glbp;
+    if (!g || iface.status() !== "up") continue;
+    const active = router.glbpActive(iface.name);
+    out.push(`${iface.name} - Group ${g.group}`, `  State is ${active === router ? "Active" : "Standby"}`, `  Virtual IP address is ${formatIpv4(g.ip)}`, `  Priority ${g.priority}`, `  Active Virtual Gateway is ${active.hostname}`);
+  }
+  return out.length ? out : ["GLBP is not configured"];
 }
 
 export function showNtpStatus(device: IosDevice): string[] {

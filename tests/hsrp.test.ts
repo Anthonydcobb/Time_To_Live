@@ -53,3 +53,26 @@ describe("VRRP", () => {
     expect(type(r2, "show vrrp").join("\n")).toContain("State is Master");
   });
 });
+
+describe("GLBP", () => {
+  it("elects an active virtual gateway and fails over", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1"));
+    const r2 = net.add(new Router("R2"));
+    const sw = net.add(new Switch("S1"));
+    const pc = net.add(new Pc("PC1"));
+    pc.configure(ip("10.0.2.10"), ip("255.255.255.0"), ip("10.0.2.254"));
+    net.connect(r1.port("Gi0/0"), sw.port("Fa0/1"));
+    net.connect(r2.port("Gi0/0"), sw.port("Fa0/2"));
+    net.connect(pc.nic, sw.port("Fa0/3"));
+    type(r1, "", "en", "conf t", "int g0/0", "ip address 10.0.2.1 255.255.255.0", "glbp 1 ip 10.0.2.254", "glbp 1 priority 120", "no shut", "end");
+    type(r2, "", "en", "conf t", "int g0/0", "ip address 10.0.2.2 255.255.255.0", "glbp 1 ip 10.0.2.254", "no shut", "end");
+    net.clock.advance(35_000);
+    expect(type(r1, "show glbp").join("\n")).toContain("State is Active");
+    expect(type(r2, "show glbp").join("\n")).toContain("State is Standby");
+    expect(run(pc, "ping -n 3 10.0.2.254").some((line) => line.startsWith("Reply from 10.0.2.254"))).toBe(true);
+    type(r1, "", "en", "conf t", "int g0/0", "shutdown", "end");
+    net.clock.advance(2_000);
+    expect(type(r2, "show glbp").join("\n")).toContain("State is Active");
+  });
+});

@@ -62,6 +62,7 @@ export interface InterfaceConfig {
   natRole: "inside" | "outside" | null;
   hsrp: { group: number; ip: Ipv4; priority: number; preempt: boolean } | null;
   vrrp: { group: number; ip: Ipv4; priority: number; preempt: boolean } | null;
+  glbp: { group: number; ip: Ipv4; priority: number; preempt: boolean } | null;
   /** Switch physical ports only. */
   switchport?: SwitchportConfig;
   /** Router subinterfaces only: `encapsulation dot1Q <vlan> [native]`. */
@@ -69,7 +70,7 @@ export interface InterfaceConfig {
 }
 
 export function newInterfaceConfig(shutdown: boolean): InterfaceConfig {
-  return { shutdown, description: null, ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, cdp: true, natRole: null, hsrp: null, vrrp: null };
+  return { shutdown, description: null, ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, cdp: true, natRole: null, hsrp: null, vrrp: null, glbp: null };
 }
 
 export interface AclAddress {
