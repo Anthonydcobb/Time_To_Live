@@ -275,6 +275,8 @@ async function healthCheck(): Promise<void> {
       const lldpNeighbors = await run("Router0", "show lldp neighbors");
       const trunk0 = await run("Switch0", "show interfaces trunk");
       const trunk1 = await run("Switch1", "show interfaces trunk");
+      const spanning0 = await run("Switch0", "show spanning-tree");
+      const spanning1 = await run("Switch1", "show spanning-tree");
       const switch0Status = await run("Switch0", "show interfaces status");
       const switch0Errors = await run("Switch0", "show interfaces counters errors");
       const dhcpSnoopingStatistics = await run("Switch0", "show ip dhcp snooping statistics");
@@ -285,6 +287,7 @@ async function healthCheck(): Promise<void> {
       const ipv6OspfText = text(ipv6Ospf); const ipv6OspfInterfaceText = text(ipv6OspfInterfaces); const ipv6ProtocolsText = text(ipv6Protocols);
       const natText = text(natTranslations); const natStatisticsText = text(natStatistics); const snmpText = text(snmpStatus); const standbyText = text(standby); const vrrpText = text(vrrp); const glbpText = text(glbp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
       const switch0StatusText = text(switch0Status); const switch0ErrorsText = text(switch0Errors);
+      const spanningText = `${text(spanning0)}\n${text(spanning1)}`;
       const switch0ErrorRows = switch0ErrorsText.split("\n").filter((line: string) => /^\S+\s+\d/.test(line));
       const interfaceErrorsClean = switch0ErrorRows.length > 0 && switch0ErrorRows.every((line: string) => /^\S+\s+(?:0\s+){5}0\s*$/.test(line));
       const dhcpSnoopingStatisticsText = text(dhcpSnoopingStatistics); const arpInspectionStatisticsText = text(arpInspectionStatistics);
@@ -328,6 +331,7 @@ async function healthCheck(): Promise<void> {
         { label: "Router VLAN 20 gateway", ok: /GigabitEthernet0\/0\.20\s+192\.168\.20\.1\s+YES\s+\w+\s+up\s+up/i.test(routerText), detail: "192.168.20.1 up/up", evidenceDevice: "Router0", evidenceLine: "show ip interface brief" },
         { label: "Inter-VLAN connectivity", ok: /Reply from 192\.168\.20\.10/i.test(text(interVlanPing)), detail: "PC0 → PC1", evidenceDevice: "PC0", evidenceLine: "ping 192.168.20.10" },
         { label: "Trunks forwarding", ok: /Fa0\/1\s+1,10,20/i.test(trunks) && /Fa0\/3\s+1,10,20/i.test(trunks), detail: "VLANs 10/20", evidenceDevice: "Switch0", evidenceLine: "show interfaces trunk" },
+        { label: "Spanning-tree forwarding", ok: /Spanning tree enabled/i.test(spanningText) && /\bFWD\b/i.test(spanningText), detail: "root bridge and forwarding ports", evidenceDevice: "Switch0", evidenceLine: "show spanning-tree" },
         { label: "Router SSH service", ok: /SSH Enabled/i.test(sshText), detail: "show ssh", evidenceDevice: "Router0", evidenceLine: "show ssh" },
         { label: "VTY local authentication", ok: (/login local/i.test(configText) || /aaa authentication login default local/i.test(configText)) && /transport input ssh/i.test(configText), detail: "line vty 0 4 / AAA", evidenceDevice: "Router0", evidenceLine: "show running-config" },
         ...ipv6Checks,
