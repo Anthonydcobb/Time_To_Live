@@ -45,4 +45,28 @@ describe("IPv6 interface configuration", () => {
     expect(r1.config.ipv6StaticRoutes).toHaveLength(1);
     expect(type(r1, "show ipv6 route").join("\n")).toContain("2001:0db8:0002:0000:0000:0000:0000:0000/64");
   });
+
+  it("routes IPv6 end to end across two routers", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1"));
+    const r2 = net.add(new Router("R2"));
+    const pc1 = net.add(new Pc("PC1"));
+    const pc2 = net.add(new Pc("PC2"));
+    const p1 = parseIpv6("2001:db8:10::10")!;
+    const p2 = parseIpv6("2001:db8:20::20")!;
+    const r1Lan = parseIpv6("2001:db8:10::1")!;
+    const r2Lan = parseIpv6("2001:db8:20::1")!;
+    net.connect(pc1.nic, r1.port("Gi0/0"));
+    net.connect(r1.port("Gi0/1"), r2.port("Gi0/0"));
+    net.connect(r2.port("Gi0/1"), pc2.nic);
+    type(r1, "", "en", "conf t", "interface g0/0", "ipv6 address 2001:db8:10::1/64", "no shutdown", "interface g0/1", "ipv6 address 2001:db8:100::1/64", "no shutdown", "ipv6 route 2001:db8:20::/64 2001:db8:100::2", "end");
+    type(r2, "", "en", "conf t", "interface g0/0", "ipv6 address 2001:db8:100::2/64", "no shutdown", "interface g0/1", "ipv6 address 2001:db8:20::1/64", "no shutdown", "ipv6 route 2001:db8:10::/64 2001:db8:100::1", "end");
+    pc1.configureIpv6(p1, 64, r1Lan);
+    pc2.configureIpv6(p2, 64, r2Lan);
+    net.clock.advance(3_000);
+    let result = "timeout";
+    pc1.stack.probeIpv6(p2, { id: 2, seq: 1, timeoutMs: 5_000, source: p1 }, (reply) => { result = reply.kind; });
+    net.clock.advance(5_000);
+    expect(result).toBe("reply");
+  });
 });

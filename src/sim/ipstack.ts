@@ -66,6 +66,7 @@ export interface IpStackOptions {
   localRoutes: boolean;
   staticRoutes?: () => StaticRoute[];
   ipv6StaticRoutes?: () => { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[];
+  ipv6DefaultGateway?: () => Ipv6 | null;
   ospfRoutes?: () => StaticRoute[];
   defaultGateway?: () => Ipv4 | null;
   /** DHCP messages go here instead of through normal delivery. They arrive before the client has an address. */
@@ -263,7 +264,15 @@ export class IpStack {
     if (best) return { iface: best.iface, source: best.source, nextHop: dst };
     const staticMatches = (this.opts.ipv6StaticRoutes?.() ?? []).filter((r) => ipv6InPrefix(dst, r.network, r.prefix)).sort((a, b) => b.prefix - a.prefix);
     const route = staticMatches[0];
-    if (!route || depth > 8) return null;
+    if (!route) {
+      const gateway = this.opts.ipv6DefaultGateway?.() ?? null;
+      if (gateway && depth === 0) {
+        const via = this.ipv6Route(gateway, depth + 1);
+        return via ? { ...via, nextHop: gateway } : null;
+      }
+      return null;
+    }
+    if (depth > 8) return null;
     if (route.exitIface) {
       const iface = this.opts.interfaces().find((candidate) => candidate.name === route.exitIface && candidate.up() && candidate.ipv6Addresses.length);
       return iface ? { iface, source: iface.ipv6Addresses[0].address, nextHop: route.nextHop ?? dst } : null;
@@ -300,7 +309,7 @@ export class IpStack {
     if (icmp?.type === "neighbor-solicitation" && icmp.target) {
       const target = this.ipv6Local(icmp.target);
       if (target) {
-        this.ipv6Neighbors.set(icmp.target, { mac: sourceMac, iface });
+        if (packet.src !== "::") this.ipv6Neighbors.set(packet.src, { mac: sourceMac, iface });
         const local = target.ipv6Addresses.find((a) => a.address === icmp.target)!;
         target.transmit({ src: target.mac, dst: sourceMac, payload: { kind: "ipv6", src: local.address, dst: packet.src, hopLimit: 255, icmpv6: { type: "neighbor-advertisement", id: 0, seq: 0, target: local.address, targetMac: target.mac } } });
       }

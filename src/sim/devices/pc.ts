@@ -17,6 +17,7 @@ export class Pc extends Device {
   mask: Ipv4 | null = null;
   gateway: Ipv4 | null = null;
   ipv6Addresses: { address: Ipv6; prefix: number }[] = [];
+  ipv6Gateway: Ipv6 | null = null;
   dnsServers: Ipv4[] = [];
   /** Obtain an address automatically. When false, the address was set by hand. */
   dhcp = false;
@@ -61,6 +62,7 @@ export class Pc extends Device {
       initialTtl: 128,
       localRoutes: false,
       defaultGateway: () => this.gateway,
+      ipv6DefaultGateway: () => this.ipv6Gateway,
       onDhcp: (_iface, packet) => this.dhcpClient.handle(packet),
     });
     this.dhcpClient = new DhcpClient({
@@ -91,8 +93,9 @@ export class Pc extends Device {
     this.setAddress(ip, mask, gateway);
   }
 
-  configureIpv6(address: Ipv6 | null, prefix: number): void {
+  configureIpv6(address: Ipv6 | null, prefix: number, gateway: Ipv6 | null = null): void {
     this.ipv6Addresses = address === null ? [] : [{ address, prefix }];
+    this.ipv6Gateway = gateway;
   }
 
   private setAddress(ip: Ipv4 | null, mask: Ipv4 | null, gateway: Ipv4 | null): void {
