@@ -1406,6 +1406,8 @@ const switchCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("switchport", "Show interface switchport information")], (c) =>
     c.out.push(...show.showInterfacesSwitchport(sw(c))),
   { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("port-security", "Port security status")], (c) => c.out.push(...show.showPortSecurity(sw(c))), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("port-security", "Port security status"), kw("interface", "Port security interface status"), ifaceArg], (c, [name]) => c.out.push(...show.showPortSecurity(sw(c), name as string)), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("etherchannel", "EtherChannel information"), kw("summary", "EtherChannel summary")], (c) => c.out.push(...show.showEtherchannelSummary(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), ifaceArg, kw("switchport", "Show interface switchport information")], (c, [name]) =>
     c.out.push(...show.showInterfacesSwitchport(sw(c), name as string)),

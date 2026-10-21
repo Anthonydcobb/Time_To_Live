@@ -819,6 +819,21 @@ export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
   return out;
 }
 
+export function showPortSecurity(sw: Switch, only?: string): string[] {
+  const ports = sw.ports.filter((port) => !only || port.name === only);
+  const out = [
+    "Secure Port      MaxSecureAddr  CurrentAddr  SecurityViolation  Security Action",
+    "                 (Count)        (Count)      (Count)             ",
+  ];
+  for (const port of ports) {
+    const sp = sw.switchport(port);
+    if (!sp) continue;
+    const state = !sp.portSecurity ? "Disabled" : port.adminDown ? "Secure-shutdown" : "Secure-up";
+    out.push(`${port.shortName.padEnd(17)}${String(sp.portSecurityMaximum).padEnd(15)}${String(sp.secureMacs.length).padEnd(13)}0${"".padEnd(20)}${state}`);
+  }
+  return out;
+}
+
 export function showIpDhcpSnooping(sw: Switch): string[] {
   const out = [
     "DHCP snooping is " + (sw.config.dhcpSnooping ? "active" : "not configured"),

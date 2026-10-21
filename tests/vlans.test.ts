@@ -78,6 +78,7 @@ describe("port security", () => {
     s1.receive(s1.port("Fa0/1"), { ...frame, src: "001122334455", payload: { ...frame.payload, senderMac: "001122334455" } });
     expect(s1.port("Fa0/1").adminDown).toBe(true);
     expect(type(s1, "show interfaces fa0/1 switchport")).toContain("Port Security: Enabled");
+    expect(type(s1, "show port-security interface fa0/1").join("\n")).toContain("Secure-shutdown");
   });
 });
 
