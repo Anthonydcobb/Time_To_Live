@@ -111,6 +111,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     out.push(`ip route ${formatIpv4(r.network)} ${formatIpv4(r.mask)} ${target}`);
   }
   if (c.staticRoutes.length) out.push("!");
+  if (c.eigrp) out.push(`router eigrp ${c.eigrp.as}`);
   for (const nat of c.staticNat) out.push(`ip nat inside source static ${formatIpv4(nat.insideLocal)} ${formatIpv4(nat.insideGlobal)}`);
   for (const rule of c.natOverloads) out.push(`ip nat inside source list ${rule.acl} interface ${rule.outsideInterface} overload`);
   for (const [number, rules] of Object.entries(c.standardAcls).sort(([a], [b]) => Number(a) - Number(b))) {
@@ -367,6 +368,7 @@ function routeTail(r: Route, withPrefix: boolean): string {
   const net = formatIpv4(r.network) + (withPrefix ? `/${maskToPrefix(r.mask)}` : "");
   if (r.code === "S" && r.nextHop !== null) return `${net} [1/0] via ${formatIpv4(r.nextHop)}`;
   if (r.code === "O" && r.nextHop !== null) return `${net} [110/2] via ${formatIpv4(r.nextHop)}`;
+  if (r.code === "D" && r.nextHop !== null) return `${net} [90/30720] via ${formatIpv4(r.nextHop)}`;
   return `${net} is directly connected, ${r.iface!.name}`;
 }
 
@@ -417,13 +419,21 @@ export function showIpOspfNeighbor(router: Router): string[] {
   return out;
 }
 
+export function showIpEigrpNeighbor(router: Router): string[] {
+  const out = ["", "H   Address         Interface       Hold Uptime   SRTT   RTO  Q  Seq"];
+  router.eigrpNeighbors.forEach((n, index) => out.push(`${index}   ${formatIpv4(n.remoteAddress).padEnd(16)}${n.localInterface.padEnd(16)}15   00:00:08        0  5000  0  ${index + 1}`));
+  return out;
+}
+
 export function showIpProtocols(device: IosDevice): string[] {
-  if (device.kind !== "router" || !device.config.ospf) return ["Routing Protocol is \"connected\"", "  Routing Protocol is \"static\"", ""];
+  if (device.kind !== "router" || (!device.config.ospf && !device.config.eigrp)) return ["Routing Protocol is \"connected\"", "  Routing Protocol is \"static\"", ""];
+  if (device.config.eigrp) return [`Routing Protocol is \"eigrp ${device.config.eigrp.as}\"`, "  Outgoing update filter list for all interfaces is not set", `  Routing for Networks: ${device.config.eigrp.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`, ""];
+  const ospf = device.config.ospf!;
   return [
-    `Routing Protocol is \"ospf ${device.config.ospf.processId}\"`,
+    `Routing Protocol is \"ospf ${ospf.processId}\"`,
     "  Outgoing update filter list for all interfaces is not set",
     "  Incoming update filter list for all interfaces is not set",
-    `  Routing for Networks: ${device.config.ospf.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`,
+    `  Routing for Networks: ${ospf.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`,
     "  Routing Information Sources:",
     "    Gateway         Distance      Last Update",
     "  Distance: (default is 110)",

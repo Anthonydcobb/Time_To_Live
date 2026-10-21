@@ -275,6 +275,7 @@ const showCommands: Entry[] = [
     when: (c) => c.device.kind === "router" || (c.device.kind === "switch" && c.device.config.ipRouting),
   }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("ospf", "OSPF information"), kw("neighbor", "OSPF neighbor list")], (c) => c.out.push(...show.showIpOspfNeighbor(c.device as Router)), { devices: ["router"] }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("eigrp", "EIGRP information"), kw("neighbors", "EIGRP neighbor list")], (c) => c.out.push(...show.showIpEigrpNeighbor(c.device as Router)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("protocols", "Active routing protocols")], (c) => c.out.push(...show.showIpProtocols(c.device)), { devices: ["router"] }),
   cmd(
     EXEC,
@@ -554,6 +555,12 @@ const configCommands: Entry[] = [
     c.device.config.ospf.processId = processId as number;
     c.console.setMode("config-router");
   }, { devices: ["router"] }),
+  cmd(CONFIG, [kw("router", "Enable a routing protocol"), kw("eigrp", "Enhanced Interior Gateway Routing Protocol"), numArg(1, 65535, "Autonomous system")], (c, [as]) => {
+    c.device.config.eigrp ??= { as: as as number, networks: [] };
+    c.device.config.eigrp.as = as as number;
+    c.console.setMode("config-router");
+  }, { devices: ["router"] }),
+  cmd(CONFIG, [NO, kw("router", "Enable a routing protocol"), kw("eigrp", "Enhanced Interior Gateway Routing Protocol")], (c) => { c.device.config.eigrp = null; }, { devices: ["router"] }),
   cmd(CONFIG, [NO, kw("router", "Enable a routing protocol"), kw("ospf", "Open Shortest Path First")], (c) => {
     c.device.config.ospf = null;
   }, { devices: ["router"] }),
@@ -1263,12 +1270,14 @@ const ospfCommands: Entry[] = [
   cmd(ROUTER_CFG, [kw("network", "Enable OSPF on an IP network"), ipArg("Network number"), ipArg("Wildcard bits"), kw("area", "OSPF area ID"), numArg(0, 4294967295, "OSPF area ID")], (c, [network, wildcard, area]) => {
     const mask = (~(wildcard as Ipv4)) >>> 0;
     const normalized = networkOf(network as Ipv4, mask);
-    const cfg = c.device.config.ospf!;
+    const cfg = c.device.config.ospf ?? c.device.config.eigrp;
+    if (!cfg) { c.out.push("% Routing process is not configured."); return; }
     if (!cfg.networks.some((n) => n.network === normalized && n.mask === mask && n.area === area)) cfg.networks.push({ network: normalized, mask, area: area as number });
   }, { devices: ["router"] }),
   cmd(ROUTER_CFG, [NO, kw("network", "Enable OSPF on an IP network"), ipArg("Network number"), ipArg("Wildcard bits"), kw("area", "OSPF area ID"), numArg(0, 4294967295, "OSPF area ID")], (c, [network, wildcard, area]) => {
     const mask = (~(wildcard as Ipv4)) >>> 0;
-    c.device.config.ospf!.networks = c.device.config.ospf!.networks.filter((n) => !(n.network === networkOf(network as Ipv4, mask) && n.mask === mask && n.area === area));
+    const cfg = c.device.config.ospf ?? c.device.config.eigrp;
+    if (cfg) cfg.networks = cfg.networks.filter((n) => !(n.network === networkOf(network as Ipv4, mask) && n.mask === mask && n.area === area));
   }, { devices: ["router"] }),
 ];
 

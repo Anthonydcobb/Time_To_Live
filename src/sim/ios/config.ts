@@ -134,6 +134,7 @@ export interface IosConfig {
   ipRouting: boolean;
   ipv6UnicastRouting: boolean;
   ospf: { processId: number; networks: OspfNetwork[] } | null;
+  eigrp: { as: number; networks: OspfNetwork[] } | null;
   ospfv3: { processId: number } | null;
   /** VTP control-plane settings for switches. */
   vtpMode: "server" | "client" | "transparent";
@@ -178,6 +179,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     ipRouting: false,
     ipv6UnicastRouting: false,
     ospf: null,
+    eigrp: null,
     ospfv3: null,
     vtpMode: "server",
     vtpDomain: "",

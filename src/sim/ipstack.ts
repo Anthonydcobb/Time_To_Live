@@ -38,7 +38,7 @@ export interface StaticRoute {
 }
 
 export interface Route {
-  code: "C" | "L" | "S" | "O";
+  code: "C" | "L" | "S" | "O" | "D";
   network: Ipv4;
   mask: Ipv4;
   nextHop: Ipv4 | null;
@@ -75,6 +75,7 @@ export interface IpStackOptions {
   ipv6OspfRoutes?: () => { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[];
   ipv6DefaultGateway?: () => Ipv6 | null;
   ospfRoutes?: () => StaticRoute[];
+  eigrpRoutes?: () => StaticRoute[];
   defaultGateway?: () => Ipv4 | null;
   /** DHCP messages go here instead of through normal delivery. They arrive before the client has an address. */
   onDhcp?: (iface: L3Interface, packet: Ipv4Packet) => void;
@@ -127,6 +128,11 @@ export class IpStack {
     for (const s of this.opts.ospfRoutes?.() ?? []) {
       if (s.nextHop !== null && connected.some((r) => r.code === "C" && networkOf(s.nextHop!, r.mask) === r.network)) {
         routes.push({ code: "O", network: s.network, mask: s.mask, nextHop: s.nextHop, iface: null });
+      }
+    }
+    for (const s of this.opts.eigrpRoutes?.() ?? []) {
+      if (s.nextHop !== null && connected.some((r) => r.code === "C" && networkOf(s.nextHop!, r.mask) === r.network)) {
+        routes.push({ code: "D", network: s.network, mask: s.mask, nextHop: s.nextHop, iface: null });
       }
     }
     return routes;

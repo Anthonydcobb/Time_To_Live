@@ -20,10 +20,12 @@ export class Router extends IosDevice {
   /** Subinterfaces removed with `no interface`. IOS keeps listing them as deleted until a reload. */
   readonly deletedSubinterfaces = new Set<string>();
   private ospfRoutes: { network: Ipv4; mask: Ipv4; nextHop: Ipv4 | null; exitIface: string | null }[] = [];
+  private eigrpRoutes: { network: Ipv4; mask: Ipv4; nextHop: Ipv4 | null; exitIface: string | null }[] = [];
   private ospfv3Routes: { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[] = [];
   private patSessions = new Map<number, { localIp: Ipv4; localId: number; globalIp: Ipv4 }>();
   private nextPatId = 40000;
   readonly ospfNeighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv4 }[] = [];
+  readonly eigrpNeighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv4 }[] = [];
   readonly ospfv3Neighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv6 }[] = [];
 
   ipv6OspfRoutes() {
@@ -66,6 +68,7 @@ export class Router extends IosDevice {
       ipv6StaticRoutes: () => this.config.ipv6StaticRoutes,
       ipv6OspfRoutes: () => this.ospfv3Routes,
       ospfRoutes: () => this.ospfRoutes,
+      eigrpRoutes: () => this.eigrpRoutes,
       onDhcp: (iface, packet) => this.handleDhcp(iface, packet),
       filter: (iface, packet, direction) => permitsStandardAcl(this.config, iface.name, packet, direction),
     });
@@ -79,7 +82,7 @@ export class Router extends IosDevice {
 
   onAttach(): void {
     super.onAttach();
-    const tick = () => { this.syncOspf(); this.syncOspfV3(); this.clock.schedule(1000, tick); };
+    const tick = () => { this.syncOspf(); this.syncOspfV3(); this.syncEigrp(); this.clock.schedule(1000, tick); };
     this.clock.schedule(1000, tick);
   }
 
@@ -116,6 +119,42 @@ export class Router extends IosDevice {
       for (const route of peer.device.ospfAdvertisements(ours.ip!)) {
         if (!local.some((r) => r.network === route.network && r.mask === route.mask) && !this.ospfRoutes.some((r) => r.network === route.network && r.mask === route.mask && r.nextHop === theirs.ip)) {
           this.ospfRoutes.push({ ...route, nextHop: theirs.ip!, exitIface: ours.name });
+        }
+      }
+    }
+  }
+
+  private eigrpNetwork(iface: L3Interface): OspfNetwork | null {
+    if (!this.config.eigrp || iface.ip === null || iface.mask === null) return null;
+    return this.config.eigrp.networks.find((n) => networkOf(iface.ip!, n.mask) === n.network) ?? null;
+  }
+
+  private eigrpAdvertisements(excludeNextHop?: Ipv4) {
+    const connected = this.l3Interfaces().flatMap((iface) => {
+      const n = this.eigrpNetwork(iface);
+      return n && iface.up() ? [{ network: n.network, mask: n.mask, nextHop: null, exitIface: null }] : [];
+    });
+    const learned = this.eigrpRoutes.filter((route) => route.nextHop !== excludeNextHop).map(({ network, mask }) => ({ network, mask, nextHop: null, exitIface: null }));
+    return [...connected, ...learned.filter((route) => !connected.some((local) => local.network === route.network && local.mask === route.mask))];
+  }
+
+  private syncEigrp(): void {
+    this.eigrpNeighbors.length = 0;
+    this.eigrpRoutes = [];
+    if (!this.config.eigrp) return;
+    const local = this.eigrpAdvertisements();
+    for (const port of this.ports) {
+      const peer = port.peer;
+      if (!peer || !(peer.device instanceof Router)) continue;
+      const ours = this.l3.get(port);
+      const theirs = peer.device.l3.get(peer);
+      const oursNet = ours && this.eigrpNetwork(ours);
+      const theirsNet = theirs && peer.device.eigrpNetwork(theirs);
+      if (!ours || !theirs || !ours.up() || !theirs.up() || !oursNet || !theirsNet || this.config.eigrp.as !== peer.device.config.eigrp?.as) continue;
+      this.eigrpNeighbors.push({ router: peer.device, localInterface: ours.name, remoteInterface: theirs.name, remoteAddress: theirs.ip! });
+      for (const route of peer.device.eigrpAdvertisements(ours.ip!)) {
+        if (!local.some((r) => r.network === route.network && r.mask === route.mask) && !this.eigrpRoutes.some((r) => r.network === route.network && r.mask === route.mask && r.nextHop === theirs.ip)) {
+          this.eigrpRoutes.push({ ...route, nextHop: theirs.ip!, exitIface: ours.name });
         }
       }
     }
