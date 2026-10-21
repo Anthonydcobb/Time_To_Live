@@ -190,13 +190,23 @@ async function run(device: string, line: string, mode = "enable"): Promise<any> 
   throw new Error(`Timed out waiting for ${device} / ${line}`);
 }
 
-function showHealth(results: { label: string; ok: boolean; detail: string }[]): void {
+type HealthResult = {
+  label: string;
+  ok: boolean;
+  detail: string;
+  evidenceDevice?: string;
+  evidenceLine?: string;
+};
+
+function showHealth(results: HealthResult[]): void {
   healthResults.replaceChildren();
   for (const result of results) {
     const row = document.createElement("div"); row.className = "health-row";
     row.innerHTML = `<span>${result.label}<small class="type"> · ${result.detail}</small></span><strong class="${result.ok ? "health-pass" : "health-fail"}">${result.ok ? "PASS" : "FAIL"}</strong>`;
     const evidence = !result.ok
-      ? [...commandOutputs.values()].find((entry) => entry.line === result.detail)
+      ? [...commandOutputs.values()].find((entry) =>
+        entry.line === (result.evidenceLine ?? result.detail)
+        && (!result.evidenceDevice || entry.device === result.evidenceDevice))
       : undefined;
     if (evidence) {
       const details = document.createElement("details"); details.className = "health-evidence";
@@ -291,16 +301,16 @@ async function healthCheck(): Promise<void> {
         /Dynamic ARP inspection statistics:/i.test(arpInspectionStatisticsText) ? { label: "DAI counters", ok: /ARP packets inspected:/i.test(arpInspectionStatisticsText), detail: "show ip arp inspection statistics" } : null,
         /Port\s+Name\s+Status\s+Vlan/i.test(switch0StatusText) ? { label: "Switch physical links", ok: /Fa0\/2\s+.*connected\s+\d+\s+(?:a-full|a-half)\s+a-\d+/i.test(switch0StatusText), detail: "show interfaces status" } : null,
         /Align-Err\s+FCS-Err/i.test(switch0ErrorsText) ? { label: "Interface error counters", ok: interfaceErrorsClean, detail: "show interfaces counters errors" } : null,
-      ].filter((check): check is { label: string; ok: boolean; detail: string } => check !== null);
+      ].filter((check) => check !== null) as HealthResult[];
       showHealth([
-        { label: "PC0 IPv4 address", ok: /IPv4 Address.*192\.168\.10\.10/i.test(pc0Text), detail: "192.168.10.10 / VLAN 10" },
-        { label: "PC1 IPv4 address", ok: /IPv4 Address.*192\.168\.20\.10/i.test(pc1Text), detail: "192.168.20.10 / VLAN 20" },
-        { label: "Router VLAN 10 gateway", ok: /GigabitEthernet0\/0\.10\s+192\.168\.10\.1\s+YES\s+\w+\s+up\s+up/i.test(routerText), detail: "192.168.10.1 up/up" },
-        { label: "Router VLAN 20 gateway", ok: /GigabitEthernet0\/0\.20\s+192\.168\.20\.1\s+YES\s+\w+\s+up\s+up/i.test(routerText), detail: "192.168.20.1 up/up" },
-        { label: "Inter-VLAN connectivity", ok: /Reply from 192\.168\.20\.10/i.test(text(interVlanPing)), detail: "PC0 → PC1" },
-        { label: "Trunks forwarding", ok: /Fa0\/1\s+1,10,20/i.test(trunks) && /Fa0\/3\s+1,10,20/i.test(trunks), detail: "VLANs 10/20" },
-        { label: "Router SSH service", ok: /SSH Enabled/i.test(sshText), detail: "show ssh" },
-        { label: "VTY local authentication", ok: (/login local/i.test(configText) || /aaa authentication login default local/i.test(configText)) && /transport input ssh/i.test(configText), detail: "line vty 0 4 / AAA" },
+        { label: "PC0 IPv4 address", ok: /IPv4 Address.*192\.168\.10\.10/i.test(pc0Text), detail: "192.168.10.10 / VLAN 10", evidenceDevice: "PC0", evidenceLine: "ipconfig" },
+        { label: "PC1 IPv4 address", ok: /IPv4 Address.*192\.168\.20\.10/i.test(pc1Text), detail: "192.168.20.10 / VLAN 20", evidenceDevice: "PC1", evidenceLine: "ipconfig" },
+        { label: "Router VLAN 10 gateway", ok: /GigabitEthernet0\/0\.10\s+192\.168\.10\.1\s+YES\s+\w+\s+up\s+up/i.test(routerText), detail: "192.168.10.1 up/up", evidenceDevice: "Router0", evidenceLine: "show ip interface brief" },
+        { label: "Router VLAN 20 gateway", ok: /GigabitEthernet0\/0\.20\s+192\.168\.20\.1\s+YES\s+\w+\s+up\s+up/i.test(routerText), detail: "192.168.20.1 up/up", evidenceDevice: "Router0", evidenceLine: "show ip interface brief" },
+        { label: "Inter-VLAN connectivity", ok: /Reply from 192\.168\.20\.10/i.test(text(interVlanPing)), detail: "PC0 → PC1", evidenceDevice: "PC0", evidenceLine: "ping 192.168.20.10" },
+        { label: "Trunks forwarding", ok: /Fa0\/1\s+1,10,20/i.test(trunks) && /Fa0\/3\s+1,10,20/i.test(trunks), detail: "VLANs 10/20", evidenceDevice: "Switch0", evidenceLine: "show interfaces trunk" },
+        { label: "Router SSH service", ok: /SSH Enabled/i.test(sshText), detail: "show ssh", evidenceDevice: "Router0", evidenceLine: "show ssh" },
+        { label: "VTY local authentication", ok: (/login local/i.test(configText) || /aaa authentication login default local/i.test(configText)) && /transport input ssh/i.test(configText), detail: "line vty 0 4 / AAA", evidenceDevice: "Router0", evidenceLine: "show running-config" },
         ...ipv6Checks,
         ...optionalChecks,
       ]);
@@ -313,11 +323,11 @@ async function healthCheck(): Promise<void> {
     const cdp = await run("Switch0", "show cdp neighbors");
     const interfaceText = text(interfaces); const macText = text(macs);
     showHealth([
-      { label: "PC0 IPv4 address", ok: /IPv4 Address.*192\.168\.10\.10/i.test(text(ipconfig)), detail: "192.168.10.10" },
-      { label: "PC0 reaches Switch0", ok: /Reply from 192\.168\.10\.1/i.test(text(ping)), detail: "ping 192.168.10.1" },
-      { label: "Switch0 management SVI", ok: /Vlan1\s+192\.168\.10\.1\s+YES\s+\w+\s+up\s+up/i.test(interfaceText), detail: "Vlan1 up/up" },
-      { label: "PC0 learned on VLAN 1 access port", ok: /\b1\s+00e0\.a379\.2d27\s+\w+\s+Fa0\/2/i.test(macText), detail: "VLAN 1 / Fa0/2" },
-      { label: "Switch1 neighbor present", ok: /Switch\s+Fas?\s*0\/1/i.test(text(cdp)), detail: "CDP via Fa0/1" },
+      { label: "PC0 IPv4 address", ok: /IPv4 Address.*192\.168\.10\.10/i.test(text(ipconfig)), detail: "192.168.10.10", evidenceDevice: "PC0", evidenceLine: "ipconfig" },
+      { label: "PC0 reaches Switch0", ok: /Reply from 192\.168\.10\.1/i.test(text(ping)), detail: "ping 192.168.10.1", evidenceDevice: "PC0", evidenceLine: "ping 192.168.10.1" },
+      { label: "Switch0 management SVI", ok: /Vlan1\s+192\.168\.10\.1\s+YES\s+\w+\s+up\s+up/i.test(interfaceText), detail: "Vlan1 up/up", evidenceDevice: "Switch0", evidenceLine: "show ip interface brief" },
+      { label: "PC0 learned on VLAN 1 access port", ok: /\b1\s+00e0\.a379\.2d27\s+\w+\s+Fa0\/2/i.test(macText), detail: "VLAN 1 / Fa0/2", evidenceDevice: "Switch0", evidenceLine: "show mac address-table" },
+      { label: "Switch1 neighbor present", ok: /Switch\s+Fas?\s*0\/1/i.test(text(cdp)), detail: "CDP via Fa0/1", evidenceDevice: "Switch0", evidenceLine: "show cdp neighbors" },
     ]);
   } catch (error) {
     healthResults.innerHTML = `<p class="health-fail">Health check failed: ${error instanceof Error ? error.message : String(error)}</p>`;
