@@ -111,7 +111,11 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     out.push(`ip route ${formatIpv4(r.network)} ${formatIpv4(r.mask)} ${target}`);
   }
   if (c.staticRoutes.length) out.push("!");
-  if (c.eigrp) out.push(`router eigrp ${c.eigrp.as}`);
+  if (c.eigrp) {
+    out.push(`router eigrp ${c.eigrp.as}`);
+    for (const network of c.eigrp.networks) out.push(` network ${formatIpv4(network.network)} ${formatIpv4((~network.mask) >>> 0)}`);
+    out.push("!");
+  }
   for (const nat of c.staticNat) out.push(`ip nat inside source static ${formatIpv4(nat.insideLocal)} ${formatIpv4(nat.insideGlobal)}`);
   for (const rule of c.natOverloads) out.push(`ip nat inside source list ${rule.acl} interface ${rule.outsideInterface} overload`);
   for (const server of c.ntpServers) out.push(`ntp server ${formatIpv4(server)}`);

@@ -17,8 +17,8 @@ describe("EIGRP", () => {
     net.connect(pc1.nic, r1.port("Gi0/0"));
     net.connect(r1.port("Gi0/1"), r2.port("Gi0/1"));
     net.connect(pc2.nic, r2.port("Gi0/0"));
-    type(r1, "", "en", "conf t", "interface g0/0", "ip address 10.0.1.1 255.255.255.0", "no shutdown", "interface g0/1", "ip address 10.0.12.1 255.255.255.252", "no shutdown", "router eigrp 100", "network 10.0.1.0 0.0.0.255 area 0", "network 10.0.12.0 0.0.0.3 area 0", "end");
-    type(r2, "", "en", "conf t", "interface g0/0", "ip address 10.0.2.1 255.255.255.0", "no shutdown", "interface g0/1", "ip address 10.0.12.2 255.255.255.252", "no shutdown", "router eigrp 100", "network 10.0.2.0 0.0.0.255 area 0", "network 10.0.12.0 0.0.0.3 area 0", "end");
+    type(r1, "", "en", "conf t", "interface g0/0", "ip address 10.0.1.1 255.255.255.0", "no shutdown", "interface g0/1", "ip address 10.0.12.1 255.255.255.252", "no shutdown", "router eigrp 100", "network 10.0.1.0 0.0.0.255", "network 10.0.12.0 0.0.0.3", "end");
+    type(r2, "", "en", "conf t", "interface g0/0", "ip address 10.0.2.1 255.255.255.0", "no shutdown", "interface g0/1", "ip address 10.0.12.2 255.255.255.252", "no shutdown", "router eigrp 100", "network 10.0.2.0 0.0.0.255", "network 10.0.12.0 0.0.0.3", "end");
     net.clock.advance(5_000);
     expect(type(r1, "show ip eigrp neighbors").join("\n")).toContain("10.0.12.2");
     expect(type(r1, "show ip route").join("\n")).toContain("D");

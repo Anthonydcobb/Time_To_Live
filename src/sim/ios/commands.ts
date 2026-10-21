@@ -1295,6 +1295,12 @@ function deleteFile(c: Ctx, file: string): void {
 }
 
 const ospfCommands: Entry[] = [
+  cmd(ROUTER_CFG, [kw("network", "Enable EIGRP on an IP network"), ipArg("Network number"), ipArg("Wildcard bits")], (c, [network, wildcard]) => {
+    if (!c.device.config.eigrp) { c.out.push("% EIGRP routing process is not configured."); return; }
+    const mask = (~(wildcard as Ipv4)) >>> 0;
+    const normalized = networkOf(network as Ipv4, mask);
+    if (!c.device.config.eigrp.networks.some((n) => n.network === normalized && n.mask === mask)) c.device.config.eigrp.networks.push({ network: normalized, mask, area: 0 });
+  }, { devices: ["router"] }),
   cmd(ROUTER_CFG, [kw("network", "Enable OSPF on an IP network"), ipArg("Network number"), ipArg("Wildcard bits"), kw("area", "OSPF area ID"), numArg(0, 4294967295, "OSPF area ID")], (c, [network, wildcard, area]) => {
     const mask = (~(wildcard as Ipv4)) >>> 0;
     const normalized = networkOf(network as Ipv4, mask);
