@@ -278,6 +278,7 @@ async function healthCheck(): Promise<void> {
       const spanning0 = await run("Switch0", "show spanning-tree");
       const spanning1 = await run("Switch1", "show spanning-tree");
       const switch0Status = await run("Switch0", "show interfaces status");
+      const switch0Counters = await run("Switch0", "show interfaces counters");
       const switch0Errors = await run("Switch0", "show interfaces counters errors");
       const dhcpSnoopingStatistics = await run("Switch0", "show ip dhcp snooping statistics");
       const arpInspectionStatistics = await run("Switch0", "show ip arp inspection statistics");
@@ -286,7 +287,7 @@ async function healthCheck(): Promise<void> {
       const ipv6InterfaceText = text(ipv6Interfaces); const ipv6RouteText = text(ipv6Routes); const ipv6NeighborText = text(ipv6Neighbors);
       const ipv6OspfText = text(ipv6Ospf); const ipv6OspfInterfaceText = text(ipv6OspfInterfaces); const ipv6ProtocolsText = text(ipv6Protocols);
       const natText = text(natTranslations); const natStatisticsText = text(natStatistics); const snmpText = text(snmpStatus); const standbyText = text(standby); const vrrpText = text(vrrp); const glbpText = text(glbp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
-      const switch0StatusText = text(switch0Status); const switch0ErrorsText = text(switch0Errors);
+      const switch0StatusText = text(switch0Status); const switch0CountersText = text(switch0Counters); const switch0ErrorsText = text(switch0Errors);
       const spanningText = `${text(spanning0)}\n${text(spanning1)}`;
       const switch0ErrorRows = switch0ErrorsText.split("\n").filter((line: string) => /^\S+\s+\d/.test(line));
       const interfaceErrorsClean = switch0ErrorRows.length > 0 && switch0ErrorRows.every((line: string) => /^\S+\s+(?:0\s+){5}0\s*$/.test(line));
@@ -322,6 +323,7 @@ async function healthCheck(): Promise<void> {
         /DHCP snooping statistics:/i.test(dhcpSnoopingStatisticsText) ? { label: "DHCP snooping counters", ok: /Packets processed:/i.test(dhcpSnoopingStatisticsText), detail: "show ip dhcp snooping statistics" } : null,
         /Dynamic ARP inspection statistics:/i.test(arpInspectionStatisticsText) ? { label: "DAI counters", ok: /ARP packets inspected:/i.test(arpInspectionStatisticsText), detail: "show ip arp inspection statistics" } : null,
         /Port\s+Name\s+Status\s+Vlan/i.test(switch0StatusText) ? { label: "Switch physical links", ok: /Fa0\/2\s+.*connected\s+\d+\s+(?:a-full|a-half)\s+a-\d+/i.test(switch0StatusText), detail: "show interfaces status" } : null,
+        /Port\s+InOctets\s+InUcastPkts/i.test(switch0CountersText) ? { label: "Interface traffic counters", ok: /Fa\d+\/\d+\s+\d+\s+\d+/i.test(switch0CountersText), detail: "show interfaces counters" } : null,
         /Align-Err\s+FCS-Err/i.test(switch0ErrorsText) ? { label: "Interface error counters", ok: interfaceErrorsClean, detail: "show interfaces counters errors" } : null,
       ].filter((check) => check !== null) as HealthResult[];
       showHealth([
