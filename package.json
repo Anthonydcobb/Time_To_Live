@@ -9,7 +9,12 @@
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "sim:spike": "node tools/run-sim-spike.mjs",
+    "sim:faults": "node tools/run-sim-fault-scenarios.mjs",
+    "sim:stp": "node tools/run-sim-stp-scenario.mjs",
+    "pt:topology": "node tools/run-pt-topology-spike.mjs",
+    "pt:health": "node tools/run-pt-expanded-health.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
