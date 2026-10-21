@@ -2,7 +2,7 @@ export * from "./addr";
 export { Clock } from "./clock";
 export { Network, Port, Device, type DeviceKind } from "./network";
 export { IpStack, type PingResult } from "./ipstack";
-export { IosDevice } from "./devices/ios-device";
+export { IosDevice, RemoteSession, type SnmpGetResult } from "./devices/ios-device";
 export { Router } from "./devices/router";
 export { Switch } from "./devices/switch";
 export { Pc } from "./devices/pc";

@@ -26,6 +26,20 @@ describe("operations services", () => {
     expect(router.config.snmpCommunities).toHaveLength(2);
   });
 
+  it("supports authenticated simulated SNMP GETs for common system OIDs", () => {
+    const net = new Network();
+    const router = net.add(new Router("R1"));
+    type(router, "", "en", "conf t", "snmp-server community monitor ro", "end");
+
+    expect(router.snmpGet("wrong", "sysName.0")).toEqual({ ok: false, reason: "unknown-community" });
+    expect(router.snmpGet("monitor", "sysName.0")).toEqual({ ok: true, oid: "sysName.0", type: "STRING", value: "Router" });
+    expect(router.snmpGet("monitor", "1.3.6.1.2.1.1.3.0")).toEqual({ ok: true, oid: "1.3.6.1.2.1.1.3.0", type: "TIMETICKS", value: 0 });
+    expect(router.snmpGet("monitor", "1.3.6.1.2.1.99.1.0")).toEqual({ ok: false, reason: "no-such-object" });
+    expect(router.snmpPacketsInput).toBe(4);
+    expect(router.snmpPacketsOutput).toBe(2);
+    expect(type(router, "show snmp").join("\n")).toContain("4 SNMP packets input");
+  });
+
   it("retains interface events in the IOS log buffer", () => {
     const net = new Network();
     const router = net.add(new Router("R1"));

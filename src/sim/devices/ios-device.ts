@@ -12,6 +12,10 @@ export type RemoteLoginResult =
   | { ok: true; protocol: RemoteProtocol; username: string }
   | { ok: false; reason: "transport-disabled" | "ssh-not-ready" | "local-login-disabled" | "unknown-user" | "bad-password" };
 
+export type SnmpGetResult =
+  | { ok: true; oid: string; type: "STRING" | "TIMETICKS"; value: string | number }
+  | { ok: false; reason: "unknown-community" | "no-such-object" };
+
 /** An authenticated simulated SSH/Telnet session. It intentionally reuses the device CLI. */
 export class RemoteSession {
   private closed = false;
@@ -93,6 +97,9 @@ export abstract class IosDevice extends Device {
   readonly lldpNeighbors = new Map<Port, LldpNeighbor>();
   /** Recent IOS messages retained by the local log buffer. */
   readonly logBuffer: string[] = [];
+  /** Counters for the deliberately local SNMP GET simulation. */
+  snmpPacketsInput = 0;
+  snmpPacketsOutput = 0;
   /** Interface whose `shutdown` state is being changed right now, for log wording. */
   protected adminChanging: string | null = null;
 
@@ -209,6 +216,30 @@ export abstract class IosDevice extends Device {
   openRemoteSession(protocol: RemoteProtocol, username: string, password: string): RemoteSession | RemoteLoginResult {
     const login = this.attemptRemoteLogin(protocol, username, password);
     return login.ok ? new RemoteSession(this, protocol, username) : login;
+  }
+
+  /**
+   * A small, transport-free SNMPv2c surface for labs and automation exercises.
+   * It models community authorization and common system OIDs, not UDP polling,
+   * SET operations, traps, or a full MIB.
+   */
+  snmpGet(community: string, oid: string): SnmpGetResult {
+    this.snmpPacketsInput++;
+    const configured = this.config.snmpCommunities.find((entry) => entry.community === community);
+    if (!configured) return { ok: false, reason: "unknown-community" };
+    const normalized = oid.replace(/^\./, "").toLowerCase();
+    const values: Record<string, { type: "STRING" | "TIMETICKS"; value: string | number }> = {
+      "1.3.6.1.2.1.1.1.0": { type: "STRING", value: `${this.model} IOS-style simulator` },
+      "1.3.6.1.2.1.1.3.0": { type: "TIMETICKS", value: this.clock.now * 100 },
+      "1.3.6.1.2.1.1.5.0": { type: "STRING", value: this.hostname },
+      "sysdescr.0": { type: "STRING", value: `${this.model} IOS-style simulator` },
+      "sysuptime.0": { type: "TIMETICKS", value: this.clock.now * 100 },
+      "sysname.0": { type: "STRING", value: this.hostname },
+    };
+    const value = values[normalized];
+    if (!value) return { ok: false, reason: "no-such-object" };
+    this.snmpPacketsOutput++;
+    return { ok: true, oid, ...value };
   }
 
   private sendCdp(port: Port): void {

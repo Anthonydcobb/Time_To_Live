@@ -1103,7 +1103,7 @@ export function showLogging(device: IosDevice): string[] {
 }
 
 export function showSnmp(device: IosDevice): string[] {
-  const out = ["Chassis: CR-2911", "0 SNMP packets input", "0 SNMP packets output", `SNMP communities configured: ${device.config.snmpCommunities.length}`];
+  const out = ["Chassis: CR-2911", `${device.snmpPacketsInput} SNMP packets input`, `${device.snmpPacketsOutput} SNMP packets output`, `SNMP communities configured: ${device.config.snmpCommunities.length}`];
   for (const snmp of device.config.snmpCommunities) out.push(`  ${snmp.community} (${snmp.access})`);
   return out;
 }
