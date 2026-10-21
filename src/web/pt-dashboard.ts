@@ -168,13 +168,15 @@ async function healthCheck(): Promise<void> {
       const standby = await run("Router0", "show standby");
       const ntpStatus = await run("Router0", "show ntp status");
       const logging = await run("Router0", "show logging");
+      const lldpStatus = await run("Router0", "show lldp");
+      const lldpNeighbors = await run("Router0", "show lldp neighbors");
       const trunk0 = await run("Switch0", "show interfaces trunk");
       const trunk1 = await run("Switch1", "show interfaces trunk");
       const pc0Text = text(pc0Ip); const pc1Text = text(pc1Ip);
       const routerText = text(routerInterfaces); const sshText = text(sshStatus); const configText = text(routerConfig); const trunks = `${text(trunk0)}\n${text(trunk1)}`;
       const ipv6InterfaceText = text(ipv6Interfaces); const ipv6RouteText = text(ipv6Routes); const ipv6NeighborText = text(ipv6Neighbors);
       const ipv6OspfText = text(ipv6Ospf);
-      const natText = text(natTranslations); const standbyText = text(standby); const ntpText = text(ntpStatus); const loggingText = text(logging);
+      const natText = text(natTranslations); const standbyText = text(standby); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
       const routingText = text(routingProtocols);
       const ipv6Configured = /[0-9a-f]{1,4}:[0-9a-f:]+\/\d+/i.test(ipv6InterfaceText);
       const ipv6Checks = ipv6Configured ? [
@@ -189,6 +191,7 @@ async function healthCheck(): Promise<void> {
         /Clock is synchronized/i.test(ntpText) ? { label: "NTP synchronization", ok: true, detail: "show ntp status" } : null,
         /Logging to (?!none)/i.test(loggingText) ? { label: "Syslog destination", ok: /Syslog logging: enabled/i.test(loggingText), detail: "show logging" } : null,
         /Routing Protocol is "(?:ospf|eigrp)/i.test(routingText) ? { label: "Dynamic routing protocol", ok: /Routing Protocol is "(?:ospf|eigrp)/i.test(routingText), detail: "show ip protocols" } : null,
+        /Global LLDP information/i.test(lldpText) ? { label: "LLDP neighbor discovery", ok: /Device ID\s+Local Intf/i.test(lldpNeighborText) && !/not enabled/i.test(lldpNeighborText), detail: "show lldp neighbors" } : null,
       ].filter((check): check is { label: string; ok: boolean; detail: string } => check !== null);
       showHealth([
         { label: "PC0 IPv4 address", ok: /IPv4 Address.*192\.168\.10\.10/i.test(pc0Text), detail: "192.168.10.10 / VLAN 10" },
