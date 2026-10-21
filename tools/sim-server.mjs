@@ -8,7 +8,7 @@ const vite = await createServer({
 });
 
 const sim = await vite.ssrLoadModule("/src/sim/index.ts");
-const { Network, Router, Switch, Pc, parseIpv4, prefixToMask, resetMacAllocator } = sim;
+const { Network, loadTopology, resetMacAllocator } = sim;
 
 let net = null;
 let devices = new Map();
@@ -22,44 +22,15 @@ function reset() {
   return { now: net.clock.now, devices: [] };
 }
 
-function addDevice(spec) {
-  let device;
-  if (spec.type === "router") device = new Router(spec.name, spec.hostname ?? spec.name);
-  else if (spec.type === "switch") device = new Switch(spec.name, spec.hostname ?? spec.name);
-  else if (spec.type === "pc") device = new Pc(spec.name, spec.hostname ?? spec.name);
-  else throw new Error(`Unsupported device type: ${spec.type}`);
-  net.add(device);
-  devices.set(spec.name, device);
-  if (device.kind === "pc" && spec.ip) {
-    const [ipText, prefixText] = spec.ip.split("/");
-    const ip = parseIpv4(ipText);
-    const prefix = Number(prefixText ?? 24);
-    const mask = prefixToMask(prefix);
-    const gateway = spec.gateway ? parseIpv4(spec.gateway) : null;
-    if (ip === null || mask === null || (spec.gateway && gateway === null)) throw new Error(`Invalid PC address for ${spec.name}`);
-    device.configure(ip, mask, gateway);
-  }
-  const logs = [];
-  device.onOutput((text) => logs.push(text));
-  logListeners.push({ name: spec.name, logs });
-  if (device.kind !== "pc" && Array.isArray(spec.startupConfig)) {
-    device.console.input("");
-    for (const line of spec.startupConfig) {
-      const result = device.console.input(line);
-      if (result.lines?.some((text) => /% (Invalid|Incomplete|Ambiguous)/i.test(text))) {
-        throw new Error(`Startup configuration failed on ${spec.name}: ${line}`);
-      }
-    }
-  }
-}
-
 function load(topology) {
-  reset();
-  for (const spec of topology.devices ?? []) addDevice(spec);
-  for (const link of topology.links ?? []) {
-    const [aName, aPort] = link.a.split(/\s+/, 2);
-    const [bName, bPort] = link.b.split(/\s+/, 2);
-    net.connect(devices.get(aName).port(aPort), devices.get(bName).port(bPort), link.cable ?? "ethernet");
+  const loaded = loadTopology(topology);
+  net = loaded.network;
+  devices = loaded.devices;
+  logListeners = [];
+  for (const device of devices.values()) {
+    const logs = [];
+    device.onOutput((text) => logs.push(text));
+    logListeners.push({ name: device.id, logs });
   }
   return snapshot();
 }

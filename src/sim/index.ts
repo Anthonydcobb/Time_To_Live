@@ -8,3 +8,4 @@ export { Switch } from "./devices/switch";
 export { Pc } from "./devices/pc";
 export { IosConsole, type Mode, type ConsoleOutput } from "./ios/console";
 export { PcShell } from "./pc/shell";
+export { loadTopology, type TopologySpec, type TopologyDeviceSpec, type TopologyLinkSpec, type LoadedTopology } from "./topology-json";
