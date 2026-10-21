@@ -148,6 +148,7 @@ export function installDevTools(story: Story, ui: Ui): void {
       <button data-act="job2">Job 2</button>
       <button data-act="finish2">Finish job 2</button>
       <button data-act="being">Being 1/4</button>
+      <button data-act="grimoire">Grimoire</button>
     </div>
     <p class="status"></p>
     <p class="note">Job 1 shortcut passwords: <code>${PW}</code></p>
@@ -189,6 +190,13 @@ export function installDevTools(story: Story, ui: Ui): void {
       ui.apparition();
       ui.beingStage = (ui.beingStage % 4) + 1;
       panel.querySelector('[data-act="being"]')!.textContent = `Being ${ui.beingStage}/4`;
+    },
+    // Both jobs done and Walter has told you about the book; it's in Bob's desk.
+    grimoire: () => {
+      if (!s.wash) takeJob2();
+      for (const f of ["ask-binding", "checked", "haunt2", "done2", "arrived2", "home2", "ask-grimoire"]) s.flags.add(f);
+      closeDialogue();
+      go("office");
     },
     fold: () => fold(!panel.classList.contains("folded")),
   };

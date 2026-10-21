@@ -5,6 +5,7 @@ import { BASICS, Grimoire } from "../sim/grimoire";
 import { cornerStore } from "../sim/scenarios/corner-store";
 import { laundromat } from "../sim/scenarios/laundromat";
 import type { Scenario } from "../sim/scenarios/types";
+import { bookToast, NOTES, type BookContents } from "./grimoire-book";
 import type { RoomId } from "./rooms";
 import type { SiteId } from "./town-map";
 import type { Line, Ui } from "./ui";
@@ -58,6 +59,8 @@ export class Story {
   /** Where R1's command history stood when Walter asked for show ip dhcp binding. */
   private bindingFrom = 0;
   private told = new Set<string>();
+  /** Notes you've read, in order. They're pinned into the grimoire, even ones read before you had it. */
+  private readonly notes: string[] = [];
 
   constructor(private readonly ui: Ui) {
     this.store.net.add(this.phantom);
@@ -149,11 +152,11 @@ export class Story {
           { who: W, text: "Two for two! You're a natural, kid. A natural what, I haven't decided." },
           { who: W, text: "Bob's going to be thrilled. Bob is going to be... somewhere. Over." },
           { who: G, text: "Did Dryer 4 get an address? I hope it did. Everybody should have somewhere to be." },
+          { who: W, text: "Kid. Before you clock out. Two jobs means you've earned the book." },
+          { who: W, text: "Bob's desk, bottom drawer. Every tech gets a *grimoire* sooner or later. The incantations are all in it, and whatever you pick up out there goes in it too." },
+          { who: W, text: "Don't let it read you first. Over." },
         ],
-        () =>
-          this.ui.showCard(
-            `<p class="big">End of the laundromat slice</p><p>Thanks for playing the grey box. Press E to keep walking around.</p>`,
-          ),
+        () => this.flags.add("ask-grimoire"),
       );
     }
   }
@@ -191,6 +194,7 @@ export class Story {
               { text: "Someone has added in pen: Dryer 4 is not a customer." },
             ],
             () => {
+              this.note("wo2-pen");
               this.takeLaundromat();
               events.emit("job");
             },
@@ -208,6 +212,7 @@ export class Story {
             { text: "Someone has added in pen: Do not restock the back cooler." },
           ],
           () => {
+            this.note("wo1-pen");
             this.flags.add("job");
             events.emit("job");
           },
@@ -234,13 +239,14 @@ export class Story {
         ui.say([{ text: "EMPLOYEE OF THE MONTH, OCTOBER 1987: Walter. He looks exactly like he sounds. The photo is still warm." }]);
         return;
       case "office:desk":
-        ui.say([{ text: "A sticky note on Bob's monitor: \"At the Cryptis quarterly. Sell the upgrade. Everybody needs the upgrade. -B\"" }]);
+        if (this.flags.has("ask-grimoire") && !this.flags.has("grimoire")) return this.findGrimoire();
+        ui.say([{ text: "A sticky note on Bob's monitor: \"At the Cryptis quarterly. Sell the upgrade. Everybody needs the upgrade. -B\"" }], () => this.note("bob-sticky"));
         return;
       case "office:coffee":
         ui.say([{ text: "The coffee machine is warm and full. It isn't plugged in." }]);
         return;
       case "office:cabinet":
-        ui.say([{ text: "Invoices, all paid in full, all from addresses on Elm and Elm. The bottom drawer is labeled *BELLWETHER* and is empty." }]);
+        ui.say([{ text: "Invoices, all paid in full, all from addresses on Elm and Elm. The bottom drawer is labeled *BELLWETHER* and is empty." }], () => this.note("bellwether"));
         return;
       case "office:exit":
         if (!this.flags.has("walkie")) ui.say([{ text: "You should grab the walkie-talkie off the charger first." }]);
@@ -263,7 +269,7 @@ export class Story {
         ui.openLaptop(office, "PC1 · Back Office", PC_HINT);
         return;
       case "shop:desk":
-        ui.say([{ text: "A desk calendar, still on October 1987. Every day is crossed off, including the ones that haven't happened." }]);
+        ui.say([{ text: "A desk calendar, still on October 1987. Every day is crossed off, including the ones that haven't happened." }], () => this.note("finch-calendar"));
         return;
       case "shop:rack":
         ui.choose({ text: "The rack hums. A light-blue console cable hangs off the side, waiting for your laptop." }, [
@@ -354,7 +360,7 @@ export class Story {
           ...(this.flags.has("walkie")
             ? [{ who: W, text: "Zero-dot-zero-dot-zero-dot-zero. That's what a machine calls itself before anybody's given it a name. Weird thing for a dryer to say. Over." }]
             : []),
-        ]);
+        ], () => this.note("gus-log"));
         return;
       case "archive":
         ui.say([{ text: "Boxes of old logbooks, labeled by year. 1974. 1974. 1974. 1974. 1974." }]);
@@ -377,7 +383,7 @@ export class Story {
         ui.say([{ text: "Top-loaders, back to back. One is full of grey water that isn't moving, even though the drum is." }]);
         return;
       case "lostfound":
-        ui.say([{ text: "LOST & FOUND. Socks, cracked glasses, two watches stopped at 3:14, a phone handset. And Polaroids of this room, ~taken from inside the dryers~." }]);
+        ui.say([{ text: "LOST & FOUND. Socks, cracked glasses, two watches stopped at 3:14, a phone handset. And Polaroids of this room, ~taken from inside the dryers~." }], () => this.note("lostfound"));
         return;
       case "change":
         ui.say([{ text: "CHANGE MACHINE. A light says OUT OF CHANGE. It gives you a quarter anyway. The quarter is warm, and dated 1974." }]);
@@ -386,7 +392,7 @@ export class Story {
         ui.say([{ text: "Detergent, at 1974 prices. Every box rattles like it's full of something smaller than soap." }]);
         return;
       case "toilet":
-        ui.say([{ text: "The restroom. A sign on the door: CUSTOMERS ONLY. The guest book inside has one name in it, over and over. Gus." }]);
+        ui.say([{ text: "The restroom. A sign on the door: CUSTOMERS ONLY. The guest book inside has one name in it, over and over. Gus." }], () => this.note("guestbook"));
         return;
       case "exit":
         if (this.flags.has("done2")) ui.openTownMap("laundromat", { bobs: () => this.travel("office"), quikstop: () => this.travel("shop") }, { haunted: true });
@@ -475,6 +481,8 @@ export class Story {
   /** Walter's hint for job 2, by the first task that isn't done. */
   private laundromatHint(job: Scenario): string {
     const ok = (i: number) => !!job.tasks[i].done?.();
+    if (this.flags.has("grimoire")) return "Read the book, kid. G. It's better company than Gary. Don't tell him I said that. Over.";
+    if (this.flags.has("ask-grimoire")) return "Bob's desk, kid. Bottom drawer. The book's expecting you. Over.";
     if (this.flags.has("done2")) return "You're done! Come on home. And don't take any socks from the lost and found. Over.";
     if (this.room !== "laundromat") return "Route 9, kid. The van's out front. Over.";
     if (!this.flags.has("keys")) return "Gear's behind the back door and Gus has the keys. He's in the booth by the kiosk. Go say hi. Over.";
@@ -612,6 +620,56 @@ export class Story {
         );
       },
     );
+  }
+
+  /** Pins a note into the grimoire. Notes read before you have the book wait for it. */
+  private note(id: keyof typeof NOTES): void {
+    if (this.notes.includes(id)) return;
+    this.notes.push(id);
+    if (this.flags.has("grimoire")) bookToast(`Pinned into the grimoire: ${NOTES[id].from}`);
+  }
+
+  /** Bob's bottom drawer, after the laundromat. The cover's eyes are shut. Mostly. */
+  private findGrimoire(): void {
+    const ui = this.ui;
+    ui.say([{ text: "Bob's desk. The bottom drawer, the one Walter meant, slides open a little before you touch it." }], () => {
+      ui.glimpse("assets/cards/grimoire-asleep.webp", "assets/cards/grimoire-awake.webp");
+      ui.say(
+        [
+          { text: "A heavy book, bound in something that isn't leather. A diagram is pressed into the cover: lines, and little shut eyes where the lines meet." },
+          { text: "For a second, ~every one of them is open~. Looking at you." },
+          { text: "Then they're shut, and they were always shut. It's a book. It's warm, like someone was just holding it." },
+          ...(this.flags.has("walkie") ? [{ who: W, text: "Got it? Good. Don't read it in bed. Over." }] : []),
+          { text: "You've got the grimoire. Press G to open it." },
+        ],
+        () => {
+          this.flags.add("grimoire");
+          events.emit("grimoire");
+          if (this.notes.length) bookToast(`${this.notes.length} note${this.notes.length === 1 ? "" : "s"} you found are pinned inside.`);
+        },
+      );
+    });
+  }
+
+  /** G: the grimoire, if you have it. Closing it the first time ends the slice. */
+  openGrimoire(): void {
+    if (!this.flags.has("grimoire")) return;
+    this.ui.openBook(this.bookContents(), () => {
+      if (this.flags.has("slice-end")) return;
+      this.flags.add("slice-end");
+      this.ui.showCard(`<p class="big">End of the laundromat slice</p><p>Thanks for playing the grey box. Press E to keep walking around.</p>`);
+    });
+  }
+
+  private bookContents(): BookContents {
+    const { store, wash } = this;
+    const sites: BookContents["sites"] = [
+      { number: store.workOrder.number, name: store.workOrder.client, net: store.net, layout: store.layout, devices: [store.r1, store.s1, store.register, store.office], done: this.flags.has("done") },
+    ];
+    if (wash) {
+      sites.push({ number: wash.workOrder.number, name: wash.workOrder.client, net: wash.net, layout: wash.layout, devices: [wash.r1, wash.s1, wash.kiosk, wash.office, wash.printer], done: this.flags.has("done2") });
+    }
+    return { notes: [...this.notes], sites: this.flags.has("job") ? sites : [] };
   }
 
   private travel(to: RoomId): void {

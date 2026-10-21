@@ -7,6 +7,7 @@ import { TerminalView, iosSession, pcSession } from "../web/terminal";
 import { apparition, apparitionPlaying } from "./apparition";
 import { audio } from "./audio";
 import { crt } from "./crt";
+import { GrimoireBook, type BookContents } from "./grimoire-book";
 import { LaptopScreen } from "./laptop-screen";
 import { parseLine, renderRuns, visibleLength, type Run } from "./markup";
 import { TownMap, type SiteId } from "./town-map";
@@ -150,6 +151,7 @@ export class Ui {
   private readonly pcScreen = new PcScreen(document.body);
   private readonly laptopScreen = new LaptopScreen(document.body);
   private readonly townMap = new TownMap(document.body);
+  private readonly book = new GrimoireBook(document.body);
   /** Growth creeping over the dialogue console; it spreads as the town goes wrong. */
   private readonly growth = new Overgrowth(document.querySelector<HTMLElement>("#dialogue .console")!);
   /** Cables that won't come out. */
@@ -169,7 +171,7 @@ export class Ui {
   }
 
   get busy(): boolean {
-    return !!(this.current || this.choices || this.card || this.screen || this.panelOpen || this.townMap.isOpen || apparitionPlaying());
+    return !!(this.current || this.choices || this.card || this.screen || this.panelOpen || this.townMap.isOpen || this.book.isOpen || apparitionPlaying());
   }
 
   /** Whether a terminal or the port panel has the keyboard. */
@@ -225,6 +227,15 @@ export class Ui {
     this.townMap.open(here, wrapped, done, opts);
   }
 
+  /** The grimoire, open on whatever tab it was last left on. */
+  openBook(contents: BookContents, then?: () => void): void {
+    this.book.open(contents, () => {
+      this.closedAt = performance.now();
+      then?.();
+      if (!this.busy) this.showNext();
+    });
+  }
+
   /** How overgrown the dialogue console is, 0 to 1, easing there over `ms`. */
   overgrow(level: number, ms = 0): void {
     this.growth.grow(level, ms);
@@ -240,17 +251,34 @@ export class Ui {
     showImage(img, src);
     if (!gone) return;
     preload(gone);
+    this.tear(img, src, gone, 1600);
+  }
+
+  /** Like a close-up that tears into `gone`, except it tears back after `holdMs`. You saw it. Probably. */
+  glimpse(src: string, other: string, holdMs = 700): void {
+    const img = $<HTMLImageElement>("closeup");
+    this.stopGlitch();
+    showImage(img, src);
+    preload(other);
+    this.tear(img, src, other, 1600, () => this.tear(img, other, src, holdMs));
+  }
+
+  /** After `ms`, if `from` is still showing, the close-up tears like a bad TV signal into `to`. */
+  private tear(img: HTMLImageElement, from: string, to: string, ms: number, then?: () => void): void {
     const at = (ms: number, fn: () => void) => this.glitchTimers.push(window.setTimeout(fn, ms));
-    at(1600, () => {
-      if (img.dataset.src !== src) return;
+    at(ms, () => {
+      if (img.dataset.src !== from) return;
       $("closeup-wrap").classList.add("glitch");
       audio.crackle(true);
       // Swap mid-tear, while the static hides it. It's preloaded, so it's ready to paint.
       at(450, () => {
-        img.dataset.src = gone;
-        img.src = gone;
+        img.dataset.src = to;
+        img.src = to;
       });
-      at(800, () => $("closeup-wrap").classList.remove("glitch"));
+      at(800, () => {
+        $("closeup-wrap").classList.remove("glitch");
+        then?.();
+      });
     });
   }
 
@@ -616,6 +644,11 @@ export class Ui {
       // Nothing gets through while it's on screen.
       e.preventDefault();
       e.stopPropagation();
+      return;
+    }
+    if (this.book.isOpen) {
+      // The book has the keyboard; G closing it mustn't reach the game and open it again.
+      if (this.book.key(e)) e.preventDefault();
       return;
     }
     if (this.townMap.isOpen) {

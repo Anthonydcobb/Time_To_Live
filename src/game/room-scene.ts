@@ -17,6 +17,8 @@ import { events, type Story } from "./story";
 import type { Ui } from "./ui";
 
 const SPEED = 260;
+/** How fast people who walk rounds go, in pixels a second. Slower than you. */
+const WALK_SPEED = 70;
 /** How close your feet need to be to something to use it, in pixels. */
 const REACH = 40;
 const FLOOR = [0x34332e, 0x31302b];
@@ -24,6 +26,11 @@ const WALL_TOP = 0x1c1b18;
 const WALL_FACE = 0x26251f;
 
 const DIRS = ["down", "up", "left", "right"] as const;
+
+/** Which way something moving by (dx, dy) faces. */
+function facingOf(dx: number, dy: number): (typeof DIRS)[number] {
+  return Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? "left" : "right") : dy < 0 ? "up" : "down";
+}
 
 type Keys = Record<"up" | "down" | "left" | "right" | "w" | "a" | "s" | "d" | "e" | "q", Phaser.Input.Keyboard.Key>;
 
@@ -47,6 +54,8 @@ export class RoomScene extends Phaser.Scene {
   private propSprites = new Map<string, Phaser.GameObjects.Sprite[]>();
   /** Closed doors: what to remove when the story opens them. */
   private doors = new Map<string, Phaser.GameObjects.GameObject[]>();
+  /** People walking their rounds: the stop they're heading for, and how long they still wait there. */
+  private walkers = new Map<Prop, { sprite: Phaser.GameObjects.Sprite; stop: number; wait: number }>();
 
   constructor(
     private readonly story: Story,
@@ -84,6 +93,7 @@ export class RoomScene extends Phaser.Scene {
     this.room = ROOMS[data.room ?? "office"];
     this.propSprites.clear();
     this.doors.clear();
+    this.walkers.clear();
     audio.setRoom(this.room.id, this.story.has("haunt"));
     const walls = this.physics.add.staticGroup();
     const solid = (x: number, y: number, w: number, h: number) => {
@@ -210,6 +220,12 @@ export class RoomScene extends Phaser.Scene {
       // Standing on the bottom of its footprint, so tall things rise up over the wall behind.
       const sprite = this.add.sprite(x + w / 2, y + h, p.sprite, p.frame ?? 0).setOrigin(0.5, 1).setScale(4).setDepth(p.onWall ? 1 : y + h);
       this.propSprites.set(p.id, [...(this.propSprites.get(p.id) ?? []), sprite]);
+      if (p.walk) {
+        // No collision: someone on their rounds just steps around you.
+        this.makeWalkAnims(p.sprite);
+        this.walkers.set(p, { sprite, stop: 0, wait: 0 });
+        return;
+      }
       if (!p.onWall) solid(x + inset, y + inset, w - inset * 2, h - inset * 2);
       return;
     }
@@ -304,7 +320,7 @@ export class RoomScene extends Phaser.Scene {
     steps.forEach((a, i) => this.time.delayedCall(i * 110 + Math.random() * 60, () => this.dark.setFillStyle(0x000000, a)));
   }
 
-  update(): void {
+  update(_time: number, delta: number): void {
     const frozen = this.ui.busy;
     const k = this.keys;
     let vx = 0;
@@ -320,6 +336,7 @@ export class RoomScene extends Phaser.Scene {
     v.normalize().scale(SPEED);
     this.body_.setVelocity(v.x, v.y);
     this.player.setDepth(this.player.y);
+    this.updateWalkers(frozen, delta);
     this.animate(v.lengthSq() > 0);
     this.drawLights(this.time.now);
     audio.update(this.player.x / TILE, this.player.y / TILE);
@@ -327,10 +344,11 @@ export class RoomScene extends Phaser.Scene {
     this.near = frozen ? null : this.nearest();
     if (this.near) {
       const p = this.near;
-      const above = p.onWall && p.y === 0;
+      const at = this.spot(p);
+      const above = p.onWall && at.y === 0;
       this.prompt
         .setText(`E  ${p.verb} ${p.label.replace(/\n/g, " ")}`)
-        .setPosition((p.x + p.w / 2) * TILE, above ? (p.y + p.h) * TILE + 34 : p.y * TILE - 4)
+        .setPosition((at.x + p.w / 2) * TILE, above ? (at.y + p.h) * TILE + 34 : at.y * TILE - 4)
         .setVisible(true);
     } else this.prompt.setVisible(false);
 
@@ -364,6 +382,59 @@ export class RoomScene extends Phaser.Scene {
     else this.sprite.stop().setFrame(DIRS.indexOf(dir) * 5);
   }
 
+  /** Where a prop is now, in tiles: its own place, or wherever a walker has got to. */
+  private spot(p: Prop): { x: number; y: number } {
+    const walker = this.walkers.get(p);
+    if (!walker) return p;
+    return { x: walker.sprite.x / TILE - p.w / 2, y: walker.sprite.y / TILE - p.h };
+  }
+
+  /** Walk animations for a sheet laid out like the player's, made once. */
+  private makeWalkAnims(sheet: string): void {
+    DIRS.forEach((dir, row) => {
+      const key = `${sheet}-walk-${dir}`;
+      if (!this.anims.exists(key)) this.anims.create({ key, frames: this.anims.generateFrameNumbers(sheet, { start: row * 5 + 1, end: row * 5 + 4 }), frameRate: 6, repeat: -1 });
+    });
+  }
+
+  /**
+   * Moves each walker along their round: walk to the next stop, face the way it says, wait, go
+   * on. While a dialogue is open they stand still, turned to you if you're close enough to be
+   * the one talking, and their clock doesn't run.
+   */
+  private updateWalkers(frozen: boolean, delta: number): void {
+    for (const [p, walker] of this.walkers) {
+      const { sprite } = walker;
+      const route = p.walk!;
+      sprite.setDepth(sprite.y);
+      if (frozen) {
+        sprite.stop();
+        const dx = this.player.x - sprite.x;
+        const dy = this.player.y - sprite.y;
+        if (Math.hypot(dx, dy) < TILE * 2.5) sprite.setFrame(DIRS.indexOf(facingOf(dx, dy)) * 5);
+        continue;
+      }
+      if (walker.wait > 0) {
+        walker.wait -= delta;
+        continue;
+      }
+      const stop = route[walker.stop];
+      const dx = (stop.x + p.w / 2) * TILE - sprite.x;
+      const dy = (stop.y + p.h) * TILE - sprite.y;
+      const dist = Math.hypot(dx, dy);
+      const step = (WALK_SPEED * delta) / 1000;
+      if (dist <= step) {
+        sprite.setPosition(sprite.x + dx, sprite.y + dy).stop();
+        sprite.setFrame(DIRS.indexOf(stop.face ?? facingOf(dx, dy)) * 5);
+        walker.wait = stop.wait ?? 400;
+        walker.stop = (walker.stop + 1) % route.length;
+        continue;
+      }
+      sprite.setPosition(sprite.x + (dx / dist) * step, sprite.y + (dy / dist) * step);
+      sprite.play(`${p.sprite}-walk-${facingOf(dx, dy)}`, true);
+    }
+  }
+
   /** The closest prop to your feet, a little ahead of where you face. */
   private nearest(): Prop | null {
     const fx = this.player.x + this.facing.x * 14;
@@ -372,8 +443,9 @@ export class RoomScene extends Phaser.Scene {
     let bestD = REACH;
     for (const p of this.room.props) {
       if (p.decor || (p.door && this.isOpen(p))) continue;
-      const x0 = p.x * TILE;
-      const y0 = p.y * TILE;
+      const at = this.spot(p);
+      const x0 = at.x * TILE;
+      const y0 = at.y * TILE;
       const dx = Math.max(x0 - fx, 0, fx - (x0 + p.w * TILE));
       const dy = Math.max(y0 - fy, 0, fy - (y0 + p.h * TILE));
       const d = Math.hypot(dx, dy);

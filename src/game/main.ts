@@ -104,7 +104,11 @@ stub.addEventListener("click", () => unfold(body.hidden));
 window.addEventListener("keydown", (e) => {
   if ((e.key === "j" || e.key === "J") && !ui.typing) unfold(body.hidden);
   if ((e.key === "m" || e.key === "M") && !ui.typing) audio.toggleMute();
+  // The book eats its own keys (G closes it), so only a G nobody else used opens it.
+  if ((e.key === "g" || e.key === "G") && !e.defaultPrevented && !ui.busy) story.openGrimoire();
 });
+// The key hint learns G once you have the book.
+events.on("grimoire", () => (document.getElementById("key-grimoire")!.hidden = false));
 /** Pops a short "done" note by the stub when a task ticks itself off. */
 const toast = (text: string) => {
   const p = document.createElement("p");

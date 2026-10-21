@@ -30,6 +30,12 @@ export interface Prop {
   decor?: boolean;
   /** A door in a wall gap: solid until the story opens it (flag `open:<room>:<id>`, event "open"). */
   door?: boolean;
+  /**
+   * Someone who walks a loop instead of standing still: tiles to walk to in turn, starting from
+   * where the prop is, each with an optional pause in ms and the way to face while paused. The
+   * sprite needs a walk sheet laid out like the player's. They stop while any dialogue is open.
+   */
+  walk?: { x: number; y: number; wait?: number; face?: "down" | "up" | "left" | "right" }[];
 }
 
 export interface RoomDef {
@@ -254,7 +260,7 @@ export const ROOMS: Record<RoomId, RoomDef> = {
     title: "Spin Cycle Eternal",
     // One big open floor. Gus's back office is the top-left corner behind a back door (locked
     // until Gus hands over his keys), and his booth is walled into the bottom-right corner
-    // with a service window onto the floor. Grey boxes for now; agy is drawing concepts.
+    // with a service window onto the floor and a door at the bottom that Gus uses on his rounds.
     map: [
       "######################",
       "######################",
@@ -270,7 +276,7 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       "#...............#....#",
       "#....................#",
       "#...............#....#",
-      "#...............#....#",
+      "#....................#",
       "######################",
     ],
     props: [
@@ -308,8 +314,18 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "change", label: "Change", x: 20, y: 8, w: 1, h: 1, verb: "Use", color: 0x5a5e5a, sprite: "laundromat-props", frame: 7 },
       // Gus's booth: the kiosk outside it, the service window, Gus behind it.
       { id: "kiosk", label: "Kiosk\nPC0", x: 15, y: 11, w: 1, h: 1, verb: "Use", color: 0x46504a, sprite: "laundromat-props", frame: 8 },
-      { id: "counter", label: "Service\nwindow", x: 16, y: 12, w: 1, h: 1, verb: "Lean on", color: 0x5a5448, sprite: "laundromat-props", frame: 9 },
-      { id: "gus", label: "Gus", x: 17, y: 12, w: 1, h: 1, verb: "Talk to", color: 0x6a6450, sprite: "gus" },
+      { id: "counter", label: "Service\nwindow", x: 16, y: 12, w: 1, h: 1, verb: "", color: 0x5a5448, decor: true, sprite: "laundromat-props", frame: 9 },
+      // Gus does his rounds: out of the booth, past the change machine, a long look at Dryer 4,
+      // around the washers and back to his window.
+      {
+        id: "gus", label: "Gus", x: 17, y: 12, w: 1, h: 1, verb: "Talk to", color: 0x6a6450, sprite: "gus",
+        walk: [
+          { x: 17, y: 14 }, { x: 15, y: 14 }, { x: 13, y: 14 }, { x: 13, y: 8 }, { x: 19, y: 8, wait: 1500, face: "right" },
+          { x: 19, y: 3 }, { x: 13, y: 3, wait: 4000, face: "up" }, { x: 11, y: 3 }, { x: 11, y: 8 }, { x: 9, y: 8 },
+          { x: 9, y: 12 }, { x: 13, y: 12 }, { x: 13, y: 14 }, { x: 15, y: 14 }, { x: 17, y: 14 },
+          { x: 17, y: 12, wait: 6000, face: "down" },
+        ],
+      },
       { id: "booth", label: "Radio", x: 19, y: 11, w: 1, h: 1, verb: "", color: 0x4a4440, decor: true, sprite: "laundromat-props", frame: 10 },
       { id: "booth", label: "Stool", x: 18, y: 13, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "laundromat-props", frame: 11 },
       // By the entrance.

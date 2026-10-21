@@ -2195,3 +2195,404 @@ body.crt-jitter #stage {
   pointer-events: none;
   image-rendering: pixelated;
 }
+
+/* ---- The grimoire (grimoire-book.ts): a two-page spread over the game, tabs down the right ---- */
+
+#grimoire {
+  --leaf: #dccca2;
+  --leaf-edge: #a8916a;
+  --ink: #2a1f14;
+  --blood-ink: #6e1c14;
+  --hand: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive;
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 10px;
+  background: radial-gradient(ellipse at center, #1d1426cc 0%, #07050bf2 75%);
+}
+
+#grimoire[hidden] {
+  display: none;
+}
+
+#grimoire .book {
+  position: relative;
+  width: min(1100px, calc(100vw - 90px));
+  aspect-ratio: 1.6;
+  max-height: calc(100vh - 70px);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  padding: 22px 30px;
+  box-sizing: border-box;
+  border-radius: 12px;
+  background:
+    var(--scratches) 0 0 / 300px,
+    linear-gradient(160deg, #33251f, #1b1311 55%, #241915);
+  box-shadow:
+    inset 0 0 0 3px #4d3b2b,
+    inset 0 0 0 7px #1a1210,
+    inset 0 0 0 9px #6a5236,
+    0 24px 70px #000d;
+}
+
+#grimoire .page {
+  position: relative;
+  box-sizing: border-box;
+  height: 100%;
+  min-height: 0;
+  padding: 26px 30px 36px;
+  overflow: hidden;
+  color: var(--ink);
+  font: 14px/1.4 Georgia, "Times New Roman", serif;
+  background:
+    var(--scratches) 0 0 / 280px,
+    radial-gradient(ellipse at 50% 45%, #e8dcb8 0%, var(--leaf) 55%, var(--leaf-edge) 100%);
+}
+
+/* The gutter: each page darkens toward the spine. */
+#grimoire .page.left {
+  border-radius: 4px 0 0 4px;
+  box-shadow: inset -26px 0 30px -18px #0008;
+}
+
+#grimoire .page.right {
+  border-radius: 0 4px 4px 0;
+  box-shadow: inset 26px 0 30px -18px #0008;
+}
+
+#grimoire .page.can-turn {
+  cursor: pointer;
+}
+
+/* Same size as a page, out of sight: pagination fills it to see what fits. */
+#grimoire .page.measure {
+  position: absolute;
+  left: 30px;
+  top: 22px;
+  width: calc((100% - 60px) / 2);
+  height: calc(100% - 44px);
+  visibility: hidden;
+  pointer-events: none;
+}
+
+#grimoire .folio {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  text-align: center;
+  font-size: 11px;
+  color: #6a5a40;
+}
+
+#grimoire .blank {
+  margin: 40% 10px 0;
+  text-align: center;
+  font-style: italic;
+  color: #6a5a40;
+}
+
+#grimoire header {
+  width: 100%;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+#grimoire h2 {
+  margin: 0;
+  font-size: 21px;
+  font-variant: small-caps;
+  letter-spacing: 0.06em;
+}
+
+#grimoire header p {
+  margin: 0;
+  font-style: italic;
+  color: #5a4a34;
+}
+
+#grimoire h3 {
+  margin: 0;
+  font-size: 13px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+/* Tabs along the fore-edge, like the concept. */
+#grimoire .tabs {
+  position: absolute;
+  top: 34px;
+  right: -34px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+#grimoire .tabs button {
+  writing-mode: vertical-rl;
+  padding: 12px 6px;
+  border: 1px solid #6a5236;
+  border-left: 0;
+  border-radius: 0 6px 6px 0;
+  color: #3a2c1c;
+  background: linear-gradient(90deg, #a8916a, #c9b78e);
+  font: 12px Georgia, serif;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  filter: brightness(0.75);
+}
+
+#grimoire .tabs button.on {
+  filter: none;
+  transform: translateX(4px);
+}
+
+#grimoire .book-keys {
+  margin: 0;
+  color: #8a8270;
+  font-size: 12px;
+}
+
+/* Incantations: the commands glow on black, the grimoire's own notes run down the margin. */
+#grimoire .ritual {
+  margin-bottom: 12px;
+}
+
+#grimoire .ritual .what {
+  margin: 0 0 4px;
+  font-size: 12px;
+  font-style: italic;
+  color: #5a4a34;
+}
+
+#grimoire .rite {
+  display: grid;
+  grid-template-columns: 1fr 36%;
+  gap: 10px;
+  align-items: start;
+}
+
+#grimoire .rite pre {
+  margin: 0;
+  padding: 7px 9px;
+  overflow: hidden;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: #a4f5b4;
+  background: #0c110d;
+  border: 2px solid #3d5a40;
+  border-radius: 3px;
+  box-shadow: 0 0 8px #7cf08a40;
+  font: 11.5px/1.45 var(--mono);
+  text-shadow: 0 0 4px #7cf08a80;
+}
+
+#grimoire .margin {
+  margin: 0;
+  font: 11.5px/1.35 var(--hand);
+  color: #4a2a1a;
+  transform: rotate(-1.5deg);
+}
+
+/* Found notes: pinned and taped at a slant. */
+#grimoire .page.notes {
+  display: flex;
+  flex-wrap: wrap;
+  align-content: flex-start;
+  align-items: flex-start;
+  gap: 16px 14px;
+}
+
+#grimoire .note {
+  position: relative;
+  box-sizing: border-box;
+  width: calc(50% - 7px);
+  margin: 0;
+  padding: 16px 12px 10px;
+  transform: rotate(var(--tilt)) translateY(var(--nudge));
+  box-shadow: 0 3px 7px #0006;
+  font: 13px/1.35 var(--hand);
+  color: #1e1a14;
+}
+
+#grimoire .note p {
+  margin: 0 0 6px;
+}
+
+#grimoire .note figcaption {
+  font: 10px/1.2 var(--mono);
+  text-transform: uppercase;
+  color: #6a6050;
+}
+
+#grimoire .note.sticky {
+  background: linear-gradient(#efdc78, #e2c95a);
+}
+
+#grimoire .note.scrap {
+  background: #ece5d2;
+  clip-path: polygon(0 3%, 12% 0, 40% 2%, 70% 0, 100% 2%, 98% 60%, 100% 100%, 60% 97%, 30% 100%, 2% 98%);
+}
+
+#grimoire .note.card {
+  background:
+    linear-gradient(#d0505040, #d0505040) 0 30px / 100% 1px no-repeat,
+    repeating-linear-gradient(#0000 0 17px, #4a78b040 17px 18px) 0 30px,
+    #f3f0e6;
+}
+
+#grimoire .note.polaroid {
+  padding: 8px 8px 10px;
+  background: #f1eee4;
+}
+
+/* A dryer's-eye view of the room: dark, round, and something pale off to one side. */
+#grimoire .note .snap {
+  aspect-ratio: 1.15;
+  margin-bottom: 6px;
+  background:
+    radial-gradient(ellipse 9% 16% at 68% 50%, #b8b6a440, #0000),
+    radial-gradient(circle at 50% 52%, #2e342c 0 30%, #12160f 36% 42%, #050605 46%),
+    #050605;
+  filter: sepia(0.4) contrast(1.1);
+}
+
+/* A pin, or tape for the sticky note. */
+#grimoire .note::before {
+  content: "";
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  width: 9px;
+  height: 9px;
+  margin-left: -4px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #e8746a, #7a1a14);
+  box-shadow: 0 2px 2px #0006;
+}
+
+#grimoire .note.sticky::before {
+  top: -6px;
+  width: 54px;
+  height: 16px;
+  margin-left: -27px;
+  border-radius: 1px;
+  background: #e8e4d466;
+  box-shadow: none;
+  transform: rotate(-4deg);
+}
+
+/* Topology: a pen sketch, a site to a page. Pencil until the gear has an address. */
+#grimoire .sketch {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  height: calc(100% - 4px);
+}
+
+#grimoire .sketch svg {
+  display: block;
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  overflow: visible;
+}
+
+#grimoire .sketch path,
+#grimoire .sketch circle,
+#grimoire .sketch rect {
+  fill: none;
+  stroke: var(--ink);
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+#grimoire .sketch .ghost {
+  stroke-width: 1;
+  opacity: 0.35;
+}
+
+#grimoire .sketch .stray {
+  stroke: var(--blood-ink);
+  stroke-dasharray: 10 5 2 5;
+}
+
+#grimoire .sketch text {
+  fill: var(--ink);
+  stroke: none;
+  text-anchor: middle;
+  font: 17px var(--hand);
+}
+
+#grimoire .sketch text.addr {
+  font: 14px var(--mono);
+}
+
+#grimoire .sketch text.stray {
+  fill: var(--blood-ink);
+  text-anchor: end;
+}
+
+#grimoire .sketch .pencil {
+  opacity: 0.38;
+}
+
+#grimoire .sketch .pencil :is(path, circle, rect) {
+  stroke-width: 1.4;
+  stroke-dasharray: 4 3;
+}
+
+/* Site logs: typed up, then something written in afterwards, then stamped. */
+#grimoire .log {
+  margin-bottom: 18px;
+  font: 13px/1.45 var(--mono);
+}
+
+#grimoire .log h3 {
+  font-family: var(--mono);
+}
+
+#grimoire .log p {
+  margin: 4px 0;
+}
+
+#grimoire .log .client {
+  font-weight: bold;
+}
+
+#grimoire .log .odd {
+  font: 13px/1.35 var(--hand);
+  color: var(--blood-ink);
+}
+
+#grimoire .log .stamp {
+  display: inline-block;
+  margin-top: 6px;
+  padding: 1px 10px;
+  border: 3px double #8a2a1e;
+  color: #8a2a1e;
+  font: bold 16px var(--mono);
+  letter-spacing: 0.15em;
+  opacity: 0.7;
+  transform: rotate(-7deg);
+}
+
+/* Something new went into the book. */
+#grimoire-toast {
+  position: fixed;
+  left: 16px;
+  bottom: 36px;
+  z-index: 26;
+  margin: 0;
+  padding: 7px 12px;
+  color: #e6dab8;
+  background: #1c1418ee;
+  border: 1px solid #6a5236;
+  box-shadow: 0 4px 10px #000a;
+  font-size: 13px;
+  animation: wo-toast 3.5s ease-out forwards;
+}
