@@ -72,6 +72,20 @@ function exec(request) {
   return { device: request.device, line: request.line, lines: runJob(device, result, maxMs), now: net.clock.now };
 }
 
+function help(request) {
+  const device = devices.get(request.device);
+  if (!device) throw new Error(`No device ${request.device}`);
+  if (device.kind === "pc") throw new Error("PC devices do not expose IOS help");
+  return { device: request.device, ...device.console.help(request.line ?? "") };
+}
+
+function complete(request) {
+  const device = devices.get(request.device);
+  if (!device) throw new Error(`No device ${request.device}`);
+  if (device.kind === "pc") throw new Error("PC devices do not expose IOS completion");
+  return { device: request.device, line: request.line ?? "", completion: device.console.complete(request.line ?? "") };
+}
+
 function advance(ms) {
   if (!Number.isFinite(ms) || ms < 0) throw new Error("advance requires a non-negative number");
   net.clock.advance(ms);
@@ -101,6 +115,8 @@ async function handle(request) {
   if (request.op === "reset") return reset();
   if (request.op === "load") return load(request.topology);
   if (request.op === "exec") return exec(request);
+  if (request.op === "help") return help(request);
+  if (request.op === "complete") return complete(request);
   if (request.op === "advance") return advance(request.ms);
   if (request.op === "snapshot") return snapshot();
   throw new Error(`Unknown operation: ${request.op}`);

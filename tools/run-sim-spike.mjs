@@ -54,6 +54,8 @@ try {
   observations.push({ op: "load", result: await request({ op: "load", topology }) });
   observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "" }) });
   observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "enable" }) });
+  observations.push({ op: "help", result: await request({ op: "help", device: "R1", line: "show ip " }) });
+  observations.push({ op: "complete", result: await request({ op: "complete", device: "R1", line: "show ip ro" }) });
   observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "configure terminal" }) });
   observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "interface gigabitEthernet0/0" }) });
   observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "ip address 192.168.1.1 255.255.255.0" }) });
