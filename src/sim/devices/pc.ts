@@ -31,6 +31,8 @@ export class Pc extends Device {
   readonly stack: IpStack;
   readonly shell: PcShell;
   readonly terminal: PcTerminal;
+  private nextDnsId = 1;
+  private readonly dnsWaiters = new Map<number, (addresses: Ipv4[]) => void>();
   private readonly l3: L3Interface;
 
   constructor(id: string, readonly name = id, mac: Mac = nextMac("0060a8")) {
@@ -64,6 +66,14 @@ export class Pc extends Device {
       defaultGateway: () => this.gateway,
       ipv6DefaultGateway: () => this.ipv6Gateway,
       onDhcp: (_iface, packet) => this.dhcpClient.handle(packet),
+      onDns: (_iface, packet) => {
+        const dns = packet.dns;
+        if (!dns?.response) return;
+        const waiter = this.dnsWaiters.get(dns.id);
+        if (!waiter) return;
+        this.dnsWaiters.delete(dns.id);
+        waiter(dns.addresses);
+      },
     });
     this.dhcpClient = new DhcpClient({
       clock: () => this.clock,
@@ -73,6 +83,34 @@ export class Pc extends Device {
     });
     this.shell = new PcShell(this);
     this.terminal = new PcTerminal(this);
+  }
+
+  resolve(name: string, done: (address: Ipv4 | null) => void): void {
+    const server = this.dnsServers[0];
+    if (server === undefined || this.ip === null || !this.nic.protocolUp || this.stack.sourceFor(server) === null) {
+      done(null);
+      return;
+    }
+    const id = this.nextDnsId++;
+    let settled = false;
+    const finish = (addresses: Ipv4[]) => {
+      if (settled) return;
+      settled = true;
+      this.dnsWaiters.delete(id);
+      done(addresses[0] ?? null);
+    };
+    this.dnsWaiters.set(id, finish);
+    if (!this.stack.send({
+      kind: "ipv4",
+      src: this.ip,
+      dst: server,
+      ttl: 128,
+      dns: { kind: "dns", id, response: false, name, addresses: [] },
+    })) {
+      finish([]);
+      return;
+    }
+    this.clock.schedule(2000, () => finish([]));
   }
 
   get hostname(): string {

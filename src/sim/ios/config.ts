@@ -116,6 +116,8 @@ export interface IosConfig {
   aaaNewModel: boolean;
   aaaLoginLocal: boolean;
   users: Record<string, string>;
+  dnsServer: boolean;
+  hostRecords: Record<string, Ipv4[]>;
   rsaKeysGenerated: boolean;
   standardAcls: Record<string, StandardAclRule[]>;
   extendedAcls: Record<string, ExtendedAclRule[]>;
@@ -167,6 +169,8 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     aaaNewModel: false,
     aaaLoginLocal: false,
     users: {},
+    dnsServer: false,
+    hostRecords: {},
     rsaKeysGenerated: false,
     standardAcls: {},
     extendedAcls: {},

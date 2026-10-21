@@ -194,10 +194,10 @@ function trace(
 }
 
 /** `ping` on Windows: four echoes, a second apart. */
-export function winPing(host: Host, target: Ipv4, count = 4): Job {
+export function winPing(host: Host, target: Ipv4, count = 4, label = formatIpv4(target)): Job {
   const job = new Job();
   const id = host.stack.newPingId();
-  const shown = formatIpv4(target);
+  const shown = label === formatIpv4(target) ? label : `${label} [${formatIpv4(target)}]`;
   const rtts: number[] = [];
   let sent = 0;
 

@@ -266,6 +266,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("ntp", "NTP status"), kw("associations", "NTP associations")], (c) => c.out.push(...show.showNtpAssociations(c.device))),
   cmd(EXEC, [SHOW, kw("logging", "Logging status")], (c) => c.out.push(...show.showLogging(c.device))),
   cmd(EXEC, [SHOW, kw("snmp", "SNMP status")], (c) => c.out.push(...show.showSnmp(c.device))),
+  cmd(EXEC, [SHOW, kw("hosts", "DNS host table")], (c) => c.out.push(...show.showHosts(c.device))),
   cmd(EXEC, [SHOW, kw("ssh", "Status of SSH server connections")], (c) => c.out.push(...show.showSsh(c.device))),
   cmd(EXEC, [SHOW, kw("access-lists", "List access lists")], (c) => c.out.push(...show.showAccessLists(c.device))),
   cmd(
@@ -618,6 +619,18 @@ const configCommands: Entry[] = [
   }),
   cmd(CONFIG, [NO, IP, DOMAIN_NAME], (c) => {
     c.device.config.domainName = null;
+  }),
+  cmd(CONFIG, [IP, kw("dns", "DNS service"), kw("server", "Enable DNS server")], (c) => {
+    c.device.config.dnsServer = true;
+  }, { devices: ["router"] }),
+  cmd(CONFIG, [NO, IP, kw("dns", "DNS service"), kw("server", "Enable DNS server")], (c) => {
+    c.device.config.dnsServer = false;
+  }, { devices: ["router"] }),
+  cmd(CONFIG, [IP, kw("host", "Add a static host name-to-address mapping"), wordArg("Host name"), ipArg("Host address")], (c, [name, address]) => {
+    c.device.config.hostRecords[String(name).toLowerCase().replace(/\.$/, "")] = [address as Ipv4];
+  }),
+  cmd(CONFIG, [NO, IP, kw("host", "Remove a static host name-to-address mapping"), wordArg("Host name")], (c, [name]) => {
+    delete c.device.config.hostRecords[String(name).toLowerCase().replace(/\.$/, "")];
   }),
   cmd(CONFIG, [kw("crypto", "Encryption module commands"), kw("key", "Long term key operations"), kw("generate", "Generate new keys"), kw("rsa", "Generate RSA keys")], (c) => {
     if (!c.device.config.domainName) {

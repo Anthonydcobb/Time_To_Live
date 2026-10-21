@@ -82,6 +82,7 @@ export interface IpStackOptions {
   defaultGateway?: () => Ipv4 | null;
   /** DHCP messages go here instead of through normal delivery. They arrive before the client has an address. */
   onDhcp?: (iface: L3Interface, packet: Ipv4Packet) => void;
+  onDns?: (iface: L3Interface, packet: Ipv4Packet) => void;
   /** Optional inbound/outbound IPv4 ACL gate supplied by the owning device. */
   filter?: (iface: L3Interface, packet: Ipv4Packet, direction: "in" | "out") => boolean;
 }
@@ -255,6 +256,10 @@ export class IpStack {
       p.dst === BROADCAST_IP ||
       (iface.ip !== null && iface.mask !== null && p.dst === broadcastOf(iface.ip, iface.mask));
     if (forMe) {
+      if (p.dns) {
+        this.opts.onDns?.(iface, p);
+        return;
+      }
       this.deliver(iface, p);
       return;
     }

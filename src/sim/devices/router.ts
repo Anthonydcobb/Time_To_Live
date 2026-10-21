@@ -92,6 +92,7 @@ export class Router extends IosDevice {
       ospfRoutes: () => this.ospfRoutes,
       eigrpRoutes: () => this.eigrpRoutes,
       onDhcp: (iface, packet) => this.handleDhcp(iface, packet),
+      onDns: (iface, packet) => this.handleDns(iface, packet),
       filter: (iface, packet, direction) => permitsStandardAcl(this.config, iface.name, packet, direction),
     });
     this.dhcp = new DhcpServer({
@@ -99,6 +100,20 @@ export class Router extends IosDevice {
       config: () => this.config,
       stack: this.stack,
       l3Interfaces: () => this.l3Interfaces(),
+    });
+  }
+
+  private handleDns(iface: L3Interface, packet: import("../frames").Ipv4Packet): void {
+    const query = packet.dns;
+    if (!query || query.response || !this.config.dnsServer || iface.ip === null) return;
+    const key = query.name.toLowerCase().replace(/\.$/, "");
+    const addresses = this.config.hostRecords[key] ?? [];
+    this.stack.send({
+      kind: "ipv4",
+      src: iface.ip,
+      dst: packet.src,
+      ttl: 255,
+      dns: { kind: "dns", id: query.id, response: true, name: query.name, addresses },
     });
   }
 

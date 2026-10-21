@@ -35,6 +35,11 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     "!",
   );
   if (c.domainName) out.push(`ip domain-name ${c.domainName}`);
+  if (c.dnsServer) out.push("ip dns server");
+  for (const [name, addresses] of Object.entries(c.hostRecords).sort(([a], [b]) => a.localeCompare(b))) {
+    for (const address of addresses) out.push(`ip host ${name} ${formatIpv4(address)}`);
+  }
+  if (c.dnsServer || Object.keys(c.hostRecords).length) out.push("!");
   for (const [name, secret] of Object.entries(c.users).sort(([a], [b]) => a.localeCompare(b))) out.push(`username ${name} secret 5 ${secret}`);
   if (c.domainName || Object.keys(c.users).length) out.push("!");
   if (c.enableSecret) out.push(`enable secret 5 ${c.enableSecret}`);
@@ -979,6 +984,11 @@ export function showSnmp(device: IosDevice): string[] {
   const out = ["Chassis: CR-2911", "0 SNMP packets input", "0 SNMP packets output", `SNMP communities configured: ${device.config.snmpCommunities.length}`];
   for (const snmp of device.config.snmpCommunities) out.push(`  ${snmp.community} (${snmp.access})`);
   return out;
+}
+
+export function showHosts(device: IosDevice): string[] {
+  const rows = Object.entries(device.config.hostRecords).flatMap(([name, addresses]) => addresses.map((address) => `${formatIpv4(address).padEnd(18)} ${name}`));
+  return rows.length ? ["Default domain is not set", "Name/address lookup uses static entries", "", "Host                      Address", "----                      -------", ...rows] : ["Default domain is not set", "Name/address lookup uses DNS", "", "No hosts configured"];
 }
 
 // ---- DHCP ----------------------------------------------------------------------

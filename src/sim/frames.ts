@@ -35,6 +35,15 @@ export interface DhcpMessage {
   relayIp?: Ipv4;
 }
 
+/** A deliberately small DNS exchange carried inside the simulated IPv4 path. */
+export interface DnsPacket {
+  kind: "dns";
+  id: number;
+  response: boolean;
+  name: string;
+  addresses: Ipv4[];
+}
+
 /** An IPv4 packet carries either an ICMP message or a DHCP message. */
 export interface Ipv4Packet {
   kind: "ipv4";
@@ -43,6 +52,7 @@ export interface Ipv4Packet {
   ttl: number;
   icmp?: IcmpMessage;
   dhcp?: DhcpMessage;
+  dns?: DnsPacket;
 }
 
 export interface Icmpv6Message {
