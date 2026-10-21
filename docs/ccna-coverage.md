@@ -72,8 +72,11 @@ simulation proves production behavior.
 npm test -- --run
 npm run build
 node tools/run-sim-spike.mjs
+node tools/run-sim-fault-scenarios.mjs
 node tools/run-pt-adapter-spike.mjs
 ```
 
-The first three are local checks. The Packet Tracer adapter command requires
+The first four are local checks. The simulator fault runner writes
+`harness/artifacts/sim-fault-scenarios.json` with before/during/after evidence
+for an access-port shutdown and a forced speed mismatch. The Packet Tracer adapter command requires
 Packet Tracer's Java ExApp to be connected and polling the bridge.
