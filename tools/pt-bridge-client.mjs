@@ -27,5 +27,5 @@ export async function runCommand({ device, line, mode = "enable", timeoutMs = 15
       await new Promise((resolve) => setTimeout(resolve, 250));
     }
   }
-  throw new Error(`Timed out waiting for Packet Tracer result ${queued.id}`);
+  throw new Error(`Timed out waiting for Packet Tracer result ${queued.id} (${device} / ${line}). Confirm Packet Tracer is open and the ExApp bridge is connected.`);
 }
