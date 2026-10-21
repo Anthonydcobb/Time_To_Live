@@ -15,6 +15,7 @@ const historyEl = document.querySelector<HTMLElement>("#history")!;
 const healthResults = document.querySelector<HTMLElement>("#health-results")!;
 const commandHistory: { device: string; command: string; status: string; at: string }[] = [];
 let liveDevices: Device[] = [];
+let refreshInFlight = false;
 
 async function bridge(path: string, options?: RequestInit): Promise<any> {
   const response = await fetch(`${urlInput.value.replace(/\/$/, "")}${path}`, options);
@@ -103,6 +104,8 @@ function addHistory(device: string, command: string, status: string): void {
 }
 
 async function refresh(): Promise<void> {
+  if (refreshInFlight) return;
+  refreshInFlight = true;
   try {
     const health = await bridge("/health");
     bridgeStatus.textContent = `ONLINE · ${health.pending} queued`;
@@ -123,7 +126,15 @@ async function refresh(): Promise<void> {
     lastRefresh.textContent = new Date().toLocaleTimeString();
   } catch (error) {
     bridgeStatus.textContent = "OFFLINE"; bridgeStatus.className = "down";
+    liveDevices = [];
+    deviceCount.textContent = "0";
+    linkCount.textContent = "0";
+    devicesEl.innerHTML = `<p class="muted">Bridge offline.</p>`;
+    linksEl.innerHTML = `<p class="muted">Bridge offline.</p>`;
+    topologyMap.innerHTML = `<p class="muted">Bridge offline.</p>`;
     output.textContent = error instanceof Error ? error.message : String(error);
+  } finally {
+    refreshInFlight = false;
   }
 }
 
@@ -256,3 +267,4 @@ document.querySelector<HTMLFormElement>("#command-form")!.addEventListener("subm
   catch (error) { output.textContent = error instanceof Error ? error.message : String(error); }
 });
 void refresh();
+window.setInterval(() => void refresh(), 10000);
