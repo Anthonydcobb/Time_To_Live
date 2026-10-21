@@ -597,6 +597,8 @@ export class Story {
           ],
           () => {
             this.flags.add("done2");
+            // Whatever is on the other end of Fa0/24 has grown since the store.
+            this.ui.beingStage = 2;
             const card = this.ui.showCard(
               `<p class="big">Work order #0002 complete</p>
                <p>LEASES ISSUED <b>2</b></p>

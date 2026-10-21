@@ -588,6 +588,9 @@ export class Ui {
     this.bound.add(port);
   }
 
+  /** Which stage of the being the apparition shows, 1 to 4. The story raises it job by job. */
+  beingStage = 1;
+
   /** Static, and something in it. Input waits until it's over. */
   apparition(then?: () => void): void {
     crt.on("haunted");
@@ -596,7 +599,7 @@ export class Ui {
       crt.fade(8000);
       this.closedAt = performance.now();
       then?.();
-    });
+    }, this.beingStage);
   }
 
   /** Shows a message in place of the usual hint until the next click. */

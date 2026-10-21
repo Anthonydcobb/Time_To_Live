@@ -147,6 +147,7 @@ export function installDevTools(story: Story, ui: Ui): void {
       <button data-act="close">Close dialogue</button>
       <button data-act="job2">Job 2</button>
       <button data-act="finish2">Finish job 2</button>
+      <button data-act="being">Being 1/4</button>
     </div>
     <p class="status"></p>
     <p class="note">Job 1 shortcut passwords: <code>${PW}</code></p>
@@ -183,6 +184,12 @@ export function installDevTools(story: Story, ui: Ui): void {
       events.emit("goto", "laundromat");
     },
     finish2: finishJob2,
+    // Plays the apparition with the stage on the button, then moves the button to the next one.
+    being: () => {
+      ui.apparition();
+      ui.beingStage = (ui.beingStage % 4) + 1;
+      panel.querySelector('[data-act="being"]')!.textContent = `Being ${ui.beingStage}/4`;
+    },
     fold: () => fold(!panel.classList.contains("folded")),
   };
   panel.addEventListener("click", (e) => {

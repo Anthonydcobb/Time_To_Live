@@ -5,8 +5,10 @@ import { audio } from "./audio";
  * the screen and something too big to take in flickers through it, a few frames at a time,
  * never long enough to see properly. Then it's gone, and the cable is still connected.
  *
- * The figure is drawn procedurally each time, so it's never quite the same twice. It can be
- * swapped for painted art later by drawing an image in `drawBeing` instead.
+ * The figure is one of four painted stages of the same thing, one per job, so it gets worse as
+ * the game goes on (`art/concepts/characters/incomprehensible-being-concept.jpg`, cut by
+ * `art/source/apparition/cut-being.py`). It's torn into slipped bands each time, so it's never quite the
+ * same twice. Until a stage's image has loaded, a procedural shape stands in.
  */
 const LENGTH_MS = 2700;
 
@@ -19,6 +21,13 @@ const GLIMPSES = [
 ];
 const WORDS = { at: 1330, ms: 90, text: "IT IS ALREADY CONNECTED" };
 
+/** The painted stages, from the ghost in the wire to the unmaking. */
+const STAGES = [1, 2, 3, 4].map((n) => {
+  const img = new Image();
+  img.src = `assets/apparition/being-${n}.webp`;
+  return img;
+});
+
 let el: HTMLElement | null = null;
 
 function build(): HTMLElement {
@@ -30,8 +39,25 @@ function build(): HTMLElement {
   return root;
 }
 
+/** Draws stage `stage` (1 to 4), torn into bands that have slipped sideways like a bad signal. */
+function drawBeing(canvas: HTMLCanvasElement, stage: number): void {
+  const img = STAGES[Math.min(STAGES.length, Math.max(1, stage)) - 1];
+  if (!img.complete || !img.naturalWidth) return drawShape(canvas);
+  const ctx = canvas.getContext("2d")!;
+  const { width: w, height: h } = canvas;
+  ctx.clearRect(0, 0, w, h);
+  const scale = h / img.naturalHeight;
+  const dw = img.naturalWidth * scale;
+  for (let y = 0; y < h; ) {
+    const band = 12 + Math.random() * 70;
+    const slip = Math.random() < 0.3 ? (Math.random() - 0.5) * 40 : 0;
+    ctx.drawImage(img, 0, y / scale, img.naturalWidth, band / scale, (w - dw) / 2 + slip, y, dw, band);
+    y += band;
+  }
+}
+
 /** A tall wrong shape: a dark mass, roots spilling from it, rings, and too many points of light. */
-function drawBeing(canvas: HTMLCanvasElement): void {
+function drawShape(canvas: HTMLCanvasElement): void {
   const ctx = canvas.getContext("2d")!;
   const { width: w, height: h } = canvas;
   ctx.clearRect(0, 0, w, h);
@@ -93,17 +119,17 @@ function drawBeing(canvas: HTMLCanvasElement): void {
 }
 
 /**
- * Plays the apparition over everything, then calls `done`. Input is swallowed while it runs;
- * check `apparitionPlaying` before acting on keys.
+ * Plays the apparition over everything, showing stage `stage` of the being, then calls `done`.
+ * Input is swallowed while it runs; check `apparitionPlaying` before acting on keys.
  */
-export function apparition(done?: () => void): void {
+export function apparition(done?: () => void, stage = 1): void {
   el ??= build();
   if (!el.hidden) return;
   const root = el;
   const noise = root.querySelector<HTMLCanvasElement>(".static")!;
   const being = root.querySelector<HTMLCanvasElement>(".being")!;
   const words = root.querySelector<HTMLElement>(".words")!;
-  drawBeing(being);
+  drawBeing(being, stage);
   words.textContent = WORDS.text;
   root.hidden = false;
   root.classList.remove("fade");
