@@ -1,4 +1,4 @@
-import type { Ipv4 } from "../addr";
+import type { Ipv4, Ipv6 } from "../addr";
 import type { StaticRoute } from "../ipstack";
 
 /** A password stored in the config. `encrypted` means it shows as type 7. */
@@ -52,6 +52,7 @@ export interface InterfaceConfig {
   description: string | null;
   ip: Ipv4 | null;
   mask: Ipv4 | null;
+  ipv6Addresses: { address: Ipv6; prefix: number }[];
   /** DHCP relay destinations configured with ip helper-address. */
   helperAddresses: Ipv4[];
   accessGroupIn: number | null;
@@ -64,7 +65,7 @@ export interface InterfaceConfig {
 }
 
 export function newInterfaceConfig(shutdown: boolean): InterfaceConfig {
-  return { shutdown, description: null, ip: null, mask: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, cdp: true };
+  return { shutdown, description: null, ip: null, mask: null, ipv6Addresses: [], helperAddresses: [], accessGroupIn: null, accessGroupOut: null, cdp: true };
 }
 
 export interface AclAddress {
@@ -128,6 +129,7 @@ export interface IosConfig {
   /** PVST+ bridge priority overrides, keyed by VLAN ID. */
   spanningTreePriority: Record<number, number>;
   ipRouting: boolean;
+  ipv6UnicastRouting: boolean;
   ospf: { processId: number; networks: OspfNetwork[] } | null;
   /** VTP control-plane settings for switches. */
   vtpMode: "server" | "client" | "transparent";
@@ -167,6 +169,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     dhcpPools: [],
     spanningTreePriority: {},
     ipRouting: false,
+    ipv6UnicastRouting: false,
     ospf: null,
     vtpMode: "server",
     vtpDomain: "",

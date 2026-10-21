@@ -1,6 +1,33 @@
 // IPv4 and MAC address helpers. IPv4 addresses are stored as unsigned 32-bit numbers.
 
 export type Ipv4 = number;
+export type Ipv6 = string;
+
+/** Parses and normalizes a basic IPv6 address (eight hex groups with :: compression). */
+export function parseIpv6(text: string): Ipv6 | null {
+  const raw = text.trim().toLowerCase();
+  if (!raw || raw.includes(".")) return null;
+  const halves = raw.split("::");
+  if (halves.length > 2) return null;
+  const left = halves[0] ? halves[0].split(":") : [];
+  const right = halves.length === 2 && halves[1] ? halves[1].split(":") : [];
+  if ([...left, ...right].some((g) => !/^[0-9a-f]{1,4}$/.test(g))) return null;
+  const missing = 8 - left.length - right.length;
+  if (halves.length === 1 ? missing !== 0 : missing < 1) return null;
+  return [...left, ...Array.from({ length: missing }, () => "0"), ...right].map((g) => g.padStart(4, "0")).join(":");
+}
+
+export function parseIpv6Prefix(text: string): { address: Ipv6; prefix: number } | null {
+  const slash = text.lastIndexOf("/");
+  if (slash < 1) return null;
+  const prefix = Number(text.slice(slash + 1));
+  const address = parseIpv6(text.slice(0, slash));
+  return address !== null && Number.isInteger(prefix) && prefix >= 0 && prefix <= 128 ? { address, prefix } : null;
+}
+
+export function formatIpv6(address: Ipv6): string {
+  return parseIpv6(address) ?? address;
+}
 
 export function parseIpv4(text: string): Ipv4 | null {
   const parts = text.split(".");

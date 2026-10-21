@@ -1,5 +1,5 @@
 // Output for IOS show commands, formatted like the real thing.
-import { formatIpv4, formatMacCisco, maskToPrefix, networkOf, type Ipv4 } from "../addr";
+import { formatIpv4, formatIpv6, formatMacCisco, maskToPrefix, networkOf, type Ipv4 } from "../addr";
 import { configTimestamp, type IosDevice } from "../devices/ios-device";
 import type { Router } from "../devices/router";
 import type { Switch } from "../devices/switch";
@@ -64,6 +64,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   if (!c.ipDomainLookup) out.push("no ip domain lookup", "!");
   if (!isSwitch) out.push("ip cef", "no ipv6 cef", "!", "multilink bundle-name authenticated", "!");
   if (!c.cdpRun) out.push("no cdp run", "!");
+  if (c.ipv6UnicastRouting) out.push("ipv6 unicast-routing");
   if (isSwitch) {
     if (c.ipRouting) out.push("ip routing");
     if (c.dhcpSnooping) out.push("ip dhcp snooping");
@@ -81,6 +82,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     out.push(`interface ${name}`);
     if (ic.description) out.push(` description ${ic.description}`);
     for (const helper of ic.helperAddresses) out.push(` ip helper-address ${formatIpv4(helper)}`);
+    for (const address of ic.ipv6Addresses) out.push(` ipv6 address ${formatIpv6(address.address)}/${address.prefix}`);
     if (ic.encapsulation) out.push(` encapsulation dot1Q ${ic.encapsulation.vlan}${ic.encapsulation.native ? " native" : ""}`);
     if (ic.accessGroupIn !== null) out.push(" ip access-group " + ic.accessGroupIn + " in");
     if (ic.accessGroupOut !== null) out.push(" ip access-group " + ic.accessGroupOut + " out");
@@ -183,6 +185,15 @@ export function showIpInterfaceBrief(device: IosDevice): string[] {
     const ip = c?.ip != null ? formatIpv4(c.ip) : "unassigned";
     const method = c?.ip != null ? "manual" : "unset ";
     out.push(`${i.name.padEnd(23)}${ip.padEnd(16)}YES ${method} ${i.status().padEnd(22)}${i.protocol()} `);
+  }
+  return out;
+}
+
+export function showIpv6InterfaceBrief(device: IosDevice): string[] {
+  const out = [`${"Interface".padEnd(23)}${"IPv6-Address".padEnd(42)}${"Status".padEnd(22)}Protocol`];
+  for (const i of device.interfaces()) {
+    const addresses = device.config.interfaces[i.name]?.ipv6Addresses ?? [];
+    out.push(`${i.name.padEnd(23)}${(addresses.length ? addresses.map((a) => `${formatIpv6(a.address)}/${a.prefix}`).join(",") : "unassigned").padEnd(42)}${i.status().padEnd(22)}${i.protocol()}`);
   }
   return out;
 }

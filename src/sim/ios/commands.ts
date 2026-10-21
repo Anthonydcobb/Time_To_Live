@@ -1,5 +1,5 @@
 // The IOS command set, per mode. Each entry is a token sequence plus a handler.
-import { broadcastOf, formatIpv4, maskToPrefix, networkOf, parseIpv4, type Ipv4 } from "../addr";
+import { broadcastOf, formatIpv4, maskToPrefix, networkOf, parseIpv4, parseIpv6Prefix, type Ipv4 } from "../addr";
 import type { IosDevice } from "../devices/ios-device";
 import type { Router } from "../devices/router";
 import type { Switch } from "../devices/switch";
@@ -239,6 +239,7 @@ const showCommands: Entry[] = [
     [SHOW, kw("ip", "IP information"), kw("interface", "IP interface status and configuration"), kw("brief", "Brief summary of IP status and configuration")],
     (c) => c.out.push(...show.showIpInterfaceBrief(c.device)),
   ),
+  cmd(EXEC, [SHOW, kw("ipv6", "IPv6 information"), kw("interface", "IPv6 interface status"), kw("brief", "Brief summary of IPv6 status")], (c) => c.out.push(...show.showIpv6InterfaceBrief(c.device))),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration")], (c) => c.out.push(...show.showInterfaces(c.device))),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), ifaceArg], (c, [name]) =>
     c.out.push(...show.showInterfaces(c.device, name as string)),
@@ -493,6 +494,12 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [IP, kw("routing", "Enable IP routing")], (c) => {
     if (c.device.kind === "switch") c.device.config.ipRouting = true;
   }, { devices: ["switch"] }),
+  cmd(CONFIG, [kw("ipv6", "Global IPv6 configuration"), kw("unicast-routing", "Enable IPv6 unicast routing")], (c) => {
+    c.device.config.ipv6UnicastRouting = true;
+  }),
+  cmd(CONFIG, [NO, kw("ipv6", "Global IPv6 configuration"), kw("unicast-routing", "Enable IPv6 unicast routing")], (c) => {
+    c.device.config.ipv6UnicastRouting = false;
+  }),
   cmd(CONFIG, [NO, IP, kw("routing", "Enable IP routing")], (c) => {
     if (c.device.kind === "switch") c.device.config.ipRouting = false;
   }, { devices: ["switch"] }),
@@ -569,6 +576,20 @@ const IF_IP = kw("ip", "Interface Internet Protocol config commands");
 const ADDRESS = kw("address", "Set the IP address of an interface");
 
 const interfaceCommands: Entry[] = [
+  cmd(ANY_IF, [kw("ipv6", "IPv6 interface configuration"), kw("address", "Set the IPv6 address"), wordArg("IPv6 address/prefix")], (c, [text]) => {
+    const parsed = parseIpv6Prefix(text as string);
+    if (!parsed) {
+      c.out.push("% Invalid IPv6 address or prefix.");
+      return;
+    }
+    forEachIface(c, (name) => {
+      const addresses = c.device.ifaceConfig(name).ipv6Addresses;
+      if (!addresses.some((a) => a.address === parsed.address && a.prefix === parsed.prefix)) addresses.push(parsed);
+    });
+  }),
+  cmd(ANY_IF, [NO, kw("ipv6", "IPv6 interface configuration"), kw("address", "Set the IPv6 address")], (c) => {
+    forEachIface(c, (name) => { c.device.ifaceConfig(name).ipv6Addresses = []; });
+  }),
   cmd(ANY_IF, [IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 199, "ACL number"), kw("in", "Inbound packets")], (c, [number]) => {
     forEachIface(c, (name) => { c.device.ifaceConfig(name).accessGroupIn = number as number; });
   }, { when: routedIface }),
