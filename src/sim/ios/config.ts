@@ -18,6 +18,8 @@ export interface LineConfig {
 
 export type SwitchportMode = "access" | "trunk" | "dynamic auto" | "dynamic desirable";
 export type ChannelGroupMode = "on" | "active" | "passive" | "desirable" | "auto";
+export type InterfaceSpeed = "auto" | 10 | 100 | 1000;
+export type InterfaceDuplex = "auto" | "half" | "full";
 
 /** Layer 2 settings on a switch's physical port. */
 export interface SwitchportConfig {
@@ -50,6 +52,8 @@ export function defaultSwitchport(): SwitchportConfig {
 export interface InterfaceConfig {
   shutdown: boolean;
   description: string | null;
+  speed: InterfaceSpeed;
+  duplex: InterfaceDuplex;
   ip: Ipv4 | null;
   mask: Ipv4 | null;
   ipv6Addresses: { address: Ipv6; prefix: number }[];
@@ -73,7 +77,7 @@ export interface InterfaceConfig {
 }
 
 export function newInterfaceConfig(shutdown: boolean): InterfaceConfig {
-  return { shutdown, description: null, ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, ipv6AccessGroupIn: null, ipv6AccessGroupOut: null, cdp: true, natRole: null, hsrp: null, vrrp: null, glbp: null, ospfPriority: 1 };
+  return { shutdown, description: null, speed: "auto", duplex: "auto", ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, ipv6AccessGroupIn: null, ipv6AccessGroupOut: null, cdp: true, natRole: null, hsrp: null, vrrp: null, glbp: null, ospfPriority: 1 };
 }
 
 export interface AclAddress {

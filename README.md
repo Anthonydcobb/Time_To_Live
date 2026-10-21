@@ -32,6 +32,7 @@ npm run build    # typecheck and production build
 - `hostname`, `enable secret`, `enable password`, `service password-encryption` (type 7), `banner motd` (single and multi-line).
 - `line con 0` and `line vty`: `password`, `login`, `logging synchronous`, `exec-timeout`.
 - `interface`: `ip address` (with bad-mask and overlap checks), `shutdown`, `description`.
+- Physical interfaces accept `speed auto|10|100|1000` and `duplex auto|half|full`; FastEthernet rejects 1000 Mbps and the chosen values appear in `show interfaces` and `show interfaces status`.
 - DHCP server: `ip dhcp excluded-address`, `ip dhcp pool` with `network`, `default-router`, `dns-server`, `domain-name` and `lease`. Like IOS, it pings an address twice before offering it and logs a conflict if anything answers.
 - `ip route` (next hop or exit interface), `ip default-gateway` on switches.
 - VLANs: `vlan 10,20` and `name` (created when you leave config-vlan mode, like IOS), `no vlan`, and `delete flash:vlan.dat`. The VLAN database lives outside the running config, so it survives `erase startup-config` and `reload`. Extended VLANs fail the way they do in VTP server mode, and VLAN 1 and 1002 to 1005 can't be renamed or deleted.

@@ -90,6 +90,8 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     const physical = device.ports.some((p) => p.name === name);
     out.push(`interface ${name}`);
     if (ic.description) out.push(` description ${ic.description}`);
+    if (physical && isSwitch && ic.duplex !== "auto") out.push(` duplex ${ic.duplex}`);
+    if (physical && isSwitch && ic.speed !== "auto") out.push(` speed ${ic.speed}`);
     for (const helper of ic.helperAddresses) out.push(` ip helper-address ${formatIpv4(helper)}`);
     for (const address of ic.ipv6Addresses) out.push(` ipv6 address ${formatIpv6(address.address)}/${address.prefix}`);
     if (ic.ipv6OspfArea !== null) out.push(` ipv6 ospf ${c.ospfv3?.processId ?? 1} area ${ic.ipv6OspfArea}`);
@@ -118,7 +120,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     if (ic.switchport) out.push(...switchportLines(ic.switchport));
     else out.push(ic.ip !== null ? ` ip address ${formatIpv4(ic.ip)} ${formatIpv4(ic.mask!)}` : " no ip address");
     if (ic.shutdown) out.push(" shutdown");
-    if (physical && !isSwitch) out.push(" duplex auto", " speed auto");
+    if (physical && !isSwitch) out.push(` duplex ${ic.duplex}`, ` speed ${ic.speed}`);
     if (physical && !ic.cdp) out.push(" no cdp enable");
     out.push("!");
   }
@@ -404,13 +406,17 @@ export function showInterfaces(device: IosDevice, only?: string): string[] {
     out.push("  Encapsulation ARPA, loopback not set", svi ? "  Keepalive not supported " : "  Keepalive set (10 sec)");
     if (i.port && isSwitch) {
       const media = gig ? "10/100/1000BaseTX" : "10/100BaseTX";
+      const duplex = c?.duplex === "auto" ? (status === "up" ? "Full-duplex" : "Auto-duplex") : `${c?.duplex === "full" ? "Full" : "Half"}-duplex`;
+      const speed = c?.speed === "auto" ? (status === "up" ? (gig ? "1000" : "100") : "Auto") : String(c?.speed);
       out.push(
-        status === "up" ? `  Full-duplex, ${gig ? "1000" : "100"}Mb/s, media type is ${media}` : `  Auto-duplex, Auto-speed, media type is ${media}`,
+        `  ${duplex}, ${speed === "Auto" ? "Auto-speed" : `${speed}Mb/s`}, media type is ${media}`,
         "  input flow-control is off, output flow-control is unsupported ",
       );
     } else if (i.port) {
+      const duplex = c?.duplex === "auto" ? (status === "up" ? "Full Duplex" : "Auto Duplex") : `${c?.duplex === "full" ? "Full" : "Half"} Duplex`;
+      const speed = c?.speed === "auto" ? (status === "up" ? "1Gbps" : "Auto Speed") : `${c?.speed}Mbps`;
       out.push(
-        status === "up" ? "  Full Duplex, 1Gbps, media type is RJ45" : "  Auto Duplex, Auto Speed, media type is RJ45",
+        `  ${duplex}, ${speed}, media type is RJ45`,
         "  output flow-control is unsupported, input flow-control is unsupported",
       );
     }
@@ -455,8 +461,8 @@ export function showInterfacesStatus(sw: Switch): string[] {
     const sp = sw.switchport(port);
     const status = port.adminDown ? "disabled" : port.protocolUp ? "connected" : "notconnect";
     const vlan = sw.operationalMode(port) === "trunk" ? "trunk" : String(sp.accessVlan);
-    const duplex = port.protocolUp ? "a-full" : "auto";
-    const speed = port.protocolUp ? (port.name.startsWith("Gigabit") ? "a-1000" : "a-100") : "auto";
+    const duplex = port.protocolUp ? (sw.config.interfaces[port.name].duplex === "auto" ? "a-full" : `a-${sw.config.interfaces[port.name].duplex}`) : "auto";
+    const speed = port.protocolUp ? (sw.config.interfaces[port.name].speed === "auto" ? (port.name.startsWith("Gigabit") ? "a-1000" : "a-100") : `a-${sw.config.interfaces[port.name].speed}`) : "auto";
     const type = port.name.startsWith("Gigabit") ? "10/100/1000BaseTX" : "10/100BaseTX";
     out.push(
       `${port.shortName.padEnd(10)}${(sw.config.interfaces[port.name].description ?? "").slice(0, 18).padEnd(19)}${status.padEnd(13)}${vlan.padEnd(11)}${duplex.padEnd(8)}${speed.padEnd(7)}${type}`,

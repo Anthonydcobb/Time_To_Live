@@ -804,10 +804,32 @@ const configCommands: Entry[] = [
 ];
 
 const routedIface = (c: Ctx) => c.console.ifaces.every((n) => c.device.findInterface(n)?.routed);
+const physicalPort = (c: Ctx) => c.console.ifaces.every((n) => c.device.findInterface(n)?.port);
 const IF_IP = kw("ip", "Interface Internet Protocol config commands");
 const ADDRESS = kw("address", "Set the IP address of an interface");
 
+function setInterfaceSpeed(c: Ctx, speed: "auto" | 10 | 100 | 1000): void {
+  forEachIface(c, (name) => {
+    if (speed === 1000 && !name.startsWith("GigabitEthernet")) {
+      c.out.push(`% Speed ${speed} is not supported on ${name}`);
+      return;
+    }
+    c.device.ifaceConfig(name).speed = speed;
+  });
+}
+
+function setInterfaceDuplex(c: Ctx, duplex: "auto" | "half" | "full"): void {
+  forEachIface(c, (name) => { c.device.ifaceConfig(name).duplex = duplex; });
+}
+
 const interfaceCommands: Entry[] = [
+  cmd(ANY_IF, [kw("speed", "Configure interface speed"), kw("auto", "Negotiate interface speed")], (c) => setInterfaceSpeed(c, "auto"), { when: physicalPort }),
+  cmd(ANY_IF, [kw("speed", "Configure interface speed"), kw("10", "10 Mbps")], (c) => setInterfaceSpeed(c, 10), { when: physicalPort }),
+  cmd(ANY_IF, [kw("speed", "Configure interface speed"), kw("100", "100 Mbps")], (c) => setInterfaceSpeed(c, 100), { when: physicalPort }),
+  cmd(ANY_IF, [kw("speed", "Configure interface speed"), kw("1000", "1000 Mbps")], (c) => setInterfaceSpeed(c, 1000), { when: physicalPort }),
+  cmd(ANY_IF, [kw("duplex", "Configure duplex operation"), kw("auto", "Negotiate duplex operation")], (c) => setInterfaceDuplex(c, "auto"), { when: physicalPort }),
+  cmd(ANY_IF, [kw("duplex", "Configure duplex operation"), kw("half", "Half-duplex operation")], (c) => setInterfaceDuplex(c, "half"), { when: physicalPort }),
+  cmd(ANY_IF, [kw("duplex", "Configure duplex operation"), kw("full", "Full-duplex operation")], (c) => setInterfaceDuplex(c, "full"), { when: physicalPort }),
   cmd(ANY_IF, [kw("ipv6", "IPv6 interface configuration"), kw("ospf", "Enable IPv6 OSPF"), numArg(1, 65535, "OSPFv3 process ID"), kw("area", "OSPF area"), numArg(0, 4294967295, "OSPF area ID")], (c, [processId, area]) => {
     if (c.device.kind !== "router" || !c.device.config.ospfv3 || c.device.config.ospfv3.processId !== processId) { c.out.push("% OSPFv3 process is not configured."); return; }
     forEachIface(c, (name) => { c.device.ifaceConfig(name).ipv6OspfArea = area as number; });
@@ -1169,7 +1191,6 @@ function eachSwitchport(c: Ctx, fn: (sp: NonNullable<ReturnType<Ctx["device"]["i
   sw(c).vlanConfigChanged();
 }
 
-const physicalPort = (c: Ctx) => c.console.ifaces.every((n) => c.device.findInterface(n)?.port);
 const subinterface = (c: Ctx) => c.console.ifaces.every((n) => splitSubinterface(n));
 const NEGOTIATE_CONFLICT = "Command rejected: Conflict between 'nonegotiate' and 'dynamic' status";
 
