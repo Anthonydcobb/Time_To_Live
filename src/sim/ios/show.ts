@@ -115,6 +115,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   if (c.staticRoutes.length) out.push("!");
   if (c.ospf) {
     out.push(`router ospf ${c.ospf.processId}`);
+    if (c.ospf.routerId !== null) out.push(` router-id ${formatIpv4(c.ospf.routerId)}`);
     for (const n of c.ospf.networks) out.push(` network ${formatIpv4(n.network)} ${formatIpv4((~n.mask) >>> 0)} area ${n.area}`);
     for (const iface of c.ospf.passiveInterfaces) out.push(` passive-interface ${iface}`);
     out.push("!");
@@ -457,7 +458,7 @@ export function showIpRoute(device: IosDevice): string[] {
 export function showIpOspfNeighbor(router: Router): string[] {
   const out = ["", "Neighbor ID     Pri   State           Dead Time   Address         Interface"];
   for (const n of router.ospfNeighbors) {
-    out.push(`${n.router.config.hostname.padEnd(16)}1     FULL/ -         00:00:34    ${formatIpv4(n.remoteAddress).padEnd(16)}${n.localInterface}`);
+    out.push(`${formatIpv4(n.router.ospfRouterId() ?? n.remoteAddress).padEnd(16)}1     FULL/ -         00:00:34    ${formatIpv4(n.remoteAddress).padEnd(16)}${n.localInterface}`);
   }
   return out;
 }
@@ -474,6 +475,7 @@ export function showIpProtocols(device: IosDevice): string[] {
   const ospf = device.config.ospf!;
   return [
     `Routing Protocol is \"ospf ${ospf.processId}\"`,
+    `  Router ID ${(device as Router).ospfRouterId() === null ? "not set" : formatIpv4((device as Router).ospfRouterId()!)}`,
     "  Outgoing update filter list for all interfaces is not set",
     "  Incoming update filter list for all interfaces is not set",
     `  Routing for Networks: ${ospf.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`,

@@ -656,7 +656,7 @@ const configCommands: Entry[] = [
     c.console.setMode(splitSubinterface(n) && c.device.kind === "router" ? "config-subif" : "config-if");
   }),
   cmd(CONFIG, [kw("router", "Enable a routing protocol"), kw("ospf", "Open Shortest Path First"), numArg(1, 65535, "Process ID")], (c, [processId]) => {
-    c.device.config.ospf ??= { processId: processId as number, networks: [], passiveInterfaces: [] };
+    c.device.config.ospf ??= { processId: processId as number, networks: [], passiveInterfaces: [], routerId: null };
     c.device.config.ospf.processId = processId as number;
     c.console.setMode("config-router");
   }, { devices: ["router"] }),
@@ -1378,6 +1378,12 @@ function deleteFile(c: Ctx, file: string): void {
 }
 
 const ospfCommands: Entry[] = [
+  cmd(ROUTER_CFG, [kw("router-id", "Override the OSPF router identifier"), ipArg("OSPF router ID")], (c, [routerId]) => {
+    if (c.device.config.ospf) c.device.config.ospf.routerId = routerId as Ipv4;
+  }, { devices: ["router"] }),
+  cmd(ROUTER_CFG, [NO, kw("router-id", "Override the OSPF router identifier")], (c) => {
+    if (c.device.config.ospf) c.device.config.ospf.routerId = null;
+  }, { devices: ["router"] }),
   cmd(ROUTER_CFG, [kw("passive-interface", "Suppress routing updates on an interface"), ifaceArg], (c, [name]) => {
     const cfg = c.device.config.ospf ?? c.device.config.eigrp;
     if (cfg && !cfg.passiveInterfaces.includes(name as string)) cfg.passiveInterfaces.push(name as string);
