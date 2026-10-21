@@ -252,6 +252,9 @@ const HELP_TEXT = [
 const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("version", "System hardware and software status")], (c) => c.out.push(...show.showVersion(c.device))),
   cmd(EXEC, [SHOW, kw("clock", "Display the system clock")], (c) => c.out.push(...show.showClock(c.device))),
+  cmd(EXEC, [SHOW, kw("ntp", "NTP status"), kw("status", "NTP status")], (c) => c.out.push(...show.showNtpStatus(c.device))),
+  cmd(EXEC, [SHOW, kw("ntp", "NTP status"), kw("associations", "NTP associations")], (c) => c.out.push(...show.showNtpAssociations(c.device))),
+  cmd(EXEC, [SHOW, kw("logging", "Logging status")], (c) => c.out.push(...show.showLogging(c.device))),
   cmd(EXEC, [SHOW, kw("ssh", "Status of SSH server connections")], (c) => c.out.push(...show.showSsh(c.device))),
   cmd(EXEC, [SHOW, kw("access-lists", "List access lists")], (c) => c.out.push(...show.showAccessLists(c.device))),
   cmd(
@@ -403,6 +406,19 @@ const configCommands: Entry[] = [
     }
     c.device.config.hostname = name as string;
   }),
+  cmd(CONFIG, [kw("ntp", "Configure NTP"), kw("server", "NTP server"), ipArg("NTP server address")], (c, [server]) => {
+    if (!c.device.config.ntpServers.includes(server as Ipv4)) c.device.config.ntpServers.push(server as Ipv4);
+  }),
+  cmd(CONFIG, [NO, kw("ntp", "Configure NTP"), kw("server", "NTP server"), ipArg("NTP server address")], (c, [server]) => {
+    c.device.config.ntpServers = c.device.config.ntpServers.filter((address) => address !== server);
+  }),
+  cmd(CONFIG, [kw("logging", "Configure system logging"), kw("host", "Log host"), ipArg("Syslog server address")], (c, [host]) => {
+    if (!c.device.config.loggingHosts.includes(host as Ipv4)) c.device.config.loggingHosts.push(host as Ipv4);
+  }),
+  cmd(CONFIG, [NO, kw("logging", "Configure system logging"), kw("host", "Log host"), ipArg("Syslog server address")], (c, [host]) => {
+    c.device.config.loggingHosts = c.device.config.loggingHosts.filter((address) => address !== host);
+  }),
+  cmd(CONFIG, [kw("logging", "Configure system logging"), kw("trap", "Set trap logging level"), numArg(0, 7, "Severity level")], (c, [level]) => { c.device.config.loggingTrap = level as number; }),
   cmd(CONFIG, [NO, kw("hostname", "Set system's network name")], (c) => {
     c.device.config.hostname = c.device.kind === "router" ? "Router" : "Switch";
   }),

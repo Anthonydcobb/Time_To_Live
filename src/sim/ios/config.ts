@@ -146,6 +146,9 @@ export interface IosConfig {
   ipv6StaticRoutes: { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[];
   staticNat: { insideLocal: Ipv4; insideGlobal: Ipv4 }[];
   natOverloads: { acl: number; outsideInterface: string }[];
+  ntpServers: Ipv4[];
+  loggingHosts: Ipv4[];
+  loggingTrap: number;
 }
 
 export function defaultLine(): LineConfig {
@@ -190,6 +193,9 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     ipv6StaticRoutes: [],
     staticNat: [],
     natOverloads: [],
+    ntpServers: [],
+    loggingHosts: [],
+    loggingTrap: 6,
   };
 }
 

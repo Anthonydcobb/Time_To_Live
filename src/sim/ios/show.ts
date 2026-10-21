@@ -114,6 +114,9 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   if (c.eigrp) out.push(`router eigrp ${c.eigrp.as}`);
   for (const nat of c.staticNat) out.push(`ip nat inside source static ${formatIpv4(nat.insideLocal)} ${formatIpv4(nat.insideGlobal)}`);
   for (const rule of c.natOverloads) out.push(`ip nat inside source list ${rule.acl} interface ${rule.outsideInterface} overload`);
+  for (const server of c.ntpServers) out.push(`ntp server ${formatIpv4(server)}`);
+  for (const host of c.loggingHosts) out.push(`logging host ${formatIpv4(host)}`);
+  out.push(`logging trap ${c.loggingTrap}`);
   for (const [number, rules] of Object.entries(c.standardAcls).sort(([a], [b]) => Number(a) - Number(b))) {
     for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + formatAclSource(rule));
   }
@@ -845,6 +848,20 @@ export function showStandby(router: Router): string[] {
     out.push(`${iface.name} - Group ${h.group}`, `  State is ${active === router ? "Active" : "Standby"}`, `  Virtual IP address is ${formatIpv4(h.ip)}`, `  Priority ${h.priority}`, `  Active router is ${active.hostname}`);
   }
   return out.length ? out : ["HSRP is not configured"];
+}
+
+export function showNtpStatus(device: IosDevice): string[] {
+  if (!device.config.ntpServers.length) return ["Clock is unsynchronized, stratum 16", "No reference clock"];
+  return ["Clock is synchronized, stratum 8", `Reference clock is ${formatIpv4(device.config.ntpServers[0])}`, "Nominal frequency is 250.0000 Hz, actual frequency is 250.0000 Hz"];
+}
+
+export function showNtpAssociations(device: IosDevice): string[] {
+  const out = ["      address         ref clock     st  when  poll reach  delay  offset   disp", "*~" + (device.config.ntpServers[0] ? formatIpv4(device.config.ntpServers[0]) : "0.0.0.0") + "          .        8     0    64  377   0.00    0.00  0.01"];
+  return out;
+}
+
+export function showLogging(device: IosDevice): string[] {
+  return ["Syslog logging: enabled", `  Logging to ${device.config.loggingHosts.length ? device.config.loggingHosts.map(formatIpv4).join(", ") : "none"}`, `  Trap logging: level ${device.config.loggingTrap}`];
 }
 
 // ---- DHCP ----------------------------------------------------------------------
