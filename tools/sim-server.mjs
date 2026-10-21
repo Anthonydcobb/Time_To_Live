@@ -42,6 +42,15 @@ function addDevice(spec) {
   const logs = [];
   device.onOutput((text) => logs.push(text));
   logListeners.push({ name: spec.name, logs });
+  if (device.kind !== "pc" && Array.isArray(spec.startupConfig)) {
+    device.console.input("");
+    for (const line of spec.startupConfig) {
+      const result = device.console.input(line);
+      if (result.lines?.some((text) => /% (Invalid|Incomplete|Ambiguous)/i.test(text))) {
+        throw new Error(`Startup configuration failed on ${spec.name}: ${line}`);
+      }
+    }
+  }
 }
 
 function load(topology) {

@@ -38,7 +38,19 @@ const topology = {
   id: "phase-0-basic-lan",
   description: "One router, one switch and one static PC",
   devices: [
-    { name: "R1", type: "router", hostname: "R1" },
+    {
+      name: "R1",
+      type: "router",
+      hostname: "R1",
+      startupConfig: [
+        "enable",
+        "configure terminal",
+        "interface gigabitEthernet0/0",
+        "ip address 192.168.1.1 255.255.255.0",
+        "no shutdown",
+        "end",
+      ],
+    },
     { name: "S1", type: "switch", hostname: "S1" },
     { name: "PC1", type: "pc", ip: "192.168.1.10/24", gateway: "192.168.1.1" },
   ],
@@ -52,15 +64,8 @@ try {
   const observations = [];
   observations.push({ op: "reset", result: await request({ op: "reset" }) });
   observations.push({ op: "load", result: await request({ op: "load", topology }) });
-  observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "" }) });
-  observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "enable" }) });
   observations.push({ op: "help", result: await request({ op: "help", device: "R1", line: "show ip " }) });
   observations.push({ op: "complete", result: await request({ op: "complete", device: "R1", line: "show ip ro" }) });
-  observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "configure terminal" }) });
-  observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "interface gigabitEthernet0/0" }) });
-  observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "ip address 192.168.1.1 255.255.255.0" }) });
-  observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "no shutdown" }) });
-  observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "end" }) });
   observations.push({ op: "advance", result: await request({ op: "advance", ms: 35_000 }) });
   observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "show ip interface brief" }) });
   observations.push({ op: "exec", result: await request({ op: "exec", device: "PC1", line: "ipconfig" }) });
