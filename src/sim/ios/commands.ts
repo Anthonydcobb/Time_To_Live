@@ -800,6 +800,7 @@ const interfaceCommands: Entry[] = [
     forEachIface(c, (name) => { c.device.ifaceConfig(name).ipv6OspfArea = area as number; });
   }, { devices: ["router"] }),
   cmd(ANY_IF, [NO, kw("ipv6", "IPv6 interface configuration"), kw("ospf", "Enable IPv6 OSPF")], (c) => forEachIface(c, (name) => { c.device.ifaceConfig(name).ipv6OspfArea = null; }), { devices: ["router"] }),
+  cmd(ANY_IF, [kw("ip", "IP configuration"), kw("ospf", "OSPF interface commands"), kw("priority", "OSPF interface priority"), numArg(0, 255, "OSPF priority")], (c, [priority]) => forEachIface(c, (name) => { c.device.ifaceConfig(name).ospfPriority = priority as number; }), { devices: ["router"] }),
   cmd(ANY_IF, [kw("ip", "IP configuration"), kw("nat", "Network Address Translation"), kw("inside", "Mark as NAT inside")], (c) => forEachIface(c, (name) => { c.device.ifaceConfig(name).natRole = "inside"; }), { devices: ["router"] }),
   cmd(ANY_IF, [kw("ip", "IP configuration"), kw("nat", "Network Address Translation"), kw("outside", "Mark as NAT outside")], (c) => forEachIface(c, (name) => { c.device.ifaceConfig(name).natRole = "outside"; }), { devices: ["router"] }),
   cmd(ANY_IF, [NO, kw("ip", "IP configuration"), kw("nat", "Network Address Translation")], (c) => forEachIface(c, (name) => { c.device.ifaceConfig(name).natRole = null; }), { devices: ["router"] }),

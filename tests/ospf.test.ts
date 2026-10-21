@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { parseIpv4 as ip } from "../src/sim/addr";
 import { Pc } from "../src/sim/devices/pc";
 import { Router } from "../src/sim/devices/router";
+import { Switch } from "../src/sim/devices/switch";
 import { Network } from "../src/sim/network";
 import { run, type } from "./helpers";
 
@@ -103,5 +104,24 @@ describe("OSPF", () => {
     expect(r2.stack.lookup(ip("10.10.1.50")!)).toMatchObject({ nextHop: ip("10.0.12.1") });
     expect(type(r2, "show ip route").join("\n")).toContain("10.10.0.0/16");
     expect(type(r1, "show running-config").join("\n")).toContain(" area 0 range 10.10.0.0 255.255.0.0");
+  });
+
+  it("discovers OSPF neighbors across a switched Ethernet segment and elects DR and BDR", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1"));
+    const r2 = net.add(new Router("R2"));
+    const r3 = net.add(new Router("R3"));
+    const sw = net.add(new Switch("S1"));
+    net.connect(r1.port("Gi0/0"), sw.port("Fa0/1"));
+    net.connect(r2.port("Gi0/0"), sw.port("Fa0/2"));
+    net.connect(r3.port("Gi0/0"), sw.port("Fa0/3"));
+    for (const [router, address, priority] of [[r1, "10.0.0.1", "200"], [r2, "10.0.0.2", "100"], [r3, "10.0.0.3", "50"]] as const) {
+      type(router, "en", "conf t", "int gi0/0", `ip address ${address} 255.255.255.0`, "no shut", "ip ospf priority " + priority, "router ospf 1", "network 10.0.0.0 0.0.0.255 area 0", "end");
+    }
+    net.clock.advance(35_000);
+    expect(r1.ospfNeighbors).toHaveLength(2);
+    expect(type(r2, "show ip ospf neighbor").join("\n")).toContain("FULL/ DR");
+    expect(type(r2, "show ip ospf neighbor").join("\n")).toContain("FULL/ DROTHER");
+    expect(type(r1, "show running-config").join("\n")).toContain(" ip ospf priority 200");
   });
 });

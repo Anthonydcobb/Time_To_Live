@@ -54,6 +54,7 @@ export interface InterfaceConfig {
   mask: Ipv4 | null;
   ipv6Addresses: { address: Ipv6; prefix: number }[];
   ipv6OspfArea: number | null;
+  ospfPriority: number;
   /** DHCP relay destinations configured with ip helper-address. */
   helperAddresses: Ipv4[];
   accessGroupIn: string | null;
@@ -72,7 +73,7 @@ export interface InterfaceConfig {
 }
 
 export function newInterfaceConfig(shutdown: boolean): InterfaceConfig {
-  return { shutdown, description: null, ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, ipv6AccessGroupIn: null, ipv6AccessGroupOut: null, cdp: true, natRole: null, hsrp: null, vrrp: null, glbp: null };
+  return { shutdown, description: null, ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, ipv6AccessGroupIn: null, ipv6AccessGroupOut: null, cdp: true, natRole: null, hsrp: null, vrrp: null, glbp: null, ospfPriority: 1 };
 }
 
 export interface AclAddress {

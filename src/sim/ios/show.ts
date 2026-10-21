@@ -93,6 +93,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     for (const helper of ic.helperAddresses) out.push(` ip helper-address ${formatIpv4(helper)}`);
     for (const address of ic.ipv6Addresses) out.push(` ipv6 address ${formatIpv6(address.address)}/${address.prefix}`);
     if (ic.ipv6OspfArea !== null) out.push(` ipv6 ospf ${c.ospfv3?.processId ?? 1} area ${ic.ipv6OspfArea}`);
+    if (ic.ospfPriority !== 1) out.push(` ip ospf priority ${ic.ospfPriority}`);
     if (ic.natRole) out.push(` ip nat ${ic.natRole}`);
     if (ic.hsrp) {
       out.push(` standby ${ic.hsrp.group} ip ${formatIpv4(ic.hsrp.ip)}`);
@@ -485,7 +486,7 @@ export function showIpRoute(device: IosDevice): string[] {
 export function showIpOspfNeighbor(router: Router): string[] {
   const out = ["", "Neighbor ID     Pri   State           Dead Time   Address         Interface"];
   for (const n of router.ospfNeighbors) {
-    out.push(`${formatIpv4(n.router.ospfRouterId() ?? n.remoteAddress).padEnd(16)}1     FULL/ -         00:00:34    ${formatIpv4(n.remoteAddress).padEnd(16)}${n.localInterface}`);
+    out.push(`${formatIpv4(n.router.ospfRouterId() ?? n.remoteAddress).padEnd(16)}1     FULL/ ${n.remoteRole.padEnd(4)}      00:00:34    ${formatIpv4(n.remoteAddress).padEnd(16)}${n.localInterface}`);
   }
   return out;
 }

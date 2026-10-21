@@ -6,6 +6,7 @@ import { defaultConfig, newInterfaceConfig, type IosConfig, type OspfNetwork } f
 import { Port } from "../network";
 import { splitSubinterface } from "../vlans";
 import { IosDevice, type InterfaceView } from "./ios-device";
+import { Switch } from "./switch";
 import { permitsIpv6Acl, permitsStandardAcl } from "../ios/acl";
 
 /** Cryptis CR-2911: three gigabit ports, all shut down out of the box. Subinterfaces carry 802.1Q VLANs. */
@@ -24,7 +25,7 @@ export class Router extends IosDevice {
   private ospfv3Routes: { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[] = [];
   private patSessions = new Map<number, { localIp: Ipv4; localId: number; globalIp: Ipv4 }>();
   private nextPatId = 40000;
-  readonly ospfNeighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv4 }[] = [];
+  readonly ospfNeighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv4; localRole: "DR" | "BDR" | "DROTHER" | "P2P"; remoteRole: "DR" | "BDR" | "DROTHER" | "P2P" }[] = [];
   readonly eigrpNeighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv4 }[] = [];
   readonly ospfv3Neighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv6 }[] = [];
 
@@ -146,6 +147,43 @@ export class Router extends IosDevice {
     return this.config.ospf.networks.find((n) => networkOf(iface.ip!, n.mask) === n.network) ?? null;
   }
 
+  private ospfPeerInterfaces(local: L3Interface): { router: Router; iface: L3Interface; segment: string; multiaccess: boolean }[] {
+    const port = this.ports.find((candidate) => candidate.name === local.name);
+    const peerPort = port?.peer;
+    if (!port || !peerPort || !port.protocolUp || !peerPort.protocolUp) return [];
+    if (peerPort.device instanceof Router) {
+      const peer = peerPort.device;
+      const names = [this.id, peer.id].sort();
+      const ports = [port.name, peerPort.name].sort();
+      const iface = peer.l3Interfaces().find((candidate) => candidate.name === peerPort.name);
+      return iface ? [{ router: peer, iface, segment: `p2p:${names.join("|")}:${ports.join("|")}`, multiaccess: false }] : [];
+    }
+    if (!(peerPort.device instanceof Switch)) return [];
+    const sw = peerPort.device;
+    const vlans = sw.forwardingVlans(peerPort);
+    return sw.ports.flatMap((candidate) => {
+      const remotePort = candidate.peer;
+      if (!remotePort || !candidate.protocolUp || !remotePort.protocolUp || !sw.forwardingVlans(candidate).some((v) => vlans.includes(v))) return [];
+      if (!(remotePort.device instanceof Router) || remotePort.device === this) return [];
+      const iface = remotePort.device.l3Interfaces().find((entry) => entry.name === remotePort.name);
+      return iface ? [{ router: remotePort.device, iface, segment: `${sw.id}:${vlans.find((v) => sw.forwardingVlans(candidate).includes(v))}`, multiaccess: true }] : [];
+    });
+  }
+
+  private ospfRole(participants: { router: Router; iface: L3Interface }[], local: Router, iface: L3Interface, multiaccess: boolean): "DR" | "BDR" | "DROTHER" | "P2P" {
+    if (!multiaccess) return "P2P";
+    const ordered = participants.filter((p) => p.iface.up() && this.ospfNetworkFor(p.iface)).sort((a, b) => {
+      const priority = (router: Router, entry: L3Interface) => router.config.interfaces[entry.name]?.ospfPriority ?? 1;
+      return priority(b.router, b.iface) - priority(a.router, a.iface) || (b.router.ospfRouterId() ?? 0) - (a.router.ospfRouterId() ?? 0);
+    });
+    const index = ordered.findIndex((p) => p.router === local && p.iface.name === iface.name);
+    return index === 0 ? "DR" : index === 1 ? "BDR" : "DROTHER";
+  }
+
+  private ospfNetworkFor(iface: L3Interface): OspfNetwork | null {
+    return this.ospfNetwork(iface);
+  }
+
   private ospfAdvertisements(excludeNextHop?: Ipv4) {
     const connected = this.l3Interfaces().flatMap((iface) => {
       const n = this.ospfNetwork(iface);
@@ -179,19 +217,22 @@ export class Router extends IosDevice {
     this.ospfRoutes = [];
     if (!this.config.ospf) return;
     const local = this.ospfAdvertisements();
-    for (const port of this.ports) {
-      const peer = port.peer;
-      if (!peer || !(peer.device instanceof Router)) continue;
-      const ours = this.l3.get(port);
-      const theirs = peer.device.l3.get(peer);
-      const oursNet = ours && this.ospfNetwork(ours);
-      const theirsNet = theirs && peer.device.ospfNetwork(theirs);
-      if (!ours || !theirs || !ours.up() || !theirs.up() || !oursNet || !theirsNet || oursNet.area !== theirsNet.area) continue;
-      if (this.config.ospf.passiveInterfaces.includes(ours.name) || peer.device.config.ospf?.passiveInterfaces.includes(theirs.name)) continue;
-      this.ospfNeighbors.push({ router: peer.device, localInterface: ours.name, remoteInterface: theirs.name, remoteAddress: theirs.ip! });
-      for (const route of peer.device.ospfAdvertisements(ours.ip!)) {
-        if (!local.some((r) => r.network === route.network && r.mask === route.mask) && !this.ospfRoutes.some((r) => r.network === route.network && r.mask === route.mask && r.nextHop === theirs.ip)) {
-          this.ospfRoutes.push({ ...route, nextHop: theirs.ip!, exitIface: ours.name });
+    for (const ours of this.l3Interfaces()) {
+      const oursNet = this.ospfNetwork(ours);
+      if (!ours.up() || !oursNet) continue;
+      for (const adjacency of this.ospfPeerInterfaces(ours)) {
+        const theirs = adjacency.iface;
+        const theirsNet = adjacency.router.ospfNetwork(theirs);
+        if (!theirs.up() || !theirsNet || oursNet.area !== theirsNet.area) continue;
+        if (this.config.ospf.passiveInterfaces.includes(ours.name) || adjacency.router.config.ospf?.passiveInterfaces.includes(theirs.name)) continue;
+        const participants = [{ router: this, iface: ours }, ...this.ospfPeerInterfaces(ours).filter((entry) => entry.segment === adjacency.segment).map((entry) => ({ router: entry.router, iface: entry.iface }))];
+        const localRole = this.ospfRole(participants, this, ours, adjacency.multiaccess);
+        const remoteRole = this.ospfRole(participants, adjacency.router, theirs, adjacency.multiaccess);
+        this.ospfNeighbors.push({ router: adjacency.router, localInterface: ours.name, remoteInterface: theirs.name, remoteAddress: theirs.ip!, localRole, remoteRole });
+        for (const route of adjacency.router.ospfAdvertisements(ours.ip!)) {
+          if (!local.some((r) => r.network === route.network && r.mask === route.mask) && !this.ospfRoutes.some((r) => r.network === route.network && r.mask === route.mask && r.nextHop === theirs.ip)) {
+            this.ospfRoutes.push({ ...route, nextHop: theirs.ip!, exitIface: ours.name });
+          }
         }
       }
     }
