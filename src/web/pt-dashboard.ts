@@ -14,11 +14,14 @@ const output = document.querySelector<HTMLElement>("#output")!;
 const topologyMap = document.querySelector<HTMLElement>("#topology-map")!;
 const historyEl = document.querySelector<HTMLElement>("#history")!;
 const healthResults = document.querySelector<HTMLElement>("#health-results")!;
+const autoHealth = document.querySelector<HTMLInputElement>("#auto-health")!;
 const commandHistory: { device: string; command: string; status: string; at: string }[] = [];
 let liveDevices: Device[] = [];
 let refreshInFlight = false;
 let lastBridgeHealth: { pending: number; pollerConnected?: boolean; lastPollAt?: string | null } | null = null;
 const commandOutputs = new Map<string, { device: string; line: string; output: string; status: string }>();
+let healthRunInFlight = false;
+let lastHealthRunAt = 0;
 
 const bridgeFromQuery = new URLSearchParams(window.location.search).get("bridge");
 if (bridgeFromQuery) {
@@ -161,6 +164,7 @@ async function refresh(): Promise<void> {
     const currentHealth = await bridge("/health");
     renderPollerStatus(currentHealth);
     lastRefresh.textContent = new Date().toLocaleTimeString();
+    if (autoHealth.checked && Date.now() - lastHealthRunAt >= 60000 && !healthRunInFlight) void healthCheck();
   } catch (error) {
     if (healthRead && lastBridgeHealth) {
       bridgeStatus.textContent = `ONLINE · ${lastBridgeHealth.pending} queued`;
@@ -232,6 +236,9 @@ function showHealth(results: HealthResult[]): void {
 }
 
 async function healthCheck(): Promise<void> {
+  if (healthRunInFlight) return;
+  healthRunInFlight = true;
+  lastHealthRunAt = Date.now();
   healthResults.innerHTML = `<p class="muted">Running live checks…</p>`;
   try {
     const text = (result: any) => String(result?.output ?? "");
@@ -343,6 +350,8 @@ async function healthCheck(): Promise<void> {
     ]);
   } catch (error) {
     healthResults.innerHTML = `<p class="health-fail">Health check failed: ${error instanceof Error ? error.message : String(error)}</p>`;
+  } finally {
+    healthRunInFlight = false;
   }
 }
 
