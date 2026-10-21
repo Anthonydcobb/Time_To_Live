@@ -69,4 +69,28 @@ describe("IPv6 interface configuration", () => {
     net.clock.advance(5_000);
     expect(result).toBe("reply");
   });
+
+  it("reports an unreachable IPv6 destination instead of timing out locally", () => {
+    const net = new Network();
+    const pc1 = net.add(new Pc("PC1"));
+    const p1 = parseIpv6("2001:db8:10::10")!;
+    pc1.configureIpv6(p1, 64);
+    let result = "timeout";
+    pc1.stack.probeIpv6(parseIpv6("2001:db8:99::99")!, { id: 3, seq: 1, timeoutMs: 100, source: p1 }, (reply) => { result = reply.kind; });
+    expect(result).toBe("unreachable");
+  });
+
+  it("reports hop-limit exhaustion on a routed IPv6 probe", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1"));
+    const r2 = net.add(new Router("R2"));
+    net.connect(r1.port("Gi0/0"), r2.port("Gi0/0"));
+    type(r1, "", "en", "conf t", "interface g0/0", "ipv6 address 2001:db8:100::1/64", "no shutdown", "ipv6 route 2001:db8:200::/64 2001:db8:100::2", "end");
+    type(r2, "", "en", "conf t", "interface g0/0", "ipv6 address 2001:db8:100::2/64", "no shutdown", "end");
+    net.clock.advance(3_000);
+    let result = "timeout";
+    r1.stack.probeIpv6(parseIpv6("2001:db8:200::2")!, { id: 4, seq: 1, timeoutMs: 100, source: parseIpv6("2001:db8:100::1")!, hopLimit: 1 }, (reply) => { result = reply.kind; });
+    net.clock.advance(100);
+    expect(result).toBe("ttl-expired");
+  });
 });
