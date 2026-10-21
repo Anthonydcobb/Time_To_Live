@@ -38,5 +38,10 @@ describe("static NAT", () => {
     const ping = run(inside, "ping -n 4 203.0.113.2");
     expect(ping.some((line) => line.startsWith("Reply from 203.0.113.2"))).toBe(true);
     expect(type(router, "show ip nat translations").join("\n")).toContain("icmp 203.0.113.1");
+    const statistics = type(router, "show ip nat statistics").join("\n");
+    expect(statistics).toContain("Total active translations: 1 (0 static, 1 dynamic; 0 extended)");
+    expect(statistics).toContain("Inside interfaces: GigabitEthernet0/0");
+    expect(statistics).toContain("Outside interfaces: GigabitEthernet0/1");
+    expect(statistics).toContain("access-list 1 interface GigabitEthernet0/1 overload (active 1)");
   });
 });

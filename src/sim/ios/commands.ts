@@ -300,6 +300,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("arp", "Arp table")], (c) => c.out.push(...show.showArp(c.device))),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("arp", "IP ARP table")], (c) => c.out.push(...show.showArp(c.device))),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("nat", "Network Address Translation"), kw("translations", "NAT translation table")], (c) => c.out.push(...show.showIpNatTranslations(c.device)), { devices: ["router"] }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("nat", "Network Address Translation"), kw("statistics", "NAT statistics")], (c) => c.out.push(...show.showIpNatStatistics(c.device as Router)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("standby", "Hot Standby Router Protocol")], (c) => c.out.push(...show.showStandby(c.device as Router)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("vrrp", "Virtual Router Redundancy Protocol")], (c) => c.out.push(...show.showVrrp(c.device as Router)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("glbp", "Gateway Load Balancing Protocol")], (c) => c.out.push(...show.showGlbp(c.device as Router)), { devices: ["router"] }),
