@@ -164,7 +164,9 @@ async function refresh(): Promise<void> {
     const currentHealth = await bridge("/health");
     renderPollerStatus(currentHealth);
     lastRefresh.textContent = new Date().toLocaleTimeString();
-    if (autoHealth.checked && Date.now() - lastHealthRunAt >= 60000 && !healthRunInFlight) void healthCheck();
+    // Do not enqueue a large health batch while the bridge is legacy or the
+    // ExApp is disconnected. Manual checks remain available for older bridges.
+    if (autoHealth.checked && currentHealth.pollerConnected === true && Date.now() - lastHealthRunAt >= 60000 && !healthRunInFlight) void healthCheck();
   } catch (error) {
     if (healthRead && lastBridgeHealth) {
       bridgeStatus.textContent = `ONLINE · ${lastBridgeHealth.pending} queued`;
