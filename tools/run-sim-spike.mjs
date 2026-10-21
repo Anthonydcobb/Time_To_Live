@@ -64,12 +64,18 @@ try {
   const observations = [];
   observations.push({ op: "reset", result: await request({ op: "reset" }) });
   observations.push({ op: "load", result: await request({ op: "load", topology }) });
-  observations.push({ op: "help", result: await request({ op: "help", device: "R1", line: "show ip " }) });
-  observations.push({ op: "complete", result: await request({ op: "complete", device: "R1", line: "show ip ro" }) });
+  const helpResult = await request({ op: "help", device: "R1", line: "show ip " });
+  if (!helpResult.lines.some((line) => line.includes("route"))) throw new Error("sim help did not list show ip route");
+  observations.push({ op: "help", result: helpResult });
+  const completionResult = await request({ op: "complete", device: "R1", line: "show ip ro" });
+  if (completionResult.completion !== "show ip route ") throw new Error(`unexpected completion: ${completionResult.completion}`);
+  observations.push({ op: "complete", result: completionResult });
   observations.push({ op: "advance", result: await request({ op: "advance", ms: 35_000 }) });
   observations.push({ op: "exec", result: await request({ op: "exec", device: "R1", line: "show ip interface brief" }) });
   observations.push({ op: "exec", result: await request({ op: "exec", device: "PC1", line: "ipconfig" }) });
-  observations.push({ op: "exec", result: await request({ op: "exec", device: "PC1", line: "ping 192.168.1.1" }) });
+  const pingResult = await request({ op: "exec", device: "PC1", line: "ping 192.168.1.1" });
+  if (!pingResult.lines.some((line) => /Reply from 192\.168\.1\.1/i.test(line))) throw new Error("sim startup configuration did not make the gateway reachable");
+  observations.push({ op: "exec", result: pingResult });
   observations.push({ op: "snapshot", result: await request({ op: "snapshot" }) });
   const artifact = {
     experimentId: topology.id,
