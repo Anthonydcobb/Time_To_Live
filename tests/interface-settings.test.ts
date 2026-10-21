@@ -46,4 +46,18 @@ describe("interface speed and duplex", () => {
     expect(config).toContain(" duplex auto");
     expect(config).toContain(" speed auto");
   });
+
+  it("drops traffic and increments error counters for a forced speed mismatch", () => {
+    const net = new Network();
+    const left = net.add(new Router("R1", "R1"));
+    const right = net.add(new Router("R2", "R2"));
+    net.connect(left.port("Gi0/0"), right.port("Gi0/0"));
+    type(left, "", "en", "conf t", "int gi0/0", "ip address 10.0.0.1 255.255.255.0", "speed 100", "no shutdown", "end");
+    type(right, "", "en", "conf t", "int gi0/0", "ip address 10.0.0.2 255.255.255.0", "speed 1000", "no shutdown", "end");
+    net.clock.advance(3_000);
+
+    expect(type(left, "ping 10.0.0.2").join("\n")).not.toContain("Success rate is 100 percent");
+    expect(type(left, "show interfaces counters errors").join("\n")).toMatch(/Gi0\/0\s+0\s+[1-9]\d*\s+[1-9]\d*\s+[1-9]\d*/);
+    expect(type(right, "show interfaces gigabitEthernet0/0").join("\n")).toMatch(/\d+ input errors, \d+ CRC/);
+  });
 });

@@ -6,6 +6,9 @@ export type DeviceKind = "router" | "switch" | "pc";
 
 export type CableType = "ethernet" | "console";
 export type PortKind = "ethernet" | "console";
+export type LinkSpeed = "auto" | 10 | 100 | 1000;
+export type LinkDuplex = "auto" | "half" | "full";
+export interface LinkSettings { maxSpeed: 10 | 100 | 1000; speed: LinkSpeed; duplex: LinkDuplex; }
 
 export class CableError extends Error {}
 
@@ -47,6 +50,10 @@ export interface PortStats {
   outPackets: number;
   outBytes: number;
   outBroadcasts: number;
+  inErrors: number;
+  crcErrors: number;
+  outErrors: number;
+  collisions: number;
   /** Clock times of the last frame in and out, or null for never. */
   lastIn: number | null;
   lastOut: number | null;
@@ -54,7 +61,7 @@ export interface PortStats {
 }
 
 function newPortStats(): PortStats {
-  return { inPackets: 0, inBytes: 0, inBroadcasts: 0, outPackets: 0, outBytes: 0, outBroadcasts: 0, lastIn: null, lastOut: null, resets: 0 };
+  return { inPackets: 0, inBytes: 0, inBroadcasts: 0, outPackets: 0, outBytes: 0, outBroadcasts: 0, inErrors: 0, crcErrors: 0, outErrors: 0, collisions: 0, lastIn: null, lastOut: null, resets: 0 };
 }
 
 /** Rough on-the-wire size of a frame without the FCS, which is what IOS counts. */
@@ -99,6 +106,11 @@ export abstract class Device {
   abstract get hostname(): string;
   abstract isPortShutdown(port: Port): boolean;
   abstract receive(port: Port, frame: Frame): void;
+
+  /** Raw interface settings used to model negotiated-link faults. */
+  linkSettings(_port: Port): LinkSettings {
+    return { maxSpeed: 1000, speed: "auto", duplex: "auto" };
+  }
 
   /** Called once the device is on a network and has a clock. */
   onAttach(): void {}
@@ -266,6 +278,25 @@ export class Network {
     const bytes = frameBytes(frame);
     const broadcast = isBroadcast(frame.dst);
     count(from.stats, "out", bytes, broadcast, this.clock.now);
+    const local = from.device.linkSettings(from);
+    const remote = to.device.linkSettings(to);
+    const forcedSpeedMismatch = local.speed !== "auto" && remote.speed !== "auto" && local.speed !== remote.speed;
+    const forcedDuplexMismatch = local.duplex !== "auto" && remote.duplex !== "auto" && local.duplex !== remote.duplex;
+    if (forcedSpeedMismatch) {
+      from.stats.outErrors++;
+      to.stats.inErrors++;
+      to.stats.crcErrors++;
+      return;
+    }
+    if (forcedDuplexMismatch) {
+      from.stats.collisions++;
+      from.stats.outErrors++;
+      if (local.duplex === "full") {
+        to.stats.inErrors++;
+        to.stats.crcErrors++;
+        return;
+      }
+    }
     this.clock.schedule(HOP_DELAY_MS, () => {
       if (!to.protocolUp || to.peer !== from) return;
       count(to.stats, "in", bytes, broadcast, this.clock.now);

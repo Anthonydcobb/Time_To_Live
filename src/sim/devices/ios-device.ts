@@ -1,5 +1,5 @@
 import type { Ipv4, Mac } from "../addr";
-import { Device, Port } from "../network";
+import { Device, Port, type LinkSettings } from "../network";
 import type { IpStack, L3Interface } from "../ipstack";
 import { cloneConfig, defaultConfig, type InterfaceConfig, type IosConfig } from "../ios/config";
 import { IosConsole, type ConsoleOutput } from "../ios/console";
@@ -121,6 +121,12 @@ export abstract class IosDevice extends Device {
 
   ifaceConfig(name: string): InterfaceConfig {
     return this.config.interfaces[name];
+  }
+
+  linkSettings(port: Port): LinkSettings {
+    const cfg = this.config.interfaces[port.name];
+    const maxSpeed = port.name.startsWith("FastEthernet") ? 100 : 1000;
+    return { maxSpeed, speed: cfg?.speed ?? "auto", duplex: cfg?.duplex ?? "auto" };
   }
 
   isPortShutdown(port: Port): boolean {

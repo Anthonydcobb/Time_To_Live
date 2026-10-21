@@ -433,7 +433,7 @@ export function showInterfaces(device: IosDevice, only?: string): string[] {
       `     ${st?.inPackets ?? 0} packets input, ${st?.inBytes ?? 0} bytes, 0 no buffer`,
       `     Received ${st?.inBroadcasts ?? 0} broadcasts (0 ${isSwitch && !svi ? "multicasts" : "IP multicasts"})`,
       "     0 runts, 0 giants, 0 throttles ",
-      "     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored",
+      `     ${st?.inErrors ?? 0} input errors, ${st?.crcErrors ?? 0} CRC, 0 frame, 0 overrun, 0 ignored`,
     );
     if (!svi) out.push("     0 watchdog, 0 multicast, 0 pause input");
     if (isSwitch && !svi) out.push("     0 input packets with dribble condition detected");
@@ -442,7 +442,7 @@ export function showInterfaces(device: IosDevice, only?: string): string[] {
       out.push(`     0 output errors, ${proto === "up" ? 1 : 0} interface resets`, "     0 unknown protocol drops");
     } else {
       out.push(
-        `     0 output errors, 0 collisions, ${st?.resets ?? 0} interface resets`,
+        `     ${st?.outErrors ?? 0} output errors, ${st?.collisions ?? 0} collisions, ${st?.resets ?? 0} interface resets`,
         "     0 unknown protocol drops",
         "     0 babbles, 0 late collision, 0 deferred",
         "     0 lost carrier, 0 no carrier, 0 pause output",
@@ -477,7 +477,8 @@ export function showInterfaceErrorCounters(device: IosDevice): string[] {
   ];
   for (const iface of device.interfaces()) {
     if (!iface.port) continue;
-    out.push(`${iface.shortName.padEnd(12)}${String(0).padStart(10)}${String(0).padStart(14)}${String(0).padStart(12)}${String(0).padStart(12)}${String(0).padStart(10)}${String(0).padStart(13)}`);
+    const stats = iface.port.stats;
+    out.push(`${iface.shortName.padEnd(12)}${String(0).padStart(10)}${String(stats.crcErrors).padStart(14)}${String(stats.outErrors).padStart(12)}${String(stats.inErrors).padStart(12)}${String(0).padStart(10)}${String(0).padStart(13)}`);
   }
   return out;
 }
