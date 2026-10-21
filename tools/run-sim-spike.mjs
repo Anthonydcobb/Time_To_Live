@@ -76,7 +76,12 @@ try {
   const pingResult = await request({ op: "exec", device: "PC1", line: "ping 192.168.1.1" });
   if (!pingResult.lines.some((line) => /Reply from 192\.168\.1\.1/i.test(line))) throw new Error("sim startup configuration did not make the gateway reachable");
   observations.push({ op: "exec", result: pingResult });
-  observations.push({ op: "snapshot", result: await request({ op: "snapshot" }) });
+  const snapshotResult = await request({ op: "snapshot" });
+  const routerSnapshot = snapshotResult.devices.find((device) => device.id === "R1");
+  const switchSnapshot = snapshotResult.devices.find((device) => device.id === "S1");
+  if (routerSnapshot?.config?.interfaces?.["GigabitEthernet0/0"]?.ip !== 0xc0a80101) throw new Error("snapshot omitted router interface configuration");
+  if (!Array.isArray(switchSnapshot?.vlans) || !Array.isArray(switchSnapshot?.stp)) throw new Error("snapshot omitted switch state");
+  observations.push({ op: "snapshot", result: snapshotResult });
   const artifact = {
     experimentId: topology.id,
     runId: new Date().toISOString(),

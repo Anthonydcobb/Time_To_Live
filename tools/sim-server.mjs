@@ -115,6 +115,23 @@ function snapshot() {
         linkUp: port.linkUp,
         protocolUp: port.protocolUp,
       })),
+      config: device.kind === "router" || device.kind === "switch" ? device.config : undefined,
+      vlans: device.kind === "switch" ? [...device.vlans.keys()].sort((a, b) => a - b) : undefined,
+      stp: device.kind === "switch" ? device.ports.filter((port) => port.kind === "ethernet").map((port) => ({
+        port: port.name,
+        role: device.stpRole(port, 1),
+        state: device.stpState(port, 1),
+      })) : undefined,
+      macTable: device.kind === "switch" ? device.liveMacEntries().map((entry) => ({
+        vlan: entry.vlan,
+        mac: entry.mac,
+        port: entry.port.name,
+      })) : undefined,
+      arp: device.kind === "router" || device.kind === "pc" ? [...device.stack.arp.values()].map((entry) => ({
+        ip: entry.ip,
+        mac: entry.mac,
+        interface: entry.iface.name,
+      })) : undefined,
       address: device.kind === "pc" ? { ip: device.ip, mask: device.mask, gateway: device.gateway } : undefined,
     })),
   };
