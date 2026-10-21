@@ -1400,6 +1400,18 @@ const switchCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("dhcp", "DHCP information"), kw("snooping", "DHCP snooping status")], (c) => c.out.push(...show.showIpDhcpSnooping(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("arp", "ARP information"), kw("inspection", "Dynamic ARP inspection")], (c) => c.out.push(...show.showIpArpInspection(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("arp", "ARP information"), kw("inspection", "Dynamic ARP inspection"), kw("statistics", "DAI statistics")], (c) => c.out.push(...show.showIpArpInspectionStatistics(sw(c))), { devices: ["switch"] }),
+  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), kw("dhcp", "DHCP information"), kw("snooping", "DHCP snooping"), kw("binding", "DHCP snooping bindings"), kw("*", "Clear all snooping bindings")], (c) => {
+    sw(c).config.dhcpSnoopingBindings = [];
+  }, { devices: ["switch"] }),
+  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), kw("dhcp", "DHCP information"), kw("snooping", "DHCP snooping"), kw("statistics", "DHCP snooping statistics")], (c) => {
+    sw(c).dhcpSnoopingStats.processed = 0;
+    sw(c).dhcpSnoopingStats.untrustedDrops = 0;
+    sw(c).dhcpSnoopingStats.rateLimitDrops = 0;
+  }, { devices: ["switch"] }),
+  cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), kw("arp", "ARP information"), kw("inspection", "Dynamic ARP inspection"), kw("statistics", "DAI statistics")], (c) => {
+    sw(c).arpInspectionStats.inspected = 0;
+    sw(c).arpInspectionStats.drops = 0;
+  }, { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("trunk", "Show interface trunk information")], (c) => c.out.push(...show.showInterfacesTrunk(sw(c))), {
     devices: ["switch"],
   }),

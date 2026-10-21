@@ -47,7 +47,7 @@ npm run build    # typecheck and production build
 - IPv6: interface addressing, static routes, neighbor discovery, IPv6 ACLs and OSPFv3.
 - Security: standard/extended IPv4 ACLs, IPv6 ACLs, port security, DHCP snooping and Dynamic ARP Inspection.
 - Gateway and services: HSRP, VRRP, GLBP, NAT/PAT, DNS host records, NTP, syslog, SNMP configuration and a transport-free SNMP GET lab API.
-- Switching operations: STP root/role election, PortFast, BPDU Guard, EtherChannel, VTP, voice VLANs, interface ranges, Layer-3 switching and DHCP relay.
+- Switching operations: STP root/role election, PortFast, BPDU Guard, EtherChannel, VTP, voice VLANs, interface ranges, Layer-3 switching, DHCP relay and clearable DHCP snooping/DAI state.
 
 **Show commands:** `running-config`, `startup-config`, `ip interface brief`, `interfaces`, `ip route`, `ipv6 route`, `arp`, `mac address-table`, `vlan`, `vlan brief`, `interfaces trunk`, `interfaces [if] switchport`, `interfaces status`, `port-security [interface]`, `ip dhcp binding`, `ip dhcp snooping [statistics]`, `ip dhcp pool`, `ip dhcp conflict`, `ip arp inspection [statistics]`, `cdp`, `cdp neighbors [detail]`, `lldp`, `lldp neighbors [detail]`, `spanning-tree`, `etherchannel summary`, `ip protocols`, `ip ospf neighbor|interface`, `ip eigrp neighbors|interfaces|topology`, `ipv6 ospf neighbor|interface`, `access-lists`, `ipv6 access-list`, `nat translations`, `nat statistics`, `standby`, `vrrp`, `glbp`, `ntp`, `logging`, `snmp`, `hosts`, `version`, `clock`.
 
