@@ -81,6 +81,7 @@ node tools/run-sim-ipv6-scenario.mjs
 node tools/run-sim-ipv6-ospf.mjs
 node tools/run-sim-dhcp-scenario.mjs
 node tools/run-sim-nat-scenario.mjs
+node tools/run-sim-acl-scenario.mjs
 node tools/run-pt-adapter-spike.mjs
 ```
 
@@ -98,3 +99,5 @@ The DHCP runner writes `harness/artifacts/sim-dhcp-scenario.json` with the
 PC lease, excluded-range validation, binding table, and topology snapshot.
 The NAT runner writes `harness/artifacts/sim-nat-scenario.json` with inbound
 static translation, outbound reachability, translations, and statistics.
+The ACL runner writes `harness/artifacts/sim-acl-scenario.json` with baseline
+reachability, an applied ICMP deny, ACL output, and restored reachability.
