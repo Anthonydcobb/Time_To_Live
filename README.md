@@ -64,6 +64,7 @@ npm run build    # typecheck and production build
 - Switch ports wait through 30 seconds of spanning-tree listening and learning (the amber lights) before forwarding.
 - The first ping from a router drops while it ARPs (`.!!!!`), just like real IOS.
 - PCs have a desktop prompt with `ipconfig`, `ping`, `tracert` and `arp -a`. Windows pings are a second apart.
+- PCs can open a serial console session with `terminal` when their RS-232 port is cabled to a router or switch; `disconnect` returns to the desktop prompt.
 - PCs can obtain an address by DHCP (`ipconfig /dhcp`, `/renew`, `/release`). Like Windows, they retry after 4, 8 and 16 seconds, then give up and take a 169.254.x.x address. A PC plugged into a switch port still in spanning tree loses that race, which is the lesson behind portfast.
 - Any Ethernet cable links any two Ethernet ports (auto-MDIX), so there's no straight-through vs crossover. Console cables go from a PC's RS-232 port to a device's console port.
 - Devices exchange CDP every 60 seconds with a 180 second holdtime, and switches don't forward it. Switches log `%CDP-4-NATIVE_VLAN_MISMATCH` when the two ends disagree.
@@ -95,6 +96,5 @@ tests/              Vitest tests
 - SSH/VTY and AAA configuration is modeled and verified through configuration/show output; there is no separate remote SSH session transport yet.
 - Wireless RF behavior, production QoS under congestion, full SNMP polling/traps, and cloud/controller integrations remain concept-only or simplified, matching Packet Tracer's limitations.
 - REST/JSON automation is represented by the local simulator and Packet Tracer bridge harness; it is not a production network controller.
-- A terminal program on the PC that uses the console cable is not implemented yet.
 
 Cryptis Systems is fictional. This project is not affiliated with Cisco Systems.
