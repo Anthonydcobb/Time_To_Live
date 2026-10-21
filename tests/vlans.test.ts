@@ -98,6 +98,7 @@ describe("DHCP snooping", () => {
     s1.receive(s1.port("Fa0/2"), ack);
     expect(type(s1, "show ip dhcp snooping binding").join("\n")).toContain("10.0.0.10");
     expect(type(s1, "show ip dhcp snooping").join("\n")).toContain("Fa0/2");
+    expect(type(s1, "show ip dhcp snooping statistics").join("\n")).toContain("Packets dropped on untrusted ports: 1");
   });
 
   it("enforces an untrusted-port DHCP rate limit", () => {
@@ -125,6 +126,7 @@ describe("Dynamic ARP Inspection", () => {
     s1.receive(s1.port("Fa0/1"), { ...valid, payload: { ...valid.payload, senderIp: ip("10.0.0.99")! } });
     expect(logs.some((line) => line.includes("SW_DAI-4-DHCP_SNOOPING_DENY"))).toBe(true);
     expect(type(s1, "show ip arp inspection").join("\n")).toContain("Inspection VLANs: 1");
+    expect(type(s1, "show ip arp inspection statistics").join("\n")).toContain("ARP packets dropped: 1");
   });
 });
 

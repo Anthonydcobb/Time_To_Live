@@ -840,6 +840,9 @@ export function showIpDhcpSnooping(sw: Switch): string[] {
     `DHCP snooping is configured on VLANs: ${sw.config.dhcpSnoopingVlans.length ? formatVlanList(sw.config.dhcpSnoopingVlans) : "none"}`,
     "Insertion of option 82 is enabled",
     "Verification of hwaddr field is enabled",
+    `Packets processed: ${sw.dhcpSnoopingStats.processed}`,
+    `Packets dropped on untrusted ports: ${sw.dhcpSnoopingStats.untrustedDrops}`,
+    `Packets dropped by rate limit: ${sw.dhcpSnoopingStats.rateLimitDrops}`,
     "",
     "Interface                  Trusted     Rate limit (pps)",
   ];
@@ -848,6 +851,15 @@ export function showIpDhcpSnooping(sw: Switch): string[] {
     out.push(`${p.shortName.padEnd(27)}${(sp.dhcpTrust ? "yes" : "no").padEnd(12)}${sp.dhcpRateLimit ?? "none"}`);
   }
   return out;
+}
+
+export function showIpDhcpSnoopingStatistics(sw: Switch): string[] {
+  return [
+    "DHCP snooping statistics:",
+    `  Packets processed: ${sw.dhcpSnoopingStats.processed}`,
+    `  Packets dropped on untrusted ports: ${sw.dhcpSnoopingStats.untrustedDrops}`,
+    `  Packets dropped by rate limit: ${sw.dhcpSnoopingStats.rateLimitDrops}`,
+  ];
 }
 
 export function showIpDhcpSnoopingBinding(sw: Switch): string[] {
@@ -869,6 +881,14 @@ export function showIpArpInspection(sw: Switch): string[] {
   ];
   for (const p of sw.ports) out.push(`${p.shortName.padEnd(27)}${sw.switchport(p).arpInspectionTrust ? "yes" : "no"}`);
   return out;
+}
+
+export function showIpArpInspectionStatistics(sw: Switch): string[] {
+  return [
+    "Dynamic ARP inspection statistics:",
+    `  ARP packets inspected: ${sw.arpInspectionStats.inspected}`,
+    `  ARP packets dropped: ${sw.arpInspectionStats.drops}`,
+  ];
 }
 
 /** The first lines of `show version`, which IOS also prints while it boots. */

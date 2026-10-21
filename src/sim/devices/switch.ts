@@ -55,6 +55,9 @@ export class Switch extends IosDevice {
   private readonly svis = new Map<string, L3Interface>();
   private readonly dhcpRateWindows = new Map<Port, { started: number; count: number }>();
   private readonly sviUp = new Set<string>();
+  /** Access-layer security counters used by the IOS show commands. */
+  readonly dhcpSnoopingStats = { processed: 0, untrustedDrops: 0, rateLimitDrops: 0 };
+  readonly arpInspectionStats = { inspected: 0, drops: 0 };
 
   constructor(id: string, hostname = "Switch") {
     super(id);
@@ -547,7 +550,9 @@ export class Switch extends IosDevice {
     const sp = this.switchport(port);
     const dhcp = frame.payload.kind === "ipv4" ? frame.payload.dhcp : undefined;
     if (dhcp && this.config.dhcpSnooping && this.config.dhcpSnoopingVlans.includes(vlan)) {
+      this.dhcpSnoopingStats.processed++;
       if ((dhcp.op === "offer" || dhcp.op === "ack") && !sp.dhcpTrust) {
+        this.dhcpSnoopingStats.untrustedDrops++;
         this.emit(`%DHCP_SNOOPING-5-DHCP_SNOOPING_UNTRUSTED_PORT: DHCP ${dhcp.op.toUpperCase()} dropped on untrusted port ${port.shortName}.`);
         return;
       }
@@ -557,6 +562,7 @@ export class Switch extends IosDevice {
         next.count++;
         this.dhcpRateWindows.set(port, next);
         if (next.count > sp.dhcpRateLimit) {
+          this.dhcpSnoopingStats.rateLimitDrops++;
           this.emit(`%DHCP_SNOOPING-4-DHCP_RATE_LIMIT_EXCEEDED: DHCP packet rate limit exceeded on port ${port.shortName}.`);
           return;
         }
@@ -564,8 +570,10 @@ export class Switch extends IosDevice {
     }
     const arp = frame.payload.kind === "arp" ? frame.payload : undefined;
     if (arp && this.config.arpInspectionVlans.includes(vlan) && !sp.arpInspectionTrust) {
+      this.arpInspectionStats.inspected++;
       const valid = this.config.dhcpSnoopingBindings.some((b) => b.vlan === vlan && b.port === port.shortName && b.mac === arp.senderMac && b.ip === arp.senderIp);
       if (!valid) {
+        this.arpInspectionStats.drops++;
         this.emit(`%SW_DAI-4-DHCP_SNOOPING_DENY: ARP packet denied on ${port.shortName}; source MAC ${arp.senderMac} and IP ${arp.senderIp} do not match a DHCP snooping binding.`);
         return;
       }

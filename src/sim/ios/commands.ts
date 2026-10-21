@@ -1396,8 +1396,10 @@ const switchCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("vlan", "VTP VLAN status")], (c) => c.out.push(...show.showVlan(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("vtp", "VTP information"), kw("status", "VTP domain status")], (c) => c.out.push(...show.showVtpStatus(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("dhcp", "DHCP information"), kw("snooping", "DHCP snooping status"), kw("binding", "DHCP snooping bindings")], (c) => c.out.push(...show.showIpDhcpSnoopingBinding(sw(c))), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("dhcp", "DHCP information"), kw("snooping", "DHCP snooping status"), kw("statistics", "DHCP snooping statistics")], (c) => c.out.push(...show.showIpDhcpSnoopingStatistics(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("dhcp", "DHCP information"), kw("snooping", "DHCP snooping status")], (c) => c.out.push(...show.showIpDhcpSnooping(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("arp", "ARP information"), kw("inspection", "Dynamic ARP inspection")], (c) => c.out.push(...show.showIpArpInspection(sw(c))), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("arp", "ARP information"), kw("inspection", "Dynamic ARP inspection"), kw("statistics", "DAI statistics")], (c) => c.out.push(...show.showIpArpInspectionStatistics(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("trunk", "Show interface trunk information")], (c) => c.out.push(...show.showInterfacesTrunk(sw(c))), {
     devices: ["switch"],
   }),
