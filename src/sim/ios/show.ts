@@ -40,7 +40,8 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   if (c.enableSecret) out.push(`enable secret 5 ${c.enableSecret}`);
   if (c.enablePassword) out.push(`enable password ${pw(c.enablePassword)}`);
   if (c.enableSecret || c.enablePassword) out.push("!");
-  out.push("no aaa new-model");
+  out.push(c.aaaNewModel ? "aaa new-model" : "no aaa new-model");
+  if (c.aaaLoginLocal) out.push("aaa authentication login default local");
   if (isSwitch) out.push("system mtu routing 1500");
   out.push("!");
   if (c.dhcpExcluded.length) {

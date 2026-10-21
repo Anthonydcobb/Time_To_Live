@@ -156,7 +156,7 @@ export abstract class IosDevice extends Device {
     if (protocol === "ssh" && (!this.config.domainName || !this.config.rsaKeysGenerated)) {
       return { ok: false, reason: "ssh-not-ready" };
     }
-    if (!line.loginLocal) return { ok: false, reason: "local-login-disabled" };
+    if (!line.loginLocal && !(this.config.aaaNewModel && this.config.aaaLoginLocal)) return { ok: false, reason: "local-login-disabled" };
     const stored = this.config.users[username];
     if (!stored) return { ok: false, reason: "unknown-user" };
     if (stored !== type5Hash(password, stored.split("$")[2])) return { ok: false, reason: "bad-password" };

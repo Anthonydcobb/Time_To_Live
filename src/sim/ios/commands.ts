@@ -176,6 +176,7 @@ const SUB: Mode[] = ["config", "config-if", "config-subif", "config-line", "dhcp
 const NO = kw("no", "Negate a command or set its defaults");
 const SHOW = kw("show", "Show running system information");
 const IP = kw("ip", "Global IP configuration subcommands");
+const AAA = kw("aaa", "Authentication, authorization and accounting");
 
 function selectedLines(ctx: Ctx): LineConfig {
   return ctx.console.lineKind === "vty" ? ctx.device.config.vty : ctx.device.config.con;
@@ -400,6 +401,13 @@ function removeRoute(c: Ctx, network: Ipv4, mask: Ipv4, nextHop?: Ipv4 | null, e
 const configCommands: Entry[] = [
   // IOS.sh's switch. It does nothing here, but it's why "sh run" in config mode puts the caret under "run".
   cmd(CONFIG, [kw("shell", "Configure shell command"), kw("processing", "Configure shell processing"), kw("full", "Enable shell processing full")], () => {}),
+  cmd(CONFIG, [AAA, kw("new-model", "Enable AAA access control" )], (c) => { c.device.config.aaaNewModel = true; }),
+  cmd(CONFIG, [NO, AAA, kw("new-model", "Enable AAA access control" )], (c) => { c.device.config.aaaNewModel = false; c.device.config.aaaLoginLocal = false; }),
+  cmd(CONFIG, [AAA, kw("authentication", "Authentication methods"), kw("login", "Login authentication"), kw("default", "Default authentication list"), kw("local", "Use local username database")], (c) => {
+    c.device.config.aaaNewModel = true;
+    c.device.config.aaaLoginLocal = true;
+  }),
+  cmd(CONFIG, [NO, AAA, kw("authentication", "Authentication methods"), kw("login", "Login authentication"), kw("default", "Default authentication list")], (c) => { c.device.config.aaaLoginLocal = false; }),
   cmd(CONFIG, [kw("hostname", "Set system's network name"), wordArg("This system's network name")], (c, [name]) => {
     if (!validHostname(name as string)) {
       c.out.push("% Hostname contains one or more illegal characters.");

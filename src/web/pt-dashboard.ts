@@ -198,7 +198,7 @@ async function healthCheck(): Promise<void> {
         { label: "Inter-VLAN connectivity", ok: /Reply from 192\.168\.20\.10/i.test(text(interVlanPing)), detail: "PC0 → PC1" },
         { label: "Trunks forwarding", ok: /Fa0\/1\s+1,10,20/i.test(trunks) && /Fa0\/3\s+1,10,20/i.test(trunks), detail: "VLANs 10/20" },
         { label: "Router SSH service", ok: /SSH Enabled/i.test(sshText), detail: "show ssh" },
-        { label: "VTY local authentication", ok: /login local/i.test(configText) && /transport input ssh/i.test(configText), detail: "line vty 0 4" },
+        { label: "VTY local authentication", ok: (/login local/i.test(configText) || /aaa authentication login default local/i.test(configText)) && /transport input ssh/i.test(configText), detail: "line vty 0 4 / AAA" },
         ...ipv6Checks,
         ...optionalChecks,
       ]);

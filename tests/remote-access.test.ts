@@ -4,6 +4,16 @@ import { Network } from "../src/sim/network";
 import { type } from "./helpers";
 
 describe("remote management access", () => {
+  it("supports AAA new-model with the local user database", () => {
+    const r = new Router("R1", "R1");
+    new Network().add(r);
+    type(r, "", "en", "conf t", "aaa new-model", "aaa authentication login default local", "ip domain-name ttl.local", "crypto key generate rsa", "username admin secret cisco", "line vty 0 4", "transport input ssh", "end");
+    expect(r.attemptRemoteLogin("ssh", "admin", "cisco")).toEqual({ ok: true, protocol: "ssh", username: "admin" });
+    const config = type(r, "show running-config").join("\n");
+    expect(config).toContain("aaa new-model");
+    expect(config).toContain("aaa authentication login default local");
+  });
+
   it("requires domain and RSA keys before SSH can start", () => {
     const r = new Router("R1", "R1");
     new Network().add(r);

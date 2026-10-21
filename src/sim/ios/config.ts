@@ -112,6 +112,8 @@ export function newDhcpPool(name: string): DhcpPool {
 export interface IosConfig {
   hostname: string;
   domainName: string | null;
+  aaaNewModel: boolean;
+  aaaLoginLocal: boolean;
   users: Record<string, string>;
   rsaKeysGenerated: boolean;
   standardAcls: Record<number, StandardAclRule[]>;
@@ -160,6 +162,8 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
   return {
     hostname,
     domainName: null,
+    aaaNewModel: false,
+    aaaLoginLocal: false,
     users: {},
     rsaKeysGenerated: false,
     standardAcls: {},
