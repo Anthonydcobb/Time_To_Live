@@ -35,6 +35,8 @@ export interface StaticRoute {
   mask: Ipv4;
   nextHop: Ipv4 | null;
   exitIface: string | null;
+  /** IOS administrative distance; static routes default to 1. */
+  distance?: number;
 }
 
 export interface Route {
@@ -43,6 +45,7 @@ export interface Route {
   mask: Ipv4;
   nextHop: Ipv4 | null;
   iface: L3Interface | null;
+  distance: number;
 }
 
 export type PingResult =
@@ -113,26 +116,26 @@ export class IpStack {
   routes(): Route[] {
     const routes: Route[] = [];
     for (const iface of this.upInterfaces()) {
-      routes.push({ code: "C", network: networkOf(iface.ip!, iface.mask!), mask: iface.mask!, nextHop: null, iface });
-      if (this.opts.localRoutes) routes.push({ code: "L", network: iface.ip!, mask: 0xffffffff, nextHop: null, iface });
+      routes.push({ code: "C", network: networkOf(iface.ip!, iface.mask!), mask: iface.mask!, nextHop: null, iface, distance: 0 });
+      if (this.opts.localRoutes) routes.push({ code: "L", network: iface.ip!, mask: 0xffffffff, nextHop: null, iface, distance: 0 });
     }
     const connected = [...routes];
     for (const s of this.opts.staticRoutes?.() ?? []) {
       if (s.exitIface) {
         const iface = connected.find((r) => r.iface?.name === s.exitIface)?.iface;
-        if (iface) routes.push({ code: "S", network: s.network, mask: s.mask, nextHop: s.nextHop, iface });
+        if (iface) routes.push({ code: "S", network: s.network, mask: s.mask, nextHop: s.nextHop, iface, distance: s.distance ?? 1 });
       } else if (s.nextHop !== null && connected.some((r) => r.code === "C" && networkOf(s.nextHop!, r.mask) === r.network)) {
-        routes.push({ code: "S", network: s.network, mask: s.mask, nextHop: s.nextHop, iface: null });
+        routes.push({ code: "S", network: s.network, mask: s.mask, nextHop: s.nextHop, iface: null, distance: s.distance ?? 1 });
       }
     }
     for (const s of this.opts.ospfRoutes?.() ?? []) {
       if (s.nextHop !== null && connected.some((r) => r.code === "C" && networkOf(s.nextHop!, r.mask) === r.network)) {
-        routes.push({ code: "O", network: s.network, mask: s.mask, nextHop: s.nextHop, iface: null });
+        routes.push({ code: "O", network: s.network, mask: s.mask, nextHop: s.nextHop, iface: null, distance: 110 });
       }
     }
     for (const s of this.opts.eigrpRoutes?.() ?? []) {
       if (s.nextHop !== null && connected.some((r) => r.code === "C" && networkOf(s.nextHop!, r.mask) === r.network)) {
-        routes.push({ code: "D", network: s.network, mask: s.mask, nextHop: s.nextHop, iface: null });
+        routes.push({ code: "D", network: s.network, mask: s.mask, nextHop: s.nextHop, iface: null, distance: 90 });
       }
     }
     return routes;
@@ -147,7 +150,7 @@ export class IpStack {
     let best: Route | null = null;
     for (const r of this.routes()) {
       if (networkOf(dst, r.mask) !== r.network) continue;
-      if (!best || r.mask >>> 0 > best.mask >>> 0) best = r;
+      if (!best || r.mask >>> 0 > best.mask >>> 0 || (r.mask === best.mask && r.distance < best.distance)) best = r;
     }
     if (best) {
       if (best.iface) return { iface: best.iface, nextHop: best.nextHop ?? dst };

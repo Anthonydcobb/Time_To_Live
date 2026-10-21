@@ -110,7 +110,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   out.push(isSwitch ? "ip http server" : "no ip http server", isSwitch ? "ip http secure-server" : "no ip http secure-server", "!");
   for (const r of c.staticRoutes) {
     const target = r.exitIface ?? formatIpv4(r.nextHop!);
-    out.push(`ip route ${formatIpv4(r.network)} ${formatIpv4(r.mask)} ${target}`);
+    out.push(`ip route ${formatIpv4(r.network)} ${formatIpv4(r.mask)} ${target}${(r.distance ?? 1) !== 1 ? ` ${r.distance}` : ""}`);
   }
   if (c.staticRoutes.length) out.push("!");
   if (c.eigrp) {
@@ -376,7 +376,8 @@ function classfulPrefix(ip: Ipv4): number {
 
 function routeTail(r: Route, withPrefix: boolean): string {
   const net = formatIpv4(r.network) + (withPrefix ? `/${maskToPrefix(r.mask)}` : "");
-  if (r.code === "S" && r.nextHop !== null) return `${net} [1/0] via ${formatIpv4(r.nextHop)}`;
+  if (r.code === "S" && r.nextHop !== null) return `${net} [${r.distance}/0] via ${formatIpv4(r.nextHop)}`;
+  if (r.code === "S" && r.iface) return `${net} [${r.distance}/0] is directly connected, ${r.iface.name}`;
   if (r.code === "O" && r.nextHop !== null) return `${net} [110/2] via ${formatIpv4(r.nextHop)}`;
   if (r.code === "D" && r.nextHop !== null) return `${net} [90/30720] via ${formatIpv4(r.nextHop)}`;
   return `${net} is directly connected, ${r.iface!.name}`;
@@ -416,7 +417,7 @@ export function showIpRoute(device: IosDevice): string[] {
       for (const r of rs) out.push(`${code(r)}       ${routeTail(r, false)}`);
     }
   }
-  if (defaultRoute) out.push(`S*    0.0.0.0/0 [1/0] via ${formatIpv4(defaultRoute.nextHop ?? 0)}`);
+  if (defaultRoute) out.push(`S*    0.0.0.0/0 [${defaultRoute.distance}/0] via ${formatIpv4(defaultRoute.nextHop ?? 0)}`);
   out.push("");
   return out;
 }

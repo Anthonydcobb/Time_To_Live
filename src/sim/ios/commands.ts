@@ -377,7 +377,7 @@ const PERMIT = kw("permit", "Permit access");
 const DENY = kw("deny", "Deny access");
 const ANY = kw("any", "Any source address");
 
-function addRoute(c: Ctx, network: Ipv4, mask: Ipv4, via: { nextHop: Ipv4 | null; exitIface: string | null }): void {
+function addRoute(c: Ctx, network: Ipv4, mask: Ipv4, via: { nextHop: Ipv4 | null; exitIface: string | null; distance?: number }): void {
   if (maskToPrefix(mask) === null) {
     c.out.push("%Inconsistent address and mask");
     return;
@@ -387,8 +387,9 @@ function addRoute(c: Ctx, network: Ipv4, mask: Ipv4, via: { nextHop: Ipv4 | null
     return;
   }
   const routes = c.device.config.staticRoutes;
-  const same = (r: (typeof routes)[number]) => r.network === network && r.mask === mask && r.nextHop === via.nextHop && r.exitIface === via.exitIface;
-  if (!routes.some(same)) routes.push({ network, mask, ...via });
+  const distance = via.distance ?? 1;
+  const same = (r: (typeof routes)[number]) => r.network === network && r.mask === mask && r.nextHop === via.nextHop && r.exitIface === via.exitIface && (r.distance ?? 1) === distance;
+  if (!routes.some(same)) routes.push({ network, mask, ...via, distance });
 }
 
 function removeRoute(c: Ctx, network: Ipv4, mask: Ipv4, nextHop?: Ipv4 | null, exitIface?: string | null): void {
@@ -636,8 +637,14 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [IP, ROUTE, ipArg("Destination prefix"), ipArg("Destination prefix mask"), ipArg("Forwarding router's address")], (c, [n, m, h]) =>
     addRoute(c, n as Ipv4, m as Ipv4, { nextHop: h as Ipv4, exitIface: null }),
   { devices: ["router"] }),
+  cmd(CONFIG, [IP, ROUTE, ipArg("Destination prefix"), ipArg("Destination prefix mask"), ipArg("Forwarding router's address"), numArg(1, 255, "Administrative distance")], (c, [n, m, h, distance]) =>
+    addRoute(c, n as Ipv4, m as Ipv4, { nextHop: h as Ipv4, exitIface: null, distance: distance as number }),
+  { devices: ["router"] }),
   cmd(CONFIG, [IP, ROUTE, ipArg("Destination prefix"), ipArg("Destination prefix mask"), ifaceArg], (c, [n, m, i]) =>
     addRoute(c, n as Ipv4, m as Ipv4, { nextHop: null, exitIface: i as string }),
+  { devices: ["router"] }),
+  cmd(CONFIG, [IP, ROUTE, ipArg("Destination prefix"), ipArg("Destination prefix mask"), ifaceArg, numArg(1, 255, "Administrative distance")], (c, [n, m, i, distance]) =>
+    addRoute(c, n as Ipv4, m as Ipv4, { nextHop: null, exitIface: i as string, distance: distance as number }),
   { devices: ["router"] }),
   cmd(CONFIG, [NO, IP, ROUTE, ipArg("Destination prefix"), ipArg("Destination prefix mask")], (c, [n, m]) => removeRoute(c, n as Ipv4, m as Ipv4), {
     devices: ["router"],
