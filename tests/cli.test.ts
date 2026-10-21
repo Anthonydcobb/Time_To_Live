@@ -11,6 +11,11 @@ function router() {
 }
 
 describe("modes and prompts", () => {
+  it("shows interface error counters", () => {
+    const r = router();
+    expect(type(r, "", "en", "show interfaces counters errors").join("\n")).toContain("Align-Err");
+  });
+
   it("walks user, enable, config, interface and back", () => {
     const r = router();
     expect(r.console.prompt()).toBe("Router>");

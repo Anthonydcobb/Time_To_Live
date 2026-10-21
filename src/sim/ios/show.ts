@@ -356,6 +356,17 @@ export function showInterfacesStatus(sw: Switch): string[] {
   return out;
 }
 
+export function showInterfaceErrorCounters(device: IosDevice): string[] {
+  const out = [
+    "Port        Align-Err     FCS-Err    Xmit-Err    Rcv-Err  UnderSize  OutDiscards",
+  ];
+  for (const iface of device.interfaces()) {
+    if (!iface.port) continue;
+    out.push(`${iface.shortName.padEnd(12)}${String(0).padStart(10)}${String(0).padStart(14)}${String(0).padStart(12)}${String(0).padStart(12)}${String(0).padStart(10)}${String(0).padStart(13)}`);
+  }
+  return out;
+}
+
 const ROUTE_CODES = [
   "Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP",
   "       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area",
