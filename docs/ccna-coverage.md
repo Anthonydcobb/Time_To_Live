@@ -84,6 +84,7 @@ node tools/run-sim-dhcp-scenario.mjs
 node tools/run-sim-nat-scenario.mjs
 node tools/run-sim-acl-scenario.mjs
 node tools/run-sim-routing-scenario.mjs
+node tools/run-sim-services-scenario.mjs
 npm run audit:network
 node tools/run-pt-adapter-spike.mjs
 ```
@@ -106,3 +107,5 @@ The ACL runner writes `harness/artifacts/sim-acl-scenario.json` with baseline
 reachability, an applied ICMP deny, ACL output, and restored reachability.
 The routing runner writes `harness/artifacts/sim-routing-scenario.json` with
 EIGRP adjacency and learned-route evidence plus HSRP active-gateway failover.
+The services runner writes `harness/artifacts/sim-services-scenario.json` with
+DNS, NTP, syslog, SNMP, SSH, and management-LAN verification evidence.
