@@ -18,7 +18,7 @@ const commandHistory: { device: string; command: string; status: string; at: str
 let liveDevices: Device[] = [];
 let refreshInFlight = false;
 let lastBridgeHealth: { pending: number; pollerConnected?: boolean; lastPollAt?: string | null } | null = null;
-const commandOutputs = new Map<string, { output: string; status: string }>();
+const commandOutputs = new Map<string, { device: string; line: string; output: string; status: string }>();
 
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 5000): Promise<Response> {
   const controller = new AbortController();
@@ -181,7 +181,7 @@ async function run(device: string, line: string, mode = "enable"): Promise<any> 
       const body = await response.json();
       const result = body.result ?? {};
       const status = result.status ?? "OK";
-      commandOutputs.set(line, { output: String(result.output ?? ""), status });
+      commandOutputs.set(`${device}|${line}`, { device, line, output: String(result.output ?? ""), status });
       addHistory(device, line, status);
       return result;
     }
@@ -195,11 +195,13 @@ function showHealth(results: { label: string; ok: boolean; detail: string }[]): 
   for (const result of results) {
     const row = document.createElement("div"); row.className = "health-row";
     row.innerHTML = `<span>${result.label}<small class="type"> · ${result.detail}</small></span><strong class="${result.ok ? "health-pass" : "health-fail"}">${result.ok ? "PASS" : "FAIL"}</strong>`;
-    const evidence = !result.ok ? commandOutputs.get(result.detail) : undefined;
+    const evidence = !result.ok
+      ? [...commandOutputs.values()].find((entry) => entry.line === result.detail)
+      : undefined;
     if (evidence) {
       const details = document.createElement("details"); details.className = "health-evidence";
       const summary = document.createElement("summary"); summary.textContent = "Show command output";
-      const pre = document.createElement("pre"); pre.textContent = `Status: ${evidence.status}\n${evidence.output || "(no command output returned)"}`;
+      const pre = document.createElement("pre"); pre.textContent = `Device: ${evidence.device}\nStatus: ${evidence.status}\n${evidence.output || "(no command output returned)"}`;
       details.append(summary, pre);
       row.firstElementChild?.append(details);
     }
