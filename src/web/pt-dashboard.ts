@@ -287,6 +287,7 @@ async function healthCheck(): Promise<void> {
       const switch0Status = await run("Switch0", "show interfaces status");
       const switch0Counters = await run("Switch0", "show interfaces counters");
       const switch0Errors = await run("Switch0", "show interfaces counters errors");
+      const switch0PortSecurity = await run("Switch0", "show port-security");
       const dhcpSnoopingStatistics = await run("Switch0", "show ip dhcp snooping statistics");
       const arpInspectionStatistics = await run("Switch0", "show ip arp inspection statistics");
       const pc0Text = text(pc0Ip); const pc1Text = text(pc1Ip);
@@ -295,7 +296,7 @@ async function healthCheck(): Promise<void> {
       const ipv6OspfText = text(ipv6Ospf); const ipv6OspfInterfaceText = text(ipv6OspfInterfaces); const ipv6ProtocolsText = text(ipv6Protocols);
       const ospfNeighborText = text(ospfNeighbors); const eigrpNeighborText = text(eigrpNeighbors);
       const natText = text(natTranslations); const natStatisticsText = text(natStatistics); const snmpText = text(snmpStatus); const standbyText = text(standby); const vrrpText = text(vrrp); const glbpText = text(glbp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
-      const switch0StatusText = text(switch0Status); const switch0CountersText = text(switch0Counters); const switch0ErrorsText = text(switch0Errors);
+      const switch0StatusText = text(switch0Status); const switch0CountersText = text(switch0Counters); const switch0ErrorsText = text(switch0Errors); const switch0PortSecurityText = text(switch0PortSecurity);
       const spanningText = `${text(spanning0)}\n${text(spanning1)}`;
       const switch0ErrorRows = switch0ErrorsText.split("\n").filter((line: string) => /^\S+\s+\d/.test(line));
       const interfaceErrorsClean = switch0ErrorRows.length > 0 && switch0ErrorRows.every((line: string) => /^\S+\s+(?:0\s+){5}0\s*$/.test(line));
@@ -333,6 +334,7 @@ async function healthCheck(): Promise<void> {
         /0\.0\.0\.0\/0/i.test(routeText) ? { label: "Default route present", ok: /(?:^|\n)O\*?\s+.*0\.0\.0\.0\/0|(?:^|\n)S\*\s+0\.0\.0\.0\/0/i.test(routeText), detail: "show ip route" } : null,
         /DHCP snooping statistics:/i.test(dhcpSnoopingStatisticsText) ? { label: "DHCP snooping counters", ok: /Packets processed:/i.test(dhcpSnoopingStatisticsText), detail: "show ip dhcp snooping statistics" } : null,
         /Dynamic ARP inspection statistics:/i.test(arpInspectionStatisticsText) ? { label: "DAI counters", ok: /ARP packets inspected:/i.test(arpInspectionStatisticsText), detail: "show ip arp inspection statistics" } : null,
+        /Secure-up|Secure-shutdown/i.test(switch0PortSecurityText) ? { label: "Port-security state", ok: /Secure-up/i.test(switch0PortSecurityText) && !/Secure-shutdown/i.test(switch0PortSecurityText), detail: "show port-security" } : null,
         /Port\s+Name\s+Status\s+Vlan/i.test(switch0StatusText) ? { label: "Switch physical links", ok: /Fa0\/2\s+.*connected\s+\d+\s+(?:a-full|a-half)\s+a-\d+/i.test(switch0StatusText), detail: "show interfaces status" } : null,
         /Mac Address/i.test(macTableText) ? { label: "Access-port MAC learning", ok: /DYNAMIC\s+Fa0\/2/i.test(macTableText), detail: "show mac address-table" } : null,
         /Protocol\s+Address/i.test(arpText) ? { label: "Router ARP learning", ok: /192\.168\.10\.10/i.test(arpText) && /192\.168\.20\.10/i.test(arpText), detail: "show ip arp" } : null,
