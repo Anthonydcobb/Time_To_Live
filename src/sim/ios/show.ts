@@ -491,6 +491,37 @@ export function showIpOspfNeighbor(router: Router): string[] {
   return out;
 }
 
+export function showIpOspfInterface(router: Router, interfaceName?: string): string[] {
+  const ospf = router.config.ospf;
+  if (!ospf) return ["% OSPF is not enabled"];
+  const names = interfaceName ? [interfaceName] : router.l3Interfaces().map((iface) => iface.name);
+  const out: string[] = [];
+  for (const name of names) {
+    const iface = router.l3Interfaces().find((candidate) => candidate.name === name);
+    const network = iface?.ip === null || iface?.ip === undefined || iface.mask === null || iface.mask === undefined ? null : ospf.networks.find((n) => networkOf(iface.ip!, n.mask) === n.network);
+    if (!iface || !network || !iface.up()) continue;
+    const neighbors = router.ospfNeighbors.filter((neighbor) => neighbor.localInterface === name);
+    const multiaccess = neighbors.some((neighbor) => neighbor.localRole !== "P2P");
+    const localRole = neighbors[0]?.localRole ?? (multiaccess ? "DROTHER" : "P2P");
+    const dr = neighbors.find((neighbor) => neighbor.remoteRole === "DR");
+    const bdr = neighbors.find((neighbor) => neighbor.remoteRole === "BDR");
+    const localId = router.ospfRouterId();
+    const drId = localRole === "DR" ? localId : dr ? dr.router.ospfRouterId() : null;
+    const bdrId = localRole === "BDR" ? localId : bdr ? bdr.router.ospfRouterId() : null;
+    out.push(
+      `${name} is up, line protocol is up`,
+      `  Internet Address ${formatIpv4(iface.ip!)}/${maskToPrefix(iface.mask!)} , Area ${network.area}`,
+      `  Process ID ${ospf.processId}, Router ID ${localId === null ? "not set" : formatIpv4(localId)}`,
+      `  Network Type ${multiaccess ? "BROADCAST" : "POINT-TO-POINT"}, Cost 1`,
+      `  State ${localRole}, Priority ${router.config.interfaces[name]?.ospfPriority ?? 1}`,
+      `  Designated Router (ID) ${drId === null ? "none" : formatIpv4(drId)}`,
+      `  Backup Designated router (ID) ${bdrId === null ? "none" : formatIpv4(bdrId)}`,
+      "",
+    );
+  }
+  return out.length ? out : ["No OSPF interfaces are active"];
+}
+
 export function showIpEigrpNeighbor(router: Router): string[] {
   const out = ["", "H   Address         Interface       Hold Uptime   SRTT   RTO  Q  Seq"];
   router.eigrpNeighbors.forEach((n, index) => out.push(`${index}   ${formatIpv4(n.remoteAddress).padEnd(16)}${n.localInterface.padEnd(16)}15   00:00:08        0  5000  0  ${index + 1}`));

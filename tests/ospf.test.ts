@@ -122,6 +122,9 @@ describe("OSPF", () => {
     expect(r1.ospfNeighbors).toHaveLength(2);
     expect(type(r2, "show ip ospf neighbor").join("\n")).toContain("FULL/ DR");
     expect(type(r2, "show ip ospf neighbor").join("\n")).toContain("FULL/ DROTHER");
+    expect(type(r2, "show ip ospf interface").join("\n")).toContain("Network Type BROADCAST");
+    expect(type(r2, "show ip ospf interface").join("\n")).toContain("State BDR");
+    expect(type(r2, "show ip ospf interface").join("\n")).toContain("Designated Router (ID)");
     expect(type(r1, "show running-config").join("\n")).toContain(" ip ospf priority 200");
   });
 });

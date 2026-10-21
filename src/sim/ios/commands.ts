@@ -306,6 +306,8 @@ const showCommands: Entry[] = [
     when: (c) => c.device.kind === "router" || (c.device.kind === "switch" && c.device.config.ipRouting),
   }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("ospf", "OSPF information"), kw("neighbor", "OSPF neighbor list")], (c) => c.out.push(...show.showIpOspfNeighbor(c.device as Router)), { devices: ["router"] }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("ospf", "OSPF information"), kw("interface", "OSPF interface information")], (c) => c.out.push(...show.showIpOspfInterface(c.device as Router)), { devices: ["router"] }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("ospf", "OSPF information"), kw("interface", "OSPF interface information"), ifaceArg], (c, [name]) => c.out.push(...show.showIpOspfInterface(c.device as Router, name as string)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("eigrp", "EIGRP information"), kw("neighbors", "EIGRP neighbor list")], (c) => c.out.push(...show.showIpEigrpNeighbor(c.device as Router)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("protocols", "Active routing protocols")], (c) => c.out.push(...show.showIpProtocols(c.device)), { devices: ["router"] }),
   cmd(
