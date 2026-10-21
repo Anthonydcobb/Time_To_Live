@@ -103,7 +103,13 @@ function snapshot() {
         mac: entry.mac,
         interface: entry.iface.name,
       })) : undefined,
-      address: device.kind === "pc" ? { ip: device.ip, mask: device.mask, gateway: device.gateway } : undefined,
+      address: device.kind === "pc" ? {
+        ip: device.ip,
+        mask: device.mask,
+        gateway: device.gateway,
+        ipv6: device.ipv6Addresses,
+        ipv6Gateway: device.ipv6Gateway,
+      } : undefined,
     })),
   };
 }

@@ -1,4 +1,4 @@
-import { parseIpv4, prefixToMask } from "./addr";
+import { parseIpv4, parseIpv6, prefixToMask } from "./addr";
 import { Network, type Device } from "./network";
 import { Router } from "./devices/router";
 import { Switch } from "./devices/switch";
@@ -12,6 +12,8 @@ export type TopologyDeviceSpec = {
   startupConfig?: string[];
   ip?: string;
   gateway?: string | null;
+  ipv6?: string;
+  ipv6Gateway?: string | null;
 };
 
 export type TopologyLinkSpec = {
@@ -40,14 +42,23 @@ function createDevice(spec: TopologyDeviceSpec): Router | Switch | Pc {
 }
 
 function configurePc(device: Pc, spec: TopologyDeviceSpec): void {
-  if (!spec.ip) return;
-  const [ipText, prefixText] = spec.ip.split("/");
-  const ip = parseIpv4(ipText);
-  const prefix = Number(prefixText ?? 24);
-  const mask = prefixToMask(prefix);
-  const gateway = spec.gateway ? parseIpv4(spec.gateway) : null;
-  if (ip === null || mask === null || (spec.gateway && gateway === null)) throw new Error(`Invalid PC address for ${spec.name}`);
-  device.configure(ip, mask, gateway);
+  if (spec.ip) {
+    const [ipText, prefixText] = spec.ip.split("/");
+    const ip = parseIpv4(ipText);
+    const prefix = Number(prefixText ?? 24);
+    const mask = prefixToMask(prefix);
+    const gateway = spec.gateway ? parseIpv4(spec.gateway) : null;
+    if (ip === null || mask === null || (spec.gateway && gateway === null)) throw new Error(`Invalid PC address for ${spec.name}`);
+    device.configure(ip, mask, gateway);
+  }
+  if (spec.ipv6) {
+    const [addressText, prefixText] = spec.ipv6.split("/");
+    const address = parseIpv6(addressText);
+    const prefix = Number(prefixText ?? 64);
+    const gateway = spec.ipv6Gateway ? parseIpv6(spec.ipv6Gateway) : null;
+    if (address === null || !Number.isInteger(prefix) || prefix < 0 || prefix > 128 || (spec.ipv6Gateway && gateway === null)) throw new Error(`Invalid PC IPv6 address for ${spec.name}`);
+    device.configureIpv6(address, prefix, gateway);
+  }
 }
 
 function applyStartupConfig(device: Router | Switch, lines: string[]): void {
