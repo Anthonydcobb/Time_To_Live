@@ -5,6 +5,7 @@ const host = "127.0.0.1";
 const port = Number(process.env.PT_BRIDGE_PORT ?? 39094);
 const pending = [];
 const results = new Map();
+let lastPollAtMs = 0;
 
 function json(res, status, value) {
   const body = JSON.stringify(value);
@@ -37,7 +38,15 @@ const server = createServer(async (req, res) => {
       return;
     }
     if (req.method === "GET" && url.pathname === "/health") {
-      json(res, 200, { ok: true, service: "pt-bridge", pending: pending.length, results: results.size });
+      const lastPollAt = lastPollAtMs ? new Date(lastPollAtMs).toISOString() : null;
+      json(res, 200, {
+        ok: true,
+        service: "pt-bridge",
+        pending: pending.length,
+        results: results.size,
+        lastPollAt,
+        pollerConnected: lastPollAtMs > 0 && Date.now() - lastPollAtMs < 3000,
+      });
       return;
     }
     if (req.method === "POST" && url.pathname === "/v1/command") {
@@ -52,6 +61,7 @@ const server = createServer(async (req, res) => {
       return;
     }
     if (req.method === "GET" && url.pathname === "/v1/commands/next") {
+      lastPollAtMs = Date.now();
       const command = pending.shift();
       if (!command) {
         res.writeHead(204);

@@ -3,6 +3,7 @@ type Link = { device: string; port: string; remotePort?: string; connectionType:
 
 const urlInput = document.querySelector<HTMLInputElement>("#bridge-url")!;
 const bridgeStatus = document.querySelector<HTMLElement>("#bridge-status")!;
+const pollerStatus = document.querySelector<HTMLElement>("#poller-status")!;
 const deviceCount = document.querySelector<HTMLElement>("#device-count")!;
 const linkCount = document.querySelector<HTMLElement>("#link-count")!;
 const lastRefresh = document.querySelector<HTMLElement>("#last-refresh")!;
@@ -121,6 +122,10 @@ async function refresh(): Promise<void> {
     const health = await bridge("/health");
     bridgeStatus.textContent = `ONLINE · ${health.pending} queued`;
     bridgeStatus.className = "up";
+    pollerStatus.textContent = health.pollerConnected
+      ? `CONNECTED - polled ${health.lastPollAt ? new Date(health.lastPollAt).toLocaleTimeString() : "just now"}`
+      : "NOT CONNECTED";
+    pollerStatus.className = health.pollerConnected ? "up" : "down";
     const deviceResult = await run("__network__", "list devices", "enable");
     const devices: Device[] = String(deviceResult.output ?? "").split("\n").filter(Boolean).map((line) => {
       const [name, type, model, serialNumber] = line.split("|"); return { name, type, model, serialNumber };
@@ -137,6 +142,7 @@ async function refresh(): Promise<void> {
     lastRefresh.textContent = new Date().toLocaleTimeString();
   } catch (error) {
     bridgeStatus.textContent = "OFFLINE"; bridgeStatus.className = "down";
+    pollerStatus.textContent = "UNAVAILABLE"; pollerStatus.className = "down";
     liveDevices = [];
     deviceCount.textContent = "0";
     linkCount.textContent = "0";
