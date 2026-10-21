@@ -32,10 +32,10 @@ $env:PT_TTL_AUTH_SECRET = "your-local-secret"
 ```
 
 To run the live queue bridge, keep `tools\pt-bridge.mjs` running on port
-`39092`, then start a second PowerShell window with the same secret:
+`39094`, then start a second PowerShell window with the same secret:
 
 ```powershell
-& .\harness\pt-exapp\build-bridge.ps1 127.0.0.1 39000 39092
+& .\harness\pt-exapp\build-bridge.ps1 127.0.0.1 39000 39094
 ```
 
 Optional arguments are host, port, and command:

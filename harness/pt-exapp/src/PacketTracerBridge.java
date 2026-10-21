@@ -26,7 +26,7 @@ public final class PacketTracerBridge {
     public static void main(String[] args) throws Exception {
         String ptHost = args.length > 0 ? args[0] : "127.0.0.1";
         int ptPort = args.length > 1 ? Integer.parseInt(args[1]) : 39000;
-        int bridgePort = args.length > 2 ? Integer.parseInt(args[2]) : 39092;
+        int bridgePort = args.length > 2 ? Integer.parseInt(args[2]) : 39094;
         String bridge = "http://127.0.0.1:" + bridgePort;
 
         PacketTracerSessionFactory factory = PacketTracerSessionFactoryImpl.getInstance();
