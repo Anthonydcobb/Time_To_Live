@@ -255,6 +255,9 @@ async function healthCheck(): Promise<void> {
       const eigrpTopology = await run("Router0", "show ip eigrp topology");
       const ospfInterfaces = await run("Router0", "show ip ospf interface");
       const ipRoutes = await run("Router0", "show ip route");
+      const routerArp = await run("Router0", "show ip arp");
+      const switch0Macs = await run("Switch0", "show mac address-table");
+      const switch1Macs = await run("Switch1", "show mac address-table");
       const dnsHosts = await run("Router0", "show hosts");
       const ipv6AccessLists = await run("Router0", "show ipv6 access-list");
       const ipv6Interfaces = await run("Router0", "show ipv6 interface brief");
@@ -293,6 +296,7 @@ async function healthCheck(): Promise<void> {
       const interfaceErrorsClean = switch0ErrorRows.length > 0 && switch0ErrorRows.every((line: string) => /^\S+\s+(?:0\s+){5}0\s*$/.test(line));
       const dhcpSnoopingStatisticsText = text(dhcpSnoopingStatistics); const arpInspectionStatisticsText = text(arpInspectionStatistics);
       const routingText = text(routingProtocols); const eigrpInterfaceText = text(eigrpInterfaces); const eigrpTopologyText = text(eigrpTopology); const ospfInterfaceText = text(ospfInterfaces); const routeText = text(ipRoutes); const dnsText = text(dnsHosts); const ipv6AclText = text(ipv6AccessLists);
+      const arpText = text(routerArp); const macTableText = `${text(switch0Macs)}\n${text(switch1Macs)}`;
       const ipv6Configured = /[0-9a-f]{1,4}:[0-9a-f:]+\/\d+/i.test(ipv6InterfaceText);
       const ipv6Checks = ipv6Configured ? [
         { label: "Router IPv6 interface", ok: /[0-9a-f]{1,4}:[0-9a-f:]+\/\d+.*up\s+up/i.test(ipv6InterfaceText), detail: "show ipv6 interface brief" },
@@ -323,6 +327,8 @@ async function healthCheck(): Promise<void> {
         /DHCP snooping statistics:/i.test(dhcpSnoopingStatisticsText) ? { label: "DHCP snooping counters", ok: /Packets processed:/i.test(dhcpSnoopingStatisticsText), detail: "show ip dhcp snooping statistics" } : null,
         /Dynamic ARP inspection statistics:/i.test(arpInspectionStatisticsText) ? { label: "DAI counters", ok: /ARP packets inspected:/i.test(arpInspectionStatisticsText), detail: "show ip arp inspection statistics" } : null,
         /Port\s+Name\s+Status\s+Vlan/i.test(switch0StatusText) ? { label: "Switch physical links", ok: /Fa0\/2\s+.*connected\s+\d+\s+(?:a-full|a-half)\s+a-\d+/i.test(switch0StatusText), detail: "show interfaces status" } : null,
+        /Mac Address/i.test(macTableText) ? { label: "Access-port MAC learning", ok: /DYNAMIC\s+Fa0\/2/i.test(macTableText), detail: "show mac address-table" } : null,
+        /Protocol\s+Address/i.test(arpText) ? { label: "Router ARP learning", ok: /192\.168\.10\.10/i.test(arpText) && /192\.168\.20\.10/i.test(arpText), detail: "show ip arp" } : null,
         /Port\s+InOctets\s+InUcastPkts/i.test(switch0CountersText) ? { label: "Interface traffic counters", ok: /Fa\d+\/\d+\s+\d+\s+\d+/i.test(switch0CountersText), detail: "show interfaces counters" } : null,
         /Align-Err\s+FCS-Err/i.test(switch0ErrorsText) ? { label: "Interface error counters", ok: interfaceErrorsClean, detail: "show interfaces counters errors" } : null,
       ].filter((check) => check !== null) as HealthResult[];
