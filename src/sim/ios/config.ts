@@ -56,8 +56,8 @@ export interface InterfaceConfig {
   ipv6OspfArea: number | null;
   /** DHCP relay destinations configured with ip helper-address. */
   helperAddresses: Ipv4[];
-  accessGroupIn: number | null;
-  accessGroupOut: number | null;
+  accessGroupIn: string | null;
+  accessGroupOut: string | null;
   cdp: boolean;
   natRole: "inside" | "outside" | null;
   hsrp: { group: number; ip: Ipv4; priority: number; preempt: boolean } | null;
@@ -116,8 +116,8 @@ export interface IosConfig {
   aaaLoginLocal: boolean;
   users: Record<string, string>;
   rsaKeysGenerated: boolean;
-  standardAcls: Record<number, StandardAclRule[]>;
-  extendedAcls: Record<number, ExtendedAclRule[]>;
+  standardAcls: Record<string, StandardAclRule[]>;
+  extendedAcls: Record<string, ExtendedAclRule[]>;
   enableSecret: string | null;
   enablePassword: StoredPassword | null;
   servicePasswordEncryption: boolean;

@@ -7,6 +7,19 @@ import { permitsStandardAcl } from "../src/sim/ios/acl";
 import { run, type } from "./helpers";
 
 describe("standard IPv4 ACLs", () => {
+  it("supports named standard ACL submode and interface attachment", () => {
+    const net = new Network();
+    const router = net.add(new Router("R1", "R1"));
+    type(router, "en", "conf t", "int g0/0", "ip address 10.0.0.1 255.255.255.0", "no shut", "ip access-list standard BLOCKED", "deny 10.0.0.10", "permit any", "exit", "int g0/0", "ip access-group BLOCKED in", "end");
+    const blocked = { kind: "ipv4" as const, src: ip("10.0.0.10")!, dst: ip("10.0.0.1")!, ttl: 64, icmp: { type: "echo-request" as const, id: 1, seq: 1 } };
+    const allowed = { ...blocked, src: ip("10.0.0.20")! };
+    expect(permitsStandardAcl(router.config, "GigabitEthernet0/0", blocked, "in")).toBe(false);
+    expect(permitsStandardAcl(router.config, "GigabitEthernet0/0", allowed, "in")).toBe(true);
+    const config = type(router, "show running-config").join("\n");
+    expect(config).toContain("ip access-list standard BLOCKED");
+    expect(config).toContain(" ip access-group BLOCKED in");
+  });
+
   it("blocks a matching source and permits later sources", () => {
     const net = new Network();
     const router = net.add(new Router("R1", "R1"));

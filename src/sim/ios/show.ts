@@ -124,11 +124,25 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   for (const host of c.loggingHosts) out.push(`logging host ${formatIpv4(host)}`);
   out.push(`logging trap ${c.loggingTrap}`);
   for (const snmp of c.snmpCommunities) out.push(`snmp-server community ${snmp.community} ${snmp.access}`);
-  for (const [number, rules] of Object.entries(c.standardAcls).sort(([a], [b]) => Number(a) - Number(b))) {
-    for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + formatAclSource(rule));
+  const aclSort = ([a]: [string, unknown], [b]: [string, unknown]) => {
+    const an = /^\d+$/.test(a); const bn = /^\d+$/.test(b);
+    if (an && bn) return Number(a) - Number(b);
+    if (an !== bn) return an ? -1 : 1;
+    return a.localeCompare(b);
+  };
+  for (const [number, rules] of Object.entries(c.standardAcls).sort(aclSort)) {
+    if (/^\d+$/.test(number)) for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + formatAclSource(rule));
+    else {
+      out.push(`ip access-list standard ${number}`);
+      for (const rule of rules) out.push(` ${rule.action} ${formatAclSource(rule)}`);
+    }
   }
-  for (const [number, rules] of Object.entries(c.extendedAcls).sort(([a], [b]) => Number(a) - Number(b))) {
-    for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + rule.protocol + " " + formatAclSource(rule.source) + " " + formatAclSource(rule.destination));
+  for (const [number, rules] of Object.entries(c.extendedAcls).sort(aclSort)) {
+    if (/^\d+$/.test(number)) for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + rule.protocol + " " + formatAclSource(rule.source) + " " + formatAclSource(rule.destination));
+    else {
+      out.push(`ip access-list extended ${number}`);
+      for (const rule of rules) out.push(` ${rule.action} ${rule.protocol} ${formatAclSource(rule.source)} ${formatAclSource(rule.destination)}`);
+    }
   }
   if (Object.keys(c.standardAcls).length || Object.keys(c.extendedAcls).length) out.push("!");
   if (!isSwitch) out.push("control-plane", "!");

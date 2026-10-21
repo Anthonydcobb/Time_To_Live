@@ -9,7 +9,7 @@ import { showVersionBanner } from "./show";
 import { Job } from "../job";
 import { bookFor, type Grimoire } from "../grimoire";
 
-export type Mode = "user" | "enable" | "config" | "config-if" | "config-subif" | "config-line" | "dhcp-config" | "config-vlan" | "config-router";
+export type Mode = "user" | "enable" | "config" | "config-if" | "config-subif" | "config-line" | "dhcp-config" | "config-vlan" | "config-router" | "config-acl";
 
 type Pending =
   | { kind: "press-return" }
@@ -33,10 +33,11 @@ const SUFFIX: Record<Mode, string> = {
   "dhcp-config": "(dhcp-config)#",
   "config-vlan": "(config-vlan)#",
   "config-router": "(config-router)#",
+  "config-acl": "(config-ext-nacl)#",
 };
 
 /** Sub-modes where an unknown command is tried again as a global config command. */
-const SUB_MODES: Mode[] = ["config-if", "config-subif", "config-line", "dhcp-config", "config-vlan", "config-router"];
+const SUB_MODES: Mode[] = ["config-if", "config-subif", "config-line", "dhcp-config", "config-vlan", "config-router", "config-acl"];
 
 const DNS_LOOKUP_MS = 5000;
 
@@ -97,6 +98,7 @@ const HELP_HEADINGS: Record<Mode, string> = {
   "dhcp-config": "DHCP pool configuration commands:",
   "config-vlan": "VLAN configuration commands:",
   "config-router": "Router configuration commands:",
+  "config-acl": "IP access list configuration commands:",
 };
 
 export class IosConsole {
@@ -108,6 +110,8 @@ export class IosConsole {
   /** The VLANs `vlan 10,20` selected. Like real IOS, they're created when you leave config-vlan mode. */
   vlanIds: number[] = [];
   vlanName: string | null = null;
+  aclKind: "standard" | "extended" | null = null;
+  aclName: string | null = null;
   pending: Pending | null = null;
   readonly history: string[] = [];
   /** The player's learned incantations. Without one, every command reads plainly. */
@@ -131,6 +135,7 @@ export class IosConsole {
       if (p.kind === "question") return p.prompt;
       return "";
     }
+    if (this.mode === "config-acl") return this.device.hostname + (this.aclKind === "standard" ? "(config-std-nacl)#" : "(config-ext-nacl)#");
     return this.device.hostname + SUFFIX[this.mode];
   }
 
@@ -305,6 +310,7 @@ export class IosConsole {
     }
     this.mode = mode;
     if (mode !== "config-if" && mode !== "config-subif") this.ifaces = [];
+    if (mode !== "config-acl") { this.aclKind = null; this.aclName = null; }
   }
 
   // ---- called by commands -------------------------------------------------

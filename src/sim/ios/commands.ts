@@ -171,7 +171,8 @@ const VLAN_MODE: Mode[] = ["config-vlan"];
 const LINE: Mode[] = ["config-line"];
 const DHCP: Mode[] = ["dhcp-config"];
 const ROUTER_CFG: Mode[] = ["config-router"];
-const SUB: Mode[] = ["config", "config-if", "config-subif", "config-line", "dhcp-config", "config-vlan", "config-router"];
+const ACL_MODE: Mode[] = ["config-acl"];
+const SUB: Mode[] = ["config", "config-if", "config-subif", "config-line", "dhcp-config", "config-vlan", "config-router", "config-acl"];
 
 const NO = kw("no", "Negate a command or set its defaults");
 const SHOW = kw("show", "Show running system information");
@@ -196,14 +197,22 @@ function aclAddress(text: string): AclAddress | null {
   return network === null ? null : { network, wildcard: 0 };
 }
 
-function addExtendedAcl(c: Ctx, number: number, action: "permit" | "deny", protocol: "ip" | "icmp", sourceText: string, destinationText: string): void {
+function addExtendedAcl(c: Ctx, number: number | string, action: "permit" | "deny", protocol: "ip" | "icmp", sourceText: string, destinationText: string): void {
   const source = aclAddress(sourceText);
   const destination = aclAddress(destinationText);
   if (!source || !destination) {
     c.out.push("% Invalid address in access-list.");
     return;
   }
-  (c.device.config.extendedAcls[number] ??= []).push({ action, protocol, source, destination });
+  (c.device.config.extendedAcls[String(number)] ??= []).push({ action, protocol, source, destination });
+}
+
+function namedAcl(c: Ctx): string | null {
+  if (c.console.mode !== "config-acl" || c.console.aclName === null) {
+    c.out.push("% Access list mode is not active.");
+    return null;
+  }
+  return c.console.aclName;
 }
 
 function ping(ctx: Ctx, target: Ipv4): void {
@@ -362,6 +371,7 @@ const exitEnd: Entry[] = [
   cmd(LINE, [kw("exit", "Exit from line configuration mode")], (c) => c.console.setMode("config")),
   cmd(DHCP, [kw("exit", "Exit from DHCP pool configuration mode")], (c) => c.console.setMode("config")),
   cmd(ROUTER_CFG, [kw("exit", "Exit from routing protocol configuration mode")], (c) => c.console.setMode("config")),
+  cmd(ACL_MODE, [kw("exit", "Exit from access-list configuration mode")], (c) => c.console.setMode("config")),
 ];
 
 const ENABLE_KW = kw("enable", "Modify enable password parameters");
@@ -487,6 +497,18 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [NO, kw("username", "Establish User Name Authentication"), wordArg("User name")], (c, [name]) => {
     delete c.device.config.users[name as string];
   }),
+  cmd(CONFIG, [IP, ACCESS_LIST, kw("standard", "Standard named access list"), wordArg("Access list name")], (c, [name]) => {
+    c.console.aclKind = "standard";
+    c.console.aclName = name as string;
+    c.console.setMode("config-acl");
+    c.device.config.standardAcls[c.console.aclName] ??= [];
+  }),
+  cmd(CONFIG, [IP, ACCESS_LIST, kw("extended", "Extended named access list"), wordArg("Access list name")], (c, [name]) => {
+    c.console.aclKind = "extended";
+    c.console.aclName = name as string;
+    c.console.setMode("config-acl");
+    c.device.config.extendedAcls[c.console.aclName] ??= [];
+  }),
   cmd(CONFIG, [ACCESS_LIST, numArg(1, 99, "Standard ACL number"), PERMIT, ANY], (c, [number]) => {
     (c.device.config.standardAcls[number as number] ??= []).push({ action: "permit", network: null, wildcard: null });
   }),
@@ -522,6 +544,46 @@ const configCommands: Entry[] = [
   }),
   cmd(CONFIG, [NO, ACCESS_LIST, numArg(100, 199, "Extended ACL number")], (c, [number]) => {
     delete c.device.config.extendedAcls[number as number];
+  }),
+  cmd(ACL_MODE, [PERMIT, ANY], (c) => {
+    const name = namedAcl(c); if (!name || c.console.aclKind !== "standard") return;
+    (c.device.config.standardAcls[name] ??= []).push({ action: "permit", network: null, wildcard: null });
+  }),
+  cmd(ACL_MODE, [DENY, ANY], (c) => {
+    const name = namedAcl(c); if (!name || c.console.aclKind !== "standard") return;
+    (c.device.config.standardAcls[name] ??= []).push({ action: "deny", network: null, wildcard: null });
+  }),
+  cmd(ACL_MODE, [PERMIT, ipArg("Source address")], (c, [network]) => {
+    const name = namedAcl(c); if (!name || c.console.aclKind !== "standard") return;
+    (c.device.config.standardAcls[name] ??= []).push({ action: "permit", network: network as Ipv4, wildcard: 0 });
+  }),
+  cmd(ACL_MODE, [PERMIT, ipArg("Source network"), ipArg("Wildcard bits")], (c, [network, wildcard]) => {
+    const name = namedAcl(c); if (!name || c.console.aclKind !== "standard") return;
+    (c.device.config.standardAcls[name] ??= []).push({ action: "permit", network: network as Ipv4, wildcard: wildcard as Ipv4 });
+  }),
+  cmd(ACL_MODE, [DENY, ipArg("Source address")], (c, [network]) => {
+    const name = namedAcl(c); if (!name || c.console.aclKind !== "standard") return;
+    (c.device.config.standardAcls[name] ??= []).push({ action: "deny", network: network as Ipv4, wildcard: 0 });
+  }),
+  cmd(ACL_MODE, [DENY, ipArg("Source network"), ipArg("Wildcard bits")], (c, [network, wildcard]) => {
+    const name = namedAcl(c); if (!name || c.console.aclKind !== "standard") return;
+    (c.device.config.standardAcls[name] ??= []).push({ action: "deny", network: network as Ipv4, wildcard: wildcard as Ipv4 });
+  }),
+  cmd(ACL_MODE, [PERMIT, kw("icmp", "Internet Control Message Protocol"), wordArg("Source address or any"), wordArg("Destination address or any")], (c, [source, destination]) => {
+    const name = namedAcl(c); if (!name || c.console.aclKind !== "extended") return;
+    addExtendedAcl(c, name, "permit", "icmp", source as string, destination as string);
+  }),
+  cmd(ACL_MODE, [DENY, kw("icmp", "Internet Control Message Protocol"), wordArg("Source address or any"), wordArg("Destination address or any")], (c, [source, destination]) => {
+    const name = namedAcl(c); if (!name || c.console.aclKind !== "extended") return;
+    addExtendedAcl(c, name, "deny", "icmp", source as string, destination as string);
+  }),
+  cmd(ACL_MODE, [PERMIT, kw("ip", "Any Internet Protocol"), wordArg("Source address or any"), wordArg("Destination address or any")], (c, [source, destination]) => {
+    const name = namedAcl(c); if (!name || c.console.aclKind !== "extended") return;
+    addExtendedAcl(c, name, "permit", "ip", source as string, destination as string);
+  }),
+  cmd(ACL_MODE, [DENY, kw("ip", "Any Internet Protocol"), wordArg("Source address or any"), wordArg("Destination address or any")], (c, [source, destination]) => {
+    const name = namedAcl(c); if (!name || c.console.aclKind !== "extended") return;
+    addExtendedAcl(c, name, "deny", "ip", source as string, destination as string);
   }),
   cmd(CONFIG, [SERVICE, PWENC], (c) => {
     const cfg = c.device.config;
@@ -723,17 +785,17 @@ const interfaceCommands: Entry[] = [
   cmd(ANY_IF, [NO, kw("ipv6", "IPv6 interface configuration"), kw("address", "Set the IPv6 address")], (c) => {
     forEachIface(c, (name) => { c.device.ifaceConfig(name).ipv6Addresses = []; });
   }),
-  cmd(ANY_IF, [IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 199, "ACL number"), kw("in", "Inbound packets")], (c, [number]) => {
-    forEachIface(c, (name) => { c.device.ifaceConfig(name).accessGroupIn = number as number; });
+  cmd(ANY_IF, [IF_IP, kw("access-group", "Apply an access list to an interface"), wordArg("ACL name or number"), kw("in", "Inbound packets")], (c, [number]) => {
+    forEachIface(c, (name) => { c.device.ifaceConfig(name).accessGroupIn = String(number); });
   }, { when: routedIface }),
-  cmd(ANY_IF, [IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 199, "ACL number"), kw("out", "Outbound packets")], (c, [number]) => {
-    forEachIface(c, (name) => { c.device.ifaceConfig(name).accessGroupOut = number as number; });
+  cmd(ANY_IF, [IF_IP, kw("access-group", "Apply an access list to an interface"), wordArg("ACL name or number"), kw("out", "Outbound packets")], (c, [number]) => {
+    forEachIface(c, (name) => { c.device.ifaceConfig(name).accessGroupOut = String(number); });
   }, { when: routedIface }),
-  cmd(ANY_IF, [NO, IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 199, "ACL number"), kw("in", "Inbound packets")], (c, [number]) => {
-    forEachIface(c, (name) => { if (c.device.ifaceConfig(name).accessGroupIn === number) c.device.ifaceConfig(name).accessGroupIn = null; });
+  cmd(ANY_IF, [NO, IF_IP, kw("access-group", "Apply an access list to an interface"), wordArg("ACL name or number"), kw("in", "Inbound packets")], (c, [number]) => {
+    forEachIface(c, (name) => { if (c.device.ifaceConfig(name).accessGroupIn === String(number)) c.device.ifaceConfig(name).accessGroupIn = null; });
   }, { when: routedIface }),
-  cmd(ANY_IF, [NO, IF_IP, kw("access-group", "Apply an access list to an interface"), numArg(1, 199, "ACL number"), kw("out", "Outbound packets")], (c, [number]) => {
-    forEachIface(c, (name) => { if (c.device.ifaceConfig(name).accessGroupOut === number) c.device.ifaceConfig(name).accessGroupOut = null; });
+  cmd(ANY_IF, [NO, IF_IP, kw("access-group", "Apply an access list to an interface"), wordArg("ACL name or number"), kw("out", "Outbound packets")], (c, [number]) => {
+    forEachIface(c, (name) => { if (c.device.ifaceConfig(name).accessGroupOut === String(number)) c.device.ifaceConfig(name).accessGroupOut = null; });
   }, { when: routedIface }),
   cmd(ANY_IF, [IF_IP, kw("helper-address", "Specify a destination address for DHCP relay"), ipArg("DHCP server address")], (c, [server]) => {
     forEachIface(c, (name) => {

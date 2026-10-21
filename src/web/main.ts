@@ -65,7 +65,7 @@ function tick(now: number): void {
 }
 requestAnimationFrame(tick);
 // The grimoire lists every incantation learned so far, newest highlighted.
-const BOOK_NAMES: Record<Book, string> = { exec: "EXEC", config: "config", if: "interface", line: "line", dhcp: "DHCP pool", vlan: "VLAN" };
+const BOOK_NAMES: Record<Book, string> = { exec: "EXEC", config: "config", if: "interface", line: "line", dhcp: "DHCP pool", vlan: "VLAN", acl: "ACL" };
 const grimoireEl = document.getElementById("grimoire")!;
 function addIncantation(book: Book, words: string[], fresh: boolean): void {
   const li = document.createElement("li");
