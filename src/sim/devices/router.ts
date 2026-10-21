@@ -107,6 +107,9 @@ export class Router extends IosDevice {
       get mask() {
         return config().mask;
       },
+      get ipv6Addresses() {
+        return config().ipv6Addresses;
+      },
       up: () => port.protocolUp,
       transmit: (frame) => this.send(port, frame),
     });
@@ -178,6 +181,9 @@ export class Router extends IosDevice {
         },
         get mask() {
           return config()?.mask ?? null;
+        },
+        get ipv6Addresses() {
+          return config()?.ipv6Addresses ?? [];
         },
         up: () => !!config() && !config().shutdown && port.protocolUp,
         transmit: (frame) => {

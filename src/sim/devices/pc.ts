@@ -1,4 +1,4 @@
-import { nextMac, type Ipv4, type Mac } from "../addr";
+import { nextMac, type Ipv4, type Ipv6, type Mac } from "../addr";
 import type { Frame } from "../frames";
 import { IpStack, type L3Interface } from "../ipstack";
 import { Device, Port } from "../network";
@@ -16,6 +16,7 @@ export class Pc extends Device {
   ip: Ipv4 | null = null;
   mask: Ipv4 | null = null;
   gateway: Ipv4 | null = null;
+  ipv6Addresses: { address: Ipv6; prefix: number }[] = [];
   dnsServers: Ipv4[] = [];
   /** Obtain an address automatically. When false, the address was set by hand. */
   dhcp = false;
@@ -45,6 +46,9 @@ export class Pc extends Device {
       },
       get mask() {
         return self.mask;
+      },
+      get ipv6Addresses() {
+        return self.ipv6Addresses;
       },
       up: () => this.nic.protocolUp,
       transmit: (frame) => this.send(this.nic, frame),
@@ -85,6 +89,10 @@ export class Pc extends Device {
     this.autoconfigured = false;
     this.dnsServers = [];
     this.setAddress(ip, mask, gateway);
+  }
+
+  configureIpv6(address: Ipv6 | null, prefix: number): void {
+    this.ipv6Addresses = address === null ? [] : [{ address, prefix }];
   }
 
   private setAddress(ip: Ipv4 | null, mask: Ipv4 | null, gateway: Ipv4 | null): void {

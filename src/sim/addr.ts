@@ -29,6 +29,14 @@ export function formatIpv6(address: Ipv6): string {
   return parseIpv6(address) ?? address;
 }
 
+export function ipv6InPrefix(address: Ipv6, prefixAddress: Ipv6, prefix: number): boolean {
+  const a = BigInt(`0x${address.replaceAll(":", "")}`);
+  const p = BigInt(`0x${prefixAddress.replaceAll(":", "")}`);
+  if (prefix === 0) return true;
+  const mask = ((1n << BigInt(prefix)) - 1n) << BigInt(128 - prefix);
+  return (a & mask) === (p & mask);
+}
+
 export function parseIpv4(text: string): Ipv4 | null {
   const parts = text.split(".");
   if (parts.length !== 4) return null;

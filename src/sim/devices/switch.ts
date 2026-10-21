@@ -88,6 +88,7 @@ export class Switch extends IosDevice {
       mac: port.mac,
       get ip() { return config().ip; },
       get mask() { return config().mask; },
+      get ipv6Addresses() { return config().ipv6Addresses; },
       up: () => this.config.ipRouting && !config().switchport && port.protocolUp,
       transmit: (frame) => this.send(port, frame),
     });
@@ -153,6 +154,9 @@ export class Switch extends IosDevice {
         },
         get mask() {
           return config()?.mask ?? null;
+        },
+        get ipv6Addresses() {
+          return config()?.ipv6Addresses ?? [];
         },
         up: () => this.sviUp.has(name),
         transmit: (frame) => this.forward(frame, null, vlan),

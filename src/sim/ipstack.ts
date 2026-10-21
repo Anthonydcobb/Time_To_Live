@@ -4,10 +4,12 @@ import {
   broadcastOf,
   networkOf,
   type Ipv4,
+  type Ipv6,
+  ipv6InPrefix,
   type Mac,
 } from "./addr";
 import type { Clock } from "./clock";
-import type { Frame, IcmpMessage, Ipv4Packet } from "./frames";
+import type { Frame, IcmpMessage, Ipv4Packet, Ipv6Packet } from "./frames";
 
 /** Anything that can hold an IP address: a router port, a PC NIC, a switch SVI. */
 export interface L3Interface {
@@ -15,6 +17,7 @@ export interface L3Interface {
   mac: Mac;
   ip: Ipv4 | null;
   mask: Ipv4 | null;
+  ipv6Addresses: { address: Ipv6; prefix: number }[];
   /** True when line protocol is up and frames can flow. */
   up(): boolean;
   transmit(frame: Frame): void;
@@ -79,6 +82,7 @@ export class IpStack {
   private queued = new Map<Ipv4, { iface: L3Interface; packet: Ipv4Packet }[]>();
   private waiters = new Map<string, (r: PingResult) => void>();
   private nextPingId = 1;
+  private ipv6Waiters = new Map<string, (r: PingResult) => void>();
 
   constructor(private readonly opts: IpStackOptions) {}
 
@@ -194,6 +198,10 @@ export class IpStack {
     if (frame.dst !== iface.mac && frame.dst !== BROADCAST_MAC) return;
     const p = frame.payload;
     if (p.kind === "cdp" || p.kind === "bpdu") return;
+    if (p.kind === "ipv6") {
+      this.handleIpv6(iface, p);
+      return;
+    }
     if (p.kind === "arp") {
       if (iface.ip === null) return;
       if (p.targetIp === iface.ip) {
@@ -240,6 +248,64 @@ export class IpStack {
       return;
     }
     this.sendVia(route.iface, route.nextHop, { ...p, ttl });
+  }
+
+  private ipv6Local(address: Ipv6): L3Interface | null {
+    return this.opts.interfaces().find((iface) => iface.up() && iface.ipv6Addresses.some((a) => a.address === address)) ?? null;
+  }
+
+  private ipv6Route(dst: Ipv6): { iface: L3Interface; source: Ipv6 } | null {
+    const matches = this.opts.interfaces().flatMap((iface) => iface.up() ? iface.ipv6Addresses.filter((a) => ipv6InPrefix(dst, a.address, a.prefix)).map((a) => ({ iface, source: a.address, prefix: a.prefix })) : []);
+    const best = matches.sort((a, b) => b.prefix - a.prefix)[0];
+    return best ? { iface: best.iface, source: best.source } : null;
+  }
+
+  sendIpv6(packet: Ipv6Packet): boolean {
+    const local = this.ipv6Local(packet.dst);
+    if (local) {
+      this.clock.schedule(0, () => this.deliverIpv6(local, packet));
+      return true;
+    }
+    const route = this.ipv6Route(packet.dst);
+    if (!route) return false;
+    route.iface.transmit({ src: route.iface.mac, dst: BROADCAST_MAC, payload: packet });
+    return true;
+  }
+
+  private handleIpv6(_iface: L3Interface, packet: Ipv6Packet): void {
+    const local = this.ipv6Local(packet.dst);
+    if (local) {
+      this.deliverIpv6(local, packet);
+      return;
+    }
+    const forwarding = typeof this.opts.forwarding === "function" ? this.opts.forwarding() : this.opts.forwarding;
+    if (!forwarding || packet.hopLimit <= 1) return;
+    const route = this.ipv6Route(packet.dst);
+    if (!route) return;
+    route.iface.transmit({ src: route.iface.mac, dst: BROADCAST_MAC, payload: { ...packet, hopLimit: packet.hopLimit - 1 } });
+  }
+
+  private deliverIpv6(_iface: L3Interface, packet: Ipv6Packet): void {
+    const icmp = packet.icmpv6;
+    if (!icmp) return;
+    if (icmp.type === "echo-request") {
+      this.sendIpv6({ kind: "ipv6", src: packet.dst, dst: packet.src, hopLimit: 64, icmpv6: { type: "echo-reply", id: icmp.id, seq: icmp.seq } });
+      return;
+    }
+    const waiter = this.ipv6Waiters.get(`${icmp.id}:${icmp.seq}`);
+    if (waiter && icmp.type === "echo-reply") {
+      this.ipv6Waiters.delete(`${icmp.id}:${icmp.seq}`);
+      waiter({ kind: "reply", rttMs: 0, ttl: packet.hopLimit, from: 0 });
+    }
+  }
+
+  probeIpv6(dst: Ipv6, opts: { id: number; seq: number; timeoutMs: number; source: Ipv6 }, done: (r: PingResult) => void): void {
+    const key = `${opts.id}:${opts.seq}`;
+    let settled = false;
+    const settle = (result: PingResult) => { if (settled) return; settled = true; this.ipv6Waiters.delete(key); done(result); };
+    this.ipv6Waiters.set(key, settle);
+    this.sendIpv6({ kind: "ipv6", src: opts.source, dst, hopLimit: 64, icmpv6: { type: "echo-request", id: opts.id, seq: opts.seq } });
+    this.clock.schedule(opts.timeoutMs, () => settle({ kind: "timeout" }));
   }
 
   private reply(from: Ipv4, original: Ipv4Packet, type: IcmpMessage["type"]): void {

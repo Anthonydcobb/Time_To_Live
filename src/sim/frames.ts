@@ -1,4 +1,4 @@
-import type { Ipv4, Mac } from "./addr";
+import type { Ipv4, Ipv6, Mac } from "./addr";
 
 export interface ArpPacket {
   kind: "arp";
@@ -45,6 +45,20 @@ export interface Ipv4Packet {
   dhcp?: DhcpMessage;
 }
 
+export interface Icmpv6Message {
+  type: "echo-request" | "echo-reply" | "time-exceeded" | "unreachable";
+  id: number;
+  seq: number;
+}
+
+export interface Ipv6Packet {
+  kind: "ipv6";
+  src: Ipv6;
+  dst: Ipv6;
+  hopLimit: number;
+  icmpv6?: Icmpv6Message;
+}
+
 /** Cisco Discovery Protocol advertisement. Switches consume these instead of forwarding them. */
 export interface CdpPacket {
   kind: "cdp";
@@ -81,7 +95,7 @@ export interface Frame {
   dst: Mac;
   /** The 802.1Q tag, present only while the frame crosses a trunk. */
   vlan?: number;
-  payload: ArpPacket | Ipv4Packet | CdpPacket | BpduPacket;
+  payload: ArpPacket | Ipv4Packet | Ipv6Packet | CdpPacket | BpduPacket;
 }
 
 /** A copy of the frame with an 802.1Q tag, or without one when `vlan` is undefined. */
