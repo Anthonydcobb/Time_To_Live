@@ -87,6 +87,11 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     for (const address of ic.ipv6Addresses) out.push(` ipv6 address ${formatIpv6(address.address)}/${address.prefix}`);
     if (ic.ipv6OspfArea !== null) out.push(` ipv6 ospf ${c.ospfv3?.processId ?? 1} area ${ic.ipv6OspfArea}`);
     if (ic.natRole) out.push(` ip nat ${ic.natRole}`);
+    if (ic.hsrp) {
+      out.push(` standby ${ic.hsrp.group} ip ${formatIpv4(ic.hsrp.ip)}`);
+      if (ic.hsrp.priority !== 100) out.push(` standby ${ic.hsrp.group} priority ${ic.hsrp.priority}`);
+      if (ic.hsrp.preempt) out.push(` standby ${ic.hsrp.group} preempt`);
+    }
     if (ic.encapsulation) out.push(` encapsulation dot1Q ${ic.encapsulation.vlan}${ic.encapsulation.native ? " native" : ""}`);
     if (ic.accessGroupIn !== null) out.push(" ip access-group " + ic.accessGroupIn + " in");
     if (ic.accessGroupOut !== null) out.push(" ip access-group " + ic.accessGroupOut + " out");
@@ -819,6 +824,17 @@ export function showIpNatTranslations(device: IosDevice): string[] {
   for (const nat of device.config.staticNat) out.push(`--- ${formatIpv4(nat.insideGlobal).padEnd(20)} ${formatIpv4(nat.insideLocal).padEnd(20)} ---               ---`);
   if (device.kind === "router") for (const nat of (device as Router).natPatTranslations()) out.push(`icmp ${formatIpv4(nat.globalIp).padEnd(20)} ${formatIpv4(nat.localIp).padEnd(20)} ---               ---`);
   return out;
+}
+
+export function showStandby(router: Router): string[] {
+  const out: string[] = [];
+  for (const iface of router.interfaces()) {
+    const h = router.config.interfaces[iface.name]?.hsrp;
+    if (!h || iface.status() !== "up") continue;
+    const active = router.hsrpActive(iface.name);
+    out.push(`${iface.name} - Group ${h.group}`, `  State is ${active === router ? "Active" : "Standby"}`, `  Virtual IP address is ${formatIpv4(h.ip)}`, `  Priority ${h.priority}`, `  Active router is ${active.hostname}`);
+  }
+  return out.length ? out : ["HSRP is not configured"];
 }
 
 // ---- DHCP ----------------------------------------------------------------------
