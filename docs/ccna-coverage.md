@@ -69,7 +69,8 @@ simulation proves production behavior.
 ## Verification commands
 
 For the complete local simulator gate, run `npm run verify:network`. It runs
-the build, all tests, and every repeatable topology/fault scenario below.
+the build, all tests, every repeatable topology/fault scenario below, and an
+artifact audit that checks each scenario produced populated JSON evidence.
 
 ```powershell
 npm test -- --run
@@ -83,6 +84,7 @@ node tools/run-sim-dhcp-scenario.mjs
 node tools/run-sim-nat-scenario.mjs
 node tools/run-sim-acl-scenario.mjs
 node tools/run-sim-routing-scenario.mjs
+npm run audit:network
 node tools/run-pt-adapter-spike.mjs
 ```
 

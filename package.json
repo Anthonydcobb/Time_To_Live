@@ -19,7 +19,8 @@
     "sim:nat": "node tools/run-sim-nat-scenario.mjs",
     "sim:acl": "node tools/run-sim-acl-scenario.mjs",
     "sim:routing": "node tools/run-sim-routing-scenario.mjs",
-    "verify:network": "npm run build && npm test -- --run && npm run sim:spike && npm run sim:faults && npm run sim:stp && npm run sim:ipv6 && npm run sim:ipv6-ospf && npm run sim:dhcp && npm run sim:nat && npm run sim:acl && npm run sim:routing",
+    "audit:network": "node tools/validate-network-artifacts.mjs",
+    "verify:network": "npm run build && npm test -- --run && npm run sim:spike && npm run sim:faults && npm run sim:stp && npm run sim:ipv6 && npm run sim:ipv6-ospf && npm run sim:dhcp && npm run sim:nat && npm run sim:acl && npm run sim:routing && npm run audit:network",
     "pt:topology": "node tools/run-pt-topology-spike.mjs",
     "pt:health": "node tools/run-pt-expanded-health.mjs",
     "pt:status": "node tools/check-pt-stack.mjs"
