@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { Router } from "../src/sim/devices/router";
+import { RemoteSession } from "../src/sim/devices/ios-device";
 import { Network } from "../src/sim/network";
 import { type } from "./helpers";
 
@@ -48,5 +49,18 @@ describe("remote management access", () => {
     expect(config).toContain(" login local");
     expect(config).toContain(" transport input ssh");
     expect(config).not.toContain("username admin secret cisco");
+  });
+
+  it("opens an authenticated session that can run IOS commands", () => {
+    const r = new Router("R1", "R1");
+    new Network().add(r);
+    type(r, "", "en", "conf t", "ip domain-name ttl.local", "crypto key generate rsa", "username admin secret cisco", "line vty 0 4", "login local", "transport input ssh", "end");
+    const session = r.openRemoteSession("ssh", "admin", "cisco");
+    expect(session).toBeInstanceOf(RemoteSession);
+    if (!(session instanceof RemoteSession)) return;
+    expect(session.prompt()).toBe("R1#");
+    expect(session.input("show version").lines.join("\n")).toContain("R1 uptime");
+    expect(session.close().lines).toEqual(["Connection closed by remote host."]);
+    expect(session.input("show version").lines).toEqual(["% Session is closed."]);
   });
 });

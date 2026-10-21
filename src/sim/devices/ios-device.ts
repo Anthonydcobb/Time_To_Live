@@ -2,7 +2,7 @@ import type { Ipv4, Mac } from "../addr";
 import { Device, Port } from "../network";
 import type { IpStack, L3Interface } from "../ipstack";
 import { cloneConfig, defaultConfig, type InterfaceConfig, type IosConfig } from "../ios/config";
-import { IosConsole } from "../ios/console";
+import { IosConsole, type ConsoleOutput } from "../ios/console";
 import { showVersion } from "../ios/show";
 import { CDP_MAC, type Frame, type LldpPacket } from "../frames";
 import { type5Hash } from "../ios/passwords";
@@ -11,6 +11,31 @@ export type RemoteProtocol = "ssh" | "telnet";
 export type RemoteLoginResult =
   | { ok: true; protocol: RemoteProtocol; username: string }
   | { ok: false; reason: "transport-disabled" | "ssh-not-ready" | "local-login-disabled" | "unknown-user" | "bad-password" };
+
+/** An authenticated simulated SSH/Telnet session. It intentionally reuses the device CLI. */
+export class RemoteSession {
+  private closed = false;
+
+  constructor(
+    readonly device: IosDevice,
+    readonly protocol: RemoteProtocol,
+    readonly username: string,
+  ) {}
+
+  prompt(): string {
+    return this.closed ? "" : this.device.console.prompt();
+  }
+
+  input(line: string): ConsoleOutput {
+    if (this.closed) return { lines: ["% Session is closed."] };
+    return this.device.console.input(line);
+  }
+
+  close(): ConsoleOutput {
+    this.closed = true;
+    return { lines: ["Connection closed by remote host."] };
+  }
+}
 
 /** What `show ip interface brief` and friends need to know about any interface. */
 export interface InterfaceView {
@@ -177,6 +202,11 @@ export abstract class IosDevice extends Device {
     if (!stored) return { ok: false, reason: "unknown-user" };
     if (stored !== type5Hash(password, stored.split("$")[2])) return { ok: false, reason: "bad-password" };
     return { ok: true, protocol, username };
+  }
+
+  openRemoteSession(protocol: RemoteProtocol, username: string, password: string): RemoteSession | RemoteLoginResult {
+    const login = this.attemptRemoteLogin(protocol, username, password);
+    return login.ok ? new RemoteSession(this, protocol, username) : login;
   }
 
   private sendCdp(port: Port): void {
