@@ -163,12 +163,17 @@ async function healthCheck(): Promise<void> {
       const ipv6Routes = await run("Router0", "show ipv6 route");
       const ipv6Neighbors = await run("Router0", "show ipv6 neighbors");
       const ipv6Ospf = await run("Router0", "show ipv6 ospf neighbor");
+      const natTranslations = await run("Router0", "show ip nat translations");
+      const standby = await run("Router0", "show standby");
+      const ntpStatus = await run("Router0", "show ntp status");
+      const logging = await run("Router0", "show logging");
       const trunk0 = await run("Switch0", "show interfaces trunk");
       const trunk1 = await run("Switch1", "show interfaces trunk");
       const pc0Text = text(pc0Ip); const pc1Text = text(pc1Ip);
       const routerText = text(routerInterfaces); const sshText = text(sshStatus); const configText = text(routerConfig); const trunks = `${text(trunk0)}\n${text(trunk1)}`;
       const ipv6InterfaceText = text(ipv6Interfaces); const ipv6RouteText = text(ipv6Routes); const ipv6NeighborText = text(ipv6Neighbors);
       const ipv6OspfText = text(ipv6Ospf);
+      const natText = text(natTranslations); const standbyText = text(standby); const ntpText = text(ntpStatus); const loggingText = text(logging);
       const ipv6Configured = /[0-9a-f]{1,4}:[0-9a-f:]+\/\d+/i.test(ipv6InterfaceText);
       const ipv6Checks = ipv6Configured ? [
         { label: "Router IPv6 interface", ok: /[0-9a-f]{1,4}:[0-9a-f:]+\/\d+.*up\s+up/i.test(ipv6InterfaceText), detail: "show ipv6 interface brief" },
@@ -176,6 +181,12 @@ async function healthCheck(): Promise<void> {
         { label: "IPv6 neighbor discovery", ok: /(?:^|\n)[0-9a-f]{1,4}:[0-9a-f:]+\s+\d+\s+[0-9a-f.]+\s+REACH/i.test(ipv6NeighborText), detail: "show ipv6 neighbors" },
         { label: "IPv6 OSPFv3 adjacency", ok: /FULL/i.test(ipv6OspfText), detail: "show ipv6 ospf neighbor" },
       ] : [];
+      const optionalChecks = [
+        /Pro Inside global/i.test(natText) ? { label: "NAT translation table", ok: natText.split("\n").slice(2).some((line: string) => /^(?:---|icmp)\s+/i.test(line)), detail: "show ip nat translations" } : null,
+        /Virtual IP address/i.test(standbyText) ? { label: "HSRP gateway state", ok: /State is (Active|Standby)/i.test(standbyText), detail: "show standby" } : null,
+        /Clock is synchronized/i.test(ntpText) ? { label: "NTP synchronization", ok: true, detail: "show ntp status" } : null,
+        /Logging to (?!none)/i.test(loggingText) ? { label: "Syslog destination", ok: /Syslog logging: enabled/i.test(loggingText), detail: "show logging" } : null,
+      ].filter((check): check is { label: string; ok: boolean; detail: string } => check !== null);
       showHealth([
         { label: "PC0 IPv4 address", ok: /IPv4 Address.*192\.168\.10\.10/i.test(pc0Text), detail: "192.168.10.10 / VLAN 10" },
         { label: "PC1 IPv4 address", ok: /IPv4 Address.*192\.168\.20\.10/i.test(pc1Text), detail: "192.168.20.10 / VLAN 20" },
@@ -186,6 +197,7 @@ async function healthCheck(): Promise<void> {
         { label: "Router SSH service", ok: /SSH Enabled/i.test(sshText), detail: "show ssh" },
         { label: "VTY local authentication", ok: /login local/i.test(configText) && /transport input ssh/i.test(configText), detail: "line vty 0 4" },
         ...ipv6Checks,
+        ...optionalChecks,
       ]);
       return;
     }
