@@ -131,4 +131,19 @@ describe("IPv6 interface configuration", () => {
     const out = type(r1, "ping ipv6 2001:db8:100::2");
     expect(out.join("\n")).toContain("Success rate is 100 percent (5/5)");
   });
+
+  it("forms OSPFv3 neighbors and learns IPv6 routes", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1"));
+    const r2 = net.add(new Router("R2"));
+    const pc2 = net.add(new Pc("PC2"));
+    net.connect(r1.port("Gi0/1"), r2.port("Gi0/0"));
+    net.connect(r2.port("Gi0/1"), pc2.nic);
+    pc2.configureIpv6(parseIpv6("2001:db8:20::10")!, 64, parseIpv6("2001:db8:20::1")!);
+    type(r1, "", "en", "conf t", "ipv6 unicast-routing", "interface g0/0", "ipv6 address 2001:db8:10::1/64", "no shutdown", "interface g0/1", "ipv6 address 2001:db8:12::1/64", "no shutdown", "ipv6 router ospf 1", "end", "conf t", "interface g0/0", "ipv6 ospf 1 area 0", "interface g0/1", "ipv6 ospf 1 area 0", "end");
+    type(r2, "", "en", "conf t", "ipv6 unicast-routing", "interface g0/0", "ipv6 address 2001:db8:12::2/64", "no shutdown", "interface g0/1", "ipv6 address 2001:db8:20::1/64", "no shutdown", "ipv6 router ospf 1", "end", "conf t", "interface g0/0", "ipv6 ospf 1 area 0", "interface g0/1", "ipv6 ospf 1 area 0", "end");
+    net.clock.advance(3_000);
+    expect(type(r1, "show ipv6 ospf neighbor").join("\n")).toContain("Router");
+    expect(type(r1, "show ipv6 route").join("\n")).toContain("2001:0db8:0020");
+  });
 });

@@ -65,6 +65,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   if (!isSwitch) out.push("ip cef", "no ipv6 cef", "!", "multilink bundle-name authenticated", "!");
   if (!c.cdpRun) out.push("no cdp run", "!");
   if (c.ipv6UnicastRouting) out.push("ipv6 unicast-routing");
+  if (c.ospfv3) out.push(`ipv6 router ospf ${c.ospfv3.processId}`);
   for (const route of c.ipv6StaticRoutes) out.push(`ipv6 route ${formatIpv6(route.network)}/${route.prefix} ${route.nextHop ?? route.exitIface ?? "Null0"}`);
   if (isSwitch) {
     if (c.ipRouting) out.push("ip routing");
@@ -84,6 +85,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     if (ic.description) out.push(` description ${ic.description}`);
     for (const helper of ic.helperAddresses) out.push(` ip helper-address ${formatIpv4(helper)}`);
     for (const address of ic.ipv6Addresses) out.push(` ipv6 address ${formatIpv6(address.address)}/${address.prefix}`);
+    if (ic.ipv6OspfArea !== null) out.push(` ipv6 ospf ${c.ospfv3?.processId ?? 1} area ${ic.ipv6OspfArea}`);
     if (ic.encapsulation) out.push(` encapsulation dot1Q ${ic.encapsulation.vlan}${ic.encapsulation.native ? " native" : ""}`);
     if (ic.accessGroupIn !== null) out.push(" ip access-group " + ic.accessGroupIn + " in");
     if (ic.accessGroupOut !== null) out.push(" ip access-group " + ic.accessGroupOut + " out");
@@ -205,6 +207,7 @@ export function showIpv6Route(device: IosDevice): string[] {
     for (const address of device.config.interfaces[iface.name]?.ipv6Addresses ?? []) out.push(`C   ${formatIpv6(address.address)}/${address.prefix} is directly connected, ${iface.name}`);
   }
   for (const route of device.config.ipv6StaticRoutes) out.push(`S   ${formatIpv6(route.network)}/${route.prefix} [1/0] via ${route.nextHop ?? route.exitIface ?? "Null0"}`);
+  if (device.kind === "router") for (const route of (device as Router).ipv6OspfRoutes()) out.push(`O   ${formatIpv6(route.network)}/${route.prefix} [110/2] via ${route.nextHop ?? route.exitIface ?? "Null0"}`);
   return out;
 }
 
@@ -215,6 +218,14 @@ export function showIpv6Neighbors(device: IosDevice): string[] {
   for (const entry of device.stack.ipv6NeighborEntries().sort((a, b) => a.address.localeCompare(b.address))) {
     const age = Math.floor((device.clock.now - entry.learnedAt) / 1000);
     out.push(`${formatIpv6(entry.address).padEnd(42)}${String(age).padStart(3)} ${formatMacCisco(entry.mac).padEnd(17)} REACH ${entry.iface.name}`);
+  }
+  return out;
+}
+
+export function showIpv6OspfNeighbor(router: Router): string[] {
+  const out = ["IPv6 OSPF neighbors", "Neighbor ID     Pri   State           Dead Time   Interface ID    Interface"];
+  for (const [index, n] of router.ospfv3Neighbors.entries()) {
+    out.push(`${n.router.hostname.padEnd(17)}1     FULL/ -         00:00:40    ${String(index + 1).padEnd(16)}${n.localInterface}`);
   }
   return out;
 }

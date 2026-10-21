@@ -53,6 +53,7 @@ export interface InterfaceConfig {
   ip: Ipv4 | null;
   mask: Ipv4 | null;
   ipv6Addresses: { address: Ipv6; prefix: number }[];
+  ipv6OspfArea: number | null;
   /** DHCP relay destinations configured with ip helper-address. */
   helperAddresses: Ipv4[];
   accessGroupIn: number | null;
@@ -65,7 +66,7 @@ export interface InterfaceConfig {
 }
 
 export function newInterfaceConfig(shutdown: boolean): InterfaceConfig {
-  return { shutdown, description: null, ip: null, mask: null, ipv6Addresses: [], helperAddresses: [], accessGroupIn: null, accessGroupOut: null, cdp: true };
+  return { shutdown, description: null, ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, cdp: true };
 }
 
 export interface AclAddress {
@@ -131,6 +132,7 @@ export interface IosConfig {
   ipRouting: boolean;
   ipv6UnicastRouting: boolean;
   ospf: { processId: number; networks: OspfNetwork[] } | null;
+  ospfv3: { processId: number } | null;
   /** VTP control-plane settings for switches. */
   vtpMode: "server" | "client" | "transparent";
   vtpDomain: string;
@@ -172,6 +174,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     ipRouting: false,
     ipv6UnicastRouting: false,
     ospf: null,
+    ospfv3: null,
     vtpMode: "server",
     vtpDomain: "",
     dhcpSnooping: false,

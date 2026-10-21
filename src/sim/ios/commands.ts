@@ -262,6 +262,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("ipv6", "IPv6 information"), kw("interface", "IPv6 interface status"), kw("brief", "Brief summary of IPv6 status")], (c) => c.out.push(...show.showIpv6InterfaceBrief(c.device))),
   cmd(EXEC, [SHOW, kw("ipv6", "IPv6 information"), kw("route", "IPv6 routing table")], (c) => c.out.push(...show.showIpv6Route(c.device))),
   cmd(EXEC, [SHOW, kw("ipv6", "IPv6 information"), kw("neighbors", "IPv6 neighbor cache")], (c) => c.out.push(...show.showIpv6Neighbors(c.device))),
+  cmd(EXEC, [SHOW, kw("ipv6", "IPv6 information"), kw("ospf", "IPv6 OSPF information"), kw("neighbor", "IPv6 OSPF neighbors")], (c) => c.out.push(...show.showIpv6OspfNeighbor(c.device as Router)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration")], (c) => c.out.push(...show.showInterfaces(c.device))),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), ifaceArg], (c, [name]) =>
     c.out.push(...show.showInterfaces(c.device, name as string)),
@@ -523,6 +524,11 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [kw("ipv6", "Global IPv6 configuration"), kw("unicast-routing", "Enable IPv6 unicast routing")], (c) => {
     c.device.config.ipv6UnicastRouting = true;
   }),
+  cmd(CONFIG, [kw("ipv6", "Global IPv6 configuration"), kw("router", "Enable IPv6 OSPF"), kw("ospf", "Open Shortest Path First"), numArg(1, 65535, "Process ID")], (c, [processId]) => {
+    c.device.config.ospfv3 = { processId: processId as number };
+    c.console.setMode("config-router");
+  }, { devices: ["router"] }),
+  cmd(CONFIG, [NO, kw("ipv6", "Global IPv6 configuration"), kw("router", "Enable IPv6 OSPF"), kw("ospf", "Open Shortest Path First")], (c) => { c.device.config.ospfv3 = null; }, { devices: ["router"] }),
   cmd(CONFIG, [NO, kw("ipv6", "Global IPv6 configuration"), kw("unicast-routing", "Enable IPv6 unicast routing")], (c) => {
     c.device.config.ipv6UnicastRouting = false;
   }),
@@ -614,6 +620,11 @@ const IF_IP = kw("ip", "Interface Internet Protocol config commands");
 const ADDRESS = kw("address", "Set the IP address of an interface");
 
 const interfaceCommands: Entry[] = [
+  cmd(ANY_IF, [kw("ipv6", "IPv6 interface configuration"), kw("ospf", "Enable IPv6 OSPF"), numArg(1, 65535, "OSPFv3 process ID"), kw("area", "OSPF area"), numArg(0, 4294967295, "OSPF area ID")], (c, [processId, area]) => {
+    if (c.device.kind !== "router" || !c.device.config.ospfv3 || c.device.config.ospfv3.processId !== processId) { c.out.push("% OSPFv3 process is not configured."); return; }
+    forEachIface(c, (name) => { c.device.ifaceConfig(name).ipv6OspfArea = area as number; });
+  }, { devices: ["router"] }),
+  cmd(ANY_IF, [NO, kw("ipv6", "IPv6 interface configuration"), kw("ospf", "Enable IPv6 OSPF")], (c) => forEachIface(c, (name) => { c.device.ifaceConfig(name).ipv6OspfArea = null; }), { devices: ["router"] }),
   cmd(ANY_IF, [kw("ipv6", "IPv6 interface configuration"), kw("address", "Set the IPv6 address"), wordArg("IPv6 address/prefix")], (c, [text]) => {
     const parsed = parseIpv6Prefix(text as string);
     if (!parsed) {

@@ -72,6 +72,7 @@ export interface IpStackOptions {
   localRoutes: boolean;
   staticRoutes?: () => StaticRoute[];
   ipv6StaticRoutes?: () => { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[];
+  ipv6OspfRoutes?: () => { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[];
   ipv6DefaultGateway?: () => Ipv6 | null;
   ospfRoutes?: () => StaticRoute[];
   defaultGateway?: () => Ipv4 | null;
@@ -272,7 +273,8 @@ export class IpStack {
     const matches = this.opts.interfaces().flatMap((iface) => iface.up() ? iface.ipv6Addresses.filter((a) => ipv6InPrefix(dst, a.address, a.prefix)).map((a) => ({ iface, source: a.address, prefix: a.prefix })) : []);
     const best = matches.sort((a, b) => b.prefix - a.prefix)[0];
     if (best) return { iface: best.iface, source: best.source, nextHop: dst };
-    const staticMatches = (this.opts.ipv6StaticRoutes?.() ?? []).filter((r) => ipv6InPrefix(dst, r.network, r.prefix)).sort((a, b) => b.prefix - a.prefix);
+    const staticMatches = [...(this.opts.ipv6StaticRoutes?.() ?? []), ...(this.opts.ipv6OspfRoutes?.() ?? [])]
+      .filter((r) => ipv6InPrefix(dst, r.network, r.prefix)).sort((a, b) => b.prefix - a.prefix);
     const route = staticMatches[0];
     if (!route) {
       const gateway = this.opts.ipv6DefaultGateway?.() ?? null;

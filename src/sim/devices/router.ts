@@ -1,4 +1,4 @@
-import { networkOf, nextMac, type Ipv4 } from "../addr";
+import { ipv6InPrefix, networkOf, nextMac, type Ipv4, type Ipv6 } from "../addr";
 import { retag, type Frame } from "../frames";
 import { IpStack, type L3Interface } from "../ipstack";
 import { DhcpServer } from "../dhcp";
@@ -20,7 +20,13 @@ export class Router extends IosDevice {
   /** Subinterfaces removed with `no interface`. IOS keeps listing them as deleted until a reload. */
   readonly deletedSubinterfaces = new Set<string>();
   private ospfRoutes: { network: Ipv4; mask: Ipv4; nextHop: Ipv4 | null; exitIface: string | null }[] = [];
+  private ospfv3Routes: { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[] = [];
   readonly ospfNeighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv4 }[] = [];
+  readonly ospfv3Neighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv6 }[] = [];
+
+  ipv6OspfRoutes() {
+    return [...this.ospfv3Routes];
+  }
 
   constructor(id: string, hostname = "Router") {
     super(id);
@@ -35,6 +41,7 @@ export class Router extends IosDevice {
       localRoutes: true,
       staticRoutes: () => this.config.staticRoutes,
       ipv6StaticRoutes: () => this.config.ipv6StaticRoutes,
+      ipv6OspfRoutes: () => this.ospfv3Routes,
       ospfRoutes: () => this.ospfRoutes,
       onDhcp: (iface, packet) => this.handleDhcp(iface, packet),
       filter: (iface, packet, direction) => permitsStandardAcl(this.config, iface.name, packet, direction),
@@ -49,7 +56,7 @@ export class Router extends IosDevice {
 
   onAttach(): void {
     super.onAttach();
-    const tick = () => { this.syncOspf(); this.clock.schedule(1000, tick); };
+    const tick = () => { this.syncOspf(); this.syncOspfV3(); this.clock.schedule(1000, tick); };
     this.clock.schedule(1000, tick);
   }
 
@@ -86,6 +93,44 @@ export class Router extends IosDevice {
       for (const route of peer.device.ospfAdvertisements(ours.ip!)) {
         if (!local.some((r) => r.network === route.network && r.mask === route.mask) && !this.ospfRoutes.some((r) => r.network === route.network && r.mask === route.mask && r.nextHop === theirs.ip)) {
           this.ospfRoutes.push({ ...route, nextHop: theirs.ip!, exitIface: ours.name });
+        }
+      }
+    }
+  }
+
+  private ospfv3Area(iface: L3Interface): number | null {
+    return this.config.ospfv3 && iface.up() ? this.config.interfaces[iface.name]?.ipv6OspfArea ?? null : null;
+  }
+
+  private ospfv3Advertisements() {
+    const connected = this.l3Interfaces().flatMap((iface) => {
+      if (this.ospfv3Area(iface) === null) return [];
+      return iface.ipv6Addresses.map((a) => ({ network: a.address, prefix: a.prefix, nextHop: null, exitIface: null }));
+    });
+    const learned = this.ospfv3Routes.filter((route) => route.nextHop !== null).map(({ network, prefix }) => ({ network, prefix, nextHop: null, exitIface: null }));
+    return [...connected, ...learned.filter((r) => !connected.some((c) => c.network === r.network && c.prefix === r.prefix))];
+  }
+
+  private syncOspfV3(): void {
+    this.ospfv3Neighbors.length = 0;
+    this.ospfv3Routes = [];
+    if (!this.config.ospfv3) return;
+    const local = this.ospfv3Advertisements();
+    for (const port of this.ports) {
+      const peer = port.peer;
+      if (!peer || !(peer.device instanceof Router)) continue;
+      const ours = this.l3.get(port);
+      const theirs = peer.device.l3.get(peer);
+      const oursArea = ours && this.ospfv3Area(ours);
+      const theirsArea = theirs && peer.device.ospfv3Area(theirs);
+      const pair = ours && theirs && oursArea !== null && oursArea === theirsArea
+        ? ours.ipv6Addresses.flatMap((a) => theirs.ipv6Addresses.map((b) => ({ a, b }))).find(({ a, b }) => ipv6InPrefix(b.address, a.address, a.prefix) && ipv6InPrefix(a.address, b.address, b.prefix))
+        : undefined;
+      if (!ours || !theirs || !pair) continue;
+      this.ospfv3Neighbors.push({ router: peer.device, localInterface: ours.name, remoteInterface: theirs.name, remoteAddress: pair.b.address });
+      for (const route of peer.device.ospfv3Advertisements()) {
+        if (!local.some((r) => r.network === route.network && r.prefix === route.prefix) && !this.ospfv3Routes.some((r) => r.network === route.network && r.prefix === route.prefix && r.nextHop === pair.b.address)) {
+          this.ospfv3Routes.push({ ...route, nextHop: pair.b.address, exitIface: ours.name });
         }
       }
     }
