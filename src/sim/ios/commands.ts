@@ -286,6 +286,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("arp", "IP ARP table")], (c) => c.out.push(...show.showArp(c.device))),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("nat", "Network Address Translation"), kw("translations", "NAT translation table")], (c) => c.out.push(...show.showIpNatTranslations(c.device)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("standby", "Hot Standby Router Protocol")], (c) => c.out.push(...show.showStandby(c.device as Router)), { devices: ["router"] }),
+  cmd(EXEC, [SHOW, kw("vrrp", "Virtual Router Redundancy Protocol")], (c) => c.out.push(...show.showVrrp(c.device as Router)), { devices: ["router"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("route", "IP routing table")], (c) => c.out.push(...show.showIpRoute(c.device)), {
     when: (c) => c.device.kind === "router" || (c.device.kind === "switch" && c.device.config.ipRouting),
   }),
@@ -770,6 +771,15 @@ const interfaceCommands: Entry[] = [
   }, { devices: ["router"] }),
   cmd(ANY_IF, [kw("standby", "Hot Standby Router Protocol"), numArg(0, 255, "HSRP group"), kw("preempt", "Preempt active router")], (c, [group]) => {
     forEachIface(c, (name) => { const h = c.device.ifaceConfig(name).hsrp; if (h && h.group === group) h.preempt = true; });
+  }, { devices: ["router"] }),
+  cmd(ANY_IF, [kw("vrrp", "Virtual Router Redundancy Protocol"), numArg(1, 255, "VRRP group"), kw("ip", "Virtual IP address"), ipArg("Virtual IP address")], (c, [group, ip]) => {
+    forEachIface(c, (name) => { const current = c.device.ifaceConfig(name).vrrp; c.device.ifaceConfig(name).vrrp = { group: group as number, ip: ip as Ipv4, priority: current?.priority ?? 100, preempt: current?.preempt ?? false }; });
+  }, { devices: ["router"] }),
+  cmd(ANY_IF, [kw("vrrp", "Virtual Router Redundancy Protocol"), numArg(1, 255, "VRRP group"), kw("priority", "VRRP priority"), numArg(1, 254, "Priority")], (c, [group, priority]) => {
+    forEachIface(c, (name) => { const v = c.device.ifaceConfig(name).vrrp; if (v && v.group === group) v.priority = priority as number; });
+  }, { devices: ["router"] }),
+  cmd(ANY_IF, [kw("vrrp", "Virtual Router Redundancy Protocol"), numArg(1, 255, "VRRP group"), kw("preempt", "Preempt active router")], (c, [group]) => {
+    forEachIface(c, (name) => { const v = c.device.ifaceConfig(name).vrrp; if (v && v.group === group) v.preempt = true; });
   }, { devices: ["router"] }),
   cmd(ANY_IF, [kw("ipv6", "IPv6 interface configuration"), kw("address", "Set the IPv6 address"), wordArg("IPv6 address/prefix")], (c, [text]) => {
     const parsed = parseIpv6Prefix(text as string);

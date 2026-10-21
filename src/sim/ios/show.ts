@@ -94,6 +94,11 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
       if (ic.hsrp.priority !== 100) out.push(` standby ${ic.hsrp.group} priority ${ic.hsrp.priority}`);
       if (ic.hsrp.preempt) out.push(` standby ${ic.hsrp.group} preempt`);
     }
+    if (ic.vrrp) {
+      out.push(` vrrp ${ic.vrrp.group} ip ${formatIpv4(ic.vrrp.ip)}`);
+      if (ic.vrrp.priority !== 100) out.push(` vrrp ${ic.vrrp.group} priority ${ic.vrrp.priority}`);
+      if (ic.vrrp.preempt) out.push(` vrrp ${ic.vrrp.group} preempt`);
+    }
     if (ic.encapsulation) out.push(` encapsulation dot1Q ${ic.encapsulation.vlan}${ic.encapsulation.native ? " native" : ""}`);
     if (ic.accessGroupIn !== null) out.push(" ip access-group " + ic.accessGroupIn + " in");
     if (ic.accessGroupOut !== null) out.push(" ip access-group " + ic.accessGroupOut + " out");
@@ -943,6 +948,17 @@ export function showStandby(router: Router): string[] {
     out.push(`${iface.name} - Group ${h.group}`, `  State is ${active === router ? "Active" : "Standby"}`, `  Virtual IP address is ${formatIpv4(h.ip)}`, `  Priority ${h.priority}`, `  Active router is ${active.hostname}`);
   }
   return out.length ? out : ["HSRP is not configured"];
+}
+
+export function showVrrp(router: Router): string[] {
+  const out: string[] = [];
+  for (const iface of router.interfaces()) {
+    const v = router.config.interfaces[iface.name]?.vrrp;
+    if (!v || iface.status() !== "up") continue;
+    const active = router.vrrpActive(iface.name);
+    out.push(`${iface.name} - Group ${v.group}`, `  State is ${active === router ? "Master" : "Backup"}`, `  Virtual IP address is ${formatIpv4(v.ip)}`, `  Priority ${v.priority}`, `  Master router is ${active.hostname}`);
+  }
+  return out.length ? out : ["VRRP is not configured"];
 }
 
 export function showNtpStatus(device: IosDevice): string[] {
