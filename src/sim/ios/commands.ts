@@ -240,6 +240,7 @@ const showCommands: Entry[] = [
     (c) => c.out.push(...show.showIpInterfaceBrief(c.device)),
   ),
   cmd(EXEC, [SHOW, kw("ipv6", "IPv6 information"), kw("interface", "IPv6 interface status"), kw("brief", "Brief summary of IPv6 status")], (c) => c.out.push(...show.showIpv6InterfaceBrief(c.device))),
+  cmd(EXEC, [SHOW, kw("ipv6", "IPv6 information"), kw("route", "IPv6 routing table")], (c) => c.out.push(...show.showIpv6Route(c.device))),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration")], (c) => c.out.push(...show.showInterfaces(c.device))),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), ifaceArg], (c, [name]) =>
     c.out.push(...show.showInterfaces(c.device, name as string)),
@@ -569,6 +570,18 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [NO, IP, kw("default-gateway", "Specify default gateway (if not routing IP)")], (c) => {
     c.device.config.defaultGateway = null;
   }, { devices: ["switch"] }),
+  cmd(CONFIG, [kw("ipv6", "Global IPv6 configuration"), kw("route", "Configure a static IPv6 route"), wordArg("IPv6 prefix/prefix-length"), wordArg("Next-hop IPv6 address")], (c, [prefix, nextHop]) => {
+    const parsed = parseIpv6Prefix(prefix as string);
+    const via = parseIpv6Prefix(`${nextHop as string}/128`);
+    if (!parsed || !via) { c.out.push("% Invalid IPv6 route."); return; }
+    c.device.config.ipv6StaticRoutes.push({ network: parsed.address, prefix: parsed.prefix, nextHop: via.address, exitIface: null });
+  }, { devices: ["router"] }),
+  cmd(CONFIG, [NO, kw("ipv6", "Global IPv6 configuration"), kw("route", "Configure a static IPv6 route"), wordArg("IPv6 prefix/prefix-length"), wordArg("Next-hop IPv6 address")], (c, [prefix, nextHop]) => {
+    const parsed = parseIpv6Prefix(prefix as string);
+    const via = parseIpv6Prefix(`${nextHop as string}/128`);
+    if (!parsed || !via) return;
+    c.device.config.ipv6StaticRoutes = c.device.config.ipv6StaticRoutes.filter((r) => !(r.network === parsed.address && r.prefix === parsed.prefix && r.nextHop === via.address));
+  }, { devices: ["router"] }),
 ];
 
 const routedIface = (c: Ctx) => c.console.ifaces.every((n) => c.device.findInterface(n)?.routed);

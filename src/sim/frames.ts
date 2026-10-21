@@ -46,9 +46,11 @@ export interface Ipv4Packet {
 }
 
 export interface Icmpv6Message {
-  type: "echo-request" | "echo-reply" | "time-exceeded" | "unreachable";
+  type: "echo-request" | "echo-reply" | "time-exceeded" | "unreachable" | "neighbor-solicitation" | "neighbor-advertisement";
   id: number;
   seq: number;
+  target?: Ipv6;
+  targetMac?: Mac;
 }
 
 export interface Ipv6Packet {

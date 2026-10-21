@@ -138,6 +138,7 @@ export interface IosConfig {
   dhcpSnoopingVlans: number[];
   dhcpSnoopingBindings: { mac: string; ip: Ipv4; vlan: number; port: string; learnedAt: number }[];
   arpInspectionVlans: number[];
+  ipv6StaticRoutes: { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[];
 }
 
 export function defaultLine(): LineConfig {
@@ -177,6 +178,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     dhcpSnoopingVlans: [],
     dhcpSnoopingBindings: [],
     arpInspectionVlans: [],
+    ipv6StaticRoutes: [],
   };
 }
 

@@ -34,6 +34,7 @@ export class Router extends IosDevice {
       initialTtl: 255,
       localRoutes: true,
       staticRoutes: () => this.config.staticRoutes,
+      ipv6StaticRoutes: () => this.config.ipv6StaticRoutes,
       ospfRoutes: () => this.ospfRoutes,
       onDhcp: (iface, packet) => this.handleDhcp(iface, packet),
       filter: (iface, packet, direction) => permitsStandardAcl(this.config, iface.name, packet, direction),

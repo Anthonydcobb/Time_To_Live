@@ -65,6 +65,7 @@ export interface IpStackOptions {
   /** Routers add local /32 routes to the table. */
   localRoutes: boolean;
   staticRoutes?: () => StaticRoute[];
+  ipv6StaticRoutes?: () => { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[];
   ospfRoutes?: () => StaticRoute[];
   defaultGateway?: () => Ipv4 | null;
   /** DHCP messages go here instead of through normal delivery. They arrive before the client has an address. */
@@ -83,6 +84,8 @@ export class IpStack {
   private waiters = new Map<string, (r: PingResult) => void>();
   private nextPingId = 1;
   private ipv6Waiters = new Map<string, (r: PingResult) => void>();
+  private ipv6Neighbors = new Map<string, { mac: Mac; iface: L3Interface }>();
+  private ipv6Queued = new Map<string, { iface: L3Interface; packet: Ipv6Packet; nextHop: Ipv6 }[]>();
 
   constructor(private readonly opts: IpStackOptions) {}
 
@@ -199,7 +202,7 @@ export class IpStack {
     const p = frame.payload;
     if (p.kind === "cdp" || p.kind === "bpdu") return;
     if (p.kind === "ipv6") {
-      this.handleIpv6(iface, p);
+      this.handleIpv6(iface, p, frame.src);
       return;
     }
     if (p.kind === "arp") {
@@ -254,10 +257,22 @@ export class IpStack {
     return this.opts.interfaces().find((iface) => iface.up() && iface.ipv6Addresses.some((a) => a.address === address)) ?? null;
   }
 
-  private ipv6Route(dst: Ipv6): { iface: L3Interface; source: Ipv6 } | null {
+  private ipv6Route(dst: Ipv6, depth = 0): { iface: L3Interface; source: Ipv6; nextHop: Ipv6 } | null {
     const matches = this.opts.interfaces().flatMap((iface) => iface.up() ? iface.ipv6Addresses.filter((a) => ipv6InPrefix(dst, a.address, a.prefix)).map((a) => ({ iface, source: a.address, prefix: a.prefix })) : []);
     const best = matches.sort((a, b) => b.prefix - a.prefix)[0];
-    return best ? { iface: best.iface, source: best.source } : null;
+    if (best) return { iface: best.iface, source: best.source, nextHop: dst };
+    const staticMatches = (this.opts.ipv6StaticRoutes?.() ?? []).filter((r) => ipv6InPrefix(dst, r.network, r.prefix)).sort((a, b) => b.prefix - a.prefix);
+    const route = staticMatches[0];
+    if (!route || depth > 8) return null;
+    if (route.exitIface) {
+      const iface = this.opts.interfaces().find((candidate) => candidate.name === route.exitIface && candidate.up() && candidate.ipv6Addresses.length);
+      return iface ? { iface, source: iface.ipv6Addresses[0].address, nextHop: route.nextHop ?? dst } : null;
+    }
+    if (route.nextHop) {
+      const via = this.ipv6Route(route.nextHop, depth + 1);
+      return via ? { ...via, nextHop: route.nextHop } : null;
+    }
+    return null;
   }
 
   sendIpv6(packet: Ipv6Packet): boolean {
@@ -268,11 +283,36 @@ export class IpStack {
     }
     const route = this.ipv6Route(packet.dst);
     if (!route) return false;
-    route.iface.transmit({ src: route.iface.mac, dst: BROADCAST_MAC, payload: packet });
+    const neighbor = this.ipv6Neighbors.get(route.nextHop);
+    if (neighbor?.iface === route.iface) {
+      route.iface.transmit({ src: route.iface.mac, dst: neighbor.mac, payload: packet });
+    } else {
+      const waiting = this.ipv6Queued.get(route.nextHop) ?? [];
+      waiting.push({ iface: route.iface, packet, nextHop: route.nextHop });
+      this.ipv6Queued.set(route.nextHop, waiting);
+      route.iface.transmit({ src: route.iface.mac, dst: BROADCAST_MAC, payload: { kind: "ipv6", src: route.source, dst: "ff02:0000:0000:0000:0000:0000:0000:0001", hopLimit: 255, icmpv6: { type: "neighbor-solicitation", id: 0, seq: 0, target: route.nextHop } } });
+    }
     return true;
   }
 
-  private handleIpv6(_iface: L3Interface, packet: Ipv6Packet): void {
+  private handleIpv6(iface: L3Interface, packet: Ipv6Packet, sourceMac: Mac): void {
+    const icmp = packet.icmpv6;
+    if (icmp?.type === "neighbor-solicitation" && icmp.target) {
+      const target = this.ipv6Local(icmp.target);
+      if (target) {
+        this.ipv6Neighbors.set(icmp.target, { mac: sourceMac, iface });
+        const local = target.ipv6Addresses.find((a) => a.address === icmp.target)!;
+        target.transmit({ src: target.mac, dst: sourceMac, payload: { kind: "ipv6", src: local.address, dst: packet.src, hopLimit: 255, icmpv6: { type: "neighbor-advertisement", id: 0, seq: 0, target: local.address, targetMac: target.mac } } });
+      }
+      return;
+    }
+    if (icmp?.type === "neighbor-advertisement" && icmp.target && icmp.targetMac) {
+      this.ipv6Neighbors.set(icmp.target, { mac: icmp.targetMac, iface });
+      const waiting = this.ipv6Queued.get(icmp.target) ?? [];
+      this.ipv6Queued.delete(icmp.target);
+      for (const item of waiting) item.iface.transmit({ src: item.iface.mac, dst: icmp.targetMac, payload: item.packet });
+      return;
+    }
     const local = this.ipv6Local(packet.dst);
     if (local) {
       this.deliverIpv6(local, packet);
@@ -282,7 +322,9 @@ export class IpStack {
     if (!forwarding || packet.hopLimit <= 1) return;
     const route = this.ipv6Route(packet.dst);
     if (!route) return;
-    route.iface.transmit({ src: route.iface.mac, dst: BROADCAST_MAC, payload: { ...packet, hopLimit: packet.hopLimit - 1 } });
+    const neighbor = this.ipv6Neighbors.get(route.nextHop);
+    if (neighbor?.iface === route.iface) route.iface.transmit({ src: route.iface.mac, dst: neighbor.mac, payload: { ...packet, hopLimit: packet.hopLimit - 1 } });
+    else route.iface.transmit({ src: route.iface.mac, dst: BROADCAST_MAC, payload: { ...packet, hopLimit: packet.hopLimit - 1 } });
   }
 
   private deliverIpv6(_iface: L3Interface, packet: Ipv6Packet): void {

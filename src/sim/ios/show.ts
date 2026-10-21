@@ -65,6 +65,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   if (!isSwitch) out.push("ip cef", "no ipv6 cef", "!", "multilink bundle-name authenticated", "!");
   if (!c.cdpRun) out.push("no cdp run", "!");
   if (c.ipv6UnicastRouting) out.push("ipv6 unicast-routing");
+  for (const route of c.ipv6StaticRoutes) out.push(`ipv6 route ${formatIpv6(route.network)}/${route.prefix} ${route.nextHop ?? route.exitIface ?? "Null0"}`);
   if (isSwitch) {
     if (c.ipRouting) out.push("ip routing");
     if (c.dhcpSnooping) out.push("ip dhcp snooping");
@@ -195,6 +196,15 @@ export function showIpv6InterfaceBrief(device: IosDevice): string[] {
     const addresses = device.config.interfaces[i.name]?.ipv6Addresses ?? [];
     out.push(`${i.name.padEnd(23)}${(addresses.length ? addresses.map((a) => `${formatIpv6(a.address)}/${a.prefix}`).join(",") : "unassigned").padEnd(42)}${i.status().padEnd(22)}${i.protocol()}`);
   }
+  return out;
+}
+
+export function showIpv6Route(device: IosDevice): string[] {
+  const out = ["IPv6 Routing Table - default - 1 entries", "Codes: C - Connected, L - Local, S - Static", ""];
+  for (const iface of device.interfaces()) {
+    for (const address of device.config.interfaces[iface.name]?.ipv6Addresses ?? []) out.push(`C   ${formatIpv6(address.address)}/${address.prefix} is directly connected, ${iface.name}`);
+  }
+  for (const route of device.config.ipv6StaticRoutes) out.push(`S   ${formatIpv6(route.network)}/${route.prefix} [1/0] via ${route.nextHop ?? route.exitIface ?? "Null0"}`);
   return out;
 }
 

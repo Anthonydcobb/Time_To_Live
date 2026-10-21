@@ -37,4 +37,12 @@ describe("IPv6 interface configuration", () => {
     net.clock.advance(100);
     expect(result).toBe("reply");
   });
+
+  it("configures and displays a static IPv6 route", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1"));
+    type(r1, "", "en", "conf t", "ipv6 route 2001:db8:2::/64 2001:db8:1::2", "end");
+    expect(r1.config.ipv6StaticRoutes).toHaveLength(1);
+    expect(type(r1, "show ipv6 route").join("\n")).toContain("2001:0db8:0002:0000:0000:0000:0000:0000/64");
+  });
 });
