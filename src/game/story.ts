@@ -29,6 +29,15 @@ const GARY_TIPS: Line[][] = [
   [{ who: G, text: "show ip interface brief is my favorite. Everything you need on one screen, and nobody yells." }],
 ];
 
+/** Whether a typed line is show ip dhcp binding, abbreviated any way IOS allows ("sh ip dh b"). */
+function isShowDhcpBinding(line: string): boolean {
+  const w = line.trim().toLowerCase().split(/\s+/);
+  const starts = (word: string | undefined, full: string, min: number) => !!word && word.length >= min && full.startsWith(word);
+  // "do show ..." works from config mode too.
+  if (w[0] === "do") w.shift();
+  return w.length === 4 && starts(w[0], "show", 2) && w[1] === "ip" && starts(w[2], "dhcp", 2) && starts(w[3], "binding", 1);
+}
+
 /**
  * The slice: who says what, and when. It owns each job's network and reads it to decide
  * what happens next. Job 1 is the corner store; job 2, the laundromat, starts from the board.
@@ -46,6 +55,8 @@ export class Story {
   private garyTip = 0;
   private finchLine = 0;
   private gusLine = 0;
+  /** Where R1's command history stood when Walter asked for show ip dhcp binding. */
+  private bindingFrom = 0;
   private told = new Set<string>();
 
   constructor(private readonly ui: Ui) {
@@ -76,6 +87,13 @@ export class Story {
     for (const i of job.incantations) this.grimoire.teach(i);
     this.wire([job.r1, job.s1]);
     this.ui.attach(job.net, [job.r1, job.s1, job.kiosk, job.office, job.printer], job.layout);
+    // The last real step is a look, not a change: Walter wants the lease list checked. It sits
+    // above the flavor line and ticks off when the story sees the command (see tickLaundromat).
+    job.tasks.splice(job.tasks.length - 1, 0, {
+      id: "binding",
+      text: "Check who has a lease: show ip dhcp binding on the router.",
+      done: () => this.flags.has("checked"),
+    });
     this.wash = job;
     this.flags.add("job2");
   }
@@ -121,7 +139,7 @@ export class Story {
       this.ui.say([
         { who: W, text: "Spin Cycle Eternal! Open twenty-four hours a day, every day, fifty-one years running. Gus has never closed it. Gus has never LEFT it." },
         { who: W, text: "Good news: it's all cabled. Bad news: the PCs want an address *handed* to them, automatic-like. That's DHCP. The router does the handing." },
-        { who: W, text: "Rack's in Gus's back office, on the left. And kid? Don't stare into the dryers. They stare back, and it's awkward for everybody. Over." },
+        { who: W, text: "Rack's in Gus's back office, through the back door. Gus has the keys; he's in his booth. And kid? Don't stare into the dryers. They stare back, and it's awkward for everybody. Over." },
       ]);
     }
     if (room === "office" && this.flags.has("done2") && !this.flags.has("home2")) {
@@ -316,6 +334,15 @@ export class Story {
       case "printer":
         ui.openLaptop(printer, "PRN · Printer", PRINTER_HINT);
         return;
+      case "backdoor":
+        if (!this.flags.has("keys")) {
+          ui.say([{ text: "BACK OFFICE. EMPLOYEES ONLY. Locked, and it's a heavy old door. Gus will have the key." }]);
+          return;
+        }
+        this.flags.add("open:laundromat:backdoor");
+        events.emit("open", "backdoor");
+        ui.say([{ text: "The key turns like it's been waiting for you. Behind the door, the hum of a rack and the smell of warm dust." }]);
+        return;
       case "desk":
         ui.say([{ text: "Gus's desk. A coffee mug that says WORLD'S OKAYEST MANAGER, still steaming. The coffee is from 1974 too." }]);
         return;
@@ -376,8 +403,11 @@ export class Story {
         { who: GUS, text: "You're from Bob's. Good. Good. I called it in on... what's today?" },
         { who: GUS, text: "Doesn't matter. The computers keep asking for an address and nobody answers them. I know how they feel." },
         { who: GUS, text: "The kiosk out front, the PC in my office, and the printer. The printer likes its own spot, point five. The others take whatever they're given." },
+        { who: GUS, text: "Equipment's in the back office. Here." },
+        { text: "Gus slides a ring of keys through the window. One is labeled BACK, in typewriter letters." },
         { who: GUS, text: "Don't mind the dryers. They run on their own. They always have." },
       ]);
+      this.flags.add("keys");
       return;
     }
     if (this.flags.has("haunt2")) {
@@ -447,12 +477,15 @@ export class Story {
     const ok = (i: number) => !!job.tasks[i].done?.();
     if (this.flags.has("done2")) return "You're done! Come on home. And don't take any socks from the lost and found. Over.";
     if (this.room !== "laundromat") return "Route 9, kid. The van's out front. Over.";
+    if (!this.flags.has("keys")) return "Gear's behind the back door and Gus has the keys. He's in the booth by the kiosk. Go say hi. Over.";
+    if (!this.flags.has("open:laundromat:backdoor")) return "You've got Gus's keys. Back door, top left. Over.";
     if (!ok(0)) return "Router first. interface gi0/0, ip address 192.168.20.1 255.255.255.0, no shutdown. Same as last time, new numbers. Over.";
     if (!ok(1)) return "Now fence off the low addresses so DHCP doesn't hand out the printer's spot. ip dhcp excluded-address 192.168.20.1 192.168.20.20, in global config. Over.";
     if (!ok(2)) return "Now the pool. ip dhcp pool, any name you like, then network 192.168.20.0 255.255.255.0 and default-router 192.168.20.1. That's the router promising to answer. Over.";
     if (!ok(3)) return "The printer doesn't take handouts. On the printer: ipconfig 192.168.20.5 255.255.255.0 192.168.20.1. A fixed address, like a house. Over.";
     if (!ok(4)) return "The PCs asked once, nobody answered, and they sulked. On each one: ipconfig /renew. Over.";
-    return "Last thing: ping the printer, 192.168.20.5, from both PCs. Over.";
+    if (!ok(5)) return "Ping the printer, 192.168.20.5, from both PCs. Over.";
+    return "Last thing: on the router, show ip dhcp binding. Make sure it's just our two PCs on the list. Over.";
   }
 
   /** Watches the network a few times a second and reacts as tasks get done. */
@@ -523,50 +556,60 @@ export class Story {
     once(0, [{ who: W, text: "Gi0/0 is up. The router's awake. That's the easy part. Over." }]);
     once(2, [{ who: W, text: "The pool's open! Now anything that asks gets an answer. ANYTHING. ...Ha. Over." }]);
     once(4, [{ who: W, text: "Leases! Both PCs got addresses. show ip dhcp binding on the router lists who's got what. Over." }]);
-    if (job.tasks.every((t) => !t.done || t.done()) && !this.flags.has("haunt2")) this.hauntLaundromat(job);
+    // Once the network work is done, Walter asks for one last look at the lease list.
+    const networkDone = job.tasks.every((t) => t.id === "binding" || !t.done || t.done());
+    if (networkDone && !this.flags.has("ask-binding")) {
+      this.flags.add("ask-binding");
+      this.bindingFrom = job.r1.console.history.length;
+      this.ui.say([
+        { who: W, text: "Pings come back, printer's got its spot. Nice work, kid." },
+        { who: W, text: "One more thing before you go. On the router: show ip dhcp binding. Make sure it's just our two PCs on the list. Over." },
+      ]);
+    }
+    if (this.flags.has("ask-binding") && !this.flags.has("checked")) {
+      const typed = job.r1.console.history.slice(this.bindingFrom);
+      if (typed.some(isShowDhcpBinding)) {
+        this.flags.add("checked");
+        // Give the real table a moment on screen first.
+        window.setTimeout(() => this.hauntLaundromat(job), 1400);
+      }
+    }
   }
 
-  /** Job 2's done, so something else asks for an address, and gets one. */
+  /**
+   * Job 2's haunt. Under the real leases in show ip dhcp binding, a third one statics in: the
+   * network address itself, leased to a dryer's MAC, expiring in 1974. Then it's gone.
+   */
   private hauntLaundromat(job: ReturnType<typeof laundromat>): void {
     this.flags.add("haunt2");
-    window.setTimeout(() => {
-      events.emit("flicker");
-      // Nobody plugged it in. Spanning tree holds its port for 30 s and its first request is
-      // lost, so it asks again once the port opens, and Walter notices when the lease lands.
-      const dryer = new Pc("DRYER4", "?", "666666666604");
-      dryer.dhcp = true;
-      job.net.add(dryer);
-      job.net.connect(dryer.nic, job.s1.port("FastEthernet0/24"));
-      this.ui.bindCable(job.s1.port("FastEthernet0/24"));
-      job.net.clock.schedule(35_000, () =>
-        dryer.renew((lease) => {
-          if (!lease) return;
-          this.ui.say([
-            { who: W, text: "Huh. The router just handed out another lease. Six-six-six-six dot... that's not one of ours." },
-            { who: W, text: "show ip dhcp binding, if you want to see who. I wouldn't. Over." },
-          ]);
-        }),
-      );
-      events.emit("haunt");
-      this.ui.say(
-        [
-          { text: "Every dryer stops at once. In the quiet, one of them starts up again. You don't have to look to know which." },
-          { who: W, text: "Ticket's DONE, kid! Tell Gus and come on home. Over." },
-        ],
-        () => {
-          this.flags.add("done2");
-          const card = this.ui.showCard(
-            `<p class="big">Work order #0002 complete</p>
-             <p>LEASES ISSUED <b>3</b></p>
-             <p>CUSTOMER SATISFACTION <b>ETERNAL</b></p>
-             <p class="vanish">BOUNDARY INTEGRITY <b>99.6%</b></p>`,
-            undefined,
-            4000,
-          );
-          window.setTimeout(() => card.querySelector(".vanish")?.classList.add("gone"), 2500);
-        },
-      );
-    }, 1500);
+    const ghost = `${"192.168.20.0".padEnd(20)}${"0166.6666.6666.04".padEnd(24)}${"Oct 14 1974 03:14 AM".padEnd(24)}Automatic`;
+    this.ui.ghostLine(
+      job.r1,
+      ghost,
+      () => events.emit("flicker"),
+      () => {
+        events.emit("haunt");
+        this.ui.say(
+          [
+            { text: "Every dryer in the place stops at once. In the quiet, one of them starts up again. You don't have to look to know which." },
+            { who: W, text: "Kid? Was there a third line on that list just now? Point zero. You can't lease point zero. That's the *network*." },
+            { who: W, text: "...No. Two PCs, two leases. That's what the paperwork says, so that's what happened. Ticket's DONE. Tell Gus and come on home. Over." },
+          ],
+          () => {
+            this.flags.add("done2");
+            const card = this.ui.showCard(
+              `<p class="big">Work order #0002 complete</p>
+               <p>LEASES ISSUED <b>2</b></p>
+               <p>CUSTOMER SATISFACTION <b>ETERNAL</b></p>
+               <p class="vanish">BOUNDARY INTEGRITY <b>99.6%</b></p>`,
+              undefined,
+              4000,
+            );
+            window.setTimeout(() => card.querySelector(".vanish")?.classList.add("gone"), 2500);
+          },
+        );
+      },
+    );
   }
 
   private travel(to: RoomId): void {

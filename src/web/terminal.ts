@@ -1,4 +1,4 @@
-import { Terminal } from "@xterm/xterm";
+import { Terminal, type IMarker } from "@xterm/xterm";
 import { FitAddon } from "@xterm/addon-fit";
 import "@xterm/xterm/css/xterm.css";
 import type { IosDevice } from "../sim/devices/ios-device";
@@ -110,6 +110,22 @@ export class TerminalView {
       return;
     }
     this.term.write(CRLF + text + CRLF + this.session.prompt() + (this.session.secret() ? "" : this.buffer));
+  }
+
+  /**
+   * Prints `text` over the current prompt line and redraws the prompt under it, so it reads as
+   * the last line of the previous command's output. Once xterm has drawn it, `onMarked` gets a
+   * marker on that line. Returns false, and prints nothing, if a command is running.
+   */
+  insertAbove(text: string, onMarked: (marker: IMarker) => void): boolean {
+    if (this.busy || this.running) return false;
+    const line = this.session.prompt() + (this.session.secret() ? "" : this.buffer);
+    // xterm parses writes later, so the marker has to wait until this one has landed.
+    this.term.write("\r\x1b[2K" + text + CRLF + line, () => {
+      const marker = this.term.registerMarker(-1);
+      if (marker) onMarked(marker);
+    });
+    return true;
   }
 
   private flushLogs(): void {

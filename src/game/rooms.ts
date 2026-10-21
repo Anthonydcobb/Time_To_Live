@@ -28,6 +28,8 @@ export interface Prop {
   cardGone?: string;
   /** Set dressing: you bump into it, but there's nothing to press E on. */
   decor?: boolean;
+  /** A door in a wall gap: solid until the story opens it (flag `open:<room>:<id>`, event "open"). */
+  door?: boolean;
 }
 
 export interface RoomDef {
@@ -250,79 +252,88 @@ export const ROOMS: Record<RoomId, RoomDef> = {
   laundromat: {
     id: "laundromat",
     title: "Spin Cycle Eternal",
-    // From art/concepts/locations/spin-cycle-laundromat-layout.jpg: the same shell as the store.
-    // Restroom hallway top left, Gus's back office below it with the rack, the dryers along the
-    // back wall, two rows of washers, and the attendant counter by the kiosk on the right.
-    // Grey boxes for now; the rack, desk and door borrow the store's art.
+    // One big open floor. Gus's back office is the top-left corner behind a back door (locked
+    // until Gus hands over his keys), and his booth is walled into the bottom-right corner
+    // with a service window onto the floor. Grey boxes for now; agy is drawing concepts.
     map: [
-      "   ##################",
-      "   ##################",
-      "   #...#............#",
-      "   #................#",
-      "   #...#............#",
-      "   #...#............#",
-      "#####.##............#",
-      "#......#............#",
-      "#......#............#",
-      "#......#............#",
-      "#......#............#",
-      "#......#............#",
-      "#......#............#",
-      "#####################",
+      "######################",
+      "######################",
+      "#........#...........#",
+      "#........#...........#",
+      "#........#...........#",
+      "#........#...........#",
+      "####.#####...........#",
+      "#....................#",
+      "#....................#",
+      "#....................#",
+      "#...............######",
+      "#...............#....#",
+      "#....................#",
+      "#...............#....#",
+      "#...............#....#",
+      "######################",
     ],
     props: [
-      // Restroom hallway
-      { id: "toilet", label: "Rest-\nroom", x: 4, y: 2, w: 1, h: 1, verb: "Look in", color: 0x6a6a64 },
-      { id: "sink", label: "Sink", x: 6, y: 2, w: 1, h: 1, verb: "", color: 0x5a6266, decor: true },
       // Gus's back office
-      { id: "rack", label: "Rack\nR1 S1", x: 1, y: 7, w: 2, h: 1, verb: "Work on", color: 0x3c4450, sprite: "store-rack" },
-      { id: "logbook", label: "Logbook", x: 3, y: 7, w: 1, h: 1, verb: "Read", color: 0x6a5238, card: "assets/cards/gus-logbook.webp" },
-      { id: "printer", label: "Printer\nPRN", x: 1, y: 9, w: 1, h: 1, verb: "Use", color: 0x5e5e58 },
-      { id: "archive", label: "Log\narchive", x: 1, y: 11, w: 1, h: 2, verb: "Look at", color: 0x50504a, sprite: "store-decor", frame: 5 },
-      { id: "desk", label: "Desk", x: 6, y: 9, w: 1, h: 2, verb: "Look at", color: 0x55524a, sprite: "store-decor", frame: 3 },
-      { id: "office", label: "PC1", x: 6, y: 9, w: 1, h: 1, verb: "Use", color: 0x46504a, hidden: true },
-      { id: "chair", label: "Chair", x: 5, y: 10, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "store-decor", frame: 4 },
-      { id: "boxes", label: "Boxes", x: 3, y: 12, w: 1, h: 1, verb: "", color: 0x5e5240, decor: true, sprite: "store-decor", frame: 6 },
+      { id: "rack", label: "Rack\nR1 S1", x: 1, y: 2, w: 2, h: 1, verb: "Work on", color: 0x3c4450, sprite: "store-rack" },
+      { id: "files", label: "Files", x: 3, y: 2, w: 1, h: 1, verb: "", color: 0x50504a, decor: true, sprite: "office-props", frame: 11 },
+      { id: "logbook", label: "Logbook", x: 5, y: 2, w: 1, h: 1, verb: "Read", color: 0x6a5238, card: "assets/cards/gus-logbook.webp" },
+      { id: "desk", label: "Desk", x: 7, y: 3, w: 1, h: 2, verb: "Look at", color: 0x55524a, sprite: "store-decor", frame: 3 },
+      { id: "office", label: "PC1", x: 7, y: 3, w: 1, h: 1, verb: "Use", color: 0x46504a, hidden: true },
+      { id: "chair", label: "Chair", x: 6, y: 4, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "store-decor", frame: 4 },
+      { id: "printer", label: "Printer\nPRN", x: 1, y: 4, w: 1, h: 1, verb: "Use", color: 0x5e5e58 },
+      { id: "archive", label: "Log\narchive", x: 1, y: 5, w: 1, h: 1, verb: "Look at", color: 0x5e5240, sprite: "store-decor", frame: 6 },
+      { id: "boxes", label: "Boxes", x: 8, y: 5, w: 1, h: 1, verb: "", color: 0x5e5240, decor: true, sprite: "store-decor", frame: 6 },
+      { id: "backdoor", label: "Back\ndoor", x: 4, y: 6, w: 1, h: 1, verb: "Open", color: 0x4a3a2a, door: true },
       // The wall of dryers. Dryer 4 is the one to look at.
-      { id: "dryers", label: "Dryers", x: 9, y: 2, w: 2, h: 1, verb: "Look at", color: 0x6e7270 },
-      { id: "dryers", label: "Dryer\n3", x: 11, y: 2, w: 1, h: 1, verb: "Look at", color: 0x6e7270 },
-      { id: "dryer4", label: "Dryer\n4", x: 12, y: 2, w: 1, h: 1, verb: "Look in", color: 0x5e6a62, card: "assets/cards/dryer-window.webp", cardGone: "assets/cards/dryer-window-empty.webp" },
-      { id: "dryers", label: "Dryers", x: 13, y: 2, w: 2, h: 1, verb: "Look at", color: 0x6e7270 },
-      { id: "dryers", label: "Dryers", x: 15, y: 2, w: 2, h: 1, verb: "Look at", color: 0x6e7270 },
-      { id: "dryers", label: "Dryers", x: 17, y: 2, w: 2, h: 1, verb: "Look at", color: 0x6e7270 },
-      // Washers back to back in two rows, carts between them.
-      { id: "benches", label: "Benches", x: 8, y: 6, w: 1, h: 4, verb: "", color: 0x5a4a3a, decor: true },
-      { id: "washers", label: "Washers", x: 10, y: 5, w: 2, h: 4, verb: "Look at", color: 0x7a7a70 },
-      { id: "cart", label: "Cart", x: 12, y: 6, w: 1, h: 1, verb: "", color: 0x5a5a62, decor: true, sprite: "store-decor", frame: 10 },
-      { id: "washers", label: "Washers", x: 14, y: 5, w: 2, h: 4, verb: "Look at", color: 0x7a7a70 },
-      { id: "cart", label: "Cart", x: 17, y: 6, w: 1, h: 1, verb: "", color: 0x5a5a62, decor: true, sprite: "store-decor", frame: 10 },
-      // Folding table with the lost and found on it, listed after so the box wins its spot.
-      { id: "table", label: "Folding\ntable", x: 19, y: 3, w: 1, h: 3, verb: "", color: 0x6a5a44, decor: true },
-      { id: "lostfound", label: "Lost &\nfound", x: 19, y: 3, w: 1, h: 1, verb: "Look in", color: 0x7a6440, card: "assets/cards/lost-and-found.webp" },
-      // The attendant counter, Gus behind it, the kiosk and machines along the east wall.
-      { id: "kiosk", label: "Kiosk\nPC0", x: 19, y: 8, w: 1, h: 1, verb: "Use", color: 0x46504a },
-      { id: "counter", label: "Counter", x: 17, y: 9, w: 1, h: 3, verb: "Lean on", color: 0x5a5448 },
-      { id: "gus", label: "Gus", x: 18, y: 10, w: 1, h: 1, verb: "Talk to", color: 0x6a6450 },
-      { id: "change", label: "Change", x: 19, y: 11, w: 1, h: 1, verb: "Use", color: 0x5a5e5a },
-      { id: "soap", label: "Soap", x: 19, y: 12, w: 1, h: 1, verb: "Look at", color: 0x6a5a6a },
-      { id: "baskets", label: "Baskets", x: 9, y: 12, w: 1, h: 1, verb: "", color: 0x5a3a3a, decor: true, sprite: "store-decor", frame: 9 },
-      { id: "exit", label: "Door", x: 13, y: 13, w: 2, h: 1, verb: "Leave", color: 0x3a3428, onWall: true, sprite: "store-decor", frame: 15 },
+      { id: "dryers", label: "Dryers", x: 10, y: 2, w: 2, h: 1, verb: "Look at", color: 0x6e7270 },
+      { id: "dryers", label: "Dryer\n3", x: 12, y: 2, w: 1, h: 1, verb: "Look at", color: 0x6e7270 },
+      { id: "dryer4", label: "Dryer\n4", x: 13, y: 2, w: 1, h: 1, verb: "Look in", color: 0x5e6a62, card: "assets/cards/dryer-window.webp", cardGone: "assets/cards/dryer-window-empty.webp" },
+      { id: "dryers", label: "Dryers", x: 14, y: 2, w: 2, h: 1, verb: "Look at", color: 0x6e7270 },
+      { id: "dryers", label: "Dryers", x: 16, y: 2, w: 2, h: 1, verb: "Look at", color: 0x6e7270 },
+      { id: "dryers", label: "Dryers", x: 18, y: 2, w: 2, h: 1, verb: "Look at", color: 0x6e7270 },
+      { id: "dryers", label: "Dryer", x: 20, y: 2, w: 1, h: 1, verb: "Look at", color: 0x6e7270 },
+      // Washer islands, carts between them.
+      { id: "washers", label: "Washers", x: 12, y: 5, w: 2, h: 3, verb: "Look at", color: 0x7a7a70 },
+      { id: "cart", label: "Cart", x: 14, y: 6, w: 1, h: 1, verb: "", color: 0x5a5a62, decor: true, sprite: "store-decor", frame: 10 },
+      { id: "washers", label: "Washers", x: 16, y: 5, w: 2, h: 3, verb: "Look at", color: 0x7a7a70 },
+      { id: "washers", label: "Washers", x: 6, y: 9, w: 3, h: 2, verb: "Look at", color: 0x7a7a70 },
+      { id: "cart", label: "Cart", x: 10, y: 10, w: 1, h: 1, verb: "", color: 0x5a5a62, decor: true, sprite: "store-decor", frame: 10 },
+      { id: "mop", label: "Mop", x: 3, y: 7, w: 1, h: 1, verb: "", color: 0x5a4a32, decor: true, sprite: "store-decor", frame: 11 },
+      // Left wall: the folding table, with the lost and found on it (listed after so the box wins its spot).
+      { id: "table", label: "Folding\ntable", x: 1, y: 8, w: 1, h: 3, verb: "", color: 0x6a5a44, decor: true },
+      { id: "lostfound", label: "Lost &\nfound", x: 1, y: 8, w: 1, h: 1, verb: "Look in", color: 0x7a6440, card: "assets/cards/lost-and-found.webp" },
+      // Right wall machines.
+      { id: "soap", label: "Soap", x: 20, y: 6, w: 1, h: 1, verb: "Look at", color: 0x6a5a6a },
+      { id: "change", label: "Change", x: 20, y: 8, w: 1, h: 1, verb: "Use", color: 0x5a5e5a },
+      // Gus's booth: the kiosk outside it, the service window, Gus behind it.
+      { id: "kiosk", label: "Kiosk\nPC0", x: 15, y: 11, w: 1, h: 1, verb: "Use", color: 0x46504a },
+      { id: "counter", label: "Service\nwindow", x: 16, y: 12, w: 1, h: 1, verb: "Lean on", color: 0x5a5448 },
+      { id: "gus", label: "Gus", x: 17, y: 12, w: 1, h: 1, verb: "Talk to", color: 0x6a6450 },
+      { id: "booth", label: "Radio", x: 19, y: 11, w: 1, h: 1, verb: "", color: 0x4a4440, decor: true },
+      { id: "booth", label: "Stool", x: 18, y: 13, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true },
+      // By the entrance.
+      { id: "baskets", label: "Baskets", x: 1, y: 14, w: 1, h: 1, verb: "", color: 0x5a3a3a, decor: true, sprite: "store-decor", frame: 9 },
+      { id: "bench", label: "Bench", x: 9, y: 14, w: 3, h: 1, verb: "", color: 0x5a4a3a, decor: true },
+      { id: "exit", label: "Door", x: 6, y: 15, w: 2, h: 1, verb: "Leave", color: 0x3a3428, onWall: true, sprite: "store-decor", frame: 15 },
     ],
-    spawn: { x: 13, y: 12 },
+    spawn: { x: 6, y: 14 },
     tiles: "office-tiles",
     floor: [[0, 40], [1, 36], [2, 8], [3, 4], [4, 4], [5, 2], [6, 4], [7, 2]],
-    // Tubes over the dryers (the one over Dryer 4 stutters), the washers, the counter, and Gus's office.
+    // Tubes over the dryers (the one over Dryer 4 stutters) and the floor, a bulb over the
+    // back door, and Gus's booth lit warmer than everything else.
     lights: {
       ambient: 0x4e564c,
       lamps: [
-        { x: 10, y: 3.6, r: 3, color: FLUORESCENT, wide: 1.5 },
-        { x: 13, y: 3.6, r: 2.6, color: FLUORESCENT, wide: 1.3, flicker: true },
-        { x: 17, y: 3.6, r: 3, color: FLUORESCENT, wide: 1.5 },
-        { x: 13, y: 7.5, r: 3.6, color: FLUORESCENT, wide: 1.5 },
-        { x: 18.5, y: 9.5, r: 3, color: FLUORESCENT, wide: 1.2 },
-        { x: 12, y: 11.6, r: 3, color: FLUORESCENT, wide: 1.4 },
-        { x: 5.5, y: 3.2, r: 2.2, color: BULB },
-        { x: 3.5, y: 9.5, r: 3.4, color: FLUORESCENT, wide: 1.3 },
+        { x: 11, y: 3.6, r: 3, color: FLUORESCENT, wide: 1.5 },
+        { x: 14, y: 3.6, r: 2.6, color: FLUORESCENT, wide: 1.3, flicker: true },
+        { x: 18, y: 3.6, r: 3, color: FLUORESCENT, wide: 1.5 },
+        { x: 15, y: 7, r: 3.4, color: FLUORESCENT, wide: 1.5 },
+        { x: 6, y: 10, r: 3.4, color: FLUORESCENT, wide: 1.5 },
+        { x: 9, y: 13.6, r: 3, color: FLUORESCENT, wide: 1.4 },
+        { x: 18.5, y: 12.5, r: 2.4, color: BULB },
+        { x: 4.5, y: 7, r: 1.8, color: BULB },
+        { x: 4.5, y: 3.5, r: 3.2, color: FLUORESCENT, wide: 1.4 },
       ],
     },
   },

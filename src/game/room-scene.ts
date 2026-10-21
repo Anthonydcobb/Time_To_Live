@@ -45,6 +45,8 @@ export class RoomScene extends Phaser.Scene {
   private lampState: { level: number; next: number }[] = [];
   /** Prop sprites by prop id, for swapping frames when the story moves on. */
   private propSprites = new Map<string, Phaser.GameObjects.Sprite[]>();
+  /** Closed doors: what to remove when the story opens them. */
+  private doors = new Map<string, Phaser.GameObjects.GameObject[]>();
 
   constructor(
     private readonly story: Story,
@@ -78,11 +80,13 @@ export class RoomScene extends Phaser.Scene {
     });
     this.room = ROOMS[data.room ?? "office"];
     this.propSprites.clear();
+    this.doors.clear();
     audio.setRoom(this.room.id, this.story.has("haunt"));
     const walls = this.physics.add.staticGroup();
     const solid = (x: number, y: number, w: number, h: number) => {
       const r = this.add.rectangle(x + w / 2, y + h / 2, w, h).setVisible(false);
       walls.add(r);
+      return r;
     };
 
     // Floor and walls. A wall shows its dark top and, above floor, a front face.
@@ -158,28 +162,42 @@ export class RoomScene extends Phaser.Scene {
       if (this.room.id === "shop") this.drawPhantomCable();
     };
     const onWalkie = () => this.propSprites.get("walkie")?.forEach((s) => s.setFrame(1));
+    const onOpen = (id: string) => this.openDoor(id);
     events.on("goto", onGoto);
     events.on("flicker", onFlicker);
     events.on("haunt", onHaunt);
     events.on("walkie", onWalkie);
+    events.on("open", onOpen);
     this.events.once("shutdown", () => {
       events.off("goto", onGoto);
       events.off("flicker", onFlicker);
       events.off("haunt", onHaunt);
       events.off("walkie", onWalkie);
+      events.off("open", onOpen);
     });
 
     this.cameras.main.fadeIn(300);
     this.story.enter(this.room.id);
   }
 
-  private drawProp(p: Prop, solid: (x: number, y: number, w: number, h: number) => void): void {
+  private drawProp(p: Prop, solid: (x: number, y: number, w: number, h: number) => Phaser.GameObjects.Rectangle): void {
     const x = p.x * TILE;
     const y = p.y * TILE;
     const w = p.w * TILE;
     const h = p.h * TILE;
     const inset = p.onWall ? 6 : 4;
     if (p.hidden) return;
+    if (p.door) {
+      // An open door is just a gap in the wall.
+      if (this.isOpen(p)) return;
+      const slab = this.add.rectangle(x, y, w, h, p.color).setOrigin(0).setStrokeStyle(2, 0x111110).setDepth(y + h);
+      const label = this.add
+        .text(x + w / 2, y + h / 2, p.label, { fontFamily: "IBM Plex Mono, monospace", fontSize: "13px", color: "#d8d4c0", align: "center" })
+        .setOrigin(0.5)
+        .setDepth(y + h + 0.5);
+      this.doors.set(p.id, [slab, label, solid(x, y, w, h)]);
+      return;
+    }
     if (p.sprite) {
       // Standing on the bottom of its footprint, so tall things rise up over the wall behind.
       const sprite = this.add.sprite(x + w / 2, y + h, p.sprite, p.frame ?? 0).setOrigin(0.5, 1).setScale(4).setDepth(p.onWall ? 1 : y + h);
@@ -262,6 +280,16 @@ export class RoomScene extends Phaser.Scene {
     put(this.player.x, this.player.y - 40, 1.6, 1, 0x7a8a7a, 0.6);
   }
 
+  private isOpen(p: Prop): boolean {
+    return this.story.has(`open:${this.room.id}:${p.id}`);
+  }
+
+  /** The story opened a door: take away the slab, its label and its collision. */
+  private openDoor(id: string): void {
+    this.doors.get(id)?.forEach((o) => o.destroy());
+    this.doors.delete(id);
+  }
+
   private flicker(): void {
     audio.crackle(true);
     const steps = [0.85, 0, 0.6, 0, 0.9, 0.2, 0];
@@ -335,7 +363,7 @@ export class RoomScene extends Phaser.Scene {
     let best: Prop | null = null;
     let bestD = REACH;
     for (const p of this.room.props) {
-      if (p.decor) continue;
+      if (p.decor || (p.door && this.isOpen(p))) continue;
       const x0 = p.x * TILE;
       const y0 = p.y * TILE;
       const dx = Math.max(x0 - fx, 0, fx - (x0 + p.w * TILE));

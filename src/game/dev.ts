@@ -1,6 +1,7 @@
 import type { IosDevice } from "../sim/devices/ios-device";
 import { parseIpv4 as ip } from "../sim/addr";
 import type { Job } from "../sim/job";
+import type { laundromat } from "../sim/scenarios/laundromat";
 import { events, type Story } from "./story";
 import type { Ui } from "./ui";
 
@@ -20,6 +21,7 @@ interface StoryInternals {
   /** Walter's one-time reactions already given. */
   told: Set<string>;
   haunt(): void;
+  wash: ReturnType<typeof laundromat> | null;
 }
 interface UiInternals {
   current: unknown;
@@ -97,6 +99,38 @@ export function installDevTools(story: Story, ui: Ui): void {
     closeDialogue();
   };
 
+  const takeJob2 = () => {
+    for (const f of ["intro", "walkie", "job", "haunt", "done", "home"]) s.flags.add(f);
+    events.emit("walkie");
+    story.takeLaundromat();
+    events.emit("job");
+    closeDialogue();
+  };
+
+  /**
+   * Does job 2's network work the way a player would, then leaves the last task, typing
+   * show ip dhcp binding on the router, to you, since that's where the ghost lease shows up.
+   */
+  const finishJob2 = () => {
+    takeJob2();
+    const w = s.wash!;
+    for (const t of w.tasks) if (t.id) s.told.add(t.id);
+    for (let i = 0; i < w.tasks.length; i++) s.told.add(`wash${i}`);
+    type(w.r1, ["enable", "configure terminal", "hostname R1", "interface gigabitEthernet0/0",
+      "ip address 192.168.20.1 255.255.255.0", "no shutdown", "exit",
+      "ip dhcp excluded-address 192.168.20.1 192.168.20.20", "ip dhcp pool LAUNDRY",
+      "network 192.168.20.0 255.255.255.0", "default-router 192.168.20.1", "end"]);
+    w.printer.shell.execute("ipconfig 192.168.20.5 255.255.255.0 192.168.20.1");
+    // Past spanning tree's listening and learning, then the renews and the pings.
+    w.net.clock.advance(35_000);
+    finish(w.net, w.kiosk.shell.execute("ipconfig /renew").job);
+    finish(w.net, w.office.shell.execute("ipconfig /renew").job);
+    finish(w.net, w.kiosk.shell.execute("ping 192.168.20.5").job);
+    finish(w.net, w.office.shell.execute("ping 192.168.20.5").job);
+    closeDialogue();
+    events.emit("goto", "laundromat");
+  };
+
   const panel = document.createElement("div");
   panel.id = "devtools";
   panel.innerHTML = `
@@ -112,6 +146,7 @@ export function installDevTools(story: Story, ui: Ui): void {
       <button data-act="time">+30 s</button>
       <button data-act="close">Close dialogue</button>
       <button data-act="job2">Job 2</button>
+      <button data-act="finish2">Finish job 2</button>
     </div>
     <p class="status"></p>
     <p class="note">Job 1 shortcut passwords: <code>${PW}</code></p>
@@ -144,13 +179,10 @@ export function installDevTools(story: Story, ui: Ui): void {
     close: closeDialogue,
     // Skips job 1 as if it went fine, takes work order #0002 and drives to the laundromat.
     job2: () => {
-      for (const f of ["intro", "walkie", "job", "haunt", "done", "home"]) s.flags.add(f);
-      events.emit("walkie");
-      story.takeLaundromat();
-      events.emit("job");
-      closeDialogue();
+      takeJob2();
       events.emit("goto", "laundromat");
     },
+    finish2: finishJob2,
     fold: () => fold(!panel.classList.contains("folded")),
   };
   panel.addEventListener("click", (e) => {

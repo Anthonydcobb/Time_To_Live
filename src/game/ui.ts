@@ -1,5 +1,6 @@
 import { IosDevice } from "../sim/devices/ios-device";
 import type { Pc } from "../sim/devices/pc";
+import type { IMarker } from "@xterm/xterm";
 import { CableError, type Device, type Network, type Port } from "../sim/network";
 import { lightFor } from "../web/topology";
 import { TerminalView, iosSession, pcSession } from "../web/terminal";
@@ -77,6 +78,19 @@ function showImage(img: HTMLImageElement, src: string): void {
 function hideImage(img: HTMLImageElement): void {
   img.hidden = true;
   delete img.dataset.src;
+}
+
+const NOISE = "░▒▓█▚▞▖▗▘▝";
+
+/** `text` with all but `shown` (0 to 1) of its characters turned to static. Gaps mostly stay gaps. */
+function staticOf(text: string, shown: number): string {
+  return [...text]
+    .map((ch) => {
+      if (Math.random() < shown) return ch;
+      if (ch === " " && Math.random() < 0.7) return " ";
+      return NOISE[Math.floor(Math.random() * NOISE.length)];
+    })
+    .join("");
 }
 
 /** Leftovers burned into the console's screen, half-visible behind whatever is being said. */
@@ -521,6 +535,52 @@ export class Ui {
     }
     this.hintHeld = false;
     this.updatePanel();
+  }
+
+  /**
+   * A line that statics into a device's terminal under the last output, flickers, and statics
+   * back out, leaving nothing behind. `onPeak` runs while it's flickering; `onGone` runs once
+   * it's gone (or straight away if the terminal is busy).
+   */
+  ghostLine(device: Device, text: string, onPeak: () => void, onGone: () => void): void {
+    const view = this.views.get(device);
+    if (!view?.insertAbove(staticOf(text, 0), (marker) => this.haunt(view.term, marker, text, onPeak, onGone))) onGone();
+  }
+
+  /** Plays a ghost line's static in, flicker and static out on the marked line. */
+  private haunt(term: TerminalView["term"], marker: IMarker, text: string, onPeak: () => void, onGone: () => void): void {
+    // Rewrites the marked line in place, as long as it's still on screen. The empty write waits
+    // for anything already sent (the player's typing) to land, so the cursor is where it looks.
+    const draw = (line: string | null) =>
+      term.write("", () => {
+        const buf = term.buffer.active;
+        const up = buf.baseY + buf.cursorY - marker.line;
+        if (marker.isDisposed || up <= 0 || up >= term.rows) return;
+        // Save the cursor, go up, rewrite (or delete) the line, come back.
+        if (line !== null) term.write(`\x1b7\x1b[${up}A\r\x1b[2K${line}\x1b8`);
+        else term.write(`\x1b7\x1b[${up}A\x1b[M\x1b8\x1b[A`);
+      });
+    const steps: [number, () => void][] = [];
+    let t = 0;
+    const at = (ms: number, fn: () => void) => steps.push([(t += ms), fn]);
+    // In: the static resolves into the line.
+    for (const shown of [0.15, 0.35, 0.55, 0.75, 0.9, 1]) at(90, () => draw(staticOf(text, shown)));
+    // Hold, with a couple of drop-outs and the lights going.
+    at(900, () => draw(staticOf(text, 0.4)));
+    at(80, () => draw(text));
+    at(700, () => {
+      onPeak();
+      draw(staticOf(text, 0.2));
+    });
+    at(120, () => draw(text));
+    // Out: back to static, then nothing.
+    for (const shown of [0.7, 0.45, 0.2, 0]) at(600 / 4, () => draw(staticOf(text, shown)));
+    at(120, () => {
+      draw(null);
+      term.write("", () => marker.dispose());
+      onGone();
+    });
+    for (const [ms, fn] of steps) window.setTimeout(fn, ms);
   }
 
   /** Marks a cable that can't be pulled out: clicking either end gets the apparition instead. */
