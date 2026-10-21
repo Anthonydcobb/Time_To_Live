@@ -13,6 +13,7 @@ describe("IPv6 interface configuration", () => {
     expect(r1.config.ipv6UnicastRouting).toBe(true);
     expect(r1.ifaceConfig("GigabitEthernet0/0").ipv6Addresses).toEqual([{ address: parseIpv6("2001:db8:1::1"), prefix: 64 }]);
     expect(type(r1, "show ipv6 interface brief").join("\n")).toContain("2001:0db8:0001:0000:0000:0000:0000:0001/64");
+    expect(type(r1, "show ipv6 interface g0/0").join("\n")).toContain("IPv6 address is 2001:0db8:0001:0000:0000:0000:0000:0001/64");
   });
 
   it("rejects malformed IPv6 prefixes", () => {

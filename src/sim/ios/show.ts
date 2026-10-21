@@ -287,6 +287,23 @@ export function showIpv6InterfaceBrief(device: IosDevice): string[] {
   return out;
 }
 
+export function showIpv6Interfaces(device: IosDevice, only?: string): string[] {
+  const out: string[] = [];
+  for (const iface of device.interfaces()) {
+    if (only && iface.name !== only) continue;
+    const c = device.config.interfaces[iface.name];
+    const addresses = c?.ipv6Addresses ?? [];
+    out.push(`${iface.name} is ${iface.status()}, line protocol is ${iface.protocol()}`);
+    if (addresses.length) for (const address of addresses) out.push(`  IPv6 address is ${formatIpv6(address.address)}/${address.prefix}`);
+    else out.push("  IPv6 is disabled");
+    if (c?.ipv6AccessGroupIn) out.push(`  Inbound IPv6 access list is ${c.ipv6AccessGroupIn}`);
+    if (c?.ipv6AccessGroupOut) out.push(`  Outgoing IPv6 access list is ${c.ipv6AccessGroupOut}`);
+    if (c?.ipv6OspfArea !== null && c?.ipv6OspfArea !== undefined) out.push(`  OSPFv3 area ${c.ipv6OspfArea}`);
+    out.push("  ND reachable time is 30000 milliseconds", "  ND advertised reachable time is 0 (unspecified)");
+  }
+  return out;
+}
+
 export function showIpv6Route(device: IosDevice): string[] {
   const out = ["IPv6 Routing Table - default - 1 entries", "Codes: C - Connected, L - Local, S - Static", ""];
   for (const iface of device.interfaces()) {
