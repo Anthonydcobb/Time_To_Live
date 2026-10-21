@@ -1,5 +1,5 @@
 // The IOS command set, per mode. Each entry is a token sequence plus a handler.
-import { broadcastOf, formatIpv4, maskToPrefix, networkOf, parseIpv4, parseIpv6Prefix, type Ipv4 } from "../addr";
+import { broadcastOf, formatIpv4, maskToPrefix, networkOf, parseIpv4, parseIpv6, parseIpv6Prefix, type Ipv4, type Ipv6 } from "../addr";
 import type { IosDevice } from "../devices/ios-device";
 import type { Router } from "../devices/router";
 import type { Switch } from "../devices/switch";
@@ -10,7 +10,7 @@ import { kw, type Arg, type Command, type Token, type Word } from "./parser";
 import { type5Hash } from "./passwords";
 import * as show from "./show";
 import type { Job } from "../job";
-import { iosPing, iosTraceroute } from "../tools";
+import { iosIpv6Traceroute, iosPing, iosTraceroute } from "../tools";
 import { MAX_NORMAL_VLAN, isDefaultVlan, parseVlanList, splitSubinterface } from "../vlans";
 
 /** IOS's [confirm]: Return or y means yes. */
@@ -43,6 +43,17 @@ const ipArg = (help: string, name = "A.B.C.D"): Arg<Ctx> => ({
     return ip === null ? null : { consumed: 1, value: ip };
   },
   partial: (t) => /^\d{1,3}(\.\d{0,3}){0,3}$/.test(t),
+});
+
+const ipv6Arg = (help: string): Arg<Ctx> => ({
+  type: "arg",
+  name: "X:X::X:X",
+  help,
+  match: (w, i) => {
+    const ip = parseIpv6(w[i].text);
+    return ip === null ? null : { consumed: 1, value: ip };
+  },
+  partial: (t) => /^[0-9a-f:]+$/i.test(t),
 });
 
 const wordArg = (help: string, name = "WORD"): Arg<Ctx> => ({
@@ -204,6 +215,11 @@ function traceroute(ctx: Ctx, target: Ipv4): void {
   ctx.job = iosTraceroute({ stack: ctx.device.stack, clock: ctx.device.clock }, target);
 }
 
+function tracerouteIpv6(ctx: Ctx, target: Ipv6): void {
+  ctx.out.push("Type escape sequence to abort.", `Tracing the route to ${target}`);
+  ctx.job = iosIpv6Traceroute({ stack: ctx.device.stack, clock: ctx.device.clock }, target);
+}
+
 function validHostname(name: string): boolean {
   return /^[A-Za-z]([A-Za-z0-9-]{0,61}[A-Za-z0-9])?$/.test(name);
 }
@@ -282,6 +298,9 @@ const execCommands: Entry[] = [
   cmd(EXEC, [kw("ping", "Send echo messages"), ipArg("Ping destination address or hostname")], (c, [ip]) => ping(c, ip as Ipv4)),
   cmd(EXEC, [kw("traceroute", "Trace route to destination"), ipArg("Trace route to destination address or hostname")], (c, [ip]) =>
     traceroute(c, ip as Ipv4),
+  ),
+  cmd(EXEC, [kw("traceroute", "Trace route to destination"), kw("ipv6", "IPv6 destination"), ipv6Arg("IPv6 destination address")], (c, [ip]) =>
+    tracerouteIpv6(c, ip as Ipv6),
   ),
   cmd(ENABLE, [kw("disable", "Turn off privileged commands")], (c) => c.console.setMode("user")),
   cmd(ENABLE, [kw("configure", "Enter configuration mode"), kw("terminal", "Configure from the terminal")], (c) => {

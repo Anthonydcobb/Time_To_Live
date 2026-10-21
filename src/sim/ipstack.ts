@@ -51,6 +51,12 @@ export type PingResult =
   | { kind: "unreachable"; from: Ipv4 }
   | { kind: "ttl-expired"; from: Ipv4 };
 
+export type Ipv6PingResult =
+  | { kind: "reply"; rttMs: number; ttl: number; from: Ipv6 }
+  | { kind: "timeout" }
+  | { kind: "unreachable"; from: Ipv6 }
+  | { kind: "ttl-expired"; from: Ipv6 };
+
 export interface IpStackOptions {
   clock: () => Clock;
   interfaces: () => L3Interface[];
@@ -84,7 +90,7 @@ export class IpStack {
   private queued = new Map<Ipv4, { iface: L3Interface; packet: Ipv4Packet }[]>();
   private waiters = new Map<string, (r: PingResult) => void>();
   private nextPingId = 1;
-  private ipv6Waiters = new Map<string, (r: PingResult) => void>();
+  private ipv6Waiters = new Map<string, (r: Ipv6PingResult) => void>();
   private ipv6Neighbors = new Map<string, { mac: Mac; iface: L3Interface; learnedAt: number }>();
   private ipv6Queued = new Map<string, { iface: L3Interface; packet: Ipv6Packet; nextHop: Ipv6 }[]>();
 
@@ -357,23 +363,23 @@ export class IpStack {
     const waiter = this.ipv6Waiters.get(`${icmp.id}:${icmp.seq}`);
     if (waiter && icmp.type === "echo-reply") {
       this.ipv6Waiters.delete(`${icmp.id}:${icmp.seq}`);
-      waiter({ kind: "reply", rttMs: 0, ttl: packet.hopLimit, from: 0 });
+      waiter({ kind: "reply", rttMs: 0, ttl: packet.hopLimit, from: packet.src });
     } else if (waiter && icmp.type === "unreachable") {
       this.ipv6Waiters.delete(`${icmp.id}:${icmp.seq}`);
-      waiter({ kind: "unreachable", from: 0 });
+      waiter({ kind: "unreachable", from: packet.src });
     } else if (waiter && icmp.type === "time-exceeded") {
       this.ipv6Waiters.delete(`${icmp.id}:${icmp.seq}`);
-      waiter({ kind: "ttl-expired", from: 0 });
+      waiter({ kind: "ttl-expired", from: packet.src });
     }
   }
 
-  probeIpv6(dst: Ipv6, opts: { id: number; seq: number; timeoutMs: number; source: Ipv6; hopLimit?: number }, done: (r: PingResult) => void): void {
+  probeIpv6(dst: Ipv6, opts: { id: number; seq: number; timeoutMs: number; source: Ipv6; hopLimit?: number }, done: (r: Ipv6PingResult) => void): void {
     const key = `${opts.id}:${opts.seq}`;
     let settled = false;
-    const settle = (result: PingResult) => { if (settled) return; settled = true; this.ipv6Waiters.delete(key); done(result); };
+    const settle = (result: Ipv6PingResult) => { if (settled) return; settled = true; this.ipv6Waiters.delete(key); done(result); };
     this.ipv6Waiters.set(key, settle);
     if (!this.sendIpv6({ kind: "ipv6", src: opts.source, dst, hopLimit: opts.hopLimit ?? 64, icmpv6: { type: "echo-request", id: opts.id, seq: opts.seq } })) {
-      settle({ kind: "unreachable", from: 0 });
+      settle({ kind: "unreachable", from: opts.source });
       return;
     }
     this.clock.schedule(opts.timeoutMs, () => settle({ kind: "timeout" }));
@@ -404,6 +410,11 @@ export class IpStack {
   sourceFor(dst: Ipv4): Ipv4 | null {
     if (this.isLocal(dst)) return dst;
     return this.lookup(dst)?.iface.ip ?? null;
+  }
+
+  sourceForIpv6(dst: Ipv6): Ipv6 | null {
+    if (this.ipv6Local(dst)) return dst;
+    return this.ipv6Route(dst)?.source ?? null;
   }
 
   newPingId(): number {

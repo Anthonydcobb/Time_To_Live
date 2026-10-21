@@ -106,4 +106,17 @@ describe("IPv6 interface configuration", () => {
     net.clock.advance(100);
     expect(type(r1, "show ipv6 neighbors").join("\n")).toContain("2001:0db8:0100:0000:0000:0000:0000:0002");
   });
+
+  it("traces an IPv6 route hop by hop", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1"));
+    const r2 = net.add(new Router("R2"));
+    net.connect(r1.port("Gi0/0"), r2.port("Gi0/0"));
+    type(r1, "", "en", "conf t", "interface g0/0", "ipv6 address 2001:db8:100::1/64", "no shutdown", "ipv6 route 2001:db8:200::/64 2001:db8:100::2", "end");
+    type(r2, "", "en", "conf t", "interface g0/0", "ipv6 address 2001:db8:100::2/64", "no shutdown", "interface g0/1", "ipv6 address 2001:db8:200::1/64", "no shutdown", "end");
+    net.clock.advance(3_000);
+    const out = type(r1, "traceroute ipv6 2001:db8:200::2");
+    expect(out.join("\n")).toContain("2001:0db8:0100:0000:0000:0000:0000:0002");
+    expect(out.join("\n")).toContain("2001:0db8:0200:0000:0000:0000:0000:0002");
+  });
 });

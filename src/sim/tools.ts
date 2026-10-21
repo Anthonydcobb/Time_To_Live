@@ -1,7 +1,7 @@
 // Ping and traceroute as jobs that run in simulated time, in IOS and Windows flavors.
-import { formatIpv4, type Ipv4 } from "./addr";
+import { formatIpv4, formatIpv6, type Ipv4, type Ipv6 } from "./addr";
 import type { Clock } from "./clock";
-import type { IpStack, PingResult } from "./ipstack";
+import type { IpStack, Ipv6PingResult, PingResult } from "./ipstack";
 import { Job } from "./job";
 
 const MAX_HOPS = 30;
@@ -72,6 +72,35 @@ export function iosTraceroute(host: Host, target: Ipv4): Job {
     );
     return addr ? `  ${hop} ${formatIpv4(addr.from)} ${marks.join(" ")}` : `  ${hop}  ${marks.join("  ")} `;
   });
+}
+
+/** `traceroute ipv6` on IOS: three probes per hop, raising the hop limit. */
+export function iosIpv6Traceroute(host: Host, target: Ipv6): Job {
+  const job = new Job();
+  const id = host.stack.newPingId();
+  let seq = 0;
+  const runHop = (hop: number) => {
+    if (job.done) return;
+    if (hop > MAX_HOPS) { job.finish(); return; }
+    const results: Ipv6PingResult[] = [];
+    const probe = () => {
+      const source = host.stack.sourceForIpv6(target);
+      if (!source) { job.write(`  ${hop}  *  *  *\n`); job.finish(); return; }
+      host.stack.probeIpv6(target, { id, seq: seq++, timeoutMs: 3000, source, hopLimit: hop }, (result) => {
+        if (job.done) return;
+        results.push(result);
+        if (results.length < 3) { probe(); return; }
+        const addr = results.find((r) => r.kind !== "timeout") as { from: Ipv6 } | undefined;
+        const marks = results.map((r) => r.kind === "timeout" ? "*" : r.kind === "unreachable" ? "!H" : `${ms(r.kind === "reply" ? r.rttMs : 0)} msec`);
+        job.write(addr ? `  ${hop} ${formatIpv6(addr.from)} ${marks.join(" ")}\n` : `  ${hop}  ${marks.join("  ")}\n`);
+        if (results.some((r) => r.kind === "reply" || r.kind === "unreachable")) job.finish();
+        else runHop(hop + 1);
+      });
+    };
+    probe();
+  };
+  runHop(1);
+  return job;
 }
 
 /** `tracert` on Windows. */
