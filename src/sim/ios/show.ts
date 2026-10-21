@@ -1089,11 +1089,12 @@ export function showIpNatStatistics(router: Router): string[] {
   const outside = router.interfaces().filter((iface) => router.config.interfaces[iface.name]?.natRole === "outside").map((iface) => iface.name);
   const staticCount = router.config.staticNat.length;
   const dynamicCount = router.natPatTranslations().length;
+  const counters = router.natStatistics();
   const out = [
     `Total active translations: ${staticCount + dynamicCount} (${staticCount} static, ${dynamicCount} dynamic; 0 extended)`,
     `Inside interfaces: ${inside.length ? inside.join(", ") : "none"}`,
     `Outside interfaces: ${outside.length ? outside.join(", ") : "none"}`,
-    `Hits: ${dynamicCount}  Misses: 0`,
+    `Hits: ${counters.hits}  Misses: ${counters.misses}`,
     "Expired translations: 0",
     "Dynamic mappings:",
   ];

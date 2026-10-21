@@ -25,6 +25,8 @@ export class Router extends IosDevice {
   private ospfv3Routes: { network: Ipv6; prefix: number; nextHop: Ipv6 | null; exitIface: string | null }[] = [];
   private patSessions = new Map<number, { localIp: Ipv4; localId: number; globalIp: Ipv4 }>();
   private nextPatId = 40000;
+  private natHits = 0;
+  private natMisses = 0;
   readonly ospfNeighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv4; localRole: "DR" | "BDR" | "DROTHER" | "P2P"; remoteRole: "DR" | "BDR" | "DROTHER" | "P2P" }[] = [];
   readonly eigrpNeighbors: { router: Router; localInterface: string; remoteInterface: string; remoteAddress: Ipv4 }[] = [];
 
@@ -44,6 +46,10 @@ export class Router extends IosDevice {
   /** Clears dynamic PAT state while leaving configured static translations intact. */
   clearNatTranslations(): void {
     this.patSessions.clear();
+  }
+
+  natStatistics(): { hits: number; misses: number } {
+    return { hits: this.natHits, misses: this.natMisses };
   }
 
   ospfRouterId(): Ipv4 | null {
@@ -342,30 +348,56 @@ export class Router extends IosDevice {
     const payload = frame.payload;
     if (this.natRole(port) !== "outside" || payload.kind !== "ipv4") return frame;
     const nat = this.config.staticNat.find((entry) => entry.insideLocal === payload.src);
-    if (nat) return { ...frame, payload: { ...payload, src: nat.insideGlobal } };
+    if (nat) {
+      this.natHits++;
+      return { ...frame, payload: { ...payload, src: nat.insideGlobal } };
+    }
     const overload = this.config.natOverloads.find((rule) => rule.outsideInterface === port.name && this.natAclPermits(rule.acl, payload));
-    if (!overload || !payload.icmp) return frame;
+    if (!overload || !payload.icmp) {
+      this.natMisses++;
+      return frame;
+    }
     let session = [...this.patSessions.values()].find((entry) => entry.localIp === payload.src && entry.localId === payload.icmp!.id && entry.globalIp === this.outsideAddress(overload.outsideInterface));
     if (!session) {
       const globalIp = this.outsideAddress(overload.outsideInterface);
-      if (globalIp === null) return frame;
+      if (globalIp === null) {
+        this.natMisses++;
+        return frame;
+      }
       const globalId = this.nextPatId++;
       session = { localIp: payload.src, localId: payload.icmp.id, globalIp };
       this.patSessions.set(globalId, session);
+      this.natHits++;
       return { ...frame, payload: { ...payload, src: globalIp, icmp: { ...payload.icmp, id: globalId } } };
     }
     const globalId = [...this.patSessions.entries()].find(([, entry]) => entry === session)?.[0];
-    return globalId === undefined ? frame : { ...frame, payload: { ...payload, src: session.globalIp, icmp: { ...payload.icmp, id: globalId } } };
+    if (globalId === undefined) {
+      this.natMisses++;
+      return frame;
+    }
+    this.natHits++;
+    return { ...frame, payload: { ...payload, src: session.globalIp, icmp: { ...payload.icmp, id: globalId } } };
   }
 
   private translateInbound(frame: Frame, port: Port): Frame {
     const payload = frame.payload;
     if (this.natRole(port) !== "outside" || payload.kind !== "ipv4") return frame;
     const nat = this.config.staticNat.find((entry) => entry.insideGlobal === payload.dst);
-    if (nat) return { ...frame, payload: { ...payload, dst: nat.insideLocal } };
-    if (!payload.icmp) return frame;
+    if (nat) {
+      this.natHits++;
+      return { ...frame, payload: { ...payload, dst: nat.insideLocal } };
+    }
+    if (!payload.icmp) {
+      this.natMisses++;
+      return frame;
+    }
     const session = this.patSessions.get(payload.icmp.id);
-    return session && session.globalIp === payload.dst ? { ...frame, payload: { ...payload, dst: session.localIp, icmp: { ...payload.icmp, id: session.localId } } } : frame;
+    if (!session || session.globalIp !== payload.dst) {
+      this.natMisses++;
+      return frame;
+    }
+    this.natHits++;
+    return { ...frame, payload: { ...payload, dst: session.localIp, icmp: { ...payload.icmp, id: session.localId } } };
   }
 
   send(port: Port, frame: Frame): void {

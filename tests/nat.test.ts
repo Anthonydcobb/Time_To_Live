@@ -43,6 +43,7 @@ describe("static NAT", () => {
     expect(statistics).toContain("Inside interfaces: GigabitEthernet0/0");
     expect(statistics).toContain("Outside interfaces: GigabitEthernet0/1");
     expect(statistics).toContain("access-list 1 interface GigabitEthernet0/1 overload (active 1)");
+    expect(statistics).toMatch(/Hits: [1-9]\d*  Misses: 0/);
     type(router, "clear ip nat translation *");
     expect(type(router, "show ip nat statistics").join("\n")).toContain("Total active translations: 0 (0 static, 0 dynamic; 0 extended)");
   });
