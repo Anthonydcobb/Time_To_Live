@@ -47,5 +47,19 @@ if (-not $dashboardReady) { throw "Vite dashboard did not become ready at http:/
 $javaCommand = "`$env:PT_TTL_AUTH_SECRET='$secret'; & '$project\harness\pt-exapp\build-bridge.ps1' 127.0.0.1 $ptPort $bridgePort"
 Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $javaCommand -WorkingDirectory $project | Out-Null
 
+$pollerReady = $false
+for ($i = 0; $i -lt 40; $i++) {
+    Start-Sleep -Milliseconds 250
+    try {
+        $health = Invoke-RestMethod -Uri "http://127.0.0.1:$bridgePort/health" -TimeoutSec 2
+        if ($health.pollerConnected -eq $true) { $pollerReady = $true; break }
+    } catch { }
+}
+if ($pollerReady) {
+    Write-Host "Packet Tracer ExApp connected to the bridge."
+} else {
+    Write-Warning "Bridge is running, but the Packet Tracer ExApp has not checked in. Open Packet Tracer, enable external IPC, and verify the Java bridge window."
+}
+
 Start-Process "http://localhost:5173/pt-dashboard.html" | Out-Null
 Write-Host "Packet Tracer stack starting. Dashboard: http://localhost:5173/pt-dashboard.html"

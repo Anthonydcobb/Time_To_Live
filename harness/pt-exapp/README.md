@@ -38,6 +38,10 @@ To run the live queue bridge, keep `tools\pt-bridge.mjs` running on port
 & .\harness\pt-exapp\build-bridge.ps1 127.0.0.1 39000 39094
 ```
 
+The dashboard's bridge status is separate from the ExApp status. A bridge can
+answer `/health` while `pollerConnected` is false; that means the Node queue
+is alive but the Java bridge has not checked in with Packet Tracer.
+
 Optional arguments are host, port, and command:
 
 ```powershell
