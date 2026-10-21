@@ -159,6 +159,7 @@ async function healthCheck(): Promise<void> {
       const routerInterfaces = await run("Router0", "show ip interface brief");
       const sshStatus = await run("Router0", "show ssh");
       const routerConfig = await run("Router0", "show running-config");
+      const routingProtocols = await run("Router0", "show ip protocols");
       const ipv6Interfaces = await run("Router0", "show ipv6 interface brief");
       const ipv6Routes = await run("Router0", "show ipv6 route");
       const ipv6Neighbors = await run("Router0", "show ipv6 neighbors");
@@ -174,6 +175,7 @@ async function healthCheck(): Promise<void> {
       const ipv6InterfaceText = text(ipv6Interfaces); const ipv6RouteText = text(ipv6Routes); const ipv6NeighborText = text(ipv6Neighbors);
       const ipv6OspfText = text(ipv6Ospf);
       const natText = text(natTranslations); const standbyText = text(standby); const ntpText = text(ntpStatus); const loggingText = text(logging);
+      const routingText = text(routingProtocols);
       const ipv6Configured = /[0-9a-f]{1,4}:[0-9a-f:]+\/\d+/i.test(ipv6InterfaceText);
       const ipv6Checks = ipv6Configured ? [
         { label: "Router IPv6 interface", ok: /[0-9a-f]{1,4}:[0-9a-f:]+\/\d+.*up\s+up/i.test(ipv6InterfaceText), detail: "show ipv6 interface brief" },
@@ -186,6 +188,7 @@ async function healthCheck(): Promise<void> {
         /Virtual IP address/i.test(standbyText) ? { label: "HSRP gateway state", ok: /State is (Active|Standby)/i.test(standbyText), detail: "show standby" } : null,
         /Clock is synchronized/i.test(ntpText) ? { label: "NTP synchronization", ok: true, detail: "show ntp status" } : null,
         /Logging to (?!none)/i.test(loggingText) ? { label: "Syslog destination", ok: /Syslog logging: enabled/i.test(loggingText), detail: "show logging" } : null,
+        /Routing Protocol is "(?:ospf|eigrp)/i.test(routingText) ? { label: "Dynamic routing protocol", ok: /Routing Protocol is "(?:ospf|eigrp)/i.test(routingText), detail: "show ip protocols" } : null,
       ].filter((check): check is { label: string; ok: boolean; detail: string } => check !== null);
       showHealth([
         { label: "PC0 IPv4 address", ok: /IPv4 Address.*192\.168\.10\.10/i.test(pc0Text), detail: "192.168.10.10 / VLAN 10" },
