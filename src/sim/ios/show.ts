@@ -65,6 +65,7 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   if (!c.ipDomainLookup) out.push("no ip domain lookup", "!");
   if (!isSwitch) out.push("ip cef", "no ipv6 cef", "!", "multilink bundle-name authenticated", "!");
   if (!c.cdpRun) out.push("no cdp run", "!");
+  if (c.lldp) out.push("lldp run", "!");
   if (c.ipv6UnicastRouting) out.push("ipv6 unicast-routing");
   if (c.ospfv3) out.push(`ipv6 router ospf ${c.ospfv3.processId}`);
   for (const route of c.ipv6StaticRoutes) out.push(`ipv6 route ${formatIpv6(route.network)}/${route.prefix} ${route.nextHop ?? route.exitIface ?? "Null0"}`);
@@ -799,6 +800,58 @@ export function showCdpNeighborsDetail(device: IosDevice): string[] {
       "advertisement version: 2",
       "Duplex: full",
       "---------------------------",
+    );
+  }
+  return out;
+}
+
+function lldpIfName(name: string): string {
+  const m = /^([A-Za-z]+)(.*)$/.exec(name)!;
+  return `${m[1].slice(0, 3)} ${m[2]}`;
+}
+
+export function showLldp(device: IosDevice): string[] {
+  if (!device.config.lldp) return ["% LLDP is not enabled"];
+  return [
+    "Global LLDP information:",
+    "    Transmit interval: 60 seconds",
+    "    Holdtime: 120 seconds",
+    "    Fast start repeat count: 3",
+  ];
+}
+
+export function showLldpNeighbors(device: IosDevice): string[] {
+  if (!device.config.lldp) return ["% LLDP is not enabled"];
+  const out = [
+    "Capability codes: R - Router, B - Bridge, T - Telephone, W - WLAN Access Point",
+    "                  S - Station, O - Other",
+    "Device ID        Local Intf     Hold-time  Capability      Port ID",
+  ];
+  const now = device.clock.now;
+  for (const n of device.liveLldpNeighbors()) {
+    const hold = String(Math.ceil((n.expiresAt - now) / 1000));
+    const cap = n.capability === "Router" ? "R" : "B,S";
+    out.push(`${n.deviceId.padEnd(17)}${lldpIfName(n.localPort.name).padEnd(15)}${hold.padEnd(11)}${cap.padEnd(16)}${lldpIfName(n.portId)}`);
+  }
+  return out;
+}
+
+export function showLldpNeighborsDetail(device: IosDevice): string[] {
+  if (!device.config.lldp) return ["% LLDP is not enabled"];
+  const out: string[] = [];
+  const now = device.clock.now;
+  for (const n of device.liveLldpNeighbors()) {
+    out.push(
+      "",
+      `Local Interface: ${n.localPort.name}`,
+      `Chassis id: ${n.deviceId}`,
+      `Port id: ${n.portId}`,
+      `Port Description: ${n.portId}`,
+      `System Name: ${n.deviceId}`,
+      `System Description: ${n.platform}`,
+      `Time remaining: ${Math.ceil((n.expiresAt - now) / 1000)} seconds`,
+      ...(n.address !== null ? [`Management address: ${formatIpv4(n.address)}`] : []),
+      `System Capabilities: ${n.capability}`,
     );
   }
   return out;

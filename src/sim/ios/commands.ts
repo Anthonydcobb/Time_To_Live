@@ -299,6 +299,9 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("cdp", "CDP information"), kw("neighbors", "CDP neighbor entries"), kw("detail", "Show detailed information")], (c) =>
     c.out.push(...show.showCdpNeighborsDetail(c.device)),
   ),
+  cmd(EXEC, [SHOW, kw("lldp", "LLDP information")], (c) => c.out.push(...show.showLldp(c.device))),
+  cmd(EXEC, [SHOW, kw("lldp", "LLDP information"), kw("neighbors", "LLDP neighbor entries")], (c) => c.out.push(...show.showLldpNeighbors(c.device))),
+  cmd(EXEC, [SHOW, kw("lldp", "LLDP information"), kw("neighbors", "LLDP neighbor entries"), kw("detail", "Show detailed information")], (c) => c.out.push(...show.showLldpNeighborsDetail(c.device))),
   cmd(ENABLE, [SHOW, kw("running-config", "Current operating configuration")], (c) => c.out.push(...show.showRunningConfig(c.device))),
   cmd(ENABLE, [SHOW, kw("startup-config", "Contents of startup configuration")], (c) => c.out.push(...show.showStartupConfig(c.device))),
 ];
@@ -537,6 +540,8 @@ const configCommands: Entry[] = [
     c.device.config.cdpRun = false;
     c.device.cdpNeighbors.clear();
   }),
+  cmd(CONFIG, [kw("lldp", "Global LLDP configuration subcommands"), kw("run", "Enable LLDP")], (c) => { c.device.config.lldp = true; }),
+  cmd(CONFIG, [NO, kw("lldp", "Global LLDP configuration subcommands"), kw("run", "Enable LLDP")], (c) => { c.device.config.lldp = false; c.device.lldpNeighbors.clear(); }),
   cmd(CONFIG, [IP, DOMAIN], (c) => {
     c.device.config.ipDomainLookup = true;
   }),

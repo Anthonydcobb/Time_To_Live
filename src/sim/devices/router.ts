@@ -411,6 +411,7 @@ export class Router extends IosDevice {
 
   receive(port: Port, frame: Frame): void {
     if (this.handleCdp(port, frame)) return;
+    if (this.handleLldp(port, frame)) return;
     const payload = frame.payload;
     if (this.natRole(port) === "outside" && payload.kind === "arp" && payload.op === "request") {
       const nat = this.config.staticNat.find((entry) => entry.insideGlobal === payload.targetIp);

@@ -75,6 +75,17 @@ export interface CdpPacket {
   nativeVlan?: number;
 }
 
+/** A small IEEE 802.1AB-style LLDP advertisement. */
+export interface LldpPacket {
+  kind: "lldp";
+  deviceId: string;
+  platform: string;
+  capability: "Router" | "Switch";
+  portId: string;
+  ttlSec: number;
+  address: Ipv4 | null;
+}
+
 /** A small PVST-style configuration BPDU. It is intentionally modeled as a
  * control frame so switches can react to real topology changes rather than
  * merely waiting out a fixed timer. */
@@ -97,7 +108,7 @@ export interface Frame {
   dst: Mac;
   /** The 802.1Q tag, present only while the frame crosses a trunk. */
   vlan?: number;
-  payload: ArpPacket | Ipv4Packet | Ipv6Packet | CdpPacket | BpduPacket;
+  payload: ArpPacket | Ipv4Packet | Ipv6Packet | CdpPacket | LldpPacket | BpduPacket;
 }
 
 /** A copy of the frame with an 802.1Q tag, or without one when `vlan` is undefined. */

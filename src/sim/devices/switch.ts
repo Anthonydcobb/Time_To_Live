@@ -533,6 +533,7 @@ export class Switch extends IosDevice {
 
   receive(port: Port, frame: Frame): void {
     if (this.handleCdp(port, frame)) return;
+    if (this.handleLldp(port, frame)) return;
     if (this.handleBpdu(port, frame)) return;
     if (!this.config.interfaces[port.name].switchport) {
       const iface = this.l3.get(port);

@@ -124,6 +124,7 @@ export interface IosConfig {
   bannerMotd: string | null;
   ipDomainLookup: boolean;
   cdpRun: boolean;
+  lldp: boolean;
   interfaces: Record<string, InterfaceConfig>;
   con: LineConfig;
   vty: LineConfig;
@@ -174,6 +175,7 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     bannerMotd: null,
     ipDomainLookup: true,
     cdpRun: true,
+    lldp: false,
     interfaces: Object.fromEntries(
       interfaces.map((i) => [i.name, newInterfaceConfig(i.shutdown)]),
     ),

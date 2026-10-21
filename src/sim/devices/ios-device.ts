@@ -4,7 +4,7 @@ import type { IpStack, L3Interface } from "../ipstack";
 import { cloneConfig, defaultConfig, type InterfaceConfig, type IosConfig } from "../ios/config";
 import { IosConsole } from "../ios/console";
 import { showVersion } from "../ios/show";
-import { CDP_MAC, type Frame } from "../frames";
+import { CDP_MAC, type Frame, type LldpPacket } from "../frames";
 import { type5Hash } from "../ios/passwords";
 
 export type RemoteProtocol = "ssh" | "telnet";
@@ -36,6 +36,16 @@ export interface CdpNeighbor {
   expiresAt: number;
 }
 
+export interface LldpNeighbor {
+  localPort: Port;
+  deviceId: string;
+  platform: string;
+  capability: "Router" | "Switch";
+  portId: string;
+  expiresAt: number;
+  address: Ipv4 | null;
+}
+
 export const CDP_INTERVAL_MS = 60_000;
 export const CDP_HOLDTIME_SEC = 180;
 
@@ -55,6 +65,7 @@ export abstract class IosDevice extends Device {
   /** The header times as they were when startup-config was written. */
   startupStamps: { changed: number | null; nvram: number | null } = { changed: null, nvram: null };
   readonly cdpNeighbors = new Map<Port, CdpNeighbor>();
+  readonly lldpNeighbors = new Map<Port, LldpNeighbor>();
   /** Interface whose `shutdown` state is being changed right now, for log wording. */
   protected adminChanging: string | null = null;
 
@@ -128,7 +139,7 @@ export abstract class IosDevice extends Device {
 
   onPortStateChange(port: Port, layer: "link" | "protocol"): void {
     this.logInterfaceChange(port.name, layer, layer === "link" ? port.linkUp : port.protocolUp);
-    if (layer === "protocol" && port.protocolUp) this.clock.schedule(0, () => this.sendCdp(port));
+    if (layer === "protocol" && port.protocolUp) this.clock.schedule(0, () => { this.sendCdp(port); this.sendLldp(port); });
   }
 
   onAttach(): void {
@@ -137,6 +148,11 @@ export abstract class IosDevice extends Device {
       this.clock.schedule(CDP_INTERVAL_MS, tick);
     };
     this.clock.schedule(CDP_INTERVAL_MS, tick);
+    const lldpTick = () => {
+      for (const p of this.ports) this.sendLldp(p);
+      this.clock.schedule(CDP_INTERVAL_MS, lldpTick);
+    };
+    this.clock.schedule(0, lldpTick);
   }
 
   /** The address CDP advertises: the first interface that has one. */
@@ -183,6 +199,21 @@ export abstract class IosDevice extends Device {
     });
   }
 
+  private sendLldp(port: Port): void {
+    const c = this.config;
+    if (!c.lldp || !port.protocolUp) return;
+    const payload: LldpPacket = {
+      kind: "lldp",
+      deviceId: c.hostname,
+      platform: `Cryptis ${this.model}`,
+      capability: this.kind === "router" ? "Router" : "Switch",
+      portId: port.name,
+      ttlSec: 120,
+      address: this.managementAddress(),
+    };
+    this.send(port, { src: port.mac, dst: "0180c200000e", payload });
+  }
+
   /** Returns true if the frame was a CDP advertisement (which is never forwarded). */
   protected handleCdp(port: Port, frame: Frame): boolean {
     const p = frame.payload;
@@ -205,9 +236,30 @@ export abstract class IosDevice extends Device {
     return true;
   }
 
+  protected handleLldp(port: Port, frame: Frame): boolean {
+    if (frame.payload.kind !== "lldp") return false;
+    if (!this.config.lldp) return true;
+    const p = frame.payload;
+    this.lldpNeighbors.set(port, {
+      localPort: port,
+      deviceId: p.deviceId,
+      platform: p.platform,
+      capability: p.capability,
+      portId: p.portId,
+      expiresAt: this.clock.now + p.ttlSec * 1000,
+      address: p.address,
+    });
+    return true;
+  }
+
   liveCdpNeighbors(): CdpNeighbor[] {
     const now = this.clock.now;
     return [...this.cdpNeighbors.values()].filter((n) => n.expiresAt > now);
+  }
+
+  liveLldpNeighbors(): LldpNeighbor[] {
+    const now = this.clock.now;
+    return [...this.lldpNeighbors.values()].filter((n) => n.expiresAt > now);
   }
 
   protected logInterfaceChange(name: string, layer: "link" | "protocol", up: boolean): void {

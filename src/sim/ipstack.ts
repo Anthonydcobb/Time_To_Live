@@ -218,7 +218,7 @@ export class IpStack {
   handleFrame(iface: L3Interface, frame: Frame): void {
     if (frame.dst !== iface.mac && frame.dst !== BROADCAST_MAC) return;
     const p = frame.payload;
-    if (p.kind === "cdp" || p.kind === "bpdu") return;
+    if (p.kind === "cdp" || p.kind === "lldp" || p.kind === "bpdu") return;
     if (p.kind === "ipv6") {
       this.handleIpv6(iface, p, frame.src);
       return;

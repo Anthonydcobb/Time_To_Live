@@ -61,7 +61,7 @@ function newPortStats(): PortStats {
 export function frameBytes(frame: Frame): number {
   const p = frame.payload;
   // An IOS ping is a 100-byte datagram; DHCP rides in a ~300-byte BOOTP packet; CDP carries a few TLVs.
-  const body = p.kind === "arp" ? 46 : p.kind === "cdp" ? 340 : p.kind === "bpdu" ? 52 : p.kind === "ipv4" && p.dhcp ? 328 : 100;
+  const body = p.kind === "arp" ? 46 : p.kind === "cdp" ? 340 : p.kind === "lldp" ? 180 : p.kind === "bpdu" ? 52 : p.kind === "ipv4" && p.dhcp ? 328 : 100;
   return 14 + body + (frame.vlan !== undefined ? 4 : 0);
 }
 
