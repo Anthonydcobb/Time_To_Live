@@ -94,6 +94,12 @@ export interface OspfNetwork {
   area: number;
 }
 
+export interface OspfSummary {
+  network: Ipv4;
+  mask: Ipv4;
+  area: number;
+}
+
 export interface DhcpPool {
   name: string;
   network: Ipv4 | null;
@@ -139,7 +145,7 @@ export interface IosConfig {
   spanningTreePriority: Record<number, number>;
   ipRouting: boolean;
   ipv6UnicastRouting: boolean;
-  ospf: { processId: number; networks: OspfNetwork[]; passiveInterfaces: string[]; routerId: Ipv4 | null } | null;
+  ospf: { processId: number; networks: OspfNetwork[]; passiveInterfaces: string[]; routerId: Ipv4 | null; defaultInformation: boolean; summaries: OspfSummary[] } | null;
   eigrp: { as: number; networks: OspfNetwork[]; passiveInterfaces: string[] } | null;
   ospfv3: { processId: number } | null;
   /** VTP control-plane settings for switches. */

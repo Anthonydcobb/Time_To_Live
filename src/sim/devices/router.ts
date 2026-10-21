@@ -136,7 +136,24 @@ export class Router extends IosDevice {
     const learned = this.ospfRoutes
       .filter((route) => route.nextHop !== excludeNextHop)
       .map(({ network, mask }) => ({ network, mask, nextHop: null, exitIface: null }));
-    return [...connected, ...learned.filter((route) => !connected.some((local) => local.network === route.network && local.mask === route.mask))];
+    const ospf = this.config.ospf;
+    let advertised = [...connected, ...learned.filter((route) => !connected.some((local) => local.network === route.network && local.mask === route.mask))];
+    if (ospf?.defaultInformation && this.config.staticRoutes.some((route) => route.network === 0 && route.mask === 0)) advertised.push({ network: 0, mask: 0, nextHop: null, exitIface: null });
+    for (const summary of ospf?.summaries ?? []) {
+      const covered = connected.filter((route) => {
+        const iface = this.l3Interfaces().find((candidate) => {
+          const network = this.ospfNetwork(candidate);
+          return network?.network === route.network && network.mask === route.mask;
+        });
+        const network = iface ? this.ospfNetwork(iface) : null;
+        return network?.area === summary.area && networkOf(route.network, summary.mask) === summary.network && route.mask >>> 0 >= summary.mask >>> 0;
+      });
+      if (covered.length) {
+        advertised = advertised.filter((route) => !covered.some((item) => item.network === route.network && item.mask === route.mask));
+        advertised.push({ network: summary.network, mask: summary.mask, nextHop: null, exitIface: null });
+      }
+    }
+    return advertised.filter((route, index) => index === advertised.findIndex((candidate) => candidate.network === route.network && candidate.mask === route.mask));
   }
 
   private syncOspf(): void {

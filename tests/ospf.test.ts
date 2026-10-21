@@ -74,4 +74,34 @@ describe("OSPF", () => {
     const ping = run(pc1, "ping -n 8 10.3.0.10");
     expect(ping.some((line) => line.startsWith("Reply from 10.3.0.10"))).toBe(true);
   });
+
+  it("originates a configured static default route into OSPF", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1"));
+    const r2 = net.add(new Router("R2"));
+    net.connect(r1.port("Gi0/0"), r2.port("Gi0/0"));
+    type(r1, "en", "conf t", "int gi0/0", "ip address 10.0.12.1 255.255.255.252", "no shut", "ip route 0.0.0.0 0.0.0.0 10.0.12.2", "router ospf 1", "network 10.0.12.0 0.0.0.3 area 0", "default-information originate", "end");
+    type(r2, "en", "conf t", "int gi0/0", "ip address 10.0.12.2 255.255.255.252", "no shut", "router ospf 1", "network 10.0.12.0 0.0.0.3 area 0", "end");
+    net.clock.advance(5_000);
+    expect(r2.stack.lookup(ip("8.8.8.8")!)).toMatchObject({ nextHop: ip("10.0.12.1") });
+    expect(type(r1, "show ip protocols").join("\n")).toContain("Default route originated: yes");
+    expect(type(r1, "show running-config").join("\n")).toContain(" default-information originate");
+  });
+
+  it("advertises an area range instead of the component networks", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1"));
+    const r2 = net.add(new Router("R2"));
+    const lan1 = net.add(new Pc("LAN1"));
+    const lan2 = net.add(new Pc("LAN2"));
+    net.connect(r1.port("Gi0/0"), r2.port("Gi0/0"));
+    net.connect(lan1.nic, r1.port("Gi0/1"));
+    net.connect(lan2.nic, r1.port("Gi0/2"));
+    type(r1, "en", "conf t", "int gi0/0", "ip address 10.0.12.1 255.255.255.252", "no shut", "int gi0/1", "ip address 10.10.1.1 255.255.255.0", "no shut", "int gi0/2", "ip address 10.10.2.1 255.255.255.0", "no shut", "router ospf 1", "network 10.0.12.0 0.0.0.3 area 0", "network 10.10.1.0 0.0.0.255 area 0", "network 10.10.2.0 0.0.0.255 area 0", "area 0 range 10.10.0.0 255.255.0.0", "end");
+    type(r2, "en", "conf t", "int gi0/0", "ip address 10.0.12.2 255.255.255.252", "no shut", "router ospf 1", "network 10.0.12.0 0.0.0.3 area 0", "end");
+    net.clock.advance(5_000);
+    expect(r2.stack.lookup(ip("10.10.1.50")!)).toMatchObject({ nextHop: ip("10.0.12.1") });
+    expect(type(r2, "show ip route").join("\n")).toContain("10.10.0.0/16");
+    expect(type(r1, "show running-config").join("\n")).toContain(" area 0 range 10.10.0.0 255.255.0.0");
+  });
 });

@@ -670,7 +670,7 @@ const configCommands: Entry[] = [
     c.console.setMode(splitSubinterface(n) && c.device.kind === "router" ? "config-subif" : "config-if");
   }),
   cmd(CONFIG, [kw("router", "Enable a routing protocol"), kw("ospf", "Open Shortest Path First"), numArg(1, 65535, "Process ID")], (c, [processId]) => {
-    c.device.config.ospf ??= { processId: processId as number, networks: [], passiveInterfaces: [], routerId: null };
+    c.device.config.ospf ??= { processId: processId as number, networks: [], passiveInterfaces: [], routerId: null, defaultInformation: false, summaries: [] };
     c.device.config.ospf.processId = processId as number;
     c.console.setMode("config-router");
   }, { devices: ["router"] }),
@@ -1406,6 +1406,22 @@ const ospfCommands: Entry[] = [
   }, { devices: ["router"] }),
   cmd(ROUTER_CFG, [NO, kw("router-id", "Override the OSPF router identifier")], (c) => {
     if (c.device.config.ospf) c.device.config.ospf.routerId = null;
+  }, { devices: ["router"] }),
+  cmd(ROUTER_CFG, [kw("default-information", "Control distribution of a default route"), kw("originate", "Originate a default route")], (c) => {
+    if (c.device.config.ospf) c.device.config.ospf.defaultInformation = true;
+  }, { devices: ["router"] }),
+  cmd(ROUTER_CFG, [NO, kw("default-information", "Control distribution of a default route"), kw("originate", "Originate a default route")], (c) => {
+    if (c.device.config.ospf) c.device.config.ospf.defaultInformation = false;
+  }, { devices: ["router"] }),
+  cmd(ROUTER_CFG, [kw("area", "OSPF area parameters"), numArg(0, 4294967295, "OSPF area ID"), kw("range", "Summarize routes at an area boundary"), ipArg("Summary network"), ipArg("Summary mask")], (c, [area, network, mask]) => {
+    const ospf = c.device.config.ospf;
+    if (!ospf) { c.out.push("% OSPF routing process is not configured."); return; }
+    const normalized = networkOf(network as Ipv4, mask as Ipv4);
+    if (!ospf.summaries.some((s) => s.network === normalized && s.mask === mask && s.area === area)) ospf.summaries.push({ network: normalized, mask: mask as Ipv4, area: area as number });
+  }, { devices: ["router"] }),
+  cmd(ROUTER_CFG, [NO, kw("area", "OSPF area parameters"), numArg(0, 4294967295, "OSPF area ID"), kw("range", "Summarize routes at an area boundary"), ipArg("Summary network"), ipArg("Summary mask")], (c, [area, network, mask]) => {
+    const ospf = c.device.config.ospf;
+    if (ospf) ospf.summaries = ospf.summaries.filter((s) => !(s.network === networkOf(network as Ipv4, mask as Ipv4) && s.mask === mask && s.area === area));
   }, { devices: ["router"] }),
   cmd(ROUTER_CFG, [kw("passive-interface", "Suppress routing updates on an interface"), ifaceArg], (c, [name]) => {
     const cfg = c.device.config.ospf ?? c.device.config.eigrp;

@@ -126,8 +126,10 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   if (c.ospf) {
     out.push(`router ospf ${c.ospf.processId}`);
     if (c.ospf.routerId !== null) out.push(` router-id ${formatIpv4(c.ospf.routerId)}`);
+    if (c.ospf.defaultInformation) out.push(" default-information originate");
     for (const n of c.ospf.networks) out.push(` network ${formatIpv4(n.network)} ${formatIpv4((~n.mask) >>> 0)} area ${n.area}`);
     for (const iface of c.ospf.passiveInterfaces) out.push(` passive-interface ${iface}`);
+    for (const summary of c.ospf.summaries) out.push(` area ${summary.area} range ${formatIpv4(summary.network)} ${formatIpv4(summary.mask)}`);
     out.push("!");
   }
   if (c.eigrp) {
@@ -490,6 +492,8 @@ export function showIpProtocols(device: IosDevice): string[] {
     "  Incoming update filter list for all interfaces is not set",
     `  Routing for Networks: ${ospf.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`,
     `  Passive Interfaces: ${ospf.passiveInterfaces.join(", ") || "none"}`,
+    `  Default route originated: ${ospf.defaultInformation ? "yes" : "no"}`,
+    `  Area ranges: ${ospf.summaries.map((s) => `${s.area}:${formatIpv4(s.network)} ${formatIpv4(s.mask)}`).join(", ") || "none"}`,
     "  Routing Information Sources:",
     "    Gateway         Distance      Last Update",
     "  Distance: (default is 110)",
