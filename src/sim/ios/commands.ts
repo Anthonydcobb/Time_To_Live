@@ -656,12 +656,12 @@ const configCommands: Entry[] = [
     c.console.setMode(splitSubinterface(n) && c.device.kind === "router" ? "config-subif" : "config-if");
   }),
   cmd(CONFIG, [kw("router", "Enable a routing protocol"), kw("ospf", "Open Shortest Path First"), numArg(1, 65535, "Process ID")], (c, [processId]) => {
-    c.device.config.ospf ??= { processId: processId as number, networks: [] };
+    c.device.config.ospf ??= { processId: processId as number, networks: [], passiveInterfaces: [] };
     c.device.config.ospf.processId = processId as number;
     c.console.setMode("config-router");
   }, { devices: ["router"] }),
   cmd(CONFIG, [kw("router", "Enable a routing protocol"), kw("eigrp", "Enhanced Interior Gateway Routing Protocol"), numArg(1, 65535, "Autonomous system")], (c, [as]) => {
-    c.device.config.eigrp ??= { as: as as number, networks: [] };
+    c.device.config.eigrp ??= { as: as as number, networks: [], passiveInterfaces: [] };
     c.device.config.eigrp.as = as as number;
     c.console.setMode("config-router");
   }, { devices: ["router"] }),
@@ -1378,6 +1378,14 @@ function deleteFile(c: Ctx, file: string): void {
 }
 
 const ospfCommands: Entry[] = [
+  cmd(ROUTER_CFG, [kw("passive-interface", "Suppress routing updates on an interface"), ifaceArg], (c, [name]) => {
+    const cfg = c.device.config.ospf ?? c.device.config.eigrp;
+    if (cfg && !cfg.passiveInterfaces.includes(name as string)) cfg.passiveInterfaces.push(name as string);
+  }, { devices: ["router"] }),
+  cmd(ROUTER_CFG, [NO, kw("passive-interface", "Suppress routing updates on an interface"), ifaceArg], (c, [name]) => {
+    const cfg = c.device.config.ospf ?? c.device.config.eigrp;
+    if (cfg) cfg.passiveInterfaces = cfg.passiveInterfaces.filter((iface) => iface !== name);
+  }, { devices: ["router"] }),
   cmd(ROUTER_CFG, [kw("network", "Enable EIGRP on an IP network"), ipArg("Network number"), ipArg("Wildcard bits")], (c, [network, wildcard]) => {
     if (!c.device.config.eigrp) { c.out.push("% EIGRP routing process is not configured."); return; }
     const mask = (~(wildcard as Ipv4)) >>> 0;

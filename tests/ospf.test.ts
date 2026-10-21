@@ -6,6 +6,19 @@ import { Network } from "../src/sim/network";
 import { run, type } from "./helpers";
 
 describe("OSPF", () => {
+  it("supports passive interfaces without forming an adjacency", () => {
+    const net = new Network();
+    const r1 = net.add(new Router("R1"));
+    const r2 = net.add(new Router("R2"));
+    net.connect(r1.port("Gi0/0"), r2.port("Gi0/0"));
+    type(r1, "", "en", "conf t", "int g0/0", "ip address 10.0.0.1 255.255.255.252", "no shut", "router ospf 1", "network 10.0.0.0 0.0.0.3 area 0", "passive-interface g0/0", "end");
+    type(r2, "", "en", "conf t", "int g0/0", "ip address 10.0.0.2 255.255.255.252", "no shut", "router ospf 1", "network 10.0.0.0 0.0.0.3 area 0", "end");
+    net.clock.advance(5_000);
+    expect(r1.ospfNeighbors).toHaveLength(0);
+    expect(type(r1, "show ip protocols").join("\n")).toContain("Passive Interfaces: GigabitEthernet0/0");
+    expect(type(r1, "show running-config").join("\n")).toContain(" passive-interface GigabitEthernet0/0");
+  });
+
   it("forms a neighbor and routes between advertised networks", () => {
     const net = new Network();
     const r1 = net.add(new Router("R1"));

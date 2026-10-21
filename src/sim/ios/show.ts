@@ -113,9 +113,16 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     out.push(`ip route ${formatIpv4(r.network)} ${formatIpv4(r.mask)} ${target}${(r.distance ?? 1) !== 1 ? ` ${r.distance}` : ""}`);
   }
   if (c.staticRoutes.length) out.push("!");
+  if (c.ospf) {
+    out.push(`router ospf ${c.ospf.processId}`);
+    for (const n of c.ospf.networks) out.push(` network ${formatIpv4(n.network)} ${formatIpv4((~n.mask) >>> 0)} area ${n.area}`);
+    for (const iface of c.ospf.passiveInterfaces) out.push(` passive-interface ${iface}`);
+    out.push("!");
+  }
   if (c.eigrp) {
     out.push(`router eigrp ${c.eigrp.as}`);
     for (const network of c.eigrp.networks) out.push(` network ${formatIpv4(network.network)} ${formatIpv4((~network.mask) >>> 0)}`);
+    for (const iface of c.eigrp.passiveInterfaces) out.push(` passive-interface ${iface}`);
     out.push("!");
   }
   for (const nat of c.staticNat) out.push(`ip nat inside source static ${formatIpv4(nat.insideLocal)} ${formatIpv4(nat.insideGlobal)}`);
@@ -463,13 +470,14 @@ export function showIpEigrpNeighbor(router: Router): string[] {
 
 export function showIpProtocols(device: IosDevice): string[] {
   if (device.kind !== "router" || (!device.config.ospf && !device.config.eigrp)) return ["Routing Protocol is \"connected\"", "  Routing Protocol is \"static\"", ""];
-  if (device.config.eigrp) return [`Routing Protocol is \"eigrp ${device.config.eigrp.as}\"`, "  Outgoing update filter list for all interfaces is not set", `  Routing for Networks: ${device.config.eigrp.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`, ""];
+  if (device.config.eigrp) return [`Routing Protocol is \"eigrp ${device.config.eigrp.as}\"`, "  Outgoing update filter list for all interfaces is not set", `  Routing for Networks: ${device.config.eigrp.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`, `  Passive Interfaces: ${device.config.eigrp.passiveInterfaces.join(", ") || "none"}`, ""];
   const ospf = device.config.ospf!;
   return [
     `Routing Protocol is \"ospf ${ospf.processId}\"`,
     "  Outgoing update filter list for all interfaces is not set",
     "  Incoming update filter list for all interfaces is not set",
     `  Routing for Networks: ${ospf.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`,
+    `  Passive Interfaces: ${ospf.passiveInterfaces.join(", ") || "none"}`,
     "  Routing Information Sources:",
     "    Gateway         Distance      Last Update",
     "  Distance: (default is 110)",

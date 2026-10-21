@@ -136,8 +136,8 @@ export interface IosConfig {
   spanningTreePriority: Record<number, number>;
   ipRouting: boolean;
   ipv6UnicastRouting: boolean;
-  ospf: { processId: number; networks: OspfNetwork[] } | null;
-  eigrp: { as: number; networks: OspfNetwork[] } | null;
+  ospf: { processId: number; networks: OspfNetwork[]; passiveInterfaces: string[] } | null;
+  eigrp: { as: number; networks: OspfNetwork[]; passiveInterfaces: string[] } | null;
   ospfv3: { processId: number } | null;
   /** VTP control-plane settings for switches. */
   vtpMode: "server" | "client" | "transparent";

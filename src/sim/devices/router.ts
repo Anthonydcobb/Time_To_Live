@@ -115,6 +115,7 @@ export class Router extends IosDevice {
       const oursNet = ours && this.ospfNetwork(ours);
       const theirsNet = theirs && peer.device.ospfNetwork(theirs);
       if (!ours || !theirs || !ours.up() || !theirs.up() || !oursNet || !theirsNet || oursNet.area !== theirsNet.area) continue;
+      if (this.config.ospf.passiveInterfaces.includes(ours.name) || peer.device.config.ospf?.passiveInterfaces.includes(theirs.name)) continue;
       this.ospfNeighbors.push({ router: peer.device, localInterface: ours.name, remoteInterface: theirs.name, remoteAddress: theirs.ip! });
       for (const route of peer.device.ospfAdvertisements(ours.ip!)) {
         if (!local.some((r) => r.network === route.network && r.mask === route.mask) && !this.ospfRoutes.some((r) => r.network === route.network && r.mask === route.mask && r.nextHop === theirs.ip)) {
@@ -151,6 +152,7 @@ export class Router extends IosDevice {
       const oursNet = ours && this.eigrpNetwork(ours);
       const theirsNet = theirs && peer.device.eigrpNetwork(theirs);
       if (!ours || !theirs || !ours.up() || !theirs.up() || !oursNet || !theirsNet || this.config.eigrp.as !== peer.device.config.eigrp?.as) continue;
+      if (this.config.eigrp.passiveInterfaces.includes(ours.name) || peer.device.config.eigrp?.passiveInterfaces.includes(theirs.name)) continue;
       this.eigrpNeighbors.push({ router: peer.device, localInterface: ours.name, remoteInterface: theirs.name, remoteAddress: theirs.ip! });
       for (const route of peer.device.eigrpAdvertisements(ours.ip!)) {
         if (!local.some((r) => r.network === route.network && r.mask === route.mask) && !this.eigrpRoutes.some((r) => r.network === route.network && r.mask === route.mask && r.nextHop === theirs.ip)) {
