@@ -16,6 +16,7 @@ const healthResults = document.querySelector<HTMLElement>("#health-results")!;
 const commandHistory: { device: string; command: string; status: string; at: string }[] = [];
 let liveDevices: Device[] = [];
 let refreshInFlight = false;
+const commandOutputs = new Map<string, string>();
 
 async function fetchWithTimeout(input: RequestInfo | URL, init: RequestInit = {}, timeoutMs = 5000): Promise<Response> {
   const controller = new AbortController();
@@ -153,7 +154,13 @@ async function run(device: string, line: string, mode = "enable"): Promise<any> 
   const deadline = Date.now() + 15000;
   while (Date.now() < deadline) {
     const response = await fetchWithTimeout(`${urlInput.value.replace(/\/$/, "")}/v1/result/${encodeURIComponent(queued.id)}`);
-    if (response.ok) { const body = await response.json(); addHistory(device, line, body.result?.status ?? "OK"); return body.result; }
+    if (response.ok) {
+      const body = await response.json();
+      const result = body.result ?? {};
+      commandOutputs.set(line, String(result.output ?? ""));
+      addHistory(device, line, result.status ?? "OK");
+      return result;
+    }
     await new Promise((resolve) => setTimeout(resolve, 250));
   }
   throw new Error(`Timed out waiting for ${device} / ${line}`);
@@ -164,6 +171,14 @@ function showHealth(results: { label: string; ok: boolean; detail: string }[]): 
   for (const result of results) {
     const row = document.createElement("div"); row.className = "health-row";
     row.innerHTML = `<span>${result.label}<small class="type"> · ${result.detail}</small></span><strong class="${result.ok ? "health-pass" : "health-fail"}">${result.ok ? "PASS" : "FAIL"}</strong>`;
+    const evidence = !result.ok ? commandOutputs.get(result.detail) : undefined;
+    if (evidence) {
+      const details = document.createElement("details"); details.className = "health-evidence";
+      const summary = document.createElement("summary"); summary.textContent = "Show command output";
+      const pre = document.createElement("pre"); pre.textContent = evidence;
+      details.append(summary, pre);
+      row.firstElementChild?.append(details);
+    }
     healthResults.append(row);
   }
 }

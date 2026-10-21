@@ -26,6 +26,7 @@ pre { min-height:180px; max-height:420px; overflow:auto; margin:16px 0 0; paddin
 .health-panel { margin-top:16px; } .panel-heading { display:flex; align-items:center; justify-content:space-between; gap:12px; }
 .health-row { display:flex; justify-content:space-between; gap:12px; padding:9px 0; border-top:1px solid var(--line); }
 .health-row:first-child { border-top:0; } .health-pass { color:var(--green); } .health-fail { color:var(--red); }
+.health-evidence { margin-top:6px; color:var(--dim); font-size:11px; } .health-evidence summary { cursor:pointer; color:var(--amber); } .health-evidence pre { min-height:0; max-height:180px; margin:6px 0 0; padding:8px; font-size:11px; }
 .topology-map { min-height:220px; position:relative; padding:10px 16px; overflow:auto; background:#080906; border:1px solid var(--line); }
 .topology-node { min-width:150px; padding:14px; text-align:center; border:1px solid var(--amber); background:var(--panel); color:var(--amber); position:relative; z-index:1; }
 .topology-node small { display:block; margin-top:4px; color:var(--dim); }
