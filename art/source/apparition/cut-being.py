@@ -17,15 +17,27 @@ OUT = Path("public/assets/apparition")
 # Each panel's box on the 2752x1536 sheet, between the title and the captions.
 PANELS = [(40, 115, 620, 1405), (625, 115, 1315, 1405), (1315, 115, 2030, 1405), (2030, 115, 2752, 1405)]
 HEIGHT = 900
+# How hard each stage is pushed into the dark: (gamma on brightness, colour kept). Ant found
+# stages 1 and 3 too bright as painted (the pale robe, the purple glow and lit monitors), so
+# they're crushed until only their highlights survive; 2 and 4 were right as they were.
+TONE = [(2.6, 0.35), (1.15, 1.0), (2.3, 0.4), (1.15, 1.0)]
 
 
-def cut(panel: Image.Image) -> Image.Image:
+def darken(a: np.ndarray, gamma: float, colour: float) -> np.ndarray:
+    """Pushes midtones toward black and drains colour, keeping the brightest bits."""
+    f = a.astype(np.float32) / 255
+    grey = f.mean(axis=2, keepdims=True)
+    f = grey + (f - grey) * colour
+    return (np.clip(f, 0, 1) ** gamma * 255).astype(np.int16)
+
+
+def cut(panel: Image.Image, tone: tuple[float, float]) -> Image.Image:
     a = np.asarray(panel).astype(np.int16)
     grey = a.mean(axis=2)
     sat = a.max(axis=2) - a.min(axis=2)
     # The checker's greys, the seams between them and the figure's own flat darks: all to black.
     flat = (sat <= 10) & (grey <= 60)
-    out = np.where(flat[..., None], 8, a).astype(np.uint8)
+    out = np.where(flat[..., None], 8, darken(a, *tone)).astype(np.uint8)
     # A soft oval: solid in the middle, gone well before the edges.
     h, w = grey.shape
     y, x = np.mgrid[0:h, 0:w]
@@ -40,7 +52,7 @@ def main() -> None:
     sheet = Image.open(sys.argv[1]).convert("RGB")
     OUT.mkdir(parents=True, exist_ok=True)
     for i, box in enumerate(PANELS, 1):
-        being = cut(sheet.crop(box))
+        being = cut(sheet.crop(box), TONE[i - 1])
         being = being.resize((round(being.width * HEIGHT / being.height), HEIGHT), Image.LANCZOS)
         being.save(OUT / f"being-{i}.webp", quality=88)
         print(OUT / f"being-{i}.webp", being.size)

@@ -59,6 +59,7 @@ export class RoomScene extends Phaser.Scene {
     // Rows: down, up, left, right. Each row is stand, step, pass, step, pass.
     this.load.spritesheet("player", "assets/sprites/characters/player-walk.png", { frameWidth: 16, frameHeight: 32 });
     this.load.spritesheet("mrs-finch", "assets/sprites/characters/mrs-finch-walk.png", { frameWidth: 16, frameHeight: 32 });
+    this.load.spritesheet("gus", "assets/sprites/characters/gus-walk.png", { frameWidth: 16, frameHeight: 32 });
     this.load.spritesheet("store-tiles", "assets/sprites/tiles/store-tiles.png", { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet("store-fridges", "assets/sprites/props/store-fridges.png", { frameWidth: 32, frameHeight: 48 });
     this.load.spritesheet("store-counter", "assets/sprites/props/store-counter.png", { frameWidth: 16, frameHeight: 80 });
@@ -71,6 +72,8 @@ export class RoomScene extends Phaser.Scene {
     this.load.spritesheet("office-props", "assets/sprites/props/office-props.png", { frameWidth: 80, frameHeight: 48 });
     // Set dressing: 32x80 cells, each piece standing at the bottom centre of its cell.
     this.load.spritesheet("store-decor", "assets/sprites/props/store-decor.png", { frameWidth: 32, frameHeight: 80 });
+    // The laundromat's machines and fittings: 48x64 cells, the same way.
+    this.load.spritesheet("laundromat-props", "assets/sprites/props/laundromat-props.png", { frameWidth: 48, frameHeight: 64 });
   }
 
   create(data: { room?: RoomId }): void {
@@ -190,6 +193,11 @@ export class RoomScene extends Phaser.Scene {
     if (p.door) {
       // An open door is just a gap in the wall.
       if (this.isOpen(p)) return;
+      if (p.sprite) {
+        const door = this.add.sprite(x + w / 2, y + h, p.sprite, p.frame ?? 0).setOrigin(0.5, 1).setScale(4).setDepth(y + h);
+        this.doors.set(p.id, [door, solid(x, y, w, h)]);
+        return;
+      }
       const slab = this.add.rectangle(x, y, w, h, p.color).setOrigin(0).setStrokeStyle(2, 0x111110).setDepth(y + h);
       const label = this.add
         .text(x + w / 2, y + h / 2, p.label, { fontFamily: "IBM Plex Mono, monospace", fontSize: "13px", color: "#d8d4c0", align: "center" })

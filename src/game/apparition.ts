@@ -12,13 +12,21 @@ import { audio } from "./audio";
  */
 const LENGTH_MS = 2700;
 
-/** Moments the figure shows through the static: start, how long, size, where, how solid. */
+/**
+ * Moments the figure shows through the static: start, how long, size, where, how solid. Each
+ * one is closer than the last: far off at the edge, then across the room, then most of the
+ * screen, then right against the glass with only the top of it in view. The last is a single
+ * frame as the static fades, to make you unsure you saw it.
+ */
 const GLIMPSES = [
-  { at: 380, ms: 90, scale: 1.3, x: 0.5, y: 0.55, alpha: 0.45 },
-  { at: 760, ms: 70, scale: 2.4, x: 0.3, y: 0.6, alpha: 0.6 },
-  { at: 1080, ms: 150, scale: 1.8, x: 0.55, y: 0.5, alpha: 0.85 },
-  { at: 1620, ms: 60, scale: 0.7, x: 0.78, y: 0.42, alpha: 0.5 },
+  { at: 380, ms: 90, scale: 0.55, x: 0.82, y: 0.58, alpha: 0.4 },
+  { at: 760, ms: 70, scale: 1, x: 0.28, y: 0.55, alpha: 0.55 },
+  { at: 1080, ms: 150, scale: 1.7, x: 0.55, y: 0.6, alpha: 0.75 },
+  { at: 1620, ms: 60, scale: 3.4, x: 0.5, y: 1.15, alpha: 0.9 },
+  { at: 2150, ms: 34, scale: 2.2, x: 0.5, y: 0.62, alpha: 0.7 },
 ];
+/** How long the shape stays burned into the screen afterwards, like a bright TV switched off. */
+const AFTERIMAGE_MS = 1800;
 const WORDS = { at: 1330, ms: 90, text: "IT IS ALREADY CONNECTED" };
 
 /** The painted stages, from the ghost in the wire to the unmaking. */
@@ -161,7 +169,6 @@ export function apparition(done?: () => void, stage = 1): void {
       being.style.left = `${glimpse.x * 100}%`;
       being.style.top = `${glimpse.y * 100}%`;
       being.style.transform = `translate(-50%, -50%) scale(${glimpse.scale}) skewX(${(Math.random() - 0.5) * 8}deg)`;
-      being.classList.toggle("negative", glimpse.alpha > 0.8);
     }
     words.style.opacity = t >= WORDS.at && t < WORDS.at + WORDS.ms ? "1" : "0";
     if (t > LENGTH_MS - 600) root.classList.add("fade");
@@ -170,10 +177,26 @@ export function apparition(done?: () => void, stage = 1): void {
       cancelAnimationFrame(frame);
       root.hidden = true;
       root.classList.remove("fade");
+      afterimage(being);
       done?.();
     }
   };
   frame = requestAnimationFrame(step);
+}
+
+/**
+ * Leaves a faint dark ghost of the figure over the middle of the room once the static is gone,
+ * and lets it fade. It doesn't block input; it's just there.
+ */
+function afterimage(being: HTMLCanvasElement): void {
+  const ghost = document.createElement("canvas");
+  ghost.className = "apparition-after";
+  ghost.width = being.width;
+  ghost.height = being.height;
+  ghost.getContext("2d")!.drawImage(being, 0, 0);
+  document.body.appendChild(ghost);
+  ghost.animate([{ opacity: 0.35 }, { opacity: 0.2, offset: 0.4 }, { opacity: 0 }], { duration: AFTERIMAGE_MS, easing: "ease-in" })
+    .finished.then(() => ghost.remove(), () => ghost.remove());
 }
 
 export const apparitionPlaying = () => !!el && !el.hidden;

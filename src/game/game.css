@@ -1990,10 +1990,18 @@ kbd {
   pointer-events: none;
 }
 
-/* The longest glimpse flips to a negative, the light parts of it burning white. */
-#apparition .being.negative {
-  mix-blend-mode: difference;
-  filter: blur(1px) invert(1) contrast(2);
+/* The figure burned into the screen for a moment after the static, darkening the room. */
+.apparition-after {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  z-index: 49;
+  height: 92vh;
+  transform: translate(-50%, -50%) scale(1.15);
+  opacity: 0;
+  filter: blur(3px) grayscale(1);
+  mix-blend-mode: multiply;
+  pointer-events: none;
 }
 
 #apparition .words {
