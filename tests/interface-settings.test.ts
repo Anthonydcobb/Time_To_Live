@@ -60,4 +60,13 @@ describe("interface speed and duplex", () => {
     expect(type(left, "show interfaces counters errors").join("\n")).toMatch(/Gi0\/0\s+0\s+[1-9]\d*\s+[1-9]\d*\s+[1-9]\d*/);
     expect(type(right, "show interfaces gigabitEthernet0/0").join("\n")).toMatch(/\d+ input errors, \d+ CRC/);
   });
+
+  it("reports packet and octet counters separately from error counters", () => {
+    const router = new Router("R1", "R1");
+    new Network().add(router);
+    const output = type(router, "show interfaces counters").join("\n");
+    expect(output).toContain("InOctets");
+    expect(output).toContain("OutOctets");
+    expect(output).toContain("Gi0/0");
+  });
 });

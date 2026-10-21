@@ -483,6 +483,23 @@ export function showInterfaceErrorCounters(device: IosDevice): string[] {
   return out;
 }
 
+export function showInterfaceCounters(device: IosDevice): string[] {
+  const out = [
+    "Port        InOctets      InUcastPkts    InMcastPkts    InBcastPkts",
+    "",
+    "Port        OutOctets     OutUcastPkts   OutMcastPkts   OutBcastPkts",
+  ];
+  for (const iface of device.interfaces()) {
+    if (!iface.port) continue;
+    const stats = iface.port.stats;
+    const inUcast = Math.max(0, stats.inPackets - stats.inBroadcasts);
+    const outUcast = Math.max(0, stats.outPackets - stats.outBroadcasts);
+    out.push(`${iface.shortName.padEnd(12)}${String(stats.inBytes).padStart(12)}${String(inUcast).padStart(15)}${String(0).padStart(15)}${String(stats.inBroadcasts).padStart(15)}`);
+    out.push(`${iface.shortName.padEnd(12)}${String(stats.outBytes).padStart(12)}${String(outUcast).padStart(15)}${String(0).padStart(15)}${String(stats.outBroadcasts).padStart(15)}`);
+  }
+  return out;
+}
+
 const ROUTE_CODES = [
   "Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP",
   "       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area",

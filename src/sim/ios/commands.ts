@@ -301,6 +301,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), ifaceArg], (c, [name]) =>
     c.out.push(...show.showInterfaces(c.device, name as string)),
   ),
+  cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("counters", "Interface counters")], (c) => c.out.push(...show.showInterfaceCounters(c.device))),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), kw("counters", "Interface counters"), kw("errors", "Interface error counters")], (c) => c.out.push(...show.showInterfaceErrorCounters(c.device))),
   cmd(EXEC, [SHOW, kw("arp", "Arp table")], (c) => c.out.push(...show.showArp(c.device))),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("arp", "IP ARP table")], (c) => c.out.push(...show.showArp(c.device))),
