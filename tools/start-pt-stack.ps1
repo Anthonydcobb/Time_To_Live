@@ -3,6 +3,7 @@ $ErrorActionPreference = "Stop"
 $project = Split-Path $PSScriptRoot -Parent
 $bridgePort = 39094
 $ptPort = 39000
+$dashboardPort = if ($env:PT_TTL_DASHBOARD_PORT) { [int]$env:PT_TTL_DASHBOARD_PORT } else { 5173 }
 $secret = if ($env:PT_TTL_AUTH_SECRET) { $env:PT_TTL_AUTH_SECRET } else { "CHANGE_ME_BEFORE_USE" }
 
 function Test-Bridge($port) {
@@ -14,7 +15,7 @@ function Test-Bridge($port) {
 
 function Test-Dashboard {
     try {
-        $response = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:5173/pt-dashboard.html" -TimeoutSec 2
+        $response = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$dashboardPort/pt-dashboard.html" -TimeoutSec 2
         return $response.StatusCode -eq 200
     } catch { return $false }
 }
@@ -32,8 +33,8 @@ if (-not (Test-Bridge $bridgePort)) {
     Write-Host "Node bridge already running on port $bridgePort"
 }
 
-if (-not (Get-NetTCPConnection -LocalPort 5173 -State Listen -ErrorAction SilentlyContinue)) {
-    $viteCommand = "Set-Location '$project'; npm run dev"
+if (-not (Get-NetTCPConnection -LocalPort $dashboardPort -State Listen -ErrorAction SilentlyContinue)) {
+    $viteCommand = "Set-Location '$project'; npm run dev -- --host 127.0.0.1 --port $dashboardPort --strictPort"
     Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $viteCommand -WorkingDirectory $project | Out-Null
 }
 
@@ -42,7 +43,7 @@ for ($i = 0; $i -lt 20; $i++) {
     Start-Sleep -Milliseconds 250
     if (Test-Dashboard) { $dashboardReady = $true; break }
 }
-if (-not $dashboardReady) { throw "Vite dashboard did not become ready at http://127.0.0.1:5173/pt-dashboard.html" }
+if (-not $dashboardReady) { throw "Vite dashboard did not become ready at http://127.0.0.1:$dashboardPort/pt-dashboard.html; set PT_TTL_DASHBOARD_PORT to an available port if needed" }
 
 $javaCommand = "`$env:PT_TTL_AUTH_SECRET='$secret'; & '$project\harness\pt-exapp\build-bridge.ps1' 127.0.0.1 $ptPort $bridgePort"
 Start-Process -FilePath "powershell.exe" -ArgumentList "-NoExit", "-ExecutionPolicy", "Bypass", "-Command", $javaCommand -WorkingDirectory $project | Out-Null
@@ -61,5 +62,5 @@ if ($pollerReady) {
     Write-Warning "Bridge is running, but the Packet Tracer ExApp has not checked in. Open Packet Tracer, enable external IPC, and verify the Java bridge window."
 }
 
-Start-Process "http://localhost:5173/pt-dashboard.html" | Out-Null
-Write-Host "Packet Tracer stack starting. Dashboard: http://localhost:5173/pt-dashboard.html"
+Start-Process "http://localhost:$dashboardPort/pt-dashboard.html" | Out-Null
+Write-Host "Packet Tracer stack starting. Dashboard: http://localhost:$dashboardPort/pt-dashboard.html"

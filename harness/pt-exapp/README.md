@@ -42,6 +42,11 @@ The dashboard's bridge status is separate from the ExApp status. A bridge can
 answer `/health` while `pollerConnected` is false; that means the Node queue
 is alive but the Java bridge has not checked in with Packet Tracer.
 
+The full launcher uses port 5173 by default and binds it strictly. Set
+`$env:PT_TTL_DASHBOARD_PORT` before running `tools\start-pt-stack.ps1` when
+another process already owns that port; the printed dashboard URL will use the
+selected port.
+
 Optional arguments are host, port, and command:
 
 ```powershell
