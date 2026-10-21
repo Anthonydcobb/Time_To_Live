@@ -47,15 +47,20 @@ const topology = {
         "interface gigabitEthernet0/0",
         "ip address 192.168.1.1 255.255.255.0",
         "no shutdown",
+        "interface gigabitEthernet0/1",
+        "ip address 10.0.0.1 255.255.255.0",
+        "no shutdown",
         "end",
       ],
     },
     { name: "S1", type: "switch", hostname: "S1" },
     { name: "PC1", type: "pc", ip: "192.168.1.10/24", gateway: "192.168.1.1" },
+    { name: "PC2", type: "pc", ip: "10.0.0.10/24", gateway: "10.0.0.1" },
   ],
   links: [
     { a: "R1 Gi0/0", b: "S1 Gi0/1" },
     { a: "PC1 Fa0", b: "S1 Fa0/1" },
+    { a: "R1 Gi0/1", b: "PC2 Fa0" },
   ],
 };
 
@@ -75,26 +80,26 @@ function text(result) {
   return (result?.lines ?? []).join("\n");
 }
 
-async function observe() {
-  const ping = await exec("PC1", "ping -n 1 192.168.1.1");
+async function observe(destination = "192.168.1.1") {
+  const ping = await exec("PC1", `ping -n 1 ${destination}`);
   const status = await exec("S1", "show interfaces status", "enable");
   const errors = await exec("R1", "show interfaces counters errors", "enable");
   return {
-    pingReachable: /Reply from 192\.168\.1\.1/i.test(text(ping)),
+    pingReachable: new RegExp(`Reply from ${destination.replaceAll(".", "\\.")}`, "i").test(text(ping)),
     switchStatus: text(status),
     routerErrors: text(errors),
   };
 }
 
-async function runScenario(id, description, inject, restore) {
-  const before = await observe();
+async function runScenario(id, description, inject, restore, destination = "192.168.1.1") {
+  const before = await observe(destination);
   await inject();
   await advance(1000);
-  const during = await observe();
+  const during = await observe(destination);
   await restore();
   await advance(35_000);
-  const after = await observe();
-  return { id, description, before, during, after };
+  const after = await observe(destination);
+  return { id, description, destination, before, during, after };
 }
 
 try {
@@ -119,6 +124,13 @@ try {
       await configure("R1", ["enable", "configure terminal", "interface gigabitEthernet 0/0", "no speed", "end"]);
       await configure("S1", ["enable", "configure terminal", "interface gigabitEthernet 0/1", "no speed", "end"]);
     },
+  ));
+  scenarios.push(await runScenario(
+    "wrong-default-gateway",
+    "Give PC1 an unreachable default gateway, then restore the router gateway.",
+    () => exec("PC1", "ipconfig 192.168.1.10 255.255.255.0 192.168.1.254", ""),
+    () => exec("PC1", "ipconfig 192.168.1.10 255.255.255.0 192.168.1.1", ""),
+    "10.0.0.1",
   ));
   const artifact = { capturedAt: new Date().toISOString(), backend: "sim", topology, scenarios };
   const outputPath = resolve(root, "harness/artifacts/sim-fault-scenarios.json");
