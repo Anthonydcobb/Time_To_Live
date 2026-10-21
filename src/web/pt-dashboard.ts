@@ -193,6 +193,8 @@ async function healthCheck(): Promise<void> {
       const ipv6Ospf = await run("Router0", "show ipv6 ospf neighbor");
       const ipv6OspfInterfaces = await run("Router0", "show ipv6 ospf interface");
       const natTranslations = await run("Router0", "show ip nat translations");
+      const natStatistics = await run("Router0", "show ip nat statistics");
+      const snmpStatus = await run("Router0", "show snmp");
       const standby = await run("Router0", "show standby");
       const vrrp = await run("Router0", "show vrrp");
       const glbp = await run("Router0", "show glbp");
@@ -202,11 +204,14 @@ async function healthCheck(): Promise<void> {
       const lldpNeighbors = await run("Router0", "show lldp neighbors");
       const trunk0 = await run("Switch0", "show interfaces trunk");
       const trunk1 = await run("Switch1", "show interfaces trunk");
+      const dhcpSnoopingStatistics = await run("Switch0", "show ip dhcp snooping statistics");
+      const arpInspectionStatistics = await run("Switch0", "show ip arp inspection statistics");
       const pc0Text = text(pc0Ip); const pc1Text = text(pc1Ip);
       const routerText = text(routerInterfaces); const sshText = text(sshStatus); const configText = text(routerConfig); const trunks = `${text(trunk0)}\n${text(trunk1)}`;
       const ipv6InterfaceText = text(ipv6Interfaces); const ipv6RouteText = text(ipv6Routes); const ipv6NeighborText = text(ipv6Neighbors);
       const ipv6OspfText = text(ipv6Ospf); const ipv6OspfInterfaceText = text(ipv6OspfInterfaces);
-      const natText = text(natTranslations); const standbyText = text(standby); const vrrpText = text(vrrp); const glbpText = text(glbp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
+      const natText = text(natTranslations); const natStatisticsText = text(natStatistics); const snmpText = text(snmpStatus); const standbyText = text(standby); const vrrpText = text(vrrp); const glbpText = text(glbp); const ntpText = text(ntpStatus); const loggingText = text(logging); const lldpText = text(lldpStatus); const lldpNeighborText = text(lldpNeighbors);
+      const dhcpSnoopingStatisticsText = text(dhcpSnoopingStatistics); const arpInspectionStatisticsText = text(arpInspectionStatistics);
       const routingText = text(routingProtocols); const eigrpInterfaceText = text(eigrpInterfaces); const eigrpTopologyText = text(eigrpTopology); const ospfInterfaceText = text(ospfInterfaces); const routeText = text(ipRoutes); const dnsText = text(dnsHosts); const ipv6AclText = text(ipv6AccessLists);
       const ipv6Configured = /[0-9a-f]{1,4}:[0-9a-f:]+\/\d+/i.test(ipv6InterfaceText);
       const ipv6Checks = ipv6Configured ? [
@@ -218,6 +223,8 @@ async function healthCheck(): Promise<void> {
       ] : [];
       const optionalChecks = [
         /Pro Inside global/i.test(natText) ? { label: "NAT translation table", ok: natText.split("\n").slice(2).some((line: string) => /^(?:---|icmp)\s+/i.test(line)), detail: "show ip nat translations" } : null,
+        /Total active translations:/i.test(natStatisticsText) ? { label: "NAT operational statistics", ok: /Inside interfaces:/i.test(natStatisticsText) && /Outside interfaces:/i.test(natStatisticsText), detail: "show ip nat statistics" } : null,
+        /SNMP communities configured:\s*[1-9]/i.test(snmpText) ? { label: "SNMP community configured", ok: /SNMP packets input/i.test(snmpText), detail: "show snmp" } : null,
         /Virtual IP address/i.test(standbyText) ? { label: "HSRP gateway state", ok: /State is (Active|Standby)/i.test(standbyText), detail: "show standby" } : null,
         /Virtual IP address/i.test(vrrpText) ? { label: "VRRP gateway state", ok: /State is (Master|Backup)/i.test(vrrpText), detail: "show vrrp" } : null,
         /Virtual IP address/i.test(glbpText) ? { label: "GLBP gateway state", ok: /State is (Active|Standby)/i.test(glbpText), detail: "show glbp" } : null,
@@ -232,6 +239,8 @@ async function healthCheck(): Promise<void> {
         /default-information originate|Area ranges:/i.test(routingText + configText) ? { label: "OSPF edge policy", ok: /default-information originate|Area ranges:/i.test(configText + routingText), detail: "default route / area summary" } : null,
         /IPv6 access list/i.test(ipv6AclText) ? { label: "IPv6 ACL attachment", ok: /ipv6 traffic-filter .* (in|out)/i.test(configText), detail: "show ipv6 access-list" } : null,
         /0\.0\.0\.0\/0/i.test(routeText) ? { label: "Default route present", ok: /(?:^|\n)O\*?\s+.*0\.0\.0\.0\/0|(?:^|\n)S\*\s+0\.0\.0\.0\/0/i.test(routeText), detail: "show ip route" } : null,
+        /DHCP snooping statistics:/i.test(dhcpSnoopingStatisticsText) ? { label: "DHCP snooping counters", ok: /Packets processed:/i.test(dhcpSnoopingStatisticsText), detail: "show ip dhcp snooping statistics" } : null,
+        /Dynamic ARP inspection statistics:/i.test(arpInspectionStatisticsText) ? { label: "DAI counters", ok: /ARP packets inspected:/i.test(arpInspectionStatisticsText), detail: "show ip arp inspection statistics" } : null,
       ].filter((check): check is { label: string; ok: boolean; detail: string } => check !== null);
       showHealth([
         { label: "PC0 IPv4 address", ok: /IPv4 Address.*192\.168\.10\.10/i.test(pc0Text), detail: "192.168.10.10 / VLAN 10" },
