@@ -507,6 +507,12 @@ const configCommands: Entry[] = [
     delete c.device.config.spanningTreePriority[vlan as number];
     (c.device as Switch).vlanConfigChanged();
   }, { devices: ["switch"] }),
+  cmd(CONFIG, [STP, kw("portfast", "Enable edge port behavior"), kw("default", "Enable PortFast by default on access ports")], (c) => {
+    if (c.device.kind === "switch") (c.device as Switch).config.spanningTreePortfastDefault = true;
+  }, { devices: ["switch"] }),
+  cmd(CONFIG, [NO, STP, kw("portfast", "Enable edge port behavior"), kw("default", "Enable PortFast by default on access ports")], (c) => {
+    if (c.device.kind === "switch") (c.device as Switch).config.spanningTreePortfastDefault = false;
+  }, { devices: ["switch"] }),
   cmd(CONFIG, [ENABLE_KW, kw("secret", "Assign the privileged level secret"), wordArg("The UNENCRYPTED (cleartext) 'enable' secret")], (c, [s]) => {
     c.device.config.enableSecret = type5Hash(s as string);
   }),

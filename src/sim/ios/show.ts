@@ -80,6 +80,8 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     if (c.dhcpSnoopingVlans.length) out.push(`ip dhcp snooping vlan ${formatVlanList(c.dhcpSnoopingVlans)}`);
     if (c.arpInspectionVlans.length) out.push(`ip arp inspection vlan ${formatVlanList(c.arpInspectionVlans)}`);
     out.push("spanning-tree mode pvst", "spanning-tree extend system-id");
+    if (c.spanningTreePortfastDefault) out.push("spanning-tree portfast default");
+    if (c.spanningTreeBpduGuardDefault) out.push("spanning-tree portfast bpduguard default");
     for (const [vlan, priority] of Object.entries(c.spanningTreePriority).sort(([a], [b]) => Number(a) - Number(b))) out.push(`spanning-tree vlan ${vlan} priority ${priority}`);
     out.push("!", "vlan internal allocation policy ascending", "!");
   }

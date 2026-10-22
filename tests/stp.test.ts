@@ -57,6 +57,20 @@ describe("spanning tree", () => {
     expect(sw.stpState(sw.port("Gi0/1"), 1)).toBe("forwarding");
   });
 
+  it("enables PortFast on access ports with the global default", () => {
+    const net = new Network();
+    const sw = net.add(new Switch("S1"));
+    const pc = net.add(new Pc("PC"));
+    type(sw, "", "en", "conf t", "spanning-tree portfast default", "end");
+    net.connect(sw.port("Gi0/1"), pc.nic);
+    net.clock.advance(3_000);
+    expect(sw.portfastEnabled(sw.port("Gi0/1"))).toBe(true);
+    expect(sw.stpState(sw.port("Gi0/1"), 1)).toBe("forwarding");
+    expect(type(sw, "show spanning-tree summary").join("\n")).toContain("Portfast Default             is enabled");
+    expect(type(sw, "show running-config").join("\n")).toContain("spanning-tree portfast default");
+    expect(type(sw, "show spanning-tree interface gi0/1 detail").join("\n")).toContain("The port is in the portfast mode");
+  });
+
   it("shuts a PortFast BPDU Guard port when a BPDU arrives", () => {
     const net = new Network();
     const edge = net.add(new Switch("EDGE"));
