@@ -1,0 +1,929 @@
+{
+  "capturedAt": "2026-10-22T19:28:07.978Z",
+  "backend": "sim",
+  "version": "workspace-sim",
+  "image": "src/sim",
+  "observations": [
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "__network__",
+      "input": "advance 35000",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "now": 35000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "PC1",
+      "input": "ipconfig /dhcp",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 192.168.30.21\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 192.168.30.1\n",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /dhcp",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 192.168.30.21",
+          "   Subnet Mask.....................: 255.255.255.0",
+          "   Default Gateway.................: 192.168.30.1",
+          ""
+        ],
+        "now": 36002
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "PC1",
+      "input": "ipconfig /renew",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 192.168.30.21\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 192.168.30.1\n",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /renew",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 192.168.30.21",
+          "   Subnet Mask.....................: 255.255.255.0",
+          "   Default Gateway.................: 192.168.30.1",
+          ""
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "PC1",
+      "input": "ipconfig /release",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: 0.0.0.0\n",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /release",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 0.0.0.0",
+          "   Subnet Mask.....................: 0.0.0.0",
+          "   Default Gateway.................: 0.0.0.0",
+          ""
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "PC1",
+      "input": "ipconfig /all",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Physical Address................: 00-60-A8-0A-00-1F\n   DHCP Enabled....................: Yes\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: 0.0.0.0\n   DNS Servers.....................: 0.0.0.0\n",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /all",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Physical Address................: 00-60-A8-0A-00-1F",
+          "   DHCP Enabled....................: Yes",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 0.0.0.0",
+          "   Subnet Mask.....................: 0.0.0.0",
+          "   Default Gateway.................: 0.0.0.0",
+          "   DNS Servers.....................: 0.0.0.0",
+          ""
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "R1",
+      "input": "show ip dhcp binding",
+      "status": "ok",
+      "rawOutput": "Bindings from all pools not associated with VRF:\nIP address          Client-ID/              Lease expiration        Type\n                    Hardware address/\n                    User name\n192.168.30.21       0100.60a8.0a00.1f       Mar 01 1993 01:00 AM    Automatic",
+      "result": {
+        "device": "R1",
+        "line": "show ip dhcp binding",
+        "lines": [
+          "Bindings from all pools not associated with VRF:",
+          "IP address          Client-ID/              Lease expiration        Type",
+          "                    Hardware address/",
+          "                    User name",
+          "192.168.30.21       0100.60a8.0a00.1f       Mar 01 1993 01:00 AM    Automatic"
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "R1",
+      "input": "show ip dhcp pool",
+      "status": "ok",
+      "rawOutput": "\nPool USERS :\n Utilization mark (high/low)    : 100 / 0\n Subnet size (first/next)       : 0 / 0 \n Total addresses                : 254\n Leased addresses               : 1\n Pending event                  : none\n 1 subnet is currently in the pool :\n Current index        IP address range                    Leased addresses\n 192.168.30.22        192.168.30.1     - 192.168.30.254    1",
+      "result": {
+        "device": "R1",
+        "line": "show ip dhcp pool",
+        "lines": [
+          "",
+          "Pool USERS :",
+          " Utilization mark (high/low)    : 100 / 0",
+          " Subnet size (first/next)       : 0 / 0 ",
+          " Total addresses                : 254",
+          " Leased addresses               : 1",
+          " Pending event                  : none",
+          " 1 subnet is currently in the pool :",
+          " Current index        IP address range                    Leased addresses",
+          " 192.168.30.22        192.168.30.1     - 192.168.30.254    1"
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "R1",
+      "input": "show ip dhcp conflict",
+      "status": "ok",
+      "rawOutput": "IP address        Detection method   Detection time          VRF",
+      "result": {
+        "device": "R1",
+        "line": "show ip dhcp conflict",
+        "lines": [
+          "IP address        Detection method   Detection time          VRF"
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "R1",
+      "input": "show ip dhcp server statistics",
+      "status": "ok",
+      "rawOutput": "                ^\n% Invalid input detected at '^' marker.\n",
+      "result": {
+        "device": "R1",
+        "line": "show ip dhcp server statistics",
+        "lines": [
+          "                ^",
+          "% Invalid input detected at '^' marker.",
+          ""
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "R1",
+      "input": "show running-config | section dhcp",
+      "status": "ok",
+      "rawOutput": "ip dhcp excluded-address 192.168.30.1 192.168.30.20\nip dhcp pool USERS\n network 192.168.30.0 255.255.255.0\n default-router 192.168.30.1\n dns-server 192.168.30.53\n lease 0 1",
+      "result": {
+        "device": "R1",
+        "line": "show running-config | section dhcp",
+        "lines": [
+          "ip dhcp excluded-address 192.168.30.1 192.168.30.20",
+          "ip dhcp pool USERS",
+          " network 192.168.30.0 255.255.255.0",
+          " default-router 192.168.30.1",
+          " dns-server 192.168.30.53",
+          " lease 0 1"
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "R1",
+      "input": "clear ip dhcp binding *",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "device": "R1",
+        "line": "clear ip dhcp binding *",
+        "lines": [],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "R1",
+      "input": "clear ip dhcp binding 192.168.30.21",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "device": "R1",
+        "line": "clear ip dhcp binding 192.168.30.21",
+        "lines": [],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "R1",
+      "input": "configure terminal",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "result": {
+        "device": "R1",
+        "line": "configure terminal",
+        "lines": [
+          "Enter configuration commands, one per line.  End with CNTL/Z."
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "R1",
+      "input": "ip dhcp ?",
+      "status": "ok",
+      "rawOutput": "% Unrecognized command",
+      "result": {
+        "device": "R1",
+        "lines": [
+          "% Unrecognized command"
+        ],
+        "line": "ip dhcp ?"
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "R1",
+      "input": "ip dhcp",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "device": "R1",
+        "line": "ip dhcp",
+        "completion": "ip dhcp "
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "basic-pool-and-client",
+      "device": "R1",
+      "input": "end",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "device": "R1",
+        "line": "end",
+        "lines": [],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "relay",
+      "device": "__network__",
+      "input": "advance 3000",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "now": 3000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "relay",
+      "device": "CLIENT",
+      "input": "ipconfig /dhcp",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 10.10.0.2\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.10.0.1\n",
+      "result": {
+        "device": "CLIENT",
+        "line": "ipconfig /dhcp",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 10.10.0.2",
+          "   Subnet Mask.....................: 255.255.255.0",
+          "   Default Gateway.................: 10.10.0.1",
+          ""
+        ],
+        "now": 8002.5
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "relay",
+      "device": "CLIENT",
+      "input": "ipconfig /renew",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 10.10.0.2\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.10.0.1\n",
+      "result": {
+        "device": "CLIENT",
+        "line": "ipconfig /renew",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 10.10.0.2",
+          "   Subnet Mask.....................: 255.255.255.0",
+          "   Default Gateway.................: 10.10.0.1",
+          ""
+        ],
+        "now": 8004.5
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "relay",
+      "device": "CLIENT",
+      "input": "ipconfig /all",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Physical Address................: 00-60-A8-0A-00-07\n   DHCP Enabled....................: Yes\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 10.10.0.2\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.10.0.1\n   DHCP Server.....................: 10.0.0.2\n   DNS Servers.....................: 0.0.0.0\n",
+      "result": {
+        "device": "CLIENT",
+        "line": "ipconfig /all",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Physical Address................: 00-60-A8-0A-00-07",
+          "   DHCP Enabled....................: Yes",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 10.10.0.2",
+          "   Subnet Mask.....................: 255.255.255.0",
+          "   Default Gateway.................: 10.10.0.1",
+          "   DHCP Server.....................: 10.0.0.2",
+          "   DNS Servers.....................: 0.0.0.0",
+          ""
+        ],
+        "now": 23004.5
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "relay",
+      "device": "RELAY",
+      "input": "show running-config | section dhcp",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "device": "RELAY",
+        "line": "show running-config | section dhcp",
+        "lines": [],
+        "now": 23004.5
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "__network__",
+      "input": "advance 35000",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "now": 35000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "PC1",
+      "input": "ipconfig /dhcp",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 10.50.0.254\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.50.0.1\n",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /dhcp",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 10.50.0.254",
+          "   Subnet Mask.....................: 255.255.255.0",
+          "   Default Gateway.................: 10.50.0.1",
+          ""
+        ],
+        "now": 36002
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "PC2",
+      "input": "ipconfig /dhcp",
+      "status": "ok",
+      "rawOutput": "An error occurred while renewing interface FastEthernet0 : unable to contact your DHCP server. Request has timed out.",
+      "result": {
+        "device": "PC2",
+        "line": "ipconfig /dhcp",
+        "lines": [
+          "An error occurred while renewing interface FastEthernet0 : unable to contact your DHCP server. Request has timed out."
+        ],
+        "now": 96002
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "PC1",
+      "input": "ipconfig /renew",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 10.50.0.254\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.50.0.1\n",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /renew",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 10.50.0.254",
+          "   Subnet Mask.....................: 255.255.255.0",
+          "   Default Gateway.................: 10.50.0.1",
+          ""
+        ],
+        "now": 96004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "PC2",
+      "input": "ipconfig /renew",
+      "status": "ok",
+      "rawOutput": "An error occurred while renewing interface FastEthernet0 : unable to contact your DHCP server. Request has timed out.",
+      "result": {
+        "device": "PC2",
+        "line": "ipconfig /renew",
+        "lines": [
+          "An error occurred while renewing interface FastEthernet0 : unable to contact your DHCP server. Request has timed out."
+        ],
+        "now": 156004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "R1",
+      "input": "show ip dhcp binding",
+      "status": "ok",
+      "rawOutput": "Bindings from all pools not associated with VRF:\nIP address          Client-ID/              Lease expiration        Type\n                    Hardware address/\n                    User name\n10.50.0.254         0100.60a8.0a00.1f       Mar 02 1993 12:01 AM    Automatic",
+      "result": {
+        "device": "R1",
+        "line": "show ip dhcp binding",
+        "lines": [
+          "Bindings from all pools not associated with VRF:",
+          "IP address          Client-ID/              Lease expiration        Type",
+          "                    Hardware address/",
+          "                    User name",
+          "10.50.0.254         0100.60a8.0a00.1f       Mar 02 1993 12:01 AM    Automatic"
+        ],
+        "now": 156004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "R1",
+      "input": "show ip dhcp pool",
+      "status": "ok",
+      "rawOutput": "\nPool TINY :\n Utilization mark (high/low)    : 100 / 0\n Subnet size (first/next)       : 0 / 0 \n Total addresses                : 254\n Leased addresses               : 1\n Pending event                  : none\n 1 subnet is currently in the pool :\n Current index        IP address range                    Leased addresses\n 10.50.0.255          10.50.0.1        - 10.50.0.254       1",
+      "result": {
+        "device": "R1",
+        "line": "show ip dhcp pool",
+        "lines": [
+          "",
+          "Pool TINY :",
+          " Utilization mark (high/low)    : 100 / 0",
+          " Subnet size (first/next)       : 0 / 0 ",
+          " Total addresses                : 254",
+          " Leased addresses               : 1",
+          " Pending event                  : none",
+          " 1 subnet is currently in the pool :",
+          " Current index        IP address range                    Leased addresses",
+          " 10.50.0.255          10.50.0.1        - 10.50.0.254       1"
+        ],
+        "now": 156004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "wrong-default-router",
+      "device": "__network__",
+      "input": "advance 35000",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "now": 35000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "wrong-default-router",
+      "device": "PC1",
+      "input": "ipconfig /dhcp",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 10.60.0.2\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.60.0.254\n",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /dhcp",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 10.60.0.2",
+          "   Subnet Mask.....................: 255.255.255.0",
+          "   Default Gateway.................: 10.60.0.254",
+          ""
+        ],
+        "now": 36002
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "wrong-default-router",
+      "device": "PC1",
+      "input": "ipconfig /renew",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 10.60.0.2\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.60.0.254\n",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /renew",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 10.60.0.2",
+          "   Subnet Mask.....................: 255.255.255.0",
+          "   Default Gateway.................: 10.60.0.254",
+          ""
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "wrong-default-router",
+      "device": "PC1",
+      "input": "ipconfig /all",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Physical Address................: 00-60-A8-0A-00-1F\n   DHCP Enabled....................: Yes\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 10.60.0.2\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.60.0.254\n   DHCP Server.....................: 10.60.0.1\n   DNS Servers.....................: 0.0.0.0\n",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /all",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Physical Address................: 00-60-A8-0A-00-1F",
+          "   DHCP Enabled....................: Yes",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 10.60.0.2",
+          "   Subnet Mask.....................: 255.255.255.0",
+          "   Default Gateway.................: 10.60.0.254",
+          "   DHCP Server.....................: 10.60.0.1",
+          "   DNS Servers.....................: 0.0.0.0",
+          ""
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "no-server-apipa",
+      "device": "__network__",
+      "input": "advance 35000",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "now": 35000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "no-server-apipa",
+      "device": "PC1",
+      "input": "ipconfig /dhcp",
+      "status": "ok",
+      "rawOutput": "An error occurred while renewing interface FastEthernet0 : unable to contact your DHCP server. Request has timed out.",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /dhcp",
+        "lines": [
+          "An error occurred while renewing interface FastEthernet0 : unable to contact your DHCP server. Request has timed out."
+        ],
+        "now": 95000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "no-server-apipa",
+      "device": "PC1",
+      "input": "ipconfig /renew",
+      "status": "ok",
+      "rawOutput": "An error occurred while renewing interface FastEthernet0 : unable to contact your DHCP server. Request has timed out.",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /renew",
+        "lines": [
+          "An error occurred while renewing interface FastEthernet0 : unable to contact your DHCP server. Request has timed out."
+        ],
+        "now": 155000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "no-server-apipa",
+      "device": "PC1",
+      "input": "ipconfig /all",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Physical Address................: 00-60-A8-0A-00-1C\n   DHCP Enabled....................: Yes\n   Connection-specific DNS Suffix..: \n   Autoconfiguration IPv4 Address..: 169.254.1.29\n   Subnet Mask.....................: 255.255.0.0\n   Default Gateway.................: 0.0.0.0\n   DNS Servers.....................: 0.0.0.0\n",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /all",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Physical Address................: 00-60-A8-0A-00-1C",
+          "   DHCP Enabled....................: Yes",
+          "   Connection-specific DNS Suffix..: ",
+          "   Autoconfiguration IPv4 Address..: 169.254.1.29",
+          "   Subnet Mask.....................: 255.255.0.0",
+          "   Default Gateway.................: 0.0.0.0",
+          "   DNS Servers.....................: 0.0.0.0",
+          ""
+        ],
+        "now": 155000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "__network__",
+      "input": "advance 35000",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "now": 35000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "S1",
+      "input": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "device": "S1",
+        "line": "enable",
+        "lines": [],
+        "now": 35000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "S1",
+      "input": "configure terminal",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "result": {
+        "device": "S1",
+        "line": "configure terminal",
+        "lines": [
+          "Enter configuration commands, one per line.  End with CNTL/Z."
+        ],
+        "now": 35000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "S1",
+      "input": "ip dhcp snooping",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "device": "S1",
+        "line": "ip dhcp snooping",
+        "lines": [],
+        "now": 35000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "S1",
+      "input": "ip dhcp snooping vlan 1",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "device": "S1",
+        "line": "ip dhcp snooping vlan 1",
+        "lines": [],
+        "now": 35000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "S1",
+      "input": "interface gigabitEthernet 0/1",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "device": "S1",
+        "line": "interface gigabitEthernet 0/1",
+        "lines": [],
+        "now": 35000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "S1",
+      "input": "ip dhcp snooping trust",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "device": "S1",
+        "line": "ip dhcp snooping trust",
+        "lines": [],
+        "now": 35000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "S1",
+      "input": "end",
+      "status": "ok",
+      "rawOutput": "",
+      "result": {
+        "device": "S1",
+        "line": "end",
+        "lines": [],
+        "now": 35000
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "PC1",
+      "input": "ipconfig /dhcp",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 10.70.0.2\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.70.0.1\n",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /dhcp",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 10.70.0.2",
+          "   Subnet Mask.....................: 255.255.255.0",
+          "   Default Gateway.................: 10.70.0.1",
+          ""
+        ],
+        "now": 36002
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "PC1",
+      "input": "ipconfig /renew",
+      "status": "ok",
+      "rawOutput": "\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   IPv4 Address....................: 10.70.0.2\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.70.0.1\n",
+      "result": {
+        "device": "PC1",
+        "line": "ipconfig /renew",
+        "lines": [
+          "",
+          "FastEthernet0 Connection:(default port)",
+          "",
+          "   Connection-specific DNS Suffix..: ",
+          "   IPv4 Address....................: 10.70.0.2",
+          "   Subnet Mask.....................: 255.255.255.0",
+          "   Default Gateway.................: 10.70.0.1",
+          ""
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "S1",
+      "input": "show ip dhcp snooping",
+      "status": "ok",
+      "rawOutput": "DHCP snooping is active\nDHCP snooping is configured on VLANs: 1\nInsertion of option 82 is enabled\nVerification of hwaddr field is enabled\nPackets processed: 8\nPackets dropped on untrusted ports: 0\nPackets dropped by rate limit: 0\n\nInterface                  Trusted     Rate limit (pps)\nFa0/1                      no          none\nFa0/2                      no          none\nFa0/3                      no          none\nFa0/4                      no          none\nFa0/5                      no          none\nFa0/6                      no          none\nFa0/7                      no          none\nFa0/8                      no          none\nFa0/9                      no          none\nFa0/10                     no          none\nFa0/11                     no          none\nFa0/12                     no          none\nFa0/13                     no          none\nFa0/14                     no          none\nFa0/15                     no          none\nFa0/16                     no          none\nFa0/17                     no          none\nFa0/18                     no          none\nFa0/19                     no          none\nFa0/20                     no          none\nFa0/21                     no          none\nFa0/22                     no          none\nFa0/23                     no          none\nFa0/24                     no          none\nGi0/1                      yes         none\nGi0/2                      no          none",
+      "result": {
+        "device": "S1",
+        "line": "show ip dhcp snooping",
+        "lines": [
+          "DHCP snooping is active",
+          "DHCP snooping is configured on VLANs: 1",
+          "Insertion of option 82 is enabled",
+          "Verification of hwaddr field is enabled",
+          "Packets processed: 8",
+          "Packets dropped on untrusted ports: 0",
+          "Packets dropped by rate limit: 0",
+          "",
+          "Interface                  Trusted     Rate limit (pps)",
+          "Fa0/1                      no          none",
+          "Fa0/2                      no          none",
+          "Fa0/3                      no          none",
+          "Fa0/4                      no          none",
+          "Fa0/5                      no          none",
+          "Fa0/6                      no          none",
+          "Fa0/7                      no          none",
+          "Fa0/8                      no          none",
+          "Fa0/9                      no          none",
+          "Fa0/10                     no          none",
+          "Fa0/11                     no          none",
+          "Fa0/12                     no          none",
+          "Fa0/13                     no          none",
+          "Fa0/14                     no          none",
+          "Fa0/15                     no          none",
+          "Fa0/16                     no          none",
+          "Fa0/17                     no          none",
+          "Fa0/18                     no          none",
+          "Fa0/19                     no          none",
+          "Fa0/20                     no          none",
+          "Fa0/21                     no          none",
+          "Fa0/22                     no          none",
+          "Fa0/23                     no          none",
+          "Fa0/24                     no          none",
+          "Gi0/1                      yes         none",
+          "Gi0/2                      no          none"
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "S1",
+      "input": "show ip dhcp snooping binding",
+      "status": "ok",
+      "rawOutput": "MacAddress          IpAddress        Lease(sec)  Type           VLAN  Interface\n------------------  ---------------  ----------  -------------  ----  -----------------\n0060.a80a.001f      10.70.0.2        -           dhcp-snooping  1     Fa0/1",
+      "result": {
+        "device": "S1",
+        "line": "show ip dhcp snooping binding",
+        "lines": [
+          "MacAddress          IpAddress        Lease(sec)  Type           VLAN  Interface",
+          "------------------  ---------------  ----------  -------------  ----  -----------------",
+          "0060.a80a.001f      10.70.0.2        -           dhcp-snooping  1     Fa0/1"
+        ],
+        "now": 36004
+      }
+    },
+    {
+      "backend": "sim",
+      "experiment": "snooping-trust",
+      "device": "S1",
+      "input": "show ip dhcp snooping statistics",
+      "status": "ok",
+      "rawOutput": "DHCP snooping statistics:\n  Packets processed: 8\n  Packets dropped on untrusted ports: 0\n  Packets dropped by rate limit: 0",
+      "result": {
+        "device": "S1",
+        "line": "show ip dhcp snooping statistics",
+        "lines": [
+          "DHCP snooping statistics:",
+          "  Packets processed: 8",
+          "  Packets dropped on untrusted ports: 0",
+          "  Packets dropped by rate limit: 0"
+        ],
+        "now": 36004
+      }
+    }
+  ]
+}

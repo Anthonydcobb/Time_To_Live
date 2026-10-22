@@ -6,6 +6,19 @@ Last updated: 2026-10-19.
 
 ## Latest handoff update (2026-10-22, Codex)
 
+- Completed the DHCP Packet Tracer versus simulator research capture. Raw
+  observations are in `harness/artifacts/dhcp-research-pt.json` and
+  `harness/artifacts/dhcp-research-sim.json`; the discrepancy report is
+  `docs/dhcp-research.md`.
+- The capture covered pool/exclusion, PC renew/release/all, bindings/pools/
+  conflicts/statistics/running-config, clears, relay, exhaustion, wrong
+  gateway, APIPA, snooping trust/bindings, and `?`/completion.
+- Restored the temporary PT DHCP/helper/snooping configuration and reverified
+  the VLAN/routing gateways. PT bridge terminal-history contamination around
+  some PC commands is recorded as a research observation, not normalized away.
+
+## Latest handoff update (2026-10-22, Codex)
+
 - Cold-started the PT stack after the reboot. The launcher reported the ExApp
   connected; `npm run pt:status` returned `ready: true`, `poller: "connected"`,
   and `pending: 0` on bridge `http://127.0.0.1:39094`.
