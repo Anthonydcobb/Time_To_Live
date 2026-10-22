@@ -4,6 +4,51 @@ Read this first if you're picking up the project, human or AI. Update it wheneve
 
 Last updated: 2026-10-19.
 
+## Latest handoff update (2026-10-22, Codex)
+
+- Cold-started the PT stack after the reboot. The launcher reported the ExApp
+  connected; `npm run pt:status` returned `ready: true`, `poller: "connected"`,
+  and `pending: 0` on bridge `http://127.0.0.1:39094`.
+- Fresh discovery found the rebuilt nine-device lab: Switch0/1/2, Router0/1,
+  PC0/1/2, and the power device. Raw and normalized topology artifacts were
+  refreshed.
+- Updated `tools/run-pt-live-expanded-config.mjs` for the real ports and both
+  routers. The live apply reported zero failures on all five network devices;
+  all three PCs exchanged verified ping replies after STP convergence.
+- Added the raw PT STP capture at `harness/artifacts/stp-research-pt.json`,
+  the sim capture remains `harness/artifacts/sim-stp-scenario.json`, and the
+  discrepancy report is `docs/stp-research.md`.
+- Full loop-dependent STP cases remain blocked until the live Packet Tracer
+  topology has a redundant switch link/BPDU source added through the GUI.
+- Anthony added `Switch0 Fa0/4` to `Switch2 Fa0/5`; discovery verified both
+  endpoints up. The STP capture now includes 48 PT observations covering
+  equal-priority MAC tie-break, path cost, root guard, PortFast, command
+  variants, and redundant-link failure. Only BPDU-Guard err-disable (no BPDU
+  source) and intentionally disruptive STP-mode mismatch remain blocked.
+- Anthony added Switch3 on `Switch2 Fa0/6`; the BPDU Guard run captured
+  `Fa0/6 err-disabled` with a superior VLAN 10 BPDU. The temporary test port
+  was shut down and its guard settings were removed. Only mismatched STP mode
+  injection remained; it has now been captured and restored as well. The PT
+  STP artifact contains 55 observations and no blocked experiments.
+
+## Latest handoff (2026-10-22)
+
+- Fixed automatic Packet Tracer bridge discovery when the default `39094`
+  listener is unreachable; `npm run pt:status` now discovers
+  `http://127.0.0.1:39095` and reports `ready: true`, `poller: "connected"`,
+  and `pending: 0`.
+- Updated the shared bridge client to use the same replacement-port discovery,
+  so the live config scripts work with the current `39095` bridge.
+- Clean-reset Switch0, Switch1, and Router0 through the live CLI bridge with
+  erase/reload, ran the existing expanded config once, and recorded the clean
+  STP/ARP convergence evidence in `docs/PT_PC0_STATUS.md`. The `.pkt` file was
+  not touched. Packet Tracer's ExApp did not return delayed PC ping reply
+  lines, so the note records that capture limitation explicitly.
+- Added `tests/pt-stack-health.test.ts` covering replacement-port discovery.
+- Validation complete: `npm run audit:network` returned `"ok": true` for 12
+  artifacts, `npm test` returned `26 passed` and `207 passed`, and
+  `npm run build` completed the Vite production build successfully.
+
 ## The game in one paragraph
 
 Time To Live is a 2D top-down horror game set in Static Springs, a Night Vale style town. You're a network contractor for Bob's Bandwidth & Bloodletting. Each job is a strange local business that needs a network, and you bring the gear, cable it and configure it with a command line that behaves exactly like Cisco IOS. The jobs climb the CCNA 200-301 curriculum, from a corner store with static IPs to The Void-View Hotel. Network attacks are the hauntings. The full design doc lives outside the repo in the project's shared files at `design/design-doc.md`. Ask Ant for it if you can't reach it.

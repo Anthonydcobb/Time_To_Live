@@ -1,26 +1,10 @@
+import { detectCurrentBridge as findCurrentBridge } from "./pt-stack-health.mjs";
+
 let baseUrl = process.env.PT_BRIDGE_URL ?? "http://127.0.0.1:39094";
 
 async function detectCurrentBridge() {
-  if (process.env.PT_BRIDGE_URL) return;
-  async function readHealth(url) {
-    try {
-      const response = await fetch(`${url}/health`, { signal: AbortSignal.timeout(800) });
-      if (!response.ok) return null;
-      const health = await response.json();
-      return health?.ok === true ? health : null;
-    } catch {
-      return null;
-    }
-  }
-  const legacyHealth = await readHealth(baseUrl);
-  if (!legacyHealth || Object.hasOwn(legacyHealth, "pollerConnected")) return;
-  for (let port = 39095; port <= 39105; port += 1) {
-    const candidate = `http://127.0.0.1:${port}`;
-    const health = await readHealth(candidate);
-    if (health && Object.hasOwn(health, "pollerConnected")) {
-      baseUrl = candidate;
-      return;
-    }
+  if (!process.env.PT_BRIDGE_URL) {
+    ({ baseUrl } = await findCurrentBridge({ baseUrl }));
   }
 }
 
