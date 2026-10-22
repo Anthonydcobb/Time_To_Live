@@ -56,6 +56,7 @@ export class Switch extends IosDevice {
   private readonly dhcpRateWindows = new Map<Port, { started: number; count: number }>();
   private readonly errDisabledPorts = new Set<Port>();
   private readonly rootInconsistentUntil = new Map<Port, Map<number, number>>();
+  private readonly rootReferences = new Map<number, Switch>();
   private readonly sviUp = new Set<string>();
   /** Access-layer security counters used by the IOS show commands. */
   readonly dhcpSnoopingStats = { processed: 0, untrustedDrops: 0, rateLimitDrops: 0 };
@@ -348,8 +349,8 @@ export class Switch extends IosDevice {
     if (!(peer instanceof Switch) || !port.peer) return "designated";
     const peerPort = port.peer;
     if (!peerPort.protocolUp || !peer.vlansOn(peerPort).includes(vlan)) return "designated";
-    const switches = (this.network?.devices ?? []).filter((d): d is Switch => d instanceof Switch);
-    const root = [...switches].sort((a, b) => a.bridgeId(vlan).localeCompare(b.bridgeId(vlan)))[0];
+    const switches = reachableSwitches(this, vlan);
+    const root = electedRoot(this, vlan);
     if (!root) return "designated";
     const distances = new Map<Switch, number>([[root, 0]]);
     let changed = true;
@@ -416,6 +417,7 @@ export class Switch extends IosDevice {
     this.lastMode.clear();
     this.errDisabledPorts.clear();
     this.rootInconsistentUntil.clear();
+    this.rootReferences.clear();
     this.syncVlans();
   }
 
@@ -648,14 +650,20 @@ export class Switch extends IosDevice {
     if (frame.payload.kind === "bpdu" && this.rootGuardEnabled(port)) {
       const bpdu = frame.payload;
       const vlan = bpdu.vlan;
+      const advertised = (this.network?.devices ?? []).find((device): device is Switch => device instanceof Switch && device.baseMac === bpdu.rootMac);
+      const peer = port.peer?.device instanceof Switch ? port.peer.device : null;
+      const advertisedBeyondPeer = !!advertised && !!peer && advertised !== peer && reachableSwitches(peer, vlan, port.peer ?? undefined).includes(advertised);
+      const root = this.rootReferences.get(vlan) ?? (advertisedBeyondPeer ? advertised! : this);
       const receivedId = bpdu.rootPriority + vlan;
-      const localId = this.bridgePriority(vlan) + vlan;
-      const superior = receivedId < localId || (receivedId === localId && bpdu.rootMac < this.baseMac);
+      const localId = root.bridgePriority(vlan) + vlan;
+      const superior = receivedId < localId || (receivedId === localId && bpdu.rootMac < root.baseMac);
       if (superior && !this.isRootInconsistent(port, vlan)) {
         let vlans = this.rootInconsistentUntil.get(port);
         if (!vlans) { vlans = new Map(); this.rootInconsistentUntil.set(port, vlans); }
         vlans.set(vlan, this.clock.now + 20_000);
         this.emit(`%SPANTREE-2-ROOTGUARD_BLOCK: Root guard blocking port ${port.shortName} on VLAN ${vlan}.`);
+      } else if (!superior) {
+        if (advertised) this.rootReferences.set(vlan, advertised);
       }
     }
     if (frame.payload.kind === "bpdu" && this.portfastEnabled(port) && this.bpduGuardEnabled(port) && !port.adminDown) {
@@ -671,11 +679,12 @@ export class Switch extends IosDevice {
   backgroundFrame(port: Port): Frame | null {
     const vlan = this.vlansOn(port)[0];
     if (vlan === undefined) return null;
+    const root = this.rootReferences.get(vlan) ?? electedRoot(this, vlan);
     const payload: BpduPacket = {
       kind: "bpdu",
       vlan,
-      rootPriority: this.bridgePriority(vlan),
-      rootMac: this.baseMac,
+      rootPriority: root.bridgePriority(vlan),
+      rootMac: root.baseMac,
       rootPathCost: 0,
       bridgePriority: this.bridgePriority(vlan),
       bridgeMac: this.baseMac,
@@ -727,4 +736,31 @@ export class Switch extends IosDevice {
     const tagged = this.operationalMode(port) === "trunk" && vlan !== this.switchport(port).nativeVlan;
     this.send(port, retag(frame, tagged ? vlan : undefined));
   }
+}
+
+/** Switches in this VLAN's currently valid STP component. Root-inconsistent links are cut. */
+export function reachableSwitches(start: Switch, vlan: number, blockedPort?: Port): Switch[] {
+  const seen = new Set<Switch>([start]);
+  const queue = [start];
+  while (queue.length) {
+    const current = queue.shift()!;
+    for (const port of current.ports) {
+      if (current === start && port === blockedPort) continue;
+      const peerPort = port.peer;
+      const peer = peerPort?.device;
+      if (!peerPort || !(peer instanceof Switch) || !port.protocolUp || !peerPort.protocolUp) continue;
+      if (!current.vlansOn(port).includes(vlan) || !peer.vlansOn(peerPort).includes(vlan)) continue;
+      if (current.isRootInconsistent(port, vlan) || peer.isRootInconsistent(peerPort, vlan)) continue;
+      if (!seen.has(peer)) {
+        seen.add(peer);
+        queue.push(peer);
+      }
+    }
+  }
+  return [...seen];
+}
+
+/** PVST root election shared by operational roles and all spanning-tree views. */
+export function electedRoot(start: Switch, vlan: number): Switch {
+  return reachableSwitches(start, vlan).sort((a, b) => a.bridgeId(vlan).localeCompare(b.bridgeId(vlan)))[0] ?? start;
 }

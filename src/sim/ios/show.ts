@@ -2,7 +2,7 @@
 import { formatIpv4, formatIpv6, formatMacCisco, maskToPrefix, networkOf, type Ipv4 } from "../addr";
 import { configTimestamp, type IosDevice } from "../devices/ios-device";
 import type { Router } from "../devices/router";
-import type { Switch } from "../devices/switch";
+import { electedRoot, type Switch } from "../devices/switch";
 import { UNSUPPORTED_VLANS, formatVlanList } from "../vlans";
 import type { Route } from "../ipstack";
 import type { AclAddress, IosConfig, LineConfig, StoredPassword, SwitchportConfig, SwitchportMode } from "./config";
@@ -747,10 +747,9 @@ export function showVtpStatus(sw: Switch): string[] {
 }
 
 export function showSpanningTree(sw: Switch): string[] {
-  const switches = (sw.network?.devices ?? []).filter((d): d is Switch => d.kind === "switch");
   const out: string[] = [];
   for (const vlan of [...sw.vlans.keys()].filter((v) => sw.vlanActive(v)).sort((a, b) => a - b)) {
-    const root = [...switches].sort((a, b) => a.bridgeId(vlan).localeCompare(b.bridgeId(vlan)))[0] ?? sw;
+    const root = electedRoot(sw, vlan);
     const rootPriority = root.bridgePriority(vlan) + vlan;
     const rootPorts = sw.ports.filter((p) => sw.stpRole(p, vlan) === "root");
     out.push(`VLAN${String(vlan).padStart(4, "0")}`, "  Spanning tree enabled protocol ieee", `  Root ID    Priority    ${rootPriority}`,
@@ -777,7 +776,7 @@ function stpVlans(sw: Switch, vlan?: number): number[] {
 }
 
 function stpRoot(sw: Switch, vlan: number): Switch {
-  return [...(sw.network?.devices ?? [])].filter((d): d is Switch => d.kind === "switch").sort((a, b) => a.bridgeId(vlan).localeCompare(b.bridgeId(vlan)))[0] ?? sw;
+  return electedRoot(sw, vlan);
 }
 
 function stpCost(port: ReturnType<Switch["port"]>): number {

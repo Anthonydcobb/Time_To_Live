@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { Network } from "../src/sim/network";
 import { Switch } from "../src/sim/devices/switch";
 import { Pc } from "../src/sim/devices/pc";
+import { formatMacCisco } from "../src/sim/addr";
 import { type } from "./helpers";
 
 function triangle() {
@@ -115,6 +116,46 @@ describe("spanning tree", () => {
     net.disconnect(guarded.port("Gi0/1"));
     net.clock.advance(21_000);
     expect(guarded.isRootInconsistent(guarded.port("Gi0/1"), 1)).toBe(false);
+  });
+
+  it("does not false-trigger Root Guard when the neighbor is not superior to the current root", () => {
+    const net = new Network();
+    const a = net.add(new Switch("A"));
+    const b = net.add(new Switch("B"));
+    const c = net.add(new Switch("C"));
+    type(a, "", "en", "conf t", "int gi0/1", "switchport mode trunk", "spanning-tree guard root", "end");
+    type(b, "", "en", "conf t", "spanning-tree vlan 1 priority 24576", "int gi0/1", "switchport mode trunk", "int gi0/2", "switchport mode trunk", "end");
+    type(c, "", "en", "conf t", "spanning-tree vlan 1 priority 0", "int gi0/1", "switchport mode trunk", "end");
+    net.connect(a.port("Gi0/1"), b.port("Gi0/1"));
+    net.connect(b.port("Gi0/2"), c.port("Gi0/1"));
+    net.clock.advance(8_000);
+    expect(a.isRootInconsistent(a.port("Gi0/1"), 1)).toBe(false);
+    expect(type(a, "show spanning-tree").join("\n")).toContain(formatMacCisco(c.baseMac));
+  });
+
+  it("keeps the original root elected when a rogue switch hits a guarded port", () => {
+    const net = new Network();
+    const a = net.add(new Switch("A"));
+    const b = net.add(new Switch("B"));
+    const c = net.add(new Switch("C"));
+    const rogue = net.add(new Switch("ROGUE"));
+    type(a, "", "en", "conf t", "int gi0/1", "switchport mode trunk", "int gi0/2", "switchport mode trunk", "spanning-tree guard root", "end");
+    type(b, "", "en", "conf t", "int gi0/1", "switchport mode trunk", "int gi0/2", "switchport mode trunk", "end");
+    type(c, "", "en", "conf t", "spanning-tree vlan 1 priority 4096", "int gi0/1", "switchport mode trunk", "end");
+    type(rogue, "", "en", "conf t", "spanning-tree vlan 1 priority 0", "int gi0/1", "switchport mode trunk", "end");
+    net.connect(a.port("Gi0/1"), b.port("Gi0/1"));
+    net.connect(b.port("Gi0/2"), c.port("Gi0/1"));
+    net.clock.advance(8_000);
+    expect(type(a, "show spanning-tree").join("\n")).toContain(formatMacCisco(c.baseMac));
+    net.connect(a.port("Gi0/2"), rogue.port("Gi0/1"));
+    net.clock.advance(8_000);
+    expect(a.isRootInconsistent(a.port("Gi0/2"), 1)).toBe(true);
+    expect(type(a, "show spanning-tree").join("\n")).toContain(formatMacCisco(c.baseMac));
+    expect(type(b, "show spanning-tree").join("\n")).toContain(formatMacCisco(c.baseMac));
+    net.disconnect(a.port("Gi0/2"));
+    net.clock.advance(21_000);
+    expect(a.isRootInconsistent(a.port("Gi0/2"), 1)).toBe(false);
+    expect(type(a, "show spanning-tree").join("\n")).toContain(formatMacCisco(c.baseMac));
   });
 
   it("elects a root and blocks one side of a switch loop", () => {
