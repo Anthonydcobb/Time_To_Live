@@ -213,7 +213,10 @@ export class Switch extends IosDevice {
   }
 
   setShutdown(name: string, shutdown: boolean): void {
-    if (!shutdown) this.errDisabledPorts.delete(this.port(name));
+    if (!shutdown) {
+      const port = this.ports.find((candidate) => candidate.name === name);
+      if (port) this.errDisabledPorts.delete(port);
+    }
     super.setShutdown(name, shutdown);
   }
 
