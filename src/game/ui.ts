@@ -22,6 +22,10 @@ export interface Line {
   text: string;
   /** Which of the speaker's portraits to show: 0 calm, 1 paranoid, 2 frantic. Default 0. */
   mood?: 0 | 1 | 2;
+  /** Scene events to fire once this many characters have typed out, like a flicker mid-sentence. */
+  cues?: { at: number; event: string }[];
+  /** Cues to fire once the line's been read and you move on, like a `#set` in the script. */
+  after?: string[];
 }
 
 /**
@@ -131,6 +135,10 @@ export class Ui {
   closedAt = 0;
   private queue: Entry[] = [];
   private current: Entry | null = null;
+  /** Fires a line's cues; the story points this at its scene events. */
+  onCue: (event: string) => void = () => {};
+  /** How many of the current line's cues have fired. */
+  private cued = 0;
   /** True while `hold` keeps you still. */
   private held = false;
   private typed = 0;
@@ -193,6 +201,8 @@ export class Ui {
   // ---- dialogue -------------------------------------------------------------
 
   say(lines: Line[], then?: () => void): void {
+    // A scene can come out empty, when the script's #if skips all of it; carry straight on.
+    if (!lines.length) return then?.();
     lines.forEach((l, i) => this.queue.push({ ...l, then: i === lines.length - 1 ? then : undefined }));
     if (!this.busy) this.showNext();
   }
@@ -219,6 +229,7 @@ export class Ui {
     this.setLights(next, this.runs);
     haunt($("ghost"));
     this.typed = 0;
+    this.cued = 0;
     window.clearInterval(this.typer);
     this.typer = window.setInterval(() => {
       this.typed += 2;
@@ -324,6 +335,8 @@ export class Ui {
   private renderLine(): void {
     if (!this.current) return;
     renderRuns($("line"), this.runs, this.typed);
+    const cues = this.current.cues ?? [];
+    while (this.cued < cues.length && cues[this.cued].at <= this.typed) this.onCue(cues[this.cued++].event);
     const typing = this.typed < this.length;
     $("more").hidden = typing;
     $("dialogue").classList.toggle("typing", typing);
@@ -348,6 +361,7 @@ export class Ui {
     this.current = null;
     // Unkey the radio after every line; the next Walter line keys it again, like a real walkie.
     audio.walkie(false);
+    c.after?.forEach((event) => this.onCue(event));
     c.then?.();
     if (!this.current && !this.choices && !this.screen && !this.panelOpen) this.showNext();
   }
@@ -433,7 +447,7 @@ export class Ui {
     this.laptopScreen.attach(net, layout, this.views, devices);
   }
 
-  openLaptop(device: Device, title: string, hint: string): void {
+  openLaptop(device: Device, title: string, hint: string, opts: { printer?: boolean } = {}): void {
     const view = this.views.get(device);
     if (!view) return;
     if (device instanceof IosDevice) {
@@ -455,7 +469,7 @@ export class Ui {
         this.closedAt = performance.now();
         (document.activeElement as HTMLElement | null)?.blur();
         this.showNext();
-      });
+      }, opts);
       return;
     }
     $("laptop-title").textContent = title;

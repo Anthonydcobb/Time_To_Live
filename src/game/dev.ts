@@ -2,6 +2,7 @@ import type { IosDevice } from "../sim/devices/ios-device";
 import { parseIpv4 as ip } from "../sim/addr";
 import type { Job } from "../sim/job";
 import type { laundromat } from "../sim/scenarios/laundromat";
+import { scriptNotes } from "./script";
 import { events, type Story } from "./story";
 import type { Ui } from "./ui";
 
@@ -212,6 +213,10 @@ export function installDevTools(story: Story, ui: Ui): void {
   window.setInterval(() => {
     const real = story.job.tasks.filter((t) => t.done);
     const doneCount = real.filter((t) => t.done!()).length;
-    status.textContent = `room: ${story.room} · tasks ${doneCount}/${real.length} · flags: ${[...s.flags].join(", ") || "none"}`;
+    const notes = scriptNotes();
+    status.textContent = `room: ${story.room} · tasks ${doneCount}/${real.length} · flags: ${[...s.flags].join(", ") || "none"}`
+      + ` · script notes for Claude: ${notes.length}`;
+    // Hover the status for the notes themselves.
+    (status as HTMLElement).title = notes.map((n) => `line ${n.line}: ${n.text}`).join("\n");
   }, 500);
 }

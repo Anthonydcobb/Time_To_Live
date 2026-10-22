@@ -8,27 +8,16 @@ import type { Scenario } from "../sim/scenarios/types";
 import { bookToast, NOTES, type BookContents } from "./grimoire-book";
 import type { RoomId } from "./rooms";
 import type { SiteId } from "./town-map";
+import { pick, runAction, scene, useStory } from "./script";
 import type { Line, Ui } from "./ui";
 
 /** Scene events: "goto" (room), "flicker", "blackout" and "lights", "haunt". */
 export const events = new Phaser.Events.EventEmitter();
 
-const W = "WALTER (walkie)";
-const G = "GARY (through the door)";
-const F = "MRS. FINCH";
-const GUS = "GUS";
 const PC_HINT = "On a PC: ipconfig 192.168.1.10 255.255.255.0 192.168.1.1   ·   Esc closes the laptop";
 const DHCP_HINT = "ipconfig /renew asks the router for a lease   ·   ipconfig shows what you got   ·   Esc closes";
 const PRINTER_HINT = "Fixed address: ipconfig 192.168.20.5 255.255.255.0 192.168.20.1   ·   Esc closes";
 const IOS_HINT = "? lists commands   ·   Tab completes   ·   Esc closes the laptop";
-
-const GARY_TIPS: Line[][] = [
-  [{ who: G, text: "Remember, no shutdown turns an interface on. Two negatives! I think that's sort of charming." }],
-  [{ who: G, text: "If the first ping drops a packet, that's usually just ARP finding its way. Try it again before you worry." }],
-  [{ who: G, text: "Is Walter being mean about me again? That's all right. He's had a long year. A long lot of years." }],
-  [{ who: G, text: "Save your work with copy running-config startup-config. Things that aren't saved don't really stay." }],
-  [{ who: G, text: "show ip interface brief is my favorite. Everything you need on one screen, and nobody yells." }],
-];
 
 /** Whether a typed line is show ip dhcp binding, abbreviated any way IOS allows ("sh ip dh b"). */
 function isShowDhcpBinding(line: string): boolean {
@@ -66,6 +55,13 @@ export class Story {
     this.store.net.add(this.phantom);
     this.grimoire = new Grimoire([...BASICS, ...this.store.incantations]);
     const { r1, s1, register, office } = this.store;
+    // Stage cues in the script, like (LIGHTS FLICKER), fire scene events as the line types out;
+    // its #set, #clear and #give change the story's flags as the conversation reaches them.
+    const cue = (event: string) => {
+      if (!runAction(event)) events.emit(event);
+    };
+    ui.onCue = cue;
+    useStory({ has: (f) => this.flags.has(f), set: (f, on) => (on ? this.flags.add(f) : this.flags.delete(f)) }, cue);
     this.wire([r1, s1]);
     ui.attach(this.store.net, [r1, s1, register, office], this.store.layout);
   }
@@ -115,49 +111,23 @@ export class Story {
     this.room = room;
     if (room === "office" && !this.flags.has("intro")) {
       this.flags.add("intro");
-      this.ui.say([{ text: "The office is empty. Somewhere nearby, a walkie-talkie crackles." }]);
+      this.ui.say(scene("office-arrive"));
     }
     if (room === "shop" && !this.flags.has("arrived")) {
       this.flags.add("arrived");
-      this.ui.say([
-        { who: W, text: "Quik-Stop Forever! Finest gas station without any gas in the county." },
-        { who: W, text: "Rack's in the back office. Nothing's plugged in yet, so cable it up first: router to switch, PCs to switch. Then console in and make it SING." },
-        { who: W, text: "Then the two PCs. Register up front, other one in back. Over!" },
-      ]);
+      this.ui.say(scene("shop-arrive"));
     }
     if (room === "office" && this.flags.has("done") && !this.flags.has("home")) {
       this.flags.add("home");
-      this.ui.say(
-        [
-          { who: W, text: "Job one, DONE! Confetti! Imagine confetti. Bob doesn't pay for real confetti." },
-          { who: W, text: "...You didn't see anything weird out there, did you? No? Good. Good." },
-          { who: G, text: "You did really well today. I'm proud of you." },
-          { who: W, text: "DON'T LISTEN TO HIM. Over." },
-          { who: W, text: "Oh, and kid? Fresh ticket on the job board. The laundromat out on Route 9. Gus has been calling since... well. Since. Over." },
-        ],
-      );
+      this.ui.say(scene("home-job1"));
     }
     if (room === "laundromat" && !this.flags.has("arrived2")) {
       this.flags.add("arrived2");
-      this.ui.say([
-        { who: W, text: "Spin Cycle Eternal! Open twenty-four hours a day, every day, fifty-one years running. Gus has never closed it. Gus has never LEFT it." },
-        { who: W, text: "Good news: it's all cabled. Bad news: the PCs want an address *handed* to them, automatic-like. That's DHCP. The router does the handing." },
-        { who: W, text: "Rack's in Gus's back office, through the back door. Gus has the keys; he's in his booth. And kid? Don't stare into the dryers. They stare back, and it's awkward for everybody. Over." },
-      ]);
+      this.ui.say(scene("wash-arrive"));
     }
     if (room === "office" && this.flags.has("done2") && !this.flags.has("home2")) {
       this.flags.add("home2");
-      this.ui.say(
-        [
-          { who: W, text: "Two for two! You're a natural, kid. A natural what, I haven't decided." },
-          { who: W, text: "Bob's going to be thrilled. Bob is going to be... somewhere. Over." },
-          { who: G, text: "Did Dryer 4 get an address? I hope it did. Everybody should have somewhere to be." },
-          { who: W, text: "Kid. Before you clock out. Two jobs means you've earned the book." },
-          { who: W, text: "Bob's desk, bottom drawer. Every tech gets a *grimoire* sooner or later. The incantations are all in it, and whatever you pick up out there goes in it too." },
-          { who: W, text: "Don't let it read you first. Over." },
-        ],
-        () => this.flags.add("ask-grimoire"),
-      );
+      this.ui.say(scene("home-job2"), () => this.flags.add("ask-grimoire"));
     }
   }
 
@@ -179,26 +149,19 @@ export class Story {
           events.emit("blackout");
           ui.hold(900, () =>
             ui.say(
-              [
-                { who: W, text: "~GARY!~ GET AWAY FROM THE NEW KID!" },
-                { who: G, text: "I was only saying hello." },
-              ],
+              scene("walkie-blackout"),
               () => {
                 events.emit("lights");
                 ui.hold(800, () => this.walterIntro());
               },
             ),
           );
-        } else ui.say([{ text: "The charger is empty. The walkie is on your belt." }]);
+        } else ui.say(scene("walkie-again"));
         return;
       case "office:board":
         if (this.flags.has("home") && !this.flags.has("job2")) {
           ui.say(
-            [
-              { text: "WORK ORDER #0002. Spin Cycle Eternal, the 24-hour laundromat on Route 9. Night manager: Gus." },
-              { text: "Everything is cabled. The PCs are set to get an address automatically, but nothing on the router is set up to give them one." },
-              { text: "Someone has added in pen: Dryer 4 is not a customer." },
-            ],
+            scene("board-wo2"),
             () => {
               this.note("wo2-pen");
               this.takeLaundromat();
@@ -208,15 +171,11 @@ export class Story {
           return;
         }
         if (this.flags.has("job")) {
-          ui.say([{ text: "The board is empty except for a pin with a bit of paper still under it." }]);
+          ui.say(scene("board-empty"));
           return;
         }
         ui.say(
-          [
-            { text: "WORK ORDER #0001. Quik-Stop Forever, corner of Elm and Elm. Owner: Mrs. Finch." },
-            { text: "The router and switch are in the rack. The cables from both PCs are run to it, but nothing is plugged in or configured." },
-            { text: "Someone has added in pen: Do not restock the back cooler." },
-          ],
+          scene("board-wo1"),
           () => {
             this.note("wo1-pen");
             this.flags.add("job");
@@ -227,36 +186,28 @@ export class Story {
       case "office:gary":
         if (!this.flags.has("gary")) {
           this.flags.add("gary");
-          ui.say([
-            { text: "You knock. Something on the other side stands up from a very comfortable chair." },
-            { who: G, text: "Oh! Hi! You must be the new technician. I'm Gary." },
-            { who: G, text: "I'd shake your hand, but the door's locked. It's always locked. That's okay! I've got a nice chair in here." },
-            { who: G, text: "Little tip for the store: every device on one network needs an address in the same subnet. You're going to do great." },
-            ...(this.flags.has("walkie")
-              ? [
-                  { who: W, text: "Was that GARY? Don't talk to Gary. Gary knows what he did." },
-                  { who: W, text: "...I don't know what he did. But he KNOWS. Over." },
-                ]
-              : []),
-          ]);
-        } else ui.say(GARY_TIPS[this.garyTip++ % GARY_TIPS.length]);
+          ui.say(scene("gary-meet"));
+        } else if (!this.flags.has("gary2")) {
+          this.flags.add("gary2");
+          ui.say(scene("gary-meet2"));
+        } else ui.say(pick("gary-tips", this.garyTip++));
         return;
       case "office:photo":
-        ui.say([{ text: "EMPLOYEE OF THE MONTH, OCTOBER 1987: Walter. He looks exactly like he sounds. The photo is still warm." }]);
+        ui.say(scene("photo"));
         return;
       case "office:desk":
         if (this.flags.has("ask-grimoire") && !this.flags.has("grimoire")) return this.findGrimoire();
-        ui.say([{ text: "A sticky note on Bob's monitor: \"At the Cryptis quarterly. Sell the upgrade. Everybody needs the upgrade. -B\"" }], () => this.note("bob-sticky"));
+        ui.say(scene("desk-sticky"), () => this.note("bob-sticky"));
         return;
       case "office:coffee":
-        ui.say([{ text: "The coffee machine is warm and full. It isn't plugged in." }]);
+        ui.say(scene("coffee"));
         return;
       case "office:cabinet":
-        ui.say([{ text: "Invoices, all paid in full, all from addresses on Elm and Elm. The bottom drawer is labeled *BELLWETHER* and is empty." }], () => this.note("bellwether"));
+        ui.say(scene("cabinet"), () => this.note("bellwether"));
         return;
       case "office:exit":
-        if (!this.flags.has("walkie")) ui.say([{ text: "You should grab the walkie-talkie off the charger first." }]);
-        else if (!this.flags.has("job")) ui.say([{ who: W, text: "Whoa whoa whoa. No ticket, no trip. Job board, kid. Over." }]);
+        if (!this.flags.has("walkie")) ui.say(scene("exit-no-walkie"));
+        else if (!this.flags.has("job")) ui.say(scene("exit-no-ticket"));
         else {
           const go: Partial<Record<SiteId, () => void>> = { quikstop: () => this.travel("shop") };
           if (this.flags.has("job2")) go.laundromat = () => this.travel("laundromat");
@@ -275,10 +226,10 @@ export class Story {
         ui.openLaptop(office, "PC1 · Back Office", PC_HINT);
         return;
       case "shop:desk":
-        ui.say([{ text: "A desk calendar, still on October 1987. Every day is crossed off, including the ones that haven't happened." }], () => this.note("finch-calendar"));
+        ui.say(scene("shop-desk"), () => this.note("finch-calendar"));
         return;
       case "shop:rack":
-        ui.choose({ text: "The rack hums. A light-blue console cable hangs off the side, waiting for your laptop." }, [
+        ui.choose(scene("shop-rack")[0], [
           { label: "Cable the back of the rack", run: () => ui.openPanel([r1, s1, register, office]) },
           { label: `Console into R1 (${r1.model})`, run: () => ui.openLaptop(r1, `R1 · ${r1.model} · console`, IOS_HINT) },
           { label: `Console into S1 (${s1.model})`, run: () => ui.openLaptop(s1, `S1 · ${s1.model} · console`, IOS_HINT) },
@@ -287,34 +238,31 @@ export class Story {
         return;
       case "shop:cooler":
         if (this.flags.has("haunt")) {
-          ui.say([
-            { text: "The cooler hums a little louder than before." },
-            { text: "An Ethernet cable runs out the back of it and into the wall. You didn't put it there. ~Nobody did.~" },
-          ]);
+          ui.say(scene("cooler-haunted"));
         } else {
-          ui.say([{ text: "BACK COOLER. A handwritten sign: DO NOT RESTOCK. Inside is milk dated October 1987. It's very cold." }]);
+          ui.say(scene("cooler"));
         }
         return;
       case "shop:shelf1":
       case "shop:shelf2":
-        ui.say([{ text: "Canned soup, motor oil, and a jar of something labeled ~TEETH (ASSORTED)~. Reasonably priced." }]);
+        ui.say(scene("shelves"));
         return;
       case "shop:jack":
         if (!this.flags.has("haunt")) {
-          ui.say([{ text: "A wall jack. According to the work order, nothing in the shop uses it." }]);
+          ui.say(scene("jack"));
           return;
         }
-        ui.choose({ text: "A blue cable is seated in the jack. Nobody ran it. ~The plastic is warm.~" }, [
+        ui.choose(scene("jack-haunted")[0], [
           {
             label: "Pull it out",
-            run: () => ui.apparition(() => ui.say([{ text: "The cable is *still in the jack*. Your hand is ~cold to the elbow~." }])),
+            run: () => ui.apparition(() => ui.say(scene("jack-pull"))),
           },
           { label: "Leave it", run: () => {} },
         ]);
         return;
       case "shop:exit":
         if (this.flags.has("done")) ui.openTownMap("quikstop", { bobs: () => this.travel("office") }, { haunted: this.flags.has("haunt") });
-        else ui.say([{ who: W, text: "Leaving already? The ticket's not done, kid. Mrs. Finch is counting on you. So is... no one else. Over." }]);
+        else ui.say(scene("shop-exit-early"));
         return;
     }
   }
@@ -330,7 +278,7 @@ export class Story {
       case "counter":
         return this.talkToGus();
       case "rack":
-        ui.choose({ text: "Gus's rack. Everything's cabled already, neat as a pin. The labels are typewritten, from 1974." }, [
+        ui.choose(scene("wash-rack")[0], [
           { label: `Console into R1 (${r1.model})`, run: () => ui.openLaptop(r1, `R1 · ${r1.model} · console`, IOS_HINT) },
           { label: `Console into S1 (${s1.model})`, run: () => ui.openLaptop(s1, `S1 · ${s1.model} · console`, IOS_HINT) },
           { label: "Check the cables", run: () => ui.openPanel([r1, s1, kiosk, office, printer]) },
@@ -344,65 +292,55 @@ export class Story {
         ui.openLaptop(office, "PC1 · Gus's office", DHCP_HINT);
         return;
       case "printer":
-        ui.openLaptop(printer, "PRN · Printer", PRINTER_HINT);
+        ui.openLaptop(printer, "PRN · Printer", PRINTER_HINT, { printer: true });
         return;
       case "backdoor":
         if (!this.flags.has("keys")) {
-          ui.say([{ text: "BACK OFFICE. EMPLOYEES ONLY. Locked, and it's a heavy old door. Gus will have the key." }]);
+          ui.say(scene("backdoor-locked"));
           return;
         }
         this.flags.add("open:laundromat:backdoor");
         events.emit("open", "backdoor");
-        ui.say([{ text: "The key turns like it's been waiting for you. Behind the door, the hum of a rack and the smell of warm dust." }]);
+        ui.say(scene("backdoor-open"));
         return;
       case "desk":
-        ui.say([{ text: "Gus's desk. A coffee mug that says WORLD'S OKAYEST MANAGER, still steaming. The coffee is from 1974 too." }]);
+        ui.say(scene("wash-desk"));
         return;
       case "logbook":
-        ui.say([
-          { text: "GUS'S SHIFT LOG. The first page: 10/14/1974, Gus on shift. All machines spinning." },
-          { text: "Every page after it says the same thing, in the same handwriting, with the same pen." },
-          { text: "The newest entry is in capitals: DRYER 4 WON'T STOP ASKING FOR AN ADDRESS. ~0.0.0.0~" },
-          ...(this.flags.has("walkie")
-            ? [{ who: W, text: "Zero-dot-zero-dot-zero-dot-zero. That's what a machine calls itself before anybody's given it a name. Weird thing for a dryer to say. Over." }]
-            : []),
-        ], () => this.note("gus-log"));
+        ui.say(scene("logbook"), () => this.note("gus-log"));
         return;
       case "archive":
-        ui.say([{ text: "Boxes of old logbooks, labeled by year. 1974. 1974. 1974. 1974. 1974." }]);
+        ui.say(scene("archive"));
         return;
       case "dryer4":
         if (this.flags.has("seen-dryer4")) {
-          ui.say([{ text: "Dryer 4 is still turning. Fog on the glass, clothes going round. *Nothing else.* You're nearly sure." }]);
+          ui.say(scene("dryer4-again"));
           return;
         }
         this.flags.add("seen-dryer4");
-        ui.say([
-          { text: "DRYER 4. A sign taped to it says OUT OF ORDER, in handwriting from 1974. It's running anyway." },
-          { text: "There was ~something against the glass~. Now there's only fog, and somebody's clothes going round." },
-        ]);
+        ui.say(scene("dryer4-first"));
         return;
       case "dryers":
-        ui.say([{ text: "Industrial dryers, every one of them running, every one of them empty. The coin slots were taped over a long time ago." }]);
+        ui.say(scene("dryers"));
         return;
       case "washers":
-        ui.say([{ text: "Top-loaders, back to back. One is full of grey water that isn't moving, even though the drum is." }]);
+        ui.say(scene("washers"));
         return;
       case "lostfound":
-        ui.say([{ text: "LOST & FOUND. Socks, cracked glasses, two watches stopped at 3:14, a phone handset. And Polaroids of this room, ~taken from inside the dryers~." }], () => this.note("lostfound"));
+        ui.say(scene("lostfound"), () => this.note("lostfound"));
         return;
       case "change":
-        ui.say([{ text: "CHANGE MACHINE. A light says OUT OF CHANGE. It gives you a quarter anyway. The quarter is warm, and dated 1974." }]);
+        ui.say(scene("change"));
         return;
       case "soap":
-        ui.say([{ text: "Detergent, at 1974 prices. Every box rattles like it's full of something smaller than soap." }]);
+        ui.say(scene("soap"));
         return;
       case "toilet":
-        ui.say([{ text: "The restroom. A sign on the door: CUSTOMERS ONLY. The guest book inside has one name in it, over and over. Gus." }], () => this.note("guestbook"));
+        ui.say(scene("toilet"), () => this.note("guestbook"));
         return;
       case "exit":
         if (this.flags.has("done2")) ui.openTownMap("laundromat", { bobs: () => this.travel("office"), quikstop: () => this.travel("shop") }, { haunted: true });
-        else ui.say([{ who: W, text: "Not yet, kid. Gus has been waiting fifty-one years for somebody to finish a job. Don't make it fifty-two. Over." }]);
+        else ui.say(scene("wash-exit-early"));
         return;
     }
   }
@@ -411,108 +349,80 @@ export class Story {
     const ui = this.ui;
     if (!this.flags.has("gus")) {
       this.flags.add("gus");
-      ui.say([
-        { who: GUS, text: "You're from Bob's. Good. Good. I called it in on... what's today?" },
-        { who: GUS, text: "Doesn't matter. The computers keep asking for an address and nobody answers them. I know how they feel." },
-        { who: GUS, text: "The kiosk out front, the PC in my office, and the printer. The printer likes its own spot, point five. The others take whatever they're given." },
-        { who: GUS, text: "Equipment's in the back office. Here." },
-        { text: "Gus slides a ring of keys through the window. One is labeled BACK, in typewriter letters." },
-        { who: GUS, text: "Don't mind the dryers. They run on their own. They always have." },
-      ]);
+      ui.say(scene("gus-meet"));
       this.flags.add("keys");
       return;
     }
     if (this.flags.has("haunt2")) {
-      ui.say([{ who: GUS, text: "Everybody's got an address now. Even the ones that oughtn't. Thank you, kid. Shift's not over, though. It never is." }]);
+      ui.say(scene("gus-haunted"));
       return;
     }
-    const lines = [
-      "Fifty-one years and I've never seen the end of a shift. Funny how that is.",
-      "Coffee's in the back if you want it. It's still hot. It's always still hot.",
-      "Dryer 4 asks me for an address every night. I tell it I haven't got one to give.",
-      "Gave up on the radio in '74. It only ever plays the spin cycle.",
-    ];
-    ui.say([{ who: GUS, text: lines[this.gusLine++ % lines.length] }]);
+    ui.say(pick("gus-idle", this.gusLine++));
   }
 
   private talkToFinch(): void {
     if (!this.flags.has("finch")) {
       this.flags.add("finch");
-      this.ui.say([
-        { who: F, text: "Oh good, you're from Bob's! Come in, come in. Mind the puddle. It isn't water, but it's very polite." },
-        { who: F, text: "The register and the back office computer can't see each other. Or the router. Or me, frankly." },
-        { who: F, text: "All the boxes with the blinking lights are in the back office. The thing that hums is the cooler. Please don't restock the cooler." },
-      ]);
+      this.ui.say(scene("finch-meet"));
       return;
     }
     if (this.flags.has("haunt")) {
-      this.ui.say([{ who: F, text: "Oh, don't mind that, dear. The cooler likes to be included. Now, that'll be all, and thank you!" }]);
+      this.ui.say(scene("finch-haunted"));
       return;
     }
-    const lines = [
-      "Take your time, dear. Time doesn't mind it here.",
-      "Would you like a soda? They're from the front cooler. The front one's fine.",
-      "My late husband used to say a store's only as good as its network. He said it after he was late, too.",
-    ];
-    this.ui.say([{ who: F, text: lines[this.finchLine++ % lines.length] }]);
+    this.ui.say(pick("finch-idle", this.finchLine++));
   }
 
   /** Walter's welcome, once the lights are back after you pick up the walkie. */
   private walterIntro(): void {
-    this.ui.say([
-      { who: W, text: "Is this thing on? Course it's on. Everything's on. That's the trouble with everything." },
-      { who: W, text: "WELCOME, welcome, welcome, new hire, to Bob's Bandwidth and Bloodletting! Ding ding ding! You have unlocked: a job!" },
-      { who: W, text: "Name's Walter. Senior technician. Very senior. Senior like a cheese, kid." },
-      { who: W, text: "Bob's not in. Bob's never in. Bob is a concept, like weekends." },
-      { who: W, text: "Ticket's on the job board. Go to the store, make the little lights go green. Green is good. Amber is thinking. Off is... we don't talk about off." },
-      { who: W, text: "And whatever you hear behind that red door, you do NOT open it. Not that you could. Ha! Ha. Over." },
-      { text: "You clip the walkie to your belt. Press Q to call Walter." },
-    ]);
+    this.ui.say(scene("walkie-intro"));
   }
 
   /** Q: Walter's hint for wherever you are. */
   callWalter(): void {
     if (!this.flags.has("walkie")) return;
-    if (this.wash) return this.ui.say([{ who: W, text: this.laundromatHint(this.wash) }]);
+    this.ui.say(this.wash ? this.laundromatHint(this.wash) : this.storeHint());
+  }
+
+  /** Walter's hint for job 1, by where you are and the first task that isn't done. */
+  private storeHint(): Line[] {
     const done = (id: string) => this.done(id);
-    let text: string;
-    if (this.flags.has("home")) text = "Fresh ticket on the job board, kid. Over.";
-    else if (!this.flags.has("job")) text = "The JOB BOARD, kid. The big cork thing on the wall. Over.";
-    else if (this.room === "office" && !this.flags.has("done")) text = "Front door, kid. The store won't network itself. It's tried. Over.";
-    else if (this.flags.has("done")) text = "You're done! Go home. Don't look at the cooler on the way out. Over.";
-    else if (!done("cable")) text = "Cables first! Back of the rack. Router Gi zero slash zero to the switch, and both PC cables into the switch. Amber light means it's thinking about it. Over.";
-    else if (!done("r1-name")) text = "Router first, and finish it before you touch anything else. configure terminal, hostname R1. Unnamed things attract attention. Over.";
-    else if (!done("r1-secret")) text = "Now lock the door. enable secret, then something only you know. Not 'password'. Gary used 'password'. Over.";
-    else if (!done("r1-console")) text = "And the console port. line console 0, password, then login. Otherwise anybody with a blue cable walks right in. Anybody. Over.";
-    else if (!done("router")) text = "Router next. In the rack, configure terminal, interface gi0/0, ip address, no shutdown. Incantations, kid! Over.";
-    else if (!done("r1-save")) text = "Now save it. copy running-config startup-config. Running config is what it's thinking; startup is what it remembers. Make it remember. Over.";
-    else if (!done("s1-name")) text = "Router's done. Switch tab on your laptop, kid. Same three: hostname S1, enable secret, console password. Over.";
-    else if (!done("s1-secret")) text = "Enable secret on the switch too. Different from the router's, if you're smart. Over.";
-    else if (!done("s1-console")) text = "Switch console: line console 0, password, login. Then the PCs. Over.";
-    else if (!done("s1-save")) text = "Save the switch too, same incantation. Then the PCs. Over.";
-    else if (!done("register")) text = "The register's at the counter. On a PC it's ipconfig, address, mask, gateway. Over.";
-    else if (!done("office")) text = "Now the back office PC. Same deal, point one-one. Over.";
-    else if (!done("ping-router")) text = "Ping the router from BOTH PCs. If the first one drops, that's ARP. Not ghosts. Usually. Over.";
-    else text = "Last thing: ping one PC from the other. Over.";
-    this.ui.say([{ who: W, text }]);
+    if (this.flags.has("home")) return scene("hint-home");
+    if (!this.flags.has("job")) return scene("hint-board");
+    if (this.room === "office" && !this.flags.has("done")) return scene("hint-front-door");
+    if (this.flags.has("done")) return scene("hint-done");
+    if (!done("cable")) return scene("hint-cable");
+    if (!done("r1-name")) return scene("hint-r1-name");
+    if (!done("r1-secret")) return scene("hint-r1-secret");
+    if (!done("r1-console")) return scene("hint-r1-console");
+    if (!done("router")) return scene("hint-router");
+    if (!done("r1-save")) return scene("hint-r1-save");
+    if (!done("s1-name")) return scene("hint-s1-name");
+    if (!done("s1-secret")) return scene("hint-s1-secret");
+    if (!done("s1-console")) return scene("hint-s1-console");
+    if (!done("s1-save")) return scene("hint-s1-save");
+    if (!done("register")) return scene("hint-register");
+    if (!done("office")) return scene("hint-office");
+    if (!done("ping-router")) return scene("hint-ping-router");
+    return scene("hint-ping-pc");
   }
 
   /** Walter's hint for job 2, by the first task that isn't done. */
-  private laundromatHint(job: Scenario): string {
+  private laundromatHint(job: Scenario): Line[] {
     const ok = (i: number) => !!job.tasks[i].done?.();
-    if (this.flags.has("grimoire")) return "Read the book, kid. G. It's better company than Gary. Don't tell him I said that. Over.";
-    if (this.flags.has("ask-grimoire")) return "Bob's desk, kid. Bottom drawer. The book's expecting you. Over.";
-    if (this.flags.has("done2")) return "You're done! Come on home. And don't take any socks from the lost and found. Over.";
-    if (this.room !== "laundromat") return "Route 9, kid. The van's out front. Over.";
-    if (!this.flags.has("keys")) return "Gear's behind the back door and Gus has the keys. He's in the booth by the kiosk. Go say hi. Over.";
-    if (!this.flags.has("open:laundromat:backdoor")) return "You've got Gus's keys. Back door, top left. Over.";
-    if (!ok(0)) return "Router first. interface gi0/0, ip address 192.168.20.1 255.255.255.0, no shutdown. Same as last time, new numbers. Over.";
-    if (!ok(1)) return "Now fence off the low addresses so DHCP doesn't hand out the printer's spot. ip dhcp excluded-address 192.168.20.1 192.168.20.20, in global config. Over.";
-    if (!ok(2)) return "Now the pool. ip dhcp pool, any name you like, then network 192.168.20.0 255.255.255.0 and default-router 192.168.20.1. That's the router promising to answer. Over.";
-    if (!ok(3)) return "The printer doesn't take handouts. On the printer: ipconfig 192.168.20.5 255.255.255.0 192.168.20.1. A fixed address, like a house. Over.";
-    if (!ok(4)) return "The PCs asked once, nobody answered, and they sulked. On each one: ipconfig /renew. Over.";
-    if (!ok(5)) return "Ping the printer, 192.168.20.5, from both PCs. Over.";
-    return "Last thing: on the router, show ip dhcp binding. Make sure it's just our two PCs on the list. Over.";
+    if (this.flags.has("grimoire")) return scene("hint2-grimoire");
+    if (this.flags.has("ask-grimoire")) return scene("hint2-ask-grimoire");
+    if (this.flags.has("done2")) return scene("hint2-done");
+    if (this.room !== "laundromat") return scene("hint2-travel");
+    if (!this.flags.has("keys")) return scene("hint2-keys");
+    if (!this.flags.has("open:laundromat:backdoor")) return scene("hint2-backdoor");
+    if (!ok(0)) return scene("hint2-router");
+    if (!ok(1)) return scene("hint2-excluded");
+    if (!ok(2)) return scene("hint2-pool");
+    if (!ok(3)) return scene("hint2-printer");
+    if (!ok(4)) return scene("hint2-renew");
+    if (!ok(5)) return scene("hint2-ping");
+    return scene("hint2-binding");
   }
 
   /** Watches the network a few times a second and reacts as tasks get done. */
@@ -524,13 +434,13 @@ export class Story {
       this.told.add(id);
       this.ui.say(lines);
     };
-    once("cable", [{ who: W, text: "All plugged in! Hear that? That's the sound of lights thinking. Give the switch half a minute to trust everybody. Over." }]);
-    once("r1-name", [{ who: W, text: "R1. Nice to meet it. It already knew your name. Over." }]);
-    once("r1-save", [{ who: W, text: "Saved! Now R1 remembers you even after a reboot. Everything here remembers. Over." }]);
-    once("s1-console", [{ who: W, text: "Locked up tight. Remember those passwords, kid. Writing them on the rack is how Gary started. Over." }]);
-    once("router", [{ who: W, text: "Ooh, a green light! I felt that one in my fillings. Now the PCs. Over." }]);
-    if (done("register") && done("office")) once("office", [{ who: W, text: "Addresses on both PCs. Look at you, giving things names. Names are boundaries, kid. Boundaries are important. Over." }]);
-    once("ping-router", [{ who: W, text: "The router answers! Of course it answers. It's polite. Too polite, some would say. Over." }]);
+    once("cable", scene("done-cable"));
+    once("r1-name", scene("done-r1-name"));
+    once("r1-save", scene("done-r1-save"));
+    once("s1-console", scene("done-s1-console"));
+    once("router", scene("done-router"));
+    if (done("register") && done("office")) once("office", scene("done-pcs"));
+    once("ping-router", scene("done-ping-router"));
     if (this.store.tasks.every((t) => !t.done || t.done()) && !this.flags.has("haunt")) this.haunt();
   }
 
@@ -552,11 +462,7 @@ export class Story {
       window.setTimeout(hello, 40_000);
       window.setInterval(hello, 90_000);
       this.ui.say(
-        [
-          { text: "The lights flicker. In the back office, a link light clicks on." },
-          { who: W, text: "Hm? Fa0/24? Nothing's plugged into twenty-four. You can check the panel if you want. Or don't. I'd don't." },
-          { who: W, text: "Anyway! Ticket's DONE! Go tell Mrs. Finch and head home. Over." },
-        ],
+        scene("haunt-job1"),
         () => {
           this.flags.add("done");
           const card = this.ui.showCard(
@@ -580,18 +486,15 @@ export class Story {
       this.told.add(`wash${i}`);
       this.ui.say(lines);
     };
-    once(0, [{ who: W, text: "Gi0/0 is up. The router's awake. That's the easy part. Over." }]);
-    once(2, [{ who: W, text: "The pool's open! Now anything that asks gets an answer. ANYTHING. ...Ha. Over." }]);
-    once(4, [{ who: W, text: "Leases! Both PCs got addresses. show ip dhcp binding on the router lists who's got what. Over." }]);
+    once(0, scene("wash-done-router"));
+    once(2, scene("wash-done-pool"));
+    once(4, scene("wash-done-leases"));
     // Once the network work is done, Walter asks for one last look at the lease list.
     const networkDone = job.tasks.every((t) => t.id === "binding" || !t.done || t.done());
     if (networkDone && !this.flags.has("ask-binding")) {
       this.flags.add("ask-binding");
       this.bindingFrom = job.r1.console.history.length;
-      this.ui.say([
-        { who: W, text: "Pings come back, printer's got its spot. Nice work, kid." },
-        { who: W, text: "One more thing before you go. On the router: show ip dhcp binding. Make sure it's just our two PCs on the list. Over." },
-      ]);
+      this.ui.say(scene("wash-ask-binding"));
     }
     if (this.flags.has("ask-binding") && !this.flags.has("checked")) {
       const typed = job.r1.console.history.slice(this.bindingFrom);
@@ -617,11 +520,7 @@ export class Story {
       () => {
         events.emit("haunt");
         this.ui.say(
-          [
-            { text: "Every dryer in the place stops at once. In the quiet, one of them starts up again. You don't have to look to know which." },
-            { who: W, text: "Kid? Was there a third line on that list just now? Point zero. You can't lease point zero. That's the *network*." },
-            { who: W, text: "...No. Two PCs, two leases. That's what the paperwork says, so that's what happened. Ticket's DONE. Tell Gus and come on home. Over." },
-          ],
+          scene("haunt-job2"),
           () => {
             this.flags.add("done2");
             // Whatever is on the other end of Fa0/24 has grown since the store.
@@ -651,16 +550,10 @@ export class Story {
   /** Bob's bottom drawer, after the laundromat. The cover's eyes are shut. Mostly. */
   private findGrimoire(): void {
     const ui = this.ui;
-    ui.say([{ text: "Bob's desk. The bottom drawer, the one Walter meant, slides open a little before you touch it." }], () => {
+    ui.say(scene("grimoire-drawer"), () => {
       ui.glimpse("assets/cards/grimoire-asleep.webp", "assets/cards/grimoire-awake.webp");
       ui.say(
-        [
-          { text: "A heavy book, bound in something that isn't leather. A diagram is pressed into the cover: lines, and little shut eyes where the lines meet." },
-          { text: "For a second, ~every one of them is open~. Looking at you." },
-          { text: "Then they're shut, and they were always shut. It's a book. It's warm, like someone was just holding it." },
-          ...(this.flags.has("walkie") ? [{ who: W, text: "Got it? Good. Don't read it in bed. Over." }] : []),
-          { text: "You've got the grimoire. Press G to open it." },
-        ],
+        [...scene("grimoire-find"), ...(this.flags.has("walkie") ? scene("grimoire-find-walter") : []), ...scene("grimoire-got")],
         () => {
           this.flags.add("grimoire");
           events.emit("grimoire");

@@ -883,6 +883,186 @@ kbd {
   z-index: 2;
 }
 
+/* The printer: the same screen, smaller, set into a yellowed office printer with paper in it. */
+#pc .printer-body {
+  display: none;
+}
+
+#pc.printer .crt {
+  /* Fits the window with room above for the paper in the back tray. */
+  width: min(1000px, 90vw, 120vh);
+  aspect-ratio: 3 / 2;
+  max-height: none;
+  margin-top: 6vh;
+  padding: 0;
+  background: linear-gradient(175deg, #c9c1a6, #b2aa8e 40%, #9d957a 75%, #847d64);
+  border-radius: 16px 16px 10px 10px;
+  box-shadow: inset 0 2px 0 #ddd5bb, inset 0 -10px 24px #0005, 0 30px 60px #000c;
+}
+
+#pc.printer .tape {
+  top: auto;
+  bottom: 21%;
+  right: 6%;
+  transform: rotate(-1.5deg);
+}
+
+#pc.printer .printer-body {
+  display: block;
+}
+
+#pc.printer .glass {
+  position: absolute;
+  left: 5%;
+  top: 17%;
+  width: 62%;
+  height: 58%;
+  border-radius: 6px;
+  box-shadow: inset 0 0 40px #000, 0 0 0 6px #3a3830, 0 0 0 8px #6d6754;
+}
+
+#pc .label {
+  position: absolute;
+  left: 5%;
+  top: 6%;
+  font: 600 15px "IBM Plex Mono", monospace;
+  letter-spacing: 0.08em;
+  color: #4a4636;
+}
+
+#pc .label b {
+  color: #2a281f;
+}
+
+/* Paper feeding in at the back, and a test page waiting in the output slot. */
+#pc .tray-in {
+  position: absolute;
+  left: 22%;
+  top: -7%;
+  width: 46%;
+  height: 9%;
+  background: linear-gradient(#5a5646, #3a372d);
+  border-radius: 6px 6px 0 0;
+  z-index: -1;
+}
+
+#pc .tray-in .sheet {
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 30%;
+  height: 120%;
+  background: linear-gradient(#e9e4d2, #d6d0bb);
+  box-shadow: 0 -1px 0 #f4f0e2;
+}
+
+#pc .tray-out {
+  position: absolute;
+  left: 8%;
+  right: 30%;
+  bottom: 6%;
+  height: 7%;
+  background: linear-gradient(#141410, #2a2820);
+  border-radius: 4px;
+  box-shadow: inset 0 3px 6px #000;
+}
+
+#pc .tray-out .sheet {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  top: 40%;
+  height: 210%;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 6px 12px;
+  background: linear-gradient(#ddd8c4, #ece7d6 30%, #e4dfcc);
+  color: #3a3830;
+  font: 10px "IBM Plex Mono", monospace;
+  box-shadow: 0 6px 10px #0006;
+  transform: perspective(300px) rotateX(18deg);
+  transform-origin: top;
+}
+
+#pc .tray-out .sheet b {
+  letter-spacing: 0.2em;
+}
+
+/* The control panel beside the screen: status lights and three fat buttons. */
+#pc .panel {
+  position: absolute;
+  right: 5%;
+  top: 17%;
+  width: 22%;
+  height: 58%;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: linear-gradient(160deg, #4a473b, #34322a);
+  border-radius: 6px;
+  box-shadow: inset 0 0 0 2px #5c5848, inset 0 -6px 14px #0006;
+  color: #b8b29a;
+  font: 600 12px "IBM Plex Mono", monospace;
+  letter-spacing: 0.1em;
+}
+
+#pc .panel p {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+}
+
+#pc .led {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #2a2a22;
+  box-shadow: inset 0 1px 2px #000;
+}
+
+#pc .led.ready {
+  background: #6af08a;
+  box-shadow: 0 0 8px #6af08a;
+}
+
+#pc.printer.booted .led.busy {
+  animation: printer-data 1.7s steps(2) infinite;
+}
+
+#pc .led.err {
+  background: #5a1c18;
+}
+
+@keyframes printer-data {
+  50% {
+    background: #f0c040;
+    box-shadow: 0 0 8px #f0c040;
+  }
+}
+
+#pc .keys {
+  display: flex;
+  justify-content: space-between;
+  margin-top: auto;
+}
+
+#pc .keys i {
+  width: 26%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #8a8470, #4a463a);
+  box-shadow: 0 3px 0 #1e1d18, inset 0 1px 0 #a8a28a;
+}
+
+#pc .keynames {
+  display: flex;
+  justify-content: space-between;
+  font-size: 9px;
+}
+
 #pc .glass {
   position: relative;
   width: 100%;
@@ -1111,6 +1291,17 @@ kbd {
   padding: 6px 12px;
   cursor: pointer;
   text-shadow: inherit;
+}
+
+/* The printer's screen is smaller, so its menu packs tighter to stay on one line. */
+#pc.printer nav {
+  gap: 10px;
+}
+
+#pc.printer nav button {
+  padding: 5px 8px;
+  font-size: 0.85em;
+  white-space: nowrap;
 }
 
 #pc button:hover,

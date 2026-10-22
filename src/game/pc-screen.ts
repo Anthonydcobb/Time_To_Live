@@ -71,6 +71,18 @@ export class PcScreen {
       <div id="pc" hidden>
         <div class="crt">
           <div class="tape">PROPERTY OF B&amp;B NETWORK</div>
+          <div class="printer-body" aria-hidden="true">
+            <div class="tray-in"><div class="sheet"></div></div>
+            <div class="label"><b>CRYPTIS</b> PRINTSTATION 4L</div>
+            <div class="panel">
+              <p><i class="led ready"></i>READY</p>
+              <p><i class="led busy"></i>DATA</p>
+              <p><i class="led err"></i>ERROR</p>
+              <div class="keys"><i></i><i></i><i></i></div>
+              <div class="keynames"><span>ONLINE</span><span>FEED</span><span>CANCEL</span></div>
+            </div>
+            <div class="tray-out"><div class="sheet"><b>TEST PAGE</b><span>PRINTSTATION 4L · 10/14/1974</span><span>ALL MACHINES SPINNING</span></div></div>
+          </div>
           <div class="glass">
             <div class="boot">
               <img class="sigil" src="assets/ui/cryptis-sigil.png" alt="" />
@@ -178,8 +190,10 @@ export class PcScreen {
     return this.isOpen && this.panel === "cmd";
   }
 
-  open(pc: Pc, view: TerminalView, title: string, hint: string, onClosed: () => void): void {
+  /** With `printer`, the same screen sits in a printer's control panel instead of a monitor. */
+  open(pc: Pc, view: TerminalView, title: string, hint: string, onClosed: () => void, opts: { printer?: boolean } = {}): void {
     this.pc = pc;
+    this.el.classList.toggle("printer", !!opts.printer);
     this.view = view;
     this.onClosed = onClosed;
     $(this.el, ".host").textContent = title.toUpperCase();
