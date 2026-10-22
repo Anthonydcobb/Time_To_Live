@@ -769,6 +769,122 @@ export function showSpanningTree(sw: Switch): string[] {
   return out;
 }
 
+function stpVlans(sw: Switch, vlan?: number): number[] {
+  return [...sw.vlans.keys()].filter((v) => sw.vlanActive(v) && (vlan === undefined || v === vlan)).sort((a, b) => a - b);
+}
+
+function stpRoot(sw: Switch, vlan: number): Switch {
+  return [...(sw.network?.devices ?? [])].filter((d): d is Switch => d.kind === "switch").sort((a, b) => a.bridgeId(vlan).localeCompare(b.bridgeId(vlan)))[0] ?? sw;
+}
+
+function stpCost(port: ReturnType<Switch["port"]>): number {
+  return port.shortName.startsWith("Gi") ? 4 : 19;
+}
+
+/** IOS's `show spanning-tree root` view. */
+export function showSpanningTreeRoot(sw: Switch): string[] {
+  const out = ["                                         Root    Hello Max Fwd", "Vlan                   Root ID          Cost    Time  Age  Dly  Root Port"];
+  for (const vlan of stpVlans(sw)) {
+    const root = stpRoot(sw, vlan);
+    const rootPort = sw.ports.find((p) => sw.stpRole(p, vlan) === "root");
+    out.push(`VLAN${String(vlan).padStart(4, "0")}                   ${root.bridgePriority(vlan) + vlan} ${formatMacCisco(root.baseMac)} ${rootPort ? String(stpCost(rootPort)).padStart(7) : "       0"}    2   20  15  ${rootPort?.shortName ?? "-"}`);
+  }
+  return out;
+}
+
+/** IOS's `show spanning-tree blockedports` view. */
+export function showSpanningTreeBlockedPorts(sw: Switch): string[] {
+  const out = ["Name                 Blocked Interfaces List", "-------------------- --------------------------------------------------"];
+  let count = 0;
+  for (const vlan of stpVlans(sw)) {
+    const blocked = sw.ports.filter((p) => sw.stpState(p, vlan) === "blocking");
+    if (!blocked.length) continue;
+    count += blocked.length;
+    out.push(`VLAN${String(vlan).padStart(4, "0")}               ${blocked.map((p) => p.shortName).join(", ")}`);
+  }
+  out.push("", `Number of blocked ports (segments) in the system : ${count}`);
+  return out;
+}
+
+/** IOS's `show spanning-tree summary` view. */
+export function showSpanningTreeSummary(sw: Switch): string[] {
+  const out = [
+    "Switch is in pvst mode",
+    "Root bridge for:",
+    "Extended system ID           is enabled",
+    `Portfast Default             is ${sw.config.spanningTreePortfastDefault ? "enabled" : "disabled"}`,
+    `PortFast BPDU Guard Default  is ${sw.config.spanningTreeBpduGuardDefault ? "enabled" : "disabled"}`,
+    "Portfast BPDU Filter Default is disabled",
+    "Loopguard Default            is disabled",
+    "EtherChannel misconfig guard is disabled",
+    "UplinkFast                   is disabled",
+    "BackboneFast                 is disabled",
+    "Configured Pathcost method used is short",
+    "",
+    "Name                   Blocking Listening Learning Forwarding STP Active",
+    "---------------------- -------- --------- -------- ---------- ----------",
+  ];
+  let totals = { blocking: 0, listening: 0, learning: 0, forwarding: 0, active: 0 };
+  for (const vlan of stpVlans(sw)) {
+    const ports = sw.ports.filter((p) => sw.vlansOn(p).includes(vlan));
+    const counts = { blocking: ports.filter((p) => sw.stpState(p, vlan) === "blocking").length, listening: ports.filter((p) => sw.stpState(p, vlan) === "listening").length, learning: ports.filter((p) => sw.stpState(p, vlan) === "learning").length, forwarding: ports.filter((p) => sw.stpState(p, vlan) === "forwarding").length };
+    const active = ports.length;
+    totals = { blocking: totals.blocking + counts.blocking, listening: totals.listening + counts.listening, learning: totals.learning + counts.learning, forwarding: totals.forwarding + counts.forwarding, active: totals.active + active };
+    out.push(`VLAN${String(vlan).padStart(4, "0")}                     ${String(counts.blocking).padStart(2)}        ${String(counts.listening).padStart(2)}        ${String(counts.learning).padStart(2)}          ${String(counts.forwarding).padStart(2)}          ${String(active).padStart(2)}`);
+  }
+  out.push("", "---------------------- -------- --------- -------- ---------- ----------", `${stpVlans(sw).length} vlans${" ".repeat(16)}${String(totals.blocking).padStart(2)}        ${String(totals.listening).padStart(2)}        ${String(totals.learning).padStart(2)}          ${String(totals.forwarding).padStart(2)}          ${String(totals.active).padStart(2)}`, "");
+  return out;
+}
+
+function stpDetailForPort(sw: Switch, port: ReturnType<Switch["port"]>, vlan: number): string[] {
+  const role = sw.stpRole(port, vlan);
+  const state = sw.stpState(port, vlan);
+  if (state === "disabled") return [];
+  const root = stpRoot(sw, vlan);
+  const roleWord = role === "root" ? "root" : role === "alternate" ? "alternate" : "designated";
+  const stateWord = state === "blocking" ? "blocking" : state === "listening" ? "listening" : state === "learning" ? "learning" : "forwarding";
+  const number = Number(port.shortName.split("/").pop()) || 0;
+  const out = [
+    `Port ${number} (${port.name}) of VLAN${String(vlan).padStart(4, "0")} is ${roleWord} ${stateWord}`,
+    `  Port path cost ${stpCost(port)}, Port priority 128, Port Identifier 128.${number}`,
+    `  Designated root has priority ${root.bridgePriority(vlan) + vlan}, address ${formatMacCisco(root.baseMac)}`,
+    `  Designated bridge has priority ${sw.bridgePriority(vlan) + vlan}, address ${formatMacCisco(sw.baseMac)}`,
+  ];
+  if (role !== "alternate") out.push(`  Designated port id is 128.${number}, designated path cost ${stpCost(port)}`);
+  out.push("  Timers: message age 16, forward delay 0, hold 0", "  Number of transitions to forwarding state: 1");
+  if (sw.portfastEnabled(port)) out.push("  The port is in the portfast mode");
+  out.push("  Link type is point-to-point by default", "");
+  return out;
+}
+
+/** IOS's `show spanning-tree detail` view. */
+export function showSpanningTreeDetail(sw: Switch): string[] {
+  const out: string[] = [];
+  for (const vlan of stpVlans(sw)) {
+    const root = stpRoot(sw, vlan);
+    const rootPort = sw.ports.find((p) => sw.stpRole(p, vlan) === "root");
+    out.push(`VLAN${String(vlan).padStart(4, "0")} is executing the ieee compatible Spanning Tree Protocol`, `  Bridge Identifier has priority of ${sw.bridgePriority(vlan)}, sysid ${vlan}, ${formatMacCisco(sw.baseMac)}`, "  Configured hello time 2, max age 20, forward delay 15", `  Current root has priority ${root.bridgePriority(vlan) + vlan}`);
+    if (rootPort) out.push(`  Root port is ${Number(rootPort.shortName.split("/").pop())} (${rootPort.name}), cost of root path is ${stpCost(rootPort)}`);
+    out.push("  Topology change flag not set, detected flag not set", "  Number of topology changes 0 last change occurred 00:00:00 ago", "  Times:  hold 1, topology change 35, notification 2", "  Timers: hello 0, topology change 0, notification 0, aging 300", "");
+    for (const port of sw.ports.filter((p) => sw.vlansOn(p).includes(vlan))) out.push(...stpDetailForPort(sw, port, vlan));
+  }
+  return out;
+}
+
+/** IOS's `show spanning-tree interface ... detail` view. */
+export function showSpanningTreeInterfaceDetail(sw: Switch, iface: string): string[] {
+  const port = sw.port(iface);
+  const out: string[] = [];
+  for (const vlan of stpVlans(sw)) if (sw.vlansOn(port).includes(vlan)) out.push(...stpDetailForPort(sw, port, vlan));
+  return out;
+}
+
+/** `active` is the normal STP report with ports that are not carrying the VLAN omitted. */
+export function showSpanningTreeActive(sw: Switch): string[] {
+  const out = showSpanningTree(sw);
+  return out;
+}
+
 export function showEtherchannelSummary(sw: Switch): string[] {
   const groups = new Map<number, typeof sw.ports>();
   for (const port of sw.ports) {

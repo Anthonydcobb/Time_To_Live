@@ -196,6 +196,12 @@ export class Switch extends IosDevice {
     return sp;
   }
 
+  /** Effective PortFast state, including the global access-port default. */
+  portfastEnabled(port: Port): boolean {
+    const sp = this.switchport(port);
+    return sp.portfast || (this.config.spanningTreePortfastDefault && this.operationalMode(port) === "access");
+  }
+
   /**
    * The port's mode after DTP. Two dynamic auto ports both wait for the other
    * to ask, so they stay access ports. Routers and PCs don't speak DTP at all.
@@ -280,7 +286,7 @@ export class Switch extends IosDevice {
     const since = timers?.get(vlan);
     if (since === undefined) return "disabled";
     if (this.stpRole(port, vlan) === "alternate") return "blocking";
-    if (this.switchport(port).portfast) return "forwarding";
+    if (this.portfastEnabled(port)) return "forwarding";
     const elapsed = this.clock.now - since;
     if (elapsed < STP_LISTENING_MS) return "listening";
     if (elapsed < STP_LISTENING_MS + STP_LEARNING_MS) return "learning";

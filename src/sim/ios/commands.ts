@@ -332,6 +332,12 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol")], (c) => c.out.push(...show.showSpanningTree(c.device as Switch)), {
     devices: ["switch"],
   }),
+  cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("root", "Root bridge information")], (c) => c.out.push(...show.showSpanningTreeRoot(c.device as Switch)), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("blockedports", "Show blocked ports")], (c) => c.out.push(...show.showSpanningTreeBlockedPorts(c.device as Switch)), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("summary", "Summary of port states")], (c) => c.out.push(...show.showSpanningTreeSummary(c.device as Switch)), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("detail", "Detailed information")], (c) => c.out.push(...show.showSpanningTreeDetail(c.device as Switch)), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("active", "Report on active interfaces only")], (c) => c.out.push(...show.showSpanningTreeActive(c.device as Switch)), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("interface", "Spanning Tree interface status and configuration"), ifaceArg, kw("detail", "Detailed information")], (c, [iface]) => c.out.push(...show.showSpanningTreeInterfaceDetail(c.device as Switch, iface as string)), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("cdp", "CDP information")], (c) => c.out.push(...show.showCdp(c.device))),
   cmd(EXEC, [SHOW, kw("cdp", "CDP information"), kw("neighbors", "CDP neighbor entries")], (c) => c.out.push(...show.showCdpNeighbors(c.device))),
   cmd(EXEC, [SHOW, kw("cdp", "CDP information"), kw("neighbors", "CDP neighbor entries"), kw("detail", "Show detailed information")], (c) =>

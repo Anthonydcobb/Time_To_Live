@@ -164,6 +164,8 @@ export interface IosConfig {
   dhcpPools: DhcpPool[];
   /** PVST+ bridge priority overrides, keyed by VLAN ID. */
   spanningTreePriority: Record<number, number>;
+  spanningTreePortfastDefault: boolean;
+  spanningTreeBpduGuardDefault: boolean;
   ipRouting: boolean;
   ipv6UnicastRouting: boolean;
   ospf: { processId: number; networks: OspfNetwork[]; passiveInterfaces: string[]; routerId: Ipv4 | null; defaultInformation: boolean; summaries: OspfSummary[] } | null;
@@ -219,6 +221,8 @@ export function defaultConfig(hostname: string, interfaces: { name: string; shut
     dhcpExcluded: [],
     dhcpPools: [],
     spanningTreePriority: {},
+    spanningTreePortfastDefault: false,
+    spanningTreeBpduGuardDefault: false,
     ipRouting: false,
     ipv6UnicastRouting: false,
     ospf: null,

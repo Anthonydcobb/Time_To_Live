@@ -94,6 +94,16 @@ describe("spanning tree", () => {
     expect(output).toContain("Altn BLK");
   });
 
+  it("supports the IOS spanning-tree show variants", () => {
+    const { c } = triangle();
+    expect(type(c, "show spanning-tree root").join("\n")).toContain("Root ID");
+    expect(type(c, "show spanning-tree blockedports").join("\n")).toContain("blocked ports");
+    expect(type(c, "show spanning-tree summary").join("\n")).toContain("Portfast Default");
+    expect(type(c, "show spanning-tree detail").join("\n")).toContain("is executing the ieee compatible Spanning Tree Protocol");
+    expect(type(c, "show spanning-tree active").join("\n")).toContain("Spanning tree enabled");
+    expect(type(c, "show spanning-tree interface gi0/1 detail").join("\n")).toContain("Port 1 (GigabitEthernet0/1)");
+  });
+
   it("reconverges through the alternate path after the root link fails", () => {
     const { net, b } = triangle();
     expect(b.stpRole(b.port("Gi0/2"), 1)).toBe("designated");
