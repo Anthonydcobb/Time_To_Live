@@ -114,6 +114,8 @@ export class IosConsole {
   aclName: string | null = null;
   pending: Pending | null = null;
   readonly history: string[] = [];
+  /** IOS keeps ten commands per terminal by default. */
+  historySize = 10;
   /** The player's learned incantations. Without one, every command reads plainly. */
   grimoire: Grimoire | null = null;
   private out: string[] = [];
@@ -127,6 +129,11 @@ export class IosConsole {
   private setupYes = 0;
 
   constructor(readonly device: IosDevice) {}
+
+  setHistorySize(size: number): void {
+    this.historySize = size;
+    if (this.history.length > size) this.history.splice(0, this.history.length - size);
+  }
 
   prompt(): string {
     const p = this.pending;
@@ -427,6 +434,7 @@ export class IosConsole {
   private run(line: string): void {
     if (!line.trim()) return;
     this.history.push(line);
+    if (this.history.length > this.historySize) this.history.splice(0, this.history.length - this.historySize);
     const pipe = this.splitPipe(line);
     if (pipe) {
       if (pipe.error) {

@@ -1255,6 +1255,21 @@ export function showClock(device: IosDevice): string[] {
   return [`*${pad(h)}:${pad(m)}:${pad(s)}.${pad(frac, 3)} UTC Mon Mar 1 1993`];
 }
 
+/** The current terminal's command history, excluding the show command itself. */
+export function showHistory(device: IosDevice): string[] {
+  return device.console.history.slice(0, -1).slice(-device.console.historySize).map((line) => `  ${line}`);
+}
+
+/** The local console is the only active line in the simulator. */
+export function showUsers(_device: IosDevice): string[] {
+  return [
+    "    Line       User       Host(s)              Idle       Location",
+    "   *  0 con 0                idle                 00:00:00",
+    "",
+    "  Interface    User               Mode         Idle     Peer Address",
+  ];
+}
+
 export function showSsh(device: IosDevice): string[] {
   const c = device.config;
   return [

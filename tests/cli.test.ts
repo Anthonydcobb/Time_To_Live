@@ -11,6 +11,32 @@ function router() {
 }
 
 describe("modes and prompts", () => {
+  it("shows the previous commands from user and privileged EXEC history", () => {
+    const r = router();
+    expect(type(r, "show clock", "show history")).toEqual([
+      "*00:00:00.000 UTC Mon Mar 1 1993",
+      "  show clock",
+    ]);
+    type(r, "en", "show version");
+    expect(type(r, "show history")).toContain("  show version");
+    expect(type(r, "terminal history size 2", "show clock", "show history")).toEqual([
+      "*00:00:00.000 UTC Mon Mar 1 1993",
+      "  show clock",
+    ]);
+  });
+
+  it("shows the active console line and users table headers", () => {
+    const r = router();
+    expect(type(r, "show users")).toEqual([
+      "    Line       User       Host(s)              Idle       Location",
+      "   *  0 con 0                idle                 00:00:00",
+      "",
+      "  Interface    User               Mode         Idle     Peer Address",
+    ]);
+    type(r, "en");
+    expect(type(r, "show users")[1]).toContain("*");
+  });
+
   it("shows interface error counters", () => {
     const r = router();
     expect(type(r, "", "en", "show interfaces counters errors").join("\n")).toContain("Align-Err");
