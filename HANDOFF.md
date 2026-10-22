@@ -6,6 +6,17 @@ Last updated: 2026-10-19.
 
 ## Latest handoff update (2026-10-22, Codex)
 
+- Corrected the DHCP and STP reports to use real IOS 15 as the reference, with
+  Cisco command/configuration sources, reclassified discrepancies as
+  `sim-wrong`, `pt-limitation`, `both-missing`, or `needs-cml`, and added
+  priority fix lists. CML was not reachable from this host.
+- The clean PT relay rerun is blocked on adding a routed far LAN through the
+  GUI: Router1 Gi0/1 is unused, so add a new 2960 switch and PC, cable
+  Router1 Gi0/1 to the switch Gi0/1, and cable the PC Fa0 to switch Fa0/1.
+  Resume the relay capture after Anthony completes that topology edit.
+
+## Latest handoff update (2026-10-22, Codex)
+
 - Completed the DHCP Packet Tracer versus simulator research capture. Raw
   observations are in `harness/artifacts/dhcp-research-pt.json` and
   `harness/artifacts/dhcp-research-sim.json`; the discrepancy report is
