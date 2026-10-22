@@ -101,6 +101,22 @@ describe("spanning tree", () => {
     expect(type(edge, "show running-config").join("\n")).toContain("spanning-tree portfast bpduguard default");
   });
 
+  it("blocks a Root Guard port on a superior BPDU and recovers after BPDUs stop", () => {
+    const net = new Network();
+    const guarded = net.add(new Switch("GUARDED"));
+    const superior = net.add(new Switch("SUPERIOR"));
+    type(guarded, "", "en", "conf t", "int gi0/1", "switchport mode trunk", "spanning-tree guard root", "end");
+    type(superior, "", "en", "conf t", "spanning-tree vlan 1 priority 0", "int gi0/1", "switchport mode trunk", "end");
+    net.connect(guarded.port("Gi0/1"), superior.port("Gi0/1"));
+    net.clock.advance(6_000);
+    expect(guarded.isRootInconsistent(guarded.port("Gi0/1"), 1)).toBe(true);
+    expect(type(guarded, "show spanning-tree inconsistentports").join("\n")).toContain("Root Inconsistent");
+    expect(guarded.logBuffer.join("\n")).toContain("%SPANTREE-2-ROOTGUARD_BLOCK");
+    net.disconnect(guarded.port("Gi0/1"));
+    net.clock.advance(21_000);
+    expect(guarded.isRootInconsistent(guarded.port("Gi0/1"), 1)).toBe(false);
+  });
+
   it("elects a root and blocks one side of a switch loop", () => {
     const { a, b, c } = triangle();
     expect(a.stpRole(a.port("Gi0/1"), 1)).toBe("designated");

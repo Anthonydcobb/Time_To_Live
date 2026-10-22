@@ -55,6 +55,7 @@ export class Switch extends IosDevice {
   private readonly svis = new Map<string, L3Interface>();
   private readonly dhcpRateWindows = new Map<Port, { started: number; count: number }>();
   private readonly errDisabledPorts = new Set<Port>();
+  private readonly rootInconsistentUntil = new Map<Port, Map<number, number>>();
   private readonly sviUp = new Set<string>();
   /** Access-layer security counters used by the IOS show commands. */
   readonly dhcpSnoopingStats = { processed: 0, untrustedDrops: 0, rateLimitDrops: 0 };
@@ -208,6 +209,20 @@ export class Switch extends IosDevice {
     return sp.bpduGuard || (this.config.spanningTreeBpduGuardDefault && this.portfastEnabled(port));
   }
 
+  rootGuardEnabled(port: Port): boolean {
+    return this.switchport(port).rootGuard;
+  }
+
+  isRootInconsistent(port: Port, vlan: number): boolean {
+    const until = this.rootInconsistentUntil.get(port)?.get(vlan);
+    if (until === undefined) return false;
+    if (until <= this.clock.now) {
+      this.rootInconsistentUntil.get(port)?.delete(vlan);
+      return false;
+    }
+    return true;
+  }
+
   isErrDisabled(port: Port): boolean {
     return this.errDisabledPorts.has(port);
   }
@@ -301,6 +316,7 @@ export class Switch extends IosDevice {
       }
       return best;
     }
+    if (this.isRootInconsistent(port, vlan)) return "blocking";
     const since = timers?.get(vlan);
     if (since === undefined) return "disabled";
     if (this.stpRole(port, vlan) === "alternate") return "blocking";
@@ -399,6 +415,7 @@ export class Switch extends IosDevice {
     this.stpRoles.clear();
     this.lastMode.clear();
     this.errDisabledPorts.clear();
+    this.rootInconsistentUntil.clear();
     this.syncVlans();
   }
 
@@ -628,6 +645,19 @@ export class Switch extends IosDevice {
 
   private handleBpdu(port: Port, frame: Frame): boolean {
     if (!this.config.interfaces[port.name].switchport) return frame.payload.kind === "bpdu";
+    if (frame.payload.kind === "bpdu" && this.rootGuardEnabled(port)) {
+      const bpdu = frame.payload;
+      const vlan = bpdu.vlan;
+      const receivedId = bpdu.rootPriority + vlan;
+      const localId = this.bridgePriority(vlan) + vlan;
+      const superior = receivedId < localId || (receivedId === localId && bpdu.rootMac < this.baseMac);
+      if (superior && !this.isRootInconsistent(port, vlan)) {
+        let vlans = this.rootInconsistentUntil.get(port);
+        if (!vlans) { vlans = new Map(); this.rootInconsistentUntil.set(port, vlans); }
+        vlans.set(vlan, this.clock.now + 20_000);
+        this.emit(`%SPANTREE-2-ROOTGUARD_BLOCK: Root guard blocking port ${port.shortName} on VLAN ${vlan}.`);
+      }
+    }
     if (frame.payload.kind === "bpdu" && this.portfastEnabled(port) && this.bpduGuardEnabled(port) && !port.adminDown) {
       this.emit(`%SPANTREE-2-BLOCK_BPDUGUARD: Received BPDU on port ${port.shortName} with BPDU Guard enabled. Disabling port.`);
       this.errDisabledPorts.add(port);

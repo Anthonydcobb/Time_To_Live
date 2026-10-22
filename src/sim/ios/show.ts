@@ -217,6 +217,7 @@ function switchportLines(sp: SwitchportConfig): string[] {
   if (sp.nonegotiate) out.push(" switchport nonegotiate");
   if (sp.portfast) out.push(" spanning-tree portfast");
   if (sp.bpduGuard) out.push(" spanning-tree bpduguard enable");
+  if (sp.rootGuard) out.push(" spanning-tree guard root");
   if (sp.channelGroup !== null && sp.channelMode !== null) out.push(` channel-group ${sp.channelGroup} mode ${sp.channelMode}`);
   if (sp.portSecurity) out.push(" switchport port-security");
   if (sp.portSecurityMaximum !== 1) out.push(` switchport port-security maximum ${sp.portSecurityMaximum}`);
@@ -878,6 +879,19 @@ export function showSpanningTreeInterfaceDetail(sw: Switch, iface: string): stri
   const port = sw.port(iface);
   const out: string[] = [];
   for (const vlan of stpVlans(sw)) if (sw.vlansOn(port).includes(vlan)) out.push(...stpDetailForPort(sw, port, vlan));
+  return out;
+}
+
+export function showSpanningTreeInconsistentPorts(sw: Switch): string[] {
+  const out = ["Name                 Interface            Inconsistency", "-------------------- -------------------- ------------------"];
+  let count = 0;
+  for (const vlan of stpVlans(sw)) for (const port of sw.ports) {
+    if (sw.isRootInconsistent(port, vlan)) {
+      out.push(`VLAN${String(vlan).padStart(4, "0")}             ${port.shortName.padEnd(20)}Root Inconsistent`);
+      count++;
+    }
+  }
+  out.push("", `Number of inconsistent ports (segments) in the system : ${count}`);
   return out;
 }
 

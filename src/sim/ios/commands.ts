@@ -338,6 +338,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("detail", "Detailed information")], (c) => c.out.push(...show.showSpanningTreeDetail(c.device as Switch)), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("active", "Report on active interfaces only")], (c) => c.out.push(...show.showSpanningTreeActive(c.device as Switch)), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("interface", "Spanning Tree interface status and configuration"), ifaceArg, kw("detail", "Detailed information")], (c, [iface]) => c.out.push(...show.showSpanningTreeInterfaceDetail(c.device as Switch, iface as string)), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("inconsistentports", "Show inconsistent ports")], (c) => c.out.push(...show.showSpanningTreeInconsistentPorts(c.device as Switch)), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("cdp", "CDP information")], (c) => c.out.push(...show.showCdp(c.device))),
   cmd(EXEC, [SHOW, kw("cdp", "CDP information"), kw("neighbors", "CDP neighbor entries")], (c) => c.out.push(...show.showCdpNeighbors(c.device))),
   cmd(EXEC, [SHOW, kw("cdp", "CDP information"), kw("neighbors", "CDP neighbor entries"), kw("detail", "Show detailed information")], (c) =>
@@ -1358,6 +1359,8 @@ const switchCommands: Entry[] = [
   cmd(IF, [NO, STP, kw("portfast", "Enable edge port behavior")], (c) => eachSwitchport(c, (sp) => { sp.portfast = false; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [STP, kw("bpduguard", "Enable BPDU Guard"), kw("enable", "Enable BPDU Guard")], (c) => eachSwitchport(c, (sp) => { sp.bpduGuard = true; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [NO, STP, kw("bpduguard", "Enable BPDU Guard"), kw("enable", "Enable BPDU Guard")], (c) => eachSwitchport(c, (sp) => { sp.bpduGuard = false; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [STP, kw("guard", "Enable STP guard"), kw("root", "Root guard")], (c) => eachSwitchport(c, (sp) => { sp.rootGuard = true; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, STP, kw("guard", "Enable STP guard"), kw("root", "Root guard")], (c) => eachSwitchport(c, (sp) => { sp.rootGuard = false; }), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [CHANNEL_GROUP, numArg(1, 64, "Channel group number"), kw("mode", "EtherChannel mode"), kw("on", "Force EtherChannel" )], (c, [group]) => setChannel(c, group as number, "on"), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [CHANNEL_GROUP, numArg(1, 64, "Channel group number"), kw("mode", "EtherChannel mode"), kw("active", "LACP active" )], (c, [group]) => setChannel(c, group as number, "active"), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [CHANNEL_GROUP, numArg(1, 64, "Channel group number"), kw("mode", "EtherChannel mode"), kw("passive", "LACP passive" )], (c, [group]) => setChannel(c, group as number, "passive"), { devices: ["switch"], when: physicalPort }),
