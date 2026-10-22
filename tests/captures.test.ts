@@ -167,6 +167,7 @@ describe("captured from real IOS", () => {
       "  binding   DHCP address bindings",
       "  conflict  DHCP address conflicts",
       "  pool      DHCP pools information",
+      "  server    DHCP server information",
       "",
     ]);
   });
