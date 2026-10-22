@@ -10,14 +10,14 @@ Last updated: 2026-10-19.
   Cisco command/configuration sources, reclassified discrepancies as
   `sim-wrong`, `pt-limitation`, `both-missing`, or `needs-cml`, and added
   priority fix lists. CML was not reachable from this host.
-- The clean PT relay rerun is blocked on adding a routed far LAN through the
-  GUI: Router1 Gi0/1 is unused, so add a new 2960 switch and PC, cable
-  Router1 Gi0/1 to the switch Gi0/1, and cable the PC Fa0 to switch Fa0/1.
-- The routed segment is now physically verified and the temporary router
-  configuration was restored. The remaining PT endpoint step is PC3 Desktop
-  > IP Configuration > DHCP; PT output was `Port is not using DHCP.` for
-  `/release` and `Invalid Command.` for `/dhcp`, and the bridge exposes no PC
-  GUI control. Resume the relay/exhaustion/APIPA capture after that toggle.
+- The clean PT relay rerun required adding a routed far LAN through the GUI:
+  Router1 Gi0/1 was connected to a new 2960 switch and PC3 on the new segment.
+- The routed segment is physically verified and PC3 was switched to DHCP in
+  the PT GUI. The final paced capture recorded a relay lease of `10.99.0.11`,
+  a zero-usable-address exhaustion pool, and PT APIPA
+  `169.254.161.183/16` with gateway `0.0.0.0`. Temporary configuration was
+  then removed; Router1 Gi0/1 is administratively down with no address and
+  Router0's DHCP section is empty.
 
 ## Latest handoff update (2026-10-22, Codex)
 
