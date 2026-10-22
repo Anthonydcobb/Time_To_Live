@@ -1167,6 +1167,7 @@ const dhcpCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("ip", "IP information"), SHOW_DHCP, kw("conflict", "DHCP address conflicts")], (c) => c.out.push(...show.showDhcpConflict(c.device as Router)), {
     devices: ["router"],
   }),
+  cmd(EXEC, [SHOW, kw("ip", "IP information"), SHOW_DHCP, kw("server", "DHCP server information"), kw("statistics", "DHCP server statistics")], (c) => c.out.push(...show.showDhcpServerStatistics(c.device as Router)), { devices: ["router"] }),
   cmd(ENABLE, [kw("clear", "Reset functions"), kw("ip", "IP"), SHOW_DHCP, kw("binding", "DHCP address bindings"), kw("*", "Clear all automatic bindings")], (c) =>
     (c.device as Router).dhcp.clear(),
   { devices: ["router"] }),

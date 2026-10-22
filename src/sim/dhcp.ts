@@ -46,6 +46,16 @@ export interface DhcpServerHost {
 export class DhcpServer {
   readonly bindings = new Map<Ipv4, DhcpBinding>();
   readonly conflicts = new Map<Ipv4, DhcpConflict>();
+  readonly statistics = {
+    received: 0,
+    sent: 0,
+    discoverReceived: 0,
+    offerSent: 0,
+    requestReceived: 0,
+    ackSent: 0,
+    nakSent: 0,
+    releaseReceived: 0,
+  };
   private readonly offers = new Map<Mac, { ip: Ipv4; pool: string; until: number }>();
   /** Clients whose discover is being ping-checked right now. */
   private readonly checking = new Set<Mac>();
@@ -106,6 +116,10 @@ export class DhcpServer {
 
   handle(iface: L3Interface, packet: Ipv4Packet): void {
     const msg = packet.dhcp!;
+    this.statistics.received++;
+    if (msg.op === "discover") this.statistics.discoverReceived++;
+    if (msg.op === "request") this.statistics.requestReceived++;
+    if (msg.op === "release") this.statistics.releaseReceived++;
     const pool = msg.relayIp === undefined ? this.poolFor(iface) : this.poolForAddress(msg.relayIp);
     if (msg.op === "discover") this.discover(iface, msg, pool);
     else if (msg.op === "request") this.request(iface, msg, pool);
@@ -178,6 +192,10 @@ export class DhcpServer {
   }
 
   private sendResponse(iface: L3Interface, dst: Ipv4, msg: DhcpMessage): void {
+    this.statistics.sent++;
+    if (msg.op === "offer") this.statistics.offerSent++;
+    if (msg.op === "ack") this.statistics.ackSent++;
+    if (msg.op === "nak") this.statistics.nakSent++;
     const frame = dhcpFrame(iface.mac, BROADCAST_MAC, iface.ip!, dst, msg);
     if (msg.relayIp !== undefined) {
       this.host.stack.send(frame.payload as Ipv4Packet);

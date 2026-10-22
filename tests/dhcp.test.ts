@@ -60,6 +60,17 @@ describe("DHCP", () => {
     expect(run(register, "ping -n 1 192.168.1.1").some((l) => l.startsWith("Reply from 192.168.1.1"))).toBe(true);
   });
 
+  it("reports IOS-style DHCP server message statistics", () => {
+    const { r1, register } = served();
+    run(register, "ipconfig /dhcp");
+    const output = type(r1, "show ip dhcp server statistics").join("\n");
+    expect(output).toContain("DHCP server statistics:");
+    expect(output).toContain("DHCPDISCOVER messages received      : 1");
+    expect(output).toContain("DHCPOFFER messages sent             : 1");
+    expect(output).toContain("DHCPACK messages sent               : 1");
+    expect(output).toContain("Active bindings                      : 1");
+  });
+
   it("gives each client its own address and keeps it on renew", () => {
     const { register, office } = served();
     run(register, "ipconfig /dhcp");

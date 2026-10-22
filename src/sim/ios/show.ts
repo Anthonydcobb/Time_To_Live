@@ -1441,6 +1441,24 @@ export function showDhcpConflict(router: Router): string[] {
   return out;
 }
 
+export function showDhcpServerStatistics(router: Router): string[] {
+  const s = router.dhcp.statistics;
+  return [
+    "DHCP server statistics:",
+    `  DHCP messages received                 : ${s.received}`,
+    `    DHCPDISCOVER messages received      : ${s.discoverReceived}`,
+    `    DHCPREQUEST messages received       : ${s.requestReceived}`,
+    `    DHCPRELEASE messages received       : ${s.releaseReceived}`,
+    `  DHCP messages sent                    : ${s.sent}`,
+    `    DHCPOFFER messages sent             : ${s.offerSent}`,
+    `    DHCPACK messages sent               : ${s.ackSent}`,
+    `    DHCPNAK messages sent               : ${s.nakSent}`,
+    "  DHCP database:",
+    `    Active bindings                      : ${router.dhcp.liveBindings().length}`,
+    `    Address conflicts                    : ${router.dhcp.conflicts.size}`,
+  ];
+}
+
 function broadcastOfMask(network: number, mask: number): number {
   return (network | (~mask >>> 0)) >>> 0;
 }
