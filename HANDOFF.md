@@ -13,7 +13,11 @@ Last updated: 2026-10-19.
 - The clean PT relay rerun is blocked on adding a routed far LAN through the
   GUI: Router1 Gi0/1 is unused, so add a new 2960 switch and PC, cable
   Router1 Gi0/1 to the switch Gi0/1, and cable the PC Fa0 to switch Fa0/1.
-  Resume the relay capture after Anthony completes that topology edit.
+- The routed segment is now physically verified and the temporary router
+  configuration was restored. The remaining PT endpoint step is PC3 Desktop
+  > IP Configuration > DHCP; PT output was `Port is not using DHCP.` for
+  `/release` and `Invalid Command.` for `/dhcp`, and the bridge exposes no PC
+  GUI control. Resume the relay/exhaustion/APIPA capture after that toggle.
 
 ## Latest handoff update (2026-10-22, Codex)
 

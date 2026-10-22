@@ -30,6 +30,18 @@ Raw captures: [Packet Tracer](../harness/artifacts/dhcp-research-pt.json) and
 Some PT PC responses include stale terminal history from the bridge, preserved
 without normalization.
 
+### Clean PT rerun status
+
+The added segment was verified before the rerun: Router1 Gi0/1 reached
+`10.99.0.1` up/up, Switch4 showed its uplink and PC port connected, and PC3
+returned `Reply from 10.99.0.1: bytes=32 time<1ms TTL=255` with a temporary
+static address. The DHCP experiment could not start because PT reported
+`Port is not using DHCP.` for `ipconfig /release` and `ipconfig /dhcp` returned
+`Invalid Command.` The bridge does not expose the PC Desktop > IP Configuration
+control needed to switch PC3 from Static to DHCP, so the relay, clean exhaustion,
+and APIPA attempts are preserved as raw blocked attempts rather than presented
+as DHCP results.
+
 ## Observed behavior
 
 - The sim leased `192.168.30.21` after excluding `.1-.20`; its binding output
