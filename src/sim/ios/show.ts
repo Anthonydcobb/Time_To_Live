@@ -1255,9 +1255,10 @@ export function showClock(device: IosDevice): string[] {
   return [`*${pad(h)}:${pad(m)}:${pad(s)}.${pad(frac, 3)} UTC Mon Mar 1 1993`];
 }
 
-/** The current terminal's command history, excluding the show command itself. */
+/** The last commands on this terminal, up to the history size. Like IOS, it ends with itself. */
 export function showHistory(device: IosDevice): string[] {
-  return device.console.history.slice(0, -1).slice(-device.console.historySize).map((line) => `  ${line}`);
+  const size = device.console.historySize;
+  return size ? device.console.history.slice(-size).map((line) => `  ${line}`) : [];
 }
 
 /** The local console is the only active line in the simulator. */

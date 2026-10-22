@@ -13,16 +13,30 @@ function router() {
 describe("modes and prompts", () => {
   it("shows the previous commands from user and privileged EXEC history", () => {
     const r = router();
+    // Like IOS, the list ends with the show history that asked for it.
     expect(type(r, "show clock", "show history")).toEqual([
       "*00:00:00.000 UTC Mon Mar 1 1993",
       "  show clock",
+      "  show history",
     ]);
     type(r, "en", "show version");
     expect(type(r, "show history")).toContain("  show version");
     expect(type(r, "terminal history size 2", "show clock", "show history")).toEqual([
       "*00:00:00.000 UTC Mon Mar 1 1993",
       "  show clock",
+      "  show history",
     ]);
+  });
+
+  it("keeps every command for the work orders, whatever show history displays", () => {
+    // The laundromat's last task looks for show ip dhcp binding after a point in this list.
+    const r = router();
+    type(r, "en", ...Array.from({ length: 15 }, () => "show clock"));
+    const from = r.console.history.length;
+    type(r, "show ip dhcp binding");
+    expect(from).toBeGreaterThan(10);
+    expect(r.console.history.slice(from)).toEqual(["show ip dhcp binding"]);
+    expect(type(r, "show history")).toHaveLength(10);
   });
 
   it("shows the active console line and users table headers", () => {

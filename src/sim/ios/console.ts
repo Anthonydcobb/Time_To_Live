@@ -113,6 +113,10 @@ export class IosConsole {
   aclKind: "standard" | "extended" | null = null;
   aclName: string | null = null;
   pending: Pending | null = null;
+  /**
+   * Every command typed on this console, never trimmed: the story's work orders look back
+   * through it. `show history` shows only the last `historySize` of them, like IOS.
+   */
   readonly history: string[] = [];
   /** IOS keeps ten commands per terminal by default. */
   historySize = 10;
@@ -132,7 +136,6 @@ export class IosConsole {
 
   setHistorySize(size: number): void {
     this.historySize = size;
-    if (this.history.length > size) this.history.splice(0, this.history.length - size);
   }
 
   prompt(): string {
@@ -434,7 +437,6 @@ export class IosConsole {
   private run(line: string): void {
     if (!line.trim()) return;
     this.history.push(line);
-    if (this.history.length > this.historySize) this.history.splice(0, this.history.length - this.historySize);
     const pipe = this.splitPipe(line);
     if (pipe) {
       if (pipe.error) {
