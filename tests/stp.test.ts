@@ -80,6 +80,25 @@ describe("spanning tree", () => {
     net.clock.advance(6_000);
     expect(edge.port("Gi0/1").adminDown).toBe(true);
     expect(type(edge, "show running-config").join("\n")).toContain(" spanning-tree bpduguard enable");
+    expect(type(edge, "show interfaces status").join("\n")).toContain("err-disabled");
+    expect(edge.logBuffer.join("\n")).toContain("%SPANTREE-2-BLOCK_BPDUGUARD");
+    expect(edge.logBuffer.join("\n")).toContain("%PM-4-ERR_DISABLE");
+    type(edge, "conf t", "int gi0/1", "shutdown", "no shutdown", "end");
+    expect(edge.port("Gi0/1").adminDown).toBe(false);
+    expect(edge.isErrDisabled(edge.port("Gi0/1"))).toBe(false);
+    expect(type(edge, "show interfaces status").join("\n")).not.toContain("err-disabled");
+  });
+
+  it("supports the global BPDU Guard default on PortFast access ports", () => {
+    const net = new Network();
+    const edge = net.add(new Switch("EDGE"));
+    const upstream = net.add(new Switch("UPSTREAM"));
+    type(edge, "", "en", "conf t", "spanning-tree portfast default", "spanning-tree portfast bpduguard default", "int gi0/1", "switchport mode access", "end");
+    net.connect(edge.port("Gi0/1"), upstream.port("Gi0/1"));
+    net.clock.advance(6_000);
+    expect(edge.isErrDisabled(edge.port("Gi0/1"))).toBe(true);
+    expect(type(edge, "show spanning-tree summary").join("\n")).toContain("PortFast BPDU Guard Default  is enabled");
+    expect(type(edge, "show running-config").join("\n")).toContain("spanning-tree portfast bpduguard default");
   });
 
   it("elects a root and blocks one side of a switch loop", () => {

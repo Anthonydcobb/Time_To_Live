@@ -461,7 +461,7 @@ export function showInterfacesStatus(sw: Switch): string[] {
   ];
   for (const port of sw.ports) {
     const sp = sw.switchport(port);
-    const status = port.adminDown ? "disabled" : port.protocolUp ? "connected" : "notconnect";
+    const status = sw.isErrDisabled(port) ? "err-disabled" : port.adminDown ? "disabled" : port.protocolUp ? "connected" : "notconnect";
     const vlan = sw.operationalMode(port) === "trunk" ? "trunk" : String(sp.accessVlan);
     const duplex = port.protocolUp ? (sw.config.interfaces[port.name].duplex === "auto" ? "a-full" : `a-${sw.config.interfaces[port.name].duplex}`) : "auto";
     const speed = port.protocolUp ? (sw.config.interfaces[port.name].speed === "auto" ? (port.name.startsWith("Gigabit") ? "a-1000" : "a-100") : `a-${sw.config.interfaces[port.name].speed}`) : "auto";

@@ -54,6 +54,7 @@ export class Switch extends IosDevice {
   private readonly lastMode = new Map<Port, OperationalMode>();
   private readonly svis = new Map<string, L3Interface>();
   private readonly dhcpRateWindows = new Map<Port, { started: number; count: number }>();
+  private readonly errDisabledPorts = new Set<Port>();
   private readonly sviUp = new Set<string>();
   /** Access-layer security counters used by the IOS show commands. */
   readonly dhcpSnoopingStats = { processed: 0, untrustedDrops: 0, rateLimitDrops: 0 };
@@ -200,6 +201,20 @@ export class Switch extends IosDevice {
   portfastEnabled(port: Port): boolean {
     const sp = this.switchport(port);
     return sp.portfast || (this.config.spanningTreePortfastDefault && this.operationalMode(port) === "access");
+  }
+
+  bpduGuardEnabled(port: Port): boolean {
+    const sp = this.switchport(port);
+    return sp.bpduGuard || (this.config.spanningTreeBpduGuardDefault && this.portfastEnabled(port));
+  }
+
+  isErrDisabled(port: Port): boolean {
+    return this.errDisabledPorts.has(port);
+  }
+
+  setShutdown(name: string, shutdown: boolean): void {
+    if (!shutdown) this.errDisabledPorts.delete(this.port(name));
+    super.setShutdown(name, shutdown);
   }
 
   /**
@@ -380,6 +395,7 @@ export class Switch extends IosDevice {
     this.stpSince.clear();
     this.stpRoles.clear();
     this.lastMode.clear();
+    this.errDisabledPorts.clear();
     this.syncVlans();
   }
 
@@ -609,9 +625,10 @@ export class Switch extends IosDevice {
 
   private handleBpdu(port: Port, frame: Frame): boolean {
     if (!this.config.interfaces[port.name].switchport) return frame.payload.kind === "bpdu";
-    const sp = this.switchport(port);
-    if (frame.payload.kind === "bpdu" && sp.portfast && sp.bpduGuard && !port.adminDown) {
+    if (frame.payload.kind === "bpdu" && this.portfastEnabled(port) && this.bpduGuardEnabled(port) && !port.adminDown) {
       this.emit(`%SPANTREE-2-BLOCK_BPDUGUARD: Received BPDU on port ${port.shortName} with BPDU Guard enabled. Disabling port.`);
+      this.errDisabledPorts.add(port);
+      this.emit(`%PM-4-ERR_DISABLE: bpduguard error detected on ${port.shortName}, putting ${port.shortName} in err-disable state`);
       this.setShutdown(port.name, true);
     }
     return frame.payload.kind === "bpdu";
