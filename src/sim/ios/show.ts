@@ -2,7 +2,8 @@
 import { formatIpv4, formatIpv6, formatMacCisco, maskToPrefix, networkOf, type Ipv4 } from "../addr";
 import { configTimestamp, type IosDevice } from "../devices/ios-device";
 import type { Router } from "../devices/router";
-import { electedRoot, type Switch } from "../devices/switch";
+import type { Switch } from "../devices/switch";
+import { electedRoot } from "../stp";
 import { UNSUPPORTED_VLANS, formatVlanList } from "../vlans";
 import type { Route } from "../ipstack";
 import type { AclAddress, IosConfig, LineConfig, StoredPassword, SwitchportConfig, SwitchportMode } from "./config";
