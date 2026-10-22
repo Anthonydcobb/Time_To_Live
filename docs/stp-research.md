@@ -10,12 +10,12 @@ and marks platform/topology questions `needs-cml`.
 
 Priority order for the game:
 
-1. Implement the documented `show spanning-tree` variants (`root`,
+1. **Fixed.** Implemented the documented `show spanning-tree` variants (`root`,
    `blockedports`, `summary`, `detail`, `active`, and interface detail) and
    match their IOS 15 field names (`sim-wrong`).
-2. Add PortFast operational state and `show spanning-tree ... interface ...
+2. **Fixed.** Added PortFast operational state and `show spanning-tree ... interface ...
    detail` output (`sim-wrong`).
-3. Add BPDU Guard err-disabled state and Root Guard inconsistent-port state
+3. **Fixed.** Added BPDU Guard err-disabled state and Root Guard inconsistent-port state
    (`sim-wrong`).
 
 ## Scope and topology limit
@@ -59,5 +59,6 @@ counts `5/2`, `4/0`, and `5/2` before/during/after a link failure.
 ## Restoration
 
 The temporary priority, mode, PortFast, BPDU Guard, Root Guard, test-switch,
-and link-failure changes were removed or reversed. No simulator fixes were made;
-this report is the research input for later implementation.
+and link-failure changes were removed or reversed. The simulator fixes are
+covered by `tests/stp.test.ts` and preserve the existing baseline
+`show spanning-tree` output.

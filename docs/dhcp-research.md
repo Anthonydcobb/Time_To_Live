@@ -10,11 +10,11 @@ and configuration references, and marks platform-dependent rows `needs-cml`.
 
 Priority order for job 2 and command fidelity:
 
-1. Add `show ip dhcp server statistics` behavior and IOS-style counters
-   (`sim-wrong`).
-2. Keep `clear ip dhcp binding *|address` behavior; it matches IOS 15. PT's
+1. **Fixed.** Added `show ip dhcp server statistics` behavior and IOS-style
+   counters (`sim-wrong`).
+2. **Already correct.** Keep `clear ip dhcp binding *|address` behavior; it matches IOS 15. PT's
    rejection is a Packet Tracer limitation, not a simulator defect.
-3. Preserve the IOS 15 `show ip dhcp binding` header and User name column; PT's
+3. **Already correct.** Preserve the IOS 15 `show ip dhcp binding` header and User name column; PT's
    shorter table is the outlier.
 
 ## Scope and evidence
@@ -57,8 +57,8 @@ commands, so the exact raw PT transcript is retained without normalization.
 - The sim exhausted a one-address effective pool: PC1 received `10.50.0.254`
   and PC2 timed out. The clean PT exhaustion pool excluded the entire usable
   range and recorded zero leased addresses.
-- The sim no-server case produced APIPA `169.254.1.29/16`. The PT bridge did
-  endpoint state produced `169.254.161.183/16` with gateway `0.0.0.0`.
+- The sim no-server case produced APIPA `169.254.1.29/16`. The PT endpoint
+  state produced `169.254.161.183/16` with gateway `0.0.0.0`.
 - Sim snooping learned `0060.a80a.001f 10.70.0.2 ... dhcp-snooping ... Fa0/1`
   with Gi0/1 trusted. PT showed snooping enabled for VLAN 10, Fa0/1 trusted,
   and zero bindings; its statistics command was rejected.
@@ -100,4 +100,5 @@ disabled with VLANs `none`, and gateway replies including
 `Reply from 192.168.10.1: bytes=32 time<1ms TTL=255` and
 `Reply from 192.168.20.1: bytes=32 time<1ms TTL=255`.
 
-No simulator or game behavior was changed.
+Simulator behavior changes are covered by `tests/dhcp.test.ts`; the laundromat
+and corner-store behavior remains covered by the existing scenario tests.

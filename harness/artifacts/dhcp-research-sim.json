@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-10-22T19:28:07.978Z",
+  "capturedAt": "2026-10-22T20:29:01.337Z",
   "backend": "sim",
   "version": "workspace-sim",
   "image": "src/sim",
@@ -177,14 +177,23 @@
       "device": "R1",
       "input": "show ip dhcp server statistics",
       "status": "ok",
-      "rawOutput": "                ^\n% Invalid input detected at '^' marker.\n",
+      "rawOutput": "DHCP server statistics:\n  DHCP messages received                 : 4\n    DHCPDISCOVER messages received      : 2\n    DHCPREQUEST messages received       : 2\n    DHCPRELEASE messages received       : 0\n  DHCP messages sent                    : 4\n    DHCPOFFER messages sent             : 2\n    DHCPACK messages sent               : 2\n    DHCPNAK messages sent               : 0\n  DHCP database:\n    Active bindings                      : 1\n    Address conflicts                    : 0",
       "result": {
         "device": "R1",
         "line": "show ip dhcp server statistics",
         "lines": [
-          "                ^",
-          "% Invalid input detected at '^' marker.",
-          ""
+          "DHCP server statistics:",
+          "  DHCP messages received                 : 4",
+          "    DHCPDISCOVER messages received      : 2",
+          "    DHCPREQUEST messages received       : 2",
+          "    DHCPRELEASE messages received       : 0",
+          "  DHCP messages sent                    : 4",
+          "    DHCPOFFER messages sent             : 2",
+          "    DHCPACK messages sent               : 2",
+          "    DHCPNAK messages sent               : 0",
+          "  DHCP database:",
+          "    Active bindings                      : 1",
+          "    Address conflicts                    : 0"
         ],
         "now": 36004
       }
