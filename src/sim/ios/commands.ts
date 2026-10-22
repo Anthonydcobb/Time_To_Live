@@ -337,6 +337,7 @@ const showCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("summary", "Summary of port states")], (c) => c.out.push(...show.showSpanningTreeSummary(c.device as Switch)), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("detail", "Detailed information")], (c) => c.out.push(...show.showSpanningTreeDetail(c.device as Switch)), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("active", "Report on active interfaces only")], (c) => c.out.push(...show.showSpanningTreeActive(c.device as Switch)), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("interface", "Spanning Tree interface status and configuration"), ifaceArg], (c, [iface]) => c.out.push(...show.showSpanningTreeInterfaceDetail(c.device as Switch, iface as string)), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("interface", "Spanning Tree interface status and configuration"), ifaceArg, kw("detail", "Detailed information")], (c, [iface]) => c.out.push(...show.showSpanningTreeInterfaceDetail(c.device as Switch, iface as string)), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("spanning-tree", "Spanning Tree Protocol"), kw("inconsistentports", "Show inconsistent ports")], (c) => c.out.push(...show.showSpanningTreeInconsistentPorts(c.device as Switch)), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("cdp", "CDP information")], (c) => c.out.push(...show.showCdp(c.device))),

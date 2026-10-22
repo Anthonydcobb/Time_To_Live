@@ -150,6 +150,7 @@ describe("spanning tree", () => {
     expect(type(c, "show spanning-tree summary").join("\n")).toContain("Portfast Default");
     expect(type(c, "show spanning-tree detail").join("\n")).toContain("is executing the ieee compatible Spanning Tree Protocol");
     expect(type(c, "show spanning-tree active").join("\n")).toContain("Spanning tree enabled");
+    expect(type(c, "show spanning-tree interface gi0/1").join("\n")).toContain("Port 1 (GigabitEthernet0/1)");
     expect(type(c, "show spanning-tree interface gi0/1 detail").join("\n")).toContain("Port 1 (GigabitEthernet0/1)");
   });
 
