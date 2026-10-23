@@ -13,15 +13,20 @@ const FRIDGES = { x: 13, y: 2.5 };
 const JACK = { x: 7.5, y: 5 };
 const GARY_DOOR = { x: 5, y: 1.5 };
 
-/** Looping music per room, from public/assets/audio. Rooms not listed have none. */
+/** Looping music per room, from public/assets/sound/music. Rooms not listed have none. */
 const MUSIC: Partial<Record<RoomId, string>> = {
-  office: "assets/audio/bobs-office.mp3",
+  office: "assets/sound/music/bobs-office-theme-loop.mp3",
 };
-const MUSIC_LEVEL = 0.35;
+/** Quiet on purpose: the music sits under the room's hum and flickers, not over them. */
+const MUSIC_LEVEL = 0.1;
 
 /** Soft key clicks that loop under dialogue while it types out. */
-const TYPING = "assets/audio/dialogue-typing.mp3";
+const TYPING = "assets/sound/ui/dialogue-typing-loop.mp3";
 const TYPING_LEVEL = 0.5;
+
+/** Gary hammering on the inside of his door when you talk to him: the first second of a door bang. */
+const GARY_BANG = "assets/sound/office/gary-door-bang.mp3";
+const GARY_BANG_LEVEL = 0.35;
 
 const near = (px: number, py: number, p: { x: number; y: number }, reach: number) =>
   Math.max(0, 1 - Math.hypot(px - p.x, py - p.y) / reach);
@@ -250,7 +255,28 @@ class GameAudio {
       .catch(() => {});
   }
 
+  /** Gary bangs on his door as you start talking to him. */
+  garyBang(): void {
+    this.oneShot(GARY_BANG, GARY_BANG_LEVEL);
+  }
+
   // ---- building blocks -------------------------------------------------------
+
+  /** Plays a sound file once. A missing file is silence. */
+  private oneShot(url: string, level: number): void {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    this.load(url)
+      .then((buffer) => {
+        const src = ctx.createBufferSource();
+        src.buffer = buffer;
+        const gain = ctx.createGain();
+        gain.gain.value = level;
+        src.connect(gain).connect(this.master);
+        src.start();
+      })
+      .catch(() => {});
+  }
 
   /** Fetches and decodes a sound file once; a failed one is forgotten so it can be tried again. */
   private load(url: string): Promise<AudioBuffer> {

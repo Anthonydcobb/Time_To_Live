@@ -5,6 +5,7 @@ import { BASICS, Grimoire } from "../sim/grimoire";
 import { cornerStore } from "../sim/scenarios/corner-store";
 import { laundromat } from "../sim/scenarios/laundromat";
 import type { Scenario } from "../sim/scenarios/types";
+import { audio } from "./audio";
 import { bookToast, NOTES, type BookContents } from "./grimoire-book";
 import type { RoomId } from "./rooms";
 import type { SiteId } from "./town-map";
@@ -184,6 +185,7 @@ export class Story {
         );
         return;
       case "office:gary":
+        audio.garyBang();
         if (!this.flags.has("gary")) {
           this.flags.add("gary");
           ui.say(scene("gary-meet"));

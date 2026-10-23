@@ -6,10 +6,16 @@ Last updated: 2026-10-23.
 
 ## Latest handoff update (2026-10-23, Claude)
 
-- **Music:** rooms can have a looping track (`MUSIC` in `src/game/audio.ts`, files in
-  `public/assets/audio/`). Bob's office plays take 6 of Bob's theme (`bobs-office.mp3`,
-  copied from `art/music/`, so renaming the source doesn't break it). Level is
-  `MUSIC_LEVEL` (0.35), not yet tuned by ear. `art/music/` is uncommitted.
+- **Sound files** the game plays live in `public/assets/sound/`, by where they play
+  (`music/`, `ui/`, `office/`), and its README lists each one, where it plays, its volume
+  setting and its source. Only files in use go there; agy's unused drafts are still in
+  `public/assets/audio/`. Paths are set at the top of `src/game/audio.ts`.
+- **Music:** rooms can have a looping track (`MUSIC` in `src/game/audio.ts`). Bob's office
+  plays take 6 of Bob's theme (`music/bobs-office-theme-loop.mp3`, copied from
+  `art/music/`). `MUSIC_LEVEL` is 0.1: Ant found 0.35 drowned out the hum and flickers.
+  `art/music/` is uncommitted.
+- **Gary's door bang:** talking to Gary plays `office/gary-door-bang.mp3` (`audio.garyBang`),
+  the first second of a Pixabay door bang. Check its license before release.
 - **Job 4 (Library) sim fixes done.** Codex's 2a3b3dd (Packet Tracer rerun on the
   Switch0 Fa0/5 ↔ Switch1 Fa0/3 cable) and 7ede0e6 (the A–J fixes) were reviewed by
   Claude and pushed. A bundle survives a dead member (`(P)`/`(D)`), STP sees one `Po`,
@@ -23,7 +29,7 @@ Last updated: 2026-10-23.
   instead of keying per line (`audio.walkie`, `Ui.advance`).
 - **Typing sound:** soft key clicks loop while a dialogue line types out and stop when
   it's all on screen (`audio.typing`, called from `Ui.renderLine`). The file is
-  `public/assets/audio/dialogue-typing.mp3`, a copy of agy's
+  `public/assets/sound/ui/dialogue-typing-loop.mp3`, a copy of agy's
   `art/music/ui-sfx/dialogue-typing-soft-muted.mp3`. Level is `TYPING_LEVEL` (0.5).
 - **Audio direction for agy** is in `docs/audio-direction.md`: cosmic horror over
   Dungeon Crawler Carl, Silent Hill first, lo-fi drums with a Night Vale feel, walkie

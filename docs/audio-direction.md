@@ -72,7 +72,7 @@ shortwave, Lustmord / dark ambient drones, Boards of Canada's warped-tape feel.
   store's fridges with whispers coming from their direction, a low throb behind Gary's door in
   Bob's office that grows as you walk up, and the apparition's static burst and falling
   sub-bass. Sounds get louder as you walk toward their source.
-- Rooms can loop a music track (`MUSIC` map in `audio.ts`, files in `public/assets/audio/`,
+- Rooms can loop a music track (`MUSIC` map in `audio.ts`, files in `public/assets/sound/`,
   played at level 0.35). Rooms right now: `office` (Bob's), `shop` (Mrs. Finch's corner store),
   `laundromat` (Spin Cycle Eternal).
 - Music so far, in `art/music/`: Bob's theme (take 6, "lofi unsettling static", now playing in
@@ -96,7 +96,7 @@ Ask Ant which to start with. Rough list:
 ## Practical notes
 
 - Loops: mp3 or ogg, seamless loop point, normalised but not loud (the game mixes them down).
-  Put sources in `art/music/` and game-ready copies in `public/assets/audio/` with short
+  Put sources in `art/music/` and game-ready copies in `public/assets/sound/<where it plays>/` (see its README) with short
   kebab-case names.
 - Don't commit anything from `art/inspiration/`; the repo is public.
 - Never say "Cisco" in anything player-facing; in-game the gear is made by Cryptis Systems.
