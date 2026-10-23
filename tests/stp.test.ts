@@ -35,7 +35,7 @@ describe("spanning tree", () => {
     expect(type(a, "show etherchannel summary").join("\n")).toContain("(P)");
   });
 
-  it("leaves an incompatible LACP/PAgP bundle suspended", () => {
+  it("leaves an incompatible LACP/PAgP bundle stand-alone", () => {
     const net = new Network();
     const a = net.add(new Switch("A", "A"));
     const b = net.add(new Switch("B", "B"));
@@ -44,7 +44,7 @@ describe("spanning tree", () => {
     net.connect(a.port("Gi0/1"), b.port("Gi0/1"));
     net.clock.advance(3_000);
     expect(a.channelGroupActive(a.port("Gi0/1"))).toBe(false);
-    expect(type(a, "show etherchannel summary").join("\n")).toContain("(s)");
+    expect(type(a, "show etherchannel summary").join("\n")).toContain("(I)");
   });
 
   it("lets a PortFast access port forward as soon as the link is up", () => {

@@ -10,7 +10,7 @@ Research captures: [sim](../harness/artifacts/l3-etherchannel-research-sim.json)
 
 3. **Summary flags and command surface — done (`sim-wrong`).** Before, the summary header was garbled and detail/neighbor commands were missing. After, `show etherchannel summary` emits the IOS legend and `Po1(SU) LACP Gi0/1(P) Gi0/2(P)`, plus `show etherchannel port-channel`, `show interfaces port-channel`, `show lacp neighbor`, `show pagp neighbor`, `show etherchannel load-balance`, and `port-channel load-balance`.
 
-4. **Negotiation and compatibility — done (`sim-wrong`).** Before, passive/passive, auto/auto, and on/active were incorrectly shown as suspended. After 5 s, non-forming negotiated members are stand-alone `(I)` with `Po(SD)`; static `on` facing active stays bundled on the `on` side while the negotiating side is `(I)`. Incompatible speed/duplex or switchport settings are `(s)` and emit `%EC-5-CANNOT_BUNDLE2`. The simulated EtherChannel misconfig guard now defaults to enabled. The exact err-disable guard transition remains a PT/CML validation item.
+4. **Negotiation and compatibility — done (`sim-wrong`).** Before, passive/passive, auto/auto, on/active, and LACP↔PAgP protocol mismatches were incorrectly shown as suspended. After 5 s, non-forming negotiated members—including LACP↔PAgP, which Cisco documents as incompatible protocols—are stand-alone `(I)` with `Po(SD)`; static `on` facing active stays bundled on the `on` side while the negotiating side is `(I)`. Incompatible speed/duplex or switchport settings are `(s)` and emit `%EC-5-CANNOT_BUNDLE2`. The simulated EtherChannel misconfig guard now defaults to enabled. The exact err-disable guard transition remains a PT/CML validation item.
 
 5. **Port-channel interface and inheritance — done (`sim-wrong`).** Before, `interface Port-channel N` and its show/config surface were unavailable. After, the first `channel-group` creates the interface; Port-channel switchport/routed settings propagate to members and appear in running-config, `show interfaces port-channel N`, status/trunk views, and EtherChannel detail.
 
@@ -29,7 +29,8 @@ Research captures: [sim](../harness/artifacts/l3-etherchannel-research-sim.json)
 | `on/on` and `on/active` | `on/on` forms; `on/active` is asymmetric `(P)`/`(I)` | IOS 15 with misconfig guard may err-disable the static side; PT behavior is limitation until CML verifies the guard log |
 | Member failure/recovery | surviving `(P)`/failed `(D)`, then both `(P)` | Matches IOS 15; PT recorded platform behavior |
 | STP sees one Port-channel | one `Po` row, no member rows | Matches IOS 15; PT limits STP timing/detail fidelity |
-| Incompatible member | suspended `(s)` plus `CANNOT_BUNDLE2` | Matches IOS 15 text family; exact platform log should be CML-verified |
+| LACP↔PAgP protocol mismatch | `Po(SD)` and stand-alone `(I)` after 3 s | Matches Cisco IOS 15 protocol incompatibility rule; PT/CML status formatting remains a platform validation item |
+| Incompatible member settings | suspended `(s)` plus `CANNOT_BUNDLE2` | Matches IOS 15 text family; exact platform log should be CML-verified |
 | L3 routing off/on and SVIs | routed-port/SVI connected routes and inter-VLAN forwarding | Matches IOS 15 multilayer-switch behavior; 2960 PT cannot provide authoritative L3 coverage |
 | Static default route | `S*` and gateway-of-last-resort lines | Matches IOS 15; PT 2960 limitation |
 | Routed EtherChannel | `Po30(RU)` and connected Port-channel route | Matches IOS 15; requires 3560/CML for PT-side validation |

@@ -58,6 +58,20 @@ describe("job 4 EtherChannel and Layer 3 switching", () => {
     expect(type(a, "show spanning-tree summary").join("\n")).toContain("EtherChannel misconfig guard is enabled");
   });
 
+  it("uses stand-alone I when LACP faces PAgP", () => {
+    const net = new Network();
+    const a = net.add(new Switch("A", "A"));
+    const b = net.add(new Switch("B", "B"));
+    type(a, "", "en", "conf t", "int gi0/1", "channel-group 1 mode active", "end");
+    type(b, "", "en", "conf t", "int gi0/1", "channel-group 1 mode desirable", "end");
+    net.connect(a.port("Gi0/1"), b.port("Gi0/1"));
+    net.clock.advance(3_000);
+    const summary = type(a, "show etherchannel summary").join("\n");
+    expect(summary).toContain("Po1(SD)");
+    expect(summary).toContain("Gi0/1(I)");
+    expect(summary).not.toContain("Gi0/1(s)");
+  });
+
   it("suspends incompatible members and logs the compatibility reason", () => {
     const { a } = bundle();
     type(a, "", "en", "conf t", "int gi0/2", "speed 10", "duplex half", "end");

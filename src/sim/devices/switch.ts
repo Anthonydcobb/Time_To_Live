@@ -330,7 +330,7 @@ export class Switch extends IosDevice {
     const theirsLacp = theirs.channelMode === "active" || theirs.channelMode === "passive";
     const oursPagp = cfg.channelMode === "desirable" || cfg.channelMode === "auto";
     const theirsPagp = theirs.channelMode === "desirable" || theirs.channelMode === "auto";
-    if ((oursLacp && theirsPagp) || (oursPagp && theirsLacp)) return "s";
+    if ((oursLacp && theirsPagp) || (oursPagp && theirsLacp)) return "I";
     if (!this.channelCompatible(port, peer)) {
       const reason = cfg.speed !== "auto" && theirs.speed !== cfg.speed ? `speed of ${port.shortName} is ${cfg.speed}M, peer is ${theirs.speed}M` : "switchport parameters do not match";
       const line = `%EC-5-CANNOT_BUNDLE2: ${port.shortName} is not compatible with ${peer.shortName} and will be suspended (${reason})`;

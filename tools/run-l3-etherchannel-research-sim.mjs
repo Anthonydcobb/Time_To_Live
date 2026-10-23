@@ -80,7 +80,7 @@ net.connect(a.port("Gi0/2"), b.port("Gi0/2"));
 net.clock.advance(35000);
 record(a, "member-recovery", "show etherchannel summary", { waitedMs: 35000 });
 
-const matrix = [["active-passive", "active", "passive"], ["passive-passive", "passive", "passive"], ["desirable-auto", "desirable", "auto"], ["auto-auto", "auto", "auto"], ["on-on", "on", "on"], ["on-active", "on", "active"]];
+const matrix = [["active-passive", "active", "passive"], ["passive-passive", "passive", "passive"], ["lacp-pagp", "active", "desirable"], ["desirable-auto", "desirable", "auto"], ["auto-auto", "auto", "auto"], ["on-on", "on", "on"], ["on-active", "on", "active"]];
 let group = 10;
 for (const [name, leftMode, rightMode] of matrix) {
   config(a, `matrix-${name}`, ["interface range gi0/1 - 2", "no channel-group", `channel-group ${group} mode ${leftMode}`, "end"]);
