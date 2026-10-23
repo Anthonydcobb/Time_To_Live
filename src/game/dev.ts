@@ -7,7 +7,7 @@ import { events, type Story } from "./story";
 import type { Ui } from "./ui";
 
 /**
- * Developer shortcuts, loaded only with `?dev` in the address. A small panel (toggle with `)
+ * Developer shortcuts, always loaded under `npm run dev` (or with `?dev`; `?nodev` hides them). A small panel (toggle with `)
  * jumps between rooms and skips ahead, so you can check the end of a job without playing it.
  * "Finish job 1" types the real commands into the real devices, so everything after it,
  * the haunt included, happens exactly as it would for a player.

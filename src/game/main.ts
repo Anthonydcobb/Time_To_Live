@@ -154,8 +154,10 @@ window.setInterval(() => {
   ui.refresh();
 }, 250);
 
-// ?dev adds a panel of shortcuts for testing: jump rooms, finish job 1, haunt now.
-if (new URLSearchParams(location.search).has("dev")) void import("./dev").then((m) => m.installDevTools(story, ui));
+// The dev panel of shortcuts for testing (jump rooms, finish a job, haunt now) is always there
+// under npm run dev, never in a real build unless the address has ?dev. ?nodev hides it.
+const params = new URLSearchParams(location.search);
+if ((import.meta.env.DEV || params.has("dev")) && !params.has("nodev")) void import("./dev").then((m) => m.installDevTools(story, ui));
 
 // ?debug shows collision boxes and lets the console reach the game.
 if (location.search.includes("debug")) Object.assign(window, { story, ui, game, audio });
