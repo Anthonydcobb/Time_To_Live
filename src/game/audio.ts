@@ -28,6 +28,10 @@ const RJ45_LEVEL = 0.5;
 const LINGER = "assets/sound/shop/after-apparition-drone-loop.mp3";
 const LINGER_LEVEL = 0.12;
 
+/** A deep, distant roar as a PC's screen boots: seconds 2 to 6 of the source, with quick fades. */
+const PC_BOOT = "assets/sound/pc/pc-boot-roar.mp3";
+const PC_BOOT_LEVEL = 0.25;
+
 /** The fluorescent hum under every room. Kept low: it's felt more than heard. The store's tubes are a little louder. */
 const HUM_LEVEL = 0.013;
 
@@ -67,6 +71,7 @@ class GameAudio {
   private music: { url: string; stop(): void } | null = null;
   private typist: { stop(): void } | null = null;
   private lingering: { stop(): void } | null = null;
+  private booting: { stop(): void } | null = null;
   private tracks = new Map<string, Promise<AudioBuffer>>();
   private lastUpdate = 0;
   private pos = { x: 0, y: 0 };
@@ -351,6 +356,39 @@ class GameAudio {
         src.connect(gain);
         src.start();
         gain.gain.setTargetAtTime(LINGER_LEVEL, ctx.currentTime, 1.5);
+      })
+      .catch(() => {});
+  }
+
+  /** A PC's screen booting up. Off fades it out, if you power the PC down before it's over. */
+  pcBoot(on: boolean): void {
+    const ctx = this.ctx;
+    this.booting?.stop();
+    this.booting = null;
+    if (!ctx || !on) return;
+    const gain = ctx.createGain();
+    gain.gain.value = PC_BOOT_LEVEL;
+    gain.connect(this.master);
+    let src: AudioBufferSourceNode | null = null;
+    let stopped = false;
+    const boot = {
+      stop: () => {
+        stopped = true;
+        gain.gain.setTargetAtTime(0, ctx.currentTime, 0.08);
+        src?.stop(ctx.currentTime + 0.5);
+      },
+    };
+    this.booting = boot;
+    this.load(PC_BOOT)
+      .then((buffer) => {
+        if (stopped) return;
+        src = ctx.createBufferSource();
+        src.buffer = buffer;
+        src.connect(gain);
+        src.onended = () => {
+          if (this.booting === boot) this.booting = null;
+        };
+        src.start();
       })
       .catch(() => {});
   }

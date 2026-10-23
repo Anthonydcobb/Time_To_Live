@@ -1,6 +1,7 @@
 import { formatIpv4, formatMacCisco, maskToPrefix, parseIpv4 } from "../sim/addr";
 import type { Pc } from "../sim/devices/pc";
 import type { TerminalView } from "../web/terminal";
+import { audio } from "./audio";
 
 /**
  * A PC's screen: Cryptis NetOS on an old CRT. It boots with the Cryptis sigil, then offers
@@ -215,6 +216,7 @@ export class PcScreen {
   close(): void {
     if (!this.isOpen) return;
     this.clearTimers();
+    audio.pcBoot(false);
     window.clearInterval(this.refresher);
     this.view?.hide();
     this.el.classList.remove("on");
@@ -248,6 +250,7 @@ export class PcScreen {
   private boot(): void {
     const log = $(this.el, ".bootlog");
     log.textContent = "";
+    audio.pcBoot(true);
     BOOT_LINES.forEach((line, i) => this.later(() => (log.textContent += line + "\n"), 700 + i * 300));
     this.later(() => this.el.classList.add("booted"), BOOT_MS);
   }
