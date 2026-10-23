@@ -6,6 +6,21 @@ Last updated: 2026-10-23.
 
 ## Latest handoff update (2026-10-23, Claude)
 
+- **Title, options, loading and saving.** The game opens on a title screen (`menu.ts`, art
+  `public/assets/screens/title.webp` from `art/concepts/title-screen/poster-sketch-1`) with
+  New Game, Load Game and Options (music and sound volume, text speed, screen effects; kept
+  in local storage). The Phaser game only starts after a choice, behind a loading screen
+  (`loading.webp`, poster sketch 3) that runs a ping; the first room waits for it to lift
+  before the story talks (`RoomScene`'s `first.gate`). **The coffee machine is the save
+  point:** use it, choose "Drink some coffee", and the game saves to one local-storage slot
+  (`save.ts`). A load starts you beside the coffee.
+  Networks are saved as replay logs (`save-log.ts`, tested in `tests/save-log.test.ts`):
+  every console line, Ctrl+Z, boot, PC command, `configure`, Ctrl+C and cable is logged with
+  its simulated time, and a load replays them into freshly built networks, with idle gaps
+  over two minutes cut short. The simulator is deterministic except for MACs, which come
+  from one counter (`addr.ts` now has `macAllocatorState`/`setMacAllocator`), so job 2
+  records the counter when it's built. Anything new that changes a network from the game
+  must go through the methods `NetRecorder` watches, or it won't survive a save.
 - **Sound files** the game plays live in `public/assets/sound/`, by where they play
   (`music/`, `ui/`, `office/`), and its README lists each one, where it plays, its volume
   setting and its source. Only files in use go there; agy's unused drafts are still in

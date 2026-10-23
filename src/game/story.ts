@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { parseIpv4 as ip } from "../sim/addr";
+import { macAllocatorState, parseIpv4 as ip, setMacAllocator } from "../sim/addr";
 import { Pc } from "../sim/devices/pc";
 import { BASICS, Grimoire } from "../sim/grimoire";
 import { cornerStore } from "../sim/scenarios/corner-store";
@@ -8,6 +8,8 @@ import type { Scenario } from "../sim/scenarios/types";
 import { audio } from "./audio";
 import { bookToast, NOTES, type BookContents } from "./grimoire-book";
 import type { RoomId } from "./rooms";
+import { writeSave, type SaveData } from "./save";
+import { NetRecorder } from "./save-log";
 import type { SiteId } from "./town-map";
 import { pick, runAction, scene, useStory } from "./script";
 import type { Line, Ui } from "./ui";
@@ -37,6 +39,11 @@ export class Story {
   readonly store = cornerStore({ cabled: false });
   /** Job 2, once you've taken it off the board. */
   private wash: ReturnType<typeof laundromat> | null = null;
+  /** Everything done to each job's network, for saving. */
+  private readonly storeLog: NetRecorder;
+  private washLog: NetRecorder | null = null;
+  /** Where the MAC allocator stood when job 2 was built, so a load rebuilds it with the same MACs. */
+  private washMacs = 0;
   /** Plugged into S1 Fa0/24 when the job is done. The cable goes into the wall. */
   readonly phantom = new Pc("PHANTOM", "?", "666666666666");
   room: RoomId = "office";
@@ -65,6 +72,8 @@ export class Story {
     useStory({ has: (f) => this.flags.has(f), set: (f, on) => (on ? this.flags.add(f) : this.flags.delete(f)) }, cue);
     this.wire([r1, s1]);
     ui.attach(this.store.net, [r1, s1, register, office], this.store.layout);
+    // After attach, whose consoles boot the same way on every page load.
+    this.storeLog = new NetRecorder(this.store.net);
   }
 
   /** The job you're on now: its network, tasks and work order. */
@@ -83,6 +92,7 @@ export class Story {
   /** Takes work order #0002: builds the laundromat's network and points the laptop at it. */
   takeLaundromat(): void {
     if (this.wash) return;
+    this.washMacs = macAllocatorState();
     const job = laundromat();
     for (const i of job.incantations) this.grimoire.teach(i);
     this.wire([job.r1, job.s1]);
@@ -95,7 +105,62 @@ export class Story {
       done: () => this.flags.has("checked"),
     });
     this.wash = job;
+    this.washLog = new NetRecorder(job.net);
     this.flags.add("job2");
+  }
+
+  /** Everything needed to pick up from here: the story, and what was done to each network. */
+  snapshot(): SaveData {
+    return {
+      version: 1,
+      savedAt: Date.now(),
+      room: this.room,
+      flags: [...this.flags],
+      told: [...this.told],
+      notes: [...this.notes],
+      lines: { gary: this.garyTip, finch: this.finchLine, gus: this.gusLine },
+      bindingFrom: this.bindingFrom,
+      store: this.storeLog.save(),
+      wash: this.washLog ? { macs: this.washMacs, net: this.washLog.save() } : null,
+    };
+  }
+
+  /**
+   * Picks up a saved game on a freshly loaded page, before the first room is shown: the story's
+   * flags, then each network rebuilt by replaying what was done to it.
+   */
+  restore(save: SaveData): void {
+    for (const f of save.flags) this.flags.add(f);
+    for (const t of save.told) this.told.add(t);
+    this.notes.push(...save.notes);
+    this.garyTip = save.lines.gary;
+    this.finchLine = save.lines.finch;
+    this.gusLine = save.lines.gus;
+    this.bindingFrom = save.bindingFrom;
+    this.storeLog.replay(save.store);
+    if (save.wash) {
+      setMacAllocator(save.wash.macs);
+      this.wash = null;
+      this.takeLaundromat();
+      this.washLog!.replay(save.wash.net);
+    }
+    this.ui.clearTerminals();
+    // What the haunts left behind keeps going.
+    if (this.flags.has("haunt")) {
+      this.ui.bindCable(this.store.s1.port("FastEthernet0/24"));
+      this.phantomHellos();
+    }
+    if (this.flags.has("done2")) this.ui.beingStage = 2;
+    if (this.flags.has("grimoire")) events.emit("grimoire");
+  }
+
+  /** Once spanning tree lets it through, the phantom says hello to the register now and then. */
+  private phantomHellos(): void {
+    const hello = () => {
+      if (this.phantom.nic.peer) this.phantom.shell.execute("ping 192.168.1.10");
+    };
+    window.setTimeout(hello, 40_000);
+    window.setInterval(hello, 90_000);
   }
 
   /** Whether the work order line with this id is done right now. */
@@ -202,7 +267,19 @@ export class Story {
         ui.say(scene("desk-sticky"), () => this.note("bob-sticky"));
         return;
       case "office:coffee":
-        ui.say(scene("coffee"));
+        // The save point: a cup of coffee saves the game.
+        ui.say(scene("coffee"), () =>
+          ui.choose(scene("coffee-ask")[0], [
+            {
+              label: "Drink some coffee",
+              run: () => {
+                writeSave(this.snapshot());
+                ui.say(scene("coffee-drink"));
+              },
+            },
+            { label: "Leave it", run: () => {} },
+          ]),
+        );
         return;
       case "office:cabinet":
         ui.say(scene("cabinet"), () => this.note("bellwether"));
@@ -457,12 +534,7 @@ export class Story {
       // It doesn't come out. Trying, at the rack or at the wall, gets you the apparition.
       this.ui.bindCable(s1.port("FastEthernet0/24"));
       events.emit("haunt");
-      // Once spanning tree lets it through, it says hello to the register now and then.
-      const hello = () => {
-        if (this.phantom.nic.peer) this.phantom.shell.execute("ping 192.168.1.10");
-      };
-      window.setTimeout(hello, 40_000);
-      window.setInterval(hello, 90_000);
+      this.phantomHellos();
       this.ui.say(
         scene("haunt-job1"),
         () => {

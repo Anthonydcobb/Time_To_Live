@@ -2,6 +2,7 @@ import Phaser from "phaser";
 import { audio } from "./audio";
 import { crt } from "./crt";
 import { installGrime } from "./grime";
+import { applyOptions, readOptions, showLoading, showTitle } from "./menu";
 import { RoomScene } from "./room-scene";
 import { events, Story } from "./story";
 import { Ui } from "./ui";
@@ -12,17 +13,26 @@ const ui = new Ui();
 ui.overgrow(0.3);
 events.on("haunt", () => ui.overgrow(1, 6000));
 
-// The page needs one click before it gets the keyboard, especially inside a frame.
-const start = document.getElementById("start")!;
-crt.on("soft");
-start.addEventListener("click", () => {
-  start.remove();
-  crt.fade(900);
-  window.focus();
-  // Browsers only allow sound after a click, so this is where it starts.
-  audio.start();
-});
 const story = new Story(ui);
+applyOptions(readOptions(), ui);
+crt.on("soft");
+
+/** Where a loaded game puts you: beside the coffee machine in Bob's office, where you saved. */
+const COFFEE_SPOT = { x: 14, y: 12 };
+
+// The title screen first. Its click is also the one the browser needs before it allows sound.
+const choice = await showTitle(ui);
+window.focus();
+audio.start();
+const loading = showLoading(choice.kind === "load" ? "RESTORING SESSION" : "CLOCKING IN");
+// Let the loading screen paint before a saved game's networks replay.
+await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+if (choice.kind === "load") {
+  story.restore(choice.save);
+  if (story.has("haunt")) ui.overgrow(1);
+}
+let opened!: () => void;
+const gate = new Promise<void>((r) => (opened = r));
 
 const game = new Phaser.Game({
   type: Phaser.AUTO,
@@ -33,8 +43,14 @@ const game = new Phaser.Game({
   pixelArt: true,
   physics: { default: "arcade", arcade: { debug: new URLSearchParams(location.search).has("debug") } },
   scale: { mode: Phaser.Scale.FIT, autoCenter: Phaser.Scale.CENTER_BOTH },
-  scene: new RoomScene(story, ui),
+  scene: new RoomScene(story, ui, { at: choice.kind === "load" ? COFFEE_SPOT : undefined, gate }),
 });
+game.events.once(Phaser.Core.Events.READY, () =>
+  void loading.finish().then(() => {
+    crt.fade(900);
+    opened();
+  }),
+);
 
 // The game is letterboxed, so tell CSS where the picture sits. The work order pins to its corner, not the window's.
 function trackFrame(): void {

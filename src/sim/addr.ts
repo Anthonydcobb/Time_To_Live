@@ -106,3 +106,13 @@ export function nextMac(oui = "00d0c7"): Mac {
 export function resetMacAllocator(): void {
   macCounter = 0x0a0000;
 }
+
+/** Where the allocator stands, so a saved game can rebuild a network with the same MACs. */
+export function macAllocatorState(): number {
+  return macCounter;
+}
+
+/** Puts the allocator back where `macAllocatorState` found it. */
+export function setMacAllocator(state: number): void {
+  macCounter = state & 0xffffff;
+}

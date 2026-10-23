@@ -814,25 +814,197 @@ kbd {
   opacity: 1;
 }
 
-#start {
+/* ---- Title, options and loading screens (menu.ts) ---------------------------- */
+
+#title,
+#loading {
   position: fixed;
   inset: 0;
-  z-index: 20;
-  display: grid;
-  place-content: center;
-  gap: 10px;
-  border: 0;
-  background: #050504ee;
-  color: var(--amber);
-  font: 22px var(--mono);
-  letter-spacing: 0.1em;
-  cursor: pointer;
+  z-index: 40;
+  background: #050504;
+  overflow: hidden;
+  transition: opacity 0.5s ease;
 }
 
-#start span {
+#title.leaving,
+#loading.leaving {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#title .art,
+#loading .art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* The poster leaves its right fifth to smoke; the menu stands in it. */
+#title .art {
+  object-position: left center;
+}
+
+#title .menu,
+#title .options {
+  position: absolute;
+  right: 1.8vw;
+  top: 50%;
+  transform: translateY(-30%);
+  /* Inside the smoke: the poster's last fifth, at the usual widescreen shape. */
+  width: max(200px, 17.5vw);
+  display: grid;
+  gap: 6px;
+  font-family: var(--mono);
+}
+
+#title .menu[hidden],
+#title .options[hidden] {
+  display: none;
+}
+
+#title button {
+  display: grid;
+  justify-items: start;
+  gap: 2px;
+  padding: 10px 14px 10px 30px;
+  border: 1px solid transparent;
+  background: #050504aa;
+  color: var(--text);
+  font: clamp(15px, 1.4vw, 20px) var(--mono);
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+}
+
+#title button small {
   color: var(--dim);
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+/* The focused choice gets a green prompt, like a terminal waiting for input. */
+#title button:is(:hover, :focus-visible, :focus):not([disabled]) {
+  outline: none;
+  border-color: #4cff7a55;
+  color: var(--green);
+  text-shadow: 0 0 8px #4cff7a88;
+}
+
+#title button:is(:hover, :focus-visible, :focus):not([disabled])::before {
+  content: ">";
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  animation: title-caret 1s steps(1) infinite;
+}
+
+#title button[disabled] {
+  color: #77756a88;
+  cursor: default;
+}
+
+@keyframes title-caret {
+  50% {
+    opacity: 0;
+  }
+}
+
+#title .options {
+  padding: 14px 16px;
+  background: #050504dd;
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+#title .options h2 {
+  margin: 0 0 6px;
+  color: var(--amber);
+  font: 16px var(--mono);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+#title .options label {
+  display: grid;
+  gap: 4px;
   font-size: 13px;
   letter-spacing: 0.06em;
+}
+
+#title .options label.check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+#title .options input[type="range"] {
+  accent-color: var(--green);
+  width: 100%;
+}
+
+#title .options select {
+  background: #0b0c0a;
+  color: var(--text);
+  border: 1px solid var(--line);
+  font: 13px var(--mono);
+  padding: 4px;
+}
+
+#title .options :is(input, select):focus-visible {
+  outline: 1px solid var(--green);
+}
+
+#title .options button {
+  margin-top: 6px;
+  font-size: 16px;
+}
+
+#title .hint {
+  position: absolute;
+  right: 1.8vw;
+  bottom: 16px;
+  margin: 0;
+  color: var(--dim);
+  font: 12px var(--mono);
+  letter-spacing: 0.06em;
+}
+
+/* The loading screen's ping, in a dark band along the bottom. */
+#loading .ping {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 18px clamp(16px, 4vw, 56px) 22px;
+  background: linear-gradient(to top, #050504f2 60%, #05050400);
+  color: var(--green);
+  font: 14px/1.5 var(--mono);
+  text-shadow: 0 0 6px #4cff7a66;
+}
+
+#loading .ping p {
+  margin: 0;
+}
+
+#loading .ping .head {
+  color: var(--amber);
+  letter-spacing: 0.14em;
+  margin-bottom: 6px;
+  text-shadow: none;
+}
+
+#loading .bangs {
+  min-height: 1.5em;
+}
+
+/* Options: screen effects off hides the CRT roll and flicker. */
+body.no-effects #crt {
+  display: none !important;
 }
 
 .port.held {

@@ -60,6 +60,12 @@ export class RoomScene extends Phaser.Scene {
   constructor(
     private readonly story: Story,
     private readonly ui: Ui,
+    /**
+     * The first room only: `at` puts you somewhere other than the room's spawn (a loaded game
+     * starts at the coffee), and nothing happens in the room until `gate` resolves, so the
+     * story doesn't start talking under the loading screen.
+     */
+    private first: { at?: { x: number; y: number }; gate?: Promise<void> } = {},
   ) {
     super("room");
   }
@@ -134,7 +140,7 @@ export class RoomScene extends Phaser.Scene {
     if (this.room.id === "shop" && this.story.has("haunt")) this.drawPhantomCable();
 
     // You: the contractor, 16x32 drawn at 4x, standing on her feet.
-    const s = this.room.spawn;
+    const s = this.first.at ?? this.room.spawn;
     this.sprite = this.add.sprite(0, 0, "player", 0).setOrigin(0.5, 1).setScale(4);
     this.player = this.add.container((s.x + 0.5) * TILE, (s.y + 0.9) * TILE, [this.sprite]);
     this.physics.add.existing(this.player);
@@ -195,8 +201,14 @@ export class RoomScene extends Phaser.Scene {
       events.off("open", onOpen);
     });
 
-    this.cameras.main.fadeIn(300);
-    this.story.enter(this.room.id);
+    const gate = this.first.gate;
+    this.first = {};
+    const enter = () => {
+      this.cameras.main.fadeIn(300);
+      this.story.enter(this.room.id);
+    };
+    if (gate) void gate.then(enter);
+    else enter();
   }
 
   private drawProp(p: Prop, solid: (x: number, y: number, w: number, h: number) => Phaser.GameObjects.Rectangle): void {

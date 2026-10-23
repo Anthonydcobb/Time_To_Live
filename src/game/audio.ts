@@ -39,7 +39,13 @@ interface Ambience {
 
 class GameAudio {
   private ctx: AudioContext | null = null;
+  /** Everything but the music. Its level is the Options screen's sound volume. */
   private master!: GainNode;
+  /** Room music, with its own volume. */
+  private musicBus!: GainNode;
+  /** Both, on their way out; M mutes it. */
+  private out!: GainNode;
+  private volume = { music: 1, sound: 1 };
   private noise!: AudioBuffer;
   private muted = false;
   private room: RoomId | null = null;
@@ -59,9 +65,15 @@ class GameAudio {
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     if (!Ctx) return;
     this.ctx = new Ctx();
+    this.out = this.ctx.createGain();
+    this.out.gain.value = this.muted ? 0 : 0.7;
+    this.out.connect(this.ctx.destination);
     this.master = this.ctx.createGain();
-    this.master.gain.value = this.muted ? 0 : 0.7;
-    this.master.connect(this.ctx.destination);
+    this.master.gain.value = this.volume.sound;
+    this.master.connect(this.out);
+    this.musicBus = this.ctx.createGain();
+    this.musicBus.gain.value = this.volume.music;
+    this.musicBus.connect(this.out);
     // Two seconds of white noise, looped and filtered into everything that hisses.
     const len = this.ctx.sampleRate * 2;
     this.noise = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
@@ -76,7 +88,15 @@ class GameAudio {
 
   toggleMute(): void {
     this.muted = !this.muted;
-    if (this.ctx) this.master.gain.setTargetAtTime(this.muted ? 0 : 0.7, this.ctx.currentTime, 0.05);
+    if (this.ctx) this.out.gain.setTargetAtTime(this.muted ? 0 : 0.7, this.ctx.currentTime, 0.05);
+  }
+
+  /** Music and sound volumes from the Options screen, 0 to 1. Safe to call before `start()`. */
+  setVolume(music: number, sound: number): void {
+    this.volume = { music, sound };
+    if (!this.ctx) return;
+    this.musicBus.gain.setTargetAtTime(music, this.ctx.currentTime, 0.05);
+    this.master.gain.setTargetAtTime(sound, this.ctx.currentTime, 0.05);
   }
 
   /** The room you're in and whether it's haunted yet. Rebuilds the ambience. */
@@ -522,7 +542,7 @@ class GameAudio {
     if (!url) return;
     const gain = ctx.createGain();
     gain.gain.value = 0;
-    gain.connect(this.master);
+    gain.connect(this.musicBus);
     let src: AudioBufferSourceNode | null = null;
     let stopped = false;
     const music = {

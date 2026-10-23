@@ -155,7 +155,17 @@ GARY: show ip interface brief is my favorite. Everything you need on one screen,
 > A sticky note on Bob's monitor: "At the Cryptis quarterly. Sell the upgrade. Everybody needs the upgrade. -B"
 
 ## coffee
-> The coffee machine is warm and full. It isn't plugged in. (can we do a save game here at the coffee pot)
+(The save point. After this line you choose: drink some, which saves the game, or leave it.)
+> The coffee machine is warm and full. It isn't plugged in.
+
+## coffee-ask
+(The question over the two choices, "Drink some coffee" and "Leave it".)
+> Pour yourself a cup?
+
+## coffee-drink
+(Plays after the game has saved.)
+> It's cold, and it tastes like a copper wire. Somewhere, something writes down exactly where you are.
+> GAME SAVED.
 
 ## cabinet
 > Invoices, all paid in full, all from addresses in Static Springs. The bottom drawer is labeled *BELLWETHER* and is empty.

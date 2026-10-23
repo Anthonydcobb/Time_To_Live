@@ -103,6 +103,14 @@ export class TerminalView {
     if (this.el.classList.contains("active")) this.fit.fit();
   }
 
+  /** Wipes the screen and shows a fresh prompt, like plugging the console cable in again. */
+  restart(): void {
+    this.buffer = "";
+    this.queuedLogs.length = 0;
+    this.term.reset();
+    this.term.write(this.session.prompt());
+  }
+
   /** Unsolicited messages are printed above the current line, like `logging synchronous`. */
   log(text: string): void {
     if (this.busy || this.running) {

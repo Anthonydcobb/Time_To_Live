@@ -123,7 +123,8 @@ function haunt(el: HTMLElement): void {
 }
 /** Walter only ever talks over the radio, so his lines get static. */
 const isWalter = (line?: Line) => !!line?.who?.startsWith("WALTER");
-const TYPE_MS = 18;
+/** Milliseconds per two letters as a line types out, by the Options screen's text speed. */
+export const TEXT_SPEEDS = { slow: 32, normal: 18, fast: 8 } as const;
 
 /**
  * Everything drawn in HTML over the game: dialogue, choices, title cards,
@@ -152,6 +153,8 @@ export class Ui {
   private screen: TerminalView | null = null;
   private panelOpen = false;
   private readonly views = new Map<Device, TerminalView>();
+  /** How fast dialogue types out; see TEXT_SPEEDS. */
+  typeMs: number = TEXT_SPEEDS.normal;
   /** A cable you pulled out on the port panel. Its other end is still plugged in at `far`. */
   private holding: Port | null = null;
   private panelDevices: Device[] = [];
@@ -236,7 +239,7 @@ export class Ui {
       this.typed += 2;
       this.renderLine();
       if (this.typed >= this.length) window.clearInterval(this.typer);
-    }, TYPE_MS);
+    }, this.typeMs);
     this.renderLine();
   }
 
@@ -447,6 +450,11 @@ export class Ui {
       d.onOutput((text) => view.log(text));
     }
     this.laptopScreen.attach(net, layout, this.views, devices);
+  }
+
+  /** Fresh screens on every terminal, after a loaded game has replayed into them. */
+  clearTerminals(): void {
+    for (const view of this.views.values()) view.restart();
   }
 
   openLaptop(device: Device, title: string, hint: string, opts: { printer?: boolean } = {}): void {
