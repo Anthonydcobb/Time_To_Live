@@ -288,3 +288,7 @@ Phase 2 is the vertical slice. Ant picked 16 px art (drawn at 4x) and Phaser on 
 | 9 | The Void-View Hotel | Everything, IPv6, fixing someone else's broken network |
 
 The VLAN plan for each site from job 3 on, and where subnetting and VLSM come in (equal subnets at job 3, VLSM at job 5), are in `docs/site-networks.md`.
+
+## Latest handoff update (2026-10-23, Codex)
+
+- Completed OSPFv2 single-area and IPv4 ACL research without changing src/sim. Raw captures and reports are in harness/artifacts/ospfv2-research-{pt,sim}.json and docs/{ospfv2,acls}-research.md. PT was restored and verified after each run. The next ordered research topic is NAT/PAT.
