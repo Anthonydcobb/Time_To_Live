@@ -37,6 +37,153 @@ function twoSwitches(modeA: string, modeB: string) {
 /** Two pings, since a router drops the first packet while it ARPs for the next hop. */
 const pings = (from: Pc, to: string) => run(from, `ping -n 2 ${to}`).some((l) => l.startsWith(`Reply from ${to}`));
 
+describe("interface status", () => {
+  it("summarizes access ports, trunks, and disconnected ports", () => {
+    const { net, s1 } = oneSwitch();
+    const s2 = net.add(new Switch("S2"));
+    type(s1, "int fa0/1", "description register", "int gi0/1", "switchport mode trunk", "end");
+    type(s2, "en", "conf t", "int gi0/1", "switchport mode trunk", "end");
+    net.connect(s1.port("Gi0/1"), s2.port("Gi0/1"));
+    net.clock.advance(3_000);
+    const lines = type(s1, "show interfaces status");
+    expect(lines[0]).toContain("Port");
+    expect(lines.some((line) => line.includes("Fa0/1") && line.includes("connected") && line.includes("register"))).toBe(true);
+    expect(lines.some((line) => line.includes("Gi0/1") && line.includes("connected") && line.includes("trunk"))).toBe(true);
+    expect(lines.some((line) => line.includes("Fa0/4") && line.includes("notconnect") && line.includes("1"))).toBe(true);
+  });
+});
+
+describe("VLAN show commands", () => {
+  it("prints IOS 15 table and detail layouts for show vlan and show vlan id", () => {
+    const { s1 } = oneSwitch();
+    type(s1, "vlan 10", "name STAFF", "exit", "int fa0/1", "switchport access vlan 10", "end");
+    const all = type(s1, "show vlan");
+    expect(all).toContain("VLAN Name                             Status    Ports");
+    expect(all).toContain("VLAN Type  SAID       MTU   Parent RingNo BridgeNo Stp  BrdgMode Trans1 Trans2");
+    const one = type(s1, "show vlan id 10");
+    expect(one).toEqual([
+      "VLAN Name                             Status    Ports",
+      "---- -------------------------------- --------- -------------------------------",
+      "10   STAFF                            active    Fa0/1",
+      "",
+      "VLAN Type  SAID       MTU   Parent RingNo BridgeNo Stp  BrdgMode Trans1 Trans2",
+      "---- ----- ---------- ----- ------ ------ -------- ---- -------- ------ ------",
+      "10   enet  100010     1500  -      -      -        -    -        0      0   ",
+    ]);
+  });
+});
+
+describe("interface ranges", () => {
+  it("applies switchport commands to every selected port", () => {
+    const { s1 } = oneSwitch();
+    type(s1, "interface range fa0/1 - 3", "description EDGE", "switchport voice vlan 150", "end");
+    for (const n of [1, 2, 3]) {
+      const cfg = s1.ifaceConfig(`FastEthernet0/${n}`);
+      expect(cfg.description).toBe("EDGE");
+      expect(cfg.switchport?.voiceVlan).toBe(150);
+    }
+    expect(type(s1, "show interfaces status").filter((line) => line.includes("EDGE"))).toHaveLength(3);
+  });
+});
+
+describe("port security", () => {
+  it("enforces a secure MAC limit and shuts down on violation", () => {
+    const { net, s1, pcs } = oneSwitch();
+    const pc1 = pcs[0];
+    type(s1, "interface fa0/1", "switchport port-security", "switchport port-security maximum 1", "switchport port-security mac-address sticky", "end");
+    net.clock.advance(35_000);
+    const frame = { src: pc1.nic.mac, dst: "ffffffffffff", payload: { kind: "arp" as const, op: "request" as const, senderMac: pc1.nic.mac, senderIp: ip("10.0.0.1")!, targetMac: "000000000000", targetIp: ip("10.0.0.2")! } };
+    s1.receive(s1.port("Fa0/1"), frame);
+    expect(s1.switchport(s1.port("Fa0/1")).secureMacs).toContain(pc1.nic.mac);
+    s1.receive(s1.port("Fa0/1"), { ...frame, src: "001122334455", payload: { ...frame.payload, senderMac: "001122334455" } });
+    expect(s1.port("Fa0/1").adminDown).toBe(true);
+    expect(type(s1, "show interfaces fa0/1 switchport")).toContain("Port Security: Enabled");
+    expect(type(s1, "show port-security interface fa0/1").join("\n")).toContain("Secure-shutdown");
+  });
+});
+
+describe("DHCP snooping", () => {
+  it("drops rogue server replies and learns trusted ACK bindings", () => {
+    const { net, s1, pcs } = oneSwitch();
+    const pc1 = pcs[0];
+    type(s1, "ip dhcp snooping", "ip dhcp snooping vlan 1", "interface fa0/2", "ip dhcp snooping trust", "end");
+    net.clock.advance(35_000);
+    const rogueLogs = captureLogs(s1);
+    const offer = { src: "001122334455", dst: "ffffffffffff", payload: { kind: "ipv4" as const, src: ip("10.0.0.1")!, dst: 0xffffffff, ttl: 255, dhcp: { op: "offer" as const, xid: 1, chaddr: pc1.nic.mac, yiaddr: ip("10.0.0.10")!, serverId: ip("10.0.0.1")! } } };
+    s1.receive(s1.port("Fa0/1"), offer);
+    expect(rogueLogs.some((line) => line.includes("UNTRUSTED_PORT"))).toBe(true);
+
+    const ack = { ...offer, src: "00aabbccddee", payload: { ...offer.payload, dhcp: { ...offer.payload.dhcp, op: "ack" as const } } };
+    s1.receive(s1.port("Fa0/1"), { ...offer, payload: { ...offer.payload, dhcp: { ...offer.payload.dhcp, op: "discover" as const } } });
+    s1.receive(s1.port("Fa0/2"), ack);
+    expect(type(s1, "show ip dhcp snooping binding").join("\n")).toContain("10.0.0.10");
+    expect(type(s1, "show ip dhcp snooping").join("\n")).toContain("Fa0/2");
+    expect(type(s1, "show ip dhcp snooping statistics").join("\n")).toContain("Packets dropped on untrusted ports: 1");
+    type(s1, "clear ip dhcp snooping binding *");
+    expect(type(s1, "show ip dhcp snooping binding").join("\n")).not.toContain("10.0.0.10");
+  });
+
+  it("enforces an untrusted-port DHCP rate limit", () => {
+    const { net, s1, pcs } = oneSwitch();
+    type(s1, "ip dhcp snooping", "ip dhcp snooping vlan 1", "interface fa0/1", "ip dhcp snooping limit rate 1", "end");
+    net.clock.advance(35_000);
+    const logs = captureLogs(s1);
+    const discover = { src: pcs[0].nic.mac, dst: "ffffffffffff", payload: { kind: "ipv4" as const, src: 0, dst: 0xffffffff, ttl: 255, dhcp: { op: "discover" as const, xid: 1, chaddr: pcs[0].nic.mac, yiaddr: 0 } } };
+    s1.receive(s1.port("Fa0/1"), discover);
+    s1.receive(s1.port("Fa0/1"), { ...discover, payload: { ...discover.payload, dhcp: { ...discover.payload.dhcp, xid: 2 } } });
+    expect(logs.some((line) => line.includes("RATE_LIMIT_EXCEEDED"))).toBe(true);
+  });
+});
+
+describe("Dynamic ARP Inspection", () => {
+  it("permits a bound ARP source and blocks spoofed IP/MAC pairs", () => {
+    const { net, s1, pcs } = oneSwitch();
+    const pc1 = pcs[0];
+    type(s1, "ip dhcp snooping", "ip dhcp snooping vlan 1", "ip arp inspection vlan 1", "end");
+    s1.config.dhcpSnoopingBindings.push({ mac: pc1.nic.mac, ip: ip("10.0.0.1")!, vlan: 1, port: "Fa0/1", learnedAt: 0 });
+    net.clock.advance(35_000);
+    const logs = captureLogs(s1);
+    const valid = { src: pc1.nic.mac, dst: "ffffffffffff", payload: { kind: "arp" as const, op: "request" as const, senderMac: pc1.nic.mac, senderIp: ip("10.0.0.1")!, targetMac: "000000000000", targetIp: ip("10.0.0.2")! } };
+    s1.receive(s1.port("Fa0/1"), valid);
+    s1.receive(s1.port("Fa0/1"), { ...valid, payload: { ...valid.payload, senderIp: ip("10.0.0.99")! } });
+    expect(logs.some((line) => line.includes("SW_DAI-4-DHCP_SNOOPING_DENY"))).toBe(true);
+    expect(type(s1, "show ip arp inspection").join("\n")).toContain("Inspection VLANs: 1");
+    expect(type(s1, "show ip arp inspection statistics").join("\n")).toContain("ARP packets dropped: 1");
+    type(s1, "clear ip arp inspection statistics");
+    expect(type(s1, "show ip arp inspection statistics").join("\n")).toContain("ARP packets dropped: 0");
+  });
+});
+
+describe("voice VLANs", () => {
+  it("creates and reports a voice VLAN on an access port", () => {
+    const { s1 } = oneSwitch();
+    const output = type(s1, "int fa0/1", "switchport mode access", "switchport voice vlan 150", "end");
+    expect(output).toContain("% Voice VLAN does not exist. Creating vlan 150");
+    expect(type(s1, "show interfaces fa0/1 switchport")).toContain("Voice VLAN: 150 (VLAN0150)");
+    expect(type(s1, "show running-config").join("\n")).toContain(" switchport voice vlan 150");
+  });
+});
+
+describe("VTP", () => {
+  it("reports VTP settings and prevents VLAN changes in client mode", () => {
+    const { s1 } = oneSwitch();
+    type(s1, "vtp domain CLINIC", "vtp mode client", "end");
+    expect(type(s1, "show vtp status")).toContain("VTP Operating Mode              : client");
+    expect(type(s1, "show vtp status")).toContain("VTP Domain Name                 : CLINIC");
+    expect(type(s1, "conf t", "vlan 150")).toContain("% VLAN configuration not allowed when device is in VTP client mode.");
+    type(s1, "vtp mode transparent", "vlan 150", "exit", "end");
+    expect(type(s1, "show vlan brief").some((line) => line.startsWith("150 "))).toBe(true);
+  });
+
+  it("propagates a server VLAN to a same-domain client across a trunk", () => {
+    const { a, b } = twoSwitches("switchport mode trunk", "switchport mode trunk");
+    type(a, "en", "conf t", "vtp domain LAB", "vtp mode server", "end");
+    type(b, "en", "conf t", "vtp domain LAB", "vtp mode client", "end");
+    type(a, "conf t", "vlan 150", "name PHONES", "exit", "end");
+    expect(b.vlans.get(150)).toBe("PHONES");
+  });
+});
+
 describe("VLAN database", () => {
   it("creates a VLAN only when you leave config-vlan mode", () => {
     const { s1 } = oneSwitch();
@@ -173,6 +320,15 @@ describe("DTP", () => {
     const { s1 } = oneSwitch();
     expect(type(s1, "int fa0/1", "switchport nonegotiate")).toEqual(["Command rejected: Conflict between 'nonegotiate' and 'dynamic' status on this interface: Fa0/1"]);
   });
+
+  it("keeps access/desirable and nonegotiate/desirable out of negotiated trunking", () => {
+    const access = twoSwitches("switchport mode access", "switchport mode dynamic desirable");
+    expect(access.a.operationalMode(access.ga)).toBe("access");
+    expect(access.b.operationalMode(access.gb)).toBe("access");
+    const nonegotiate = twoSwitches("switchport mode trunk;switchport nonegotiate", "switchport mode dynamic desirable");
+    expect(nonegotiate.a.operationalMode(nonegotiate.ga)).toBe("trunk");
+    expect(nonegotiate.b.operationalMode(nonegotiate.gb)).toBe("access");
+  });
 });
 
 describe("trunks", () => {
@@ -204,6 +360,22 @@ describe("trunks", () => {
       "Gi0/1       1,10",
       "",
     ]);
+  });
+
+  it("logs a native VLAN mismatch on both ends once per CDP interval", () => {
+    const t = twoSwitches("switchport mode trunk", "switchport mode trunk;switchport trunk native vlan 99");
+    const a = captureLogs(t.a);
+    const b = captureLogs(t.b);
+    t.net.clock.advance(60_000);
+    const mismatch = "%CDP-4-NATIVE_VLAN_MISMATCH";
+    expect(a.filter((line) => line.includes(mismatch))).toHaveLength(1);
+    expect(b.filter((line) => line.includes(mismatch))).toHaveLength(1);
+    t.net.clock.advance(50_000);
+    expect(a.filter((line) => line.includes(mismatch))).toHaveLength(1);
+    expect(b.filter((line) => line.includes(mismatch))).toHaveLength(1);
+    t.net.clock.advance(10_000);
+    expect(a.filter((line) => line.includes(mismatch))).toHaveLength(2);
+    expect(b.filter((line) => line.includes(mismatch))).toHaveLength(2);
   });
 
   it("drops a VLAN the trunk doesn't allow", () => {

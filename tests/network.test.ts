@@ -106,6 +106,20 @@ describe("the corner store", () => {
 });
 
 describe("routing", () => {
+  it("uses administrative distance after longest-prefix matching", () => {
+    const net = new Network();
+    const r = net.add(new Router("R1", "R1"));
+    const a = net.add(new Pc("A"));
+    const b = net.add(new Pc("B"));
+    net.connect(a.nic, r.port("Gi0/0"));
+    net.connect(b.nic, r.port("Gi0/1"));
+    type(r, "", "en", "conf t", "int g0/0", "ip address 10.0.0.1 255.255.255.0", "no shut", "int g0/1", "ip address 10.0.1.1 255.255.255.0", "no shut", "ip route 172.16.0.0 255.255.255.0 10.0.0.2 200", "ip route 172.16.0.0 255.255.255.0 10.0.1.2 5", "end");
+    net.clock.advance(3_000);
+    expect(r.stack.lookup(ip("172.16.0.10")!)).toMatchObject({ iface: expect.objectContaining({ name: "GigabitEthernet0/1" }), nextHop: ip("10.0.1.2") });
+    expect(type(r, "show ip route").join("\n")).toContain("[5/0] via 10.0.1.2");
+    expect(type(r, "show running-config").join("\n")).toContain("ip route 172.16.0.0 255.255.255.0 10.0.1.2 5");
+  });
+
   function twoSubnets() {
     const net = new Network();
     const r = net.add(new Router("R1"));

@@ -1,11 +1,12 @@
 // Output for IOS show commands, formatted like the real thing.
-import { formatIpv4, formatMacCisco, maskToPrefix, networkOf, type Ipv4 } from "../addr";
+import { formatIpv4, formatIpv6, formatMacCisco, maskToPrefix, networkOf, type Ipv4 } from "../addr";
 import { configTimestamp, type IosDevice } from "../devices/ios-device";
 import type { Router } from "../devices/router";
 import type { Switch } from "../devices/switch";
+import { electedRoot } from "../stp";
 import { UNSUPPORTED_VLANS, formatVlanList } from "../vlans";
 import type { Route } from "../ipstack";
-import type { IosConfig, LineConfig, StoredPassword, SwitchportConfig, SwitchportMode } from "./config";
+import type { AclAddress, IosConfig, LineConfig, StoredPassword, SwitchportConfig, SwitchportMode } from "./config";
 import { type7Encode } from "./passwords";
 
 const IOS_VERSION = "15.1(4)M4";
@@ -34,10 +35,19 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     "boot-end-marker",
     "!",
   );
+  if (c.domainName) out.push(`ip domain-name ${c.domainName}`);
+  if (c.dnsServer) out.push("ip dns server");
+  for (const [name, addresses] of Object.entries(c.hostRecords).sort(([a], [b]) => a.localeCompare(b))) {
+    for (const address of addresses) out.push(`ip host ${name} ${formatIpv4(address)}`);
+  }
+  if (c.dnsServer || Object.keys(c.hostRecords).length) out.push("!");
+  for (const [name, secret] of Object.entries(c.users).sort(([a], [b]) => a.localeCompare(b))) out.push(`username ${name} secret 5 ${secret}`);
+  if (c.domainName || Object.keys(c.users).length) out.push("!");
   if (c.enableSecret) out.push(`enable secret 5 ${c.enableSecret}`);
   if (c.enablePassword) out.push(`enable password ${pw(c.enablePassword)}`);
   if (c.enableSecret || c.enablePassword) out.push("!");
-  out.push("no aaa new-model");
+  out.push(c.aaaNewModel ? "aaa new-model" : "no aaa new-model");
+  if (c.aaaLoginLocal) out.push("aaa authentication login default local");
   if (isSwitch) out.push("system mtu routing 1500");
   out.push("!");
   if (c.dhcpExcluded.length) {
@@ -61,7 +71,21 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   if (!c.ipDomainLookup) out.push("no ip domain lookup", "!");
   if (!isSwitch) out.push("ip cef", "no ipv6 cef", "!", "multilink bundle-name authenticated", "!");
   if (!c.cdpRun) out.push("no cdp run", "!");
-  if (isSwitch) out.push("spanning-tree mode pvst", "spanning-tree extend system-id", "!", "vlan internal allocation policy ascending", "!");
+  if (c.lldp) out.push("lldp run", "!");
+  if (c.ipv6UnicastRouting) out.push("ipv6 unicast-routing");
+  if (c.ospfv3) out.push(`ipv6 router ospf ${c.ospfv3.processId}`);
+  for (const route of c.ipv6StaticRoutes) out.push(`ipv6 route ${formatIpv6(route.network)}/${route.prefix} ${route.nextHop ?? route.exitIface ?? "Null0"}`);
+  if (isSwitch) {
+    if (c.ipRouting) out.push("ip routing");
+    if (c.dhcpSnooping) out.push("ip dhcp snooping");
+    if (c.dhcpSnoopingVlans.length) out.push(`ip dhcp snooping vlan ${formatVlanList(c.dhcpSnoopingVlans)}`);
+    if (c.arpInspectionVlans.length) out.push(`ip arp inspection vlan ${formatVlanList(c.arpInspectionVlans)}`);
+    out.push("spanning-tree mode pvst", "spanning-tree extend system-id");
+    if (c.spanningTreePortfastDefault) out.push("spanning-tree portfast default");
+    if (c.spanningTreeBpduGuardDefault) out.push("spanning-tree portfast bpduguard default");
+    for (const [vlan, priority] of Object.entries(c.spanningTreePriority).sort(([a], [b]) => Number(a) - Number(b))) out.push(`spanning-tree vlan ${vlan} priority ${priority}`);
+    out.push("!", "vlan internal allocation policy ascending", "!");
+  }
 
   for (const name of device.configInterfaceOrder(c)) {
     const ic = c.interfaces[name];
@@ -69,11 +93,41 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     const physical = device.ports.some((p) => p.name === name);
     out.push(`interface ${name}`);
     if (ic.description) out.push(` description ${ic.description}`);
+    if (physical && isSwitch && ic.duplex !== "auto") out.push(` duplex ${ic.duplex}`);
+    if (physical && isSwitch && ic.speed !== "auto") out.push(` speed ${ic.speed}`);
+    for (const helper of ic.helperAddresses) out.push(` ip helper-address ${formatIpv4(helper)}`);
+    for (const address of ic.ipv6Addresses) out.push(` ipv6 address ${formatIpv6(address.address)}/${address.prefix}`);
+    if (ic.ipv6OspfArea !== null) out.push(` ipv6 ospf ${c.ospfv3?.processId ?? 1} area ${ic.ipv6OspfArea}`);
+    if (ic.ospfPriority !== 1) out.push(` ip ospf priority ${ic.ospfPriority}`);
+    if (ic.natRole) out.push(` ip nat ${ic.natRole}`);
+    if (ic.hsrp) {
+      out.push(` standby ${ic.hsrp.group} ip ${formatIpv4(ic.hsrp.ip)}`);
+      if (ic.hsrp.priority !== 100) out.push(` standby ${ic.hsrp.group} priority ${ic.hsrp.priority}`);
+      if (ic.hsrp.preempt) out.push(` standby ${ic.hsrp.group} preempt`);
+    }
+    if (ic.vrrp) {
+      out.push(` vrrp ${ic.vrrp.group} ip ${formatIpv4(ic.vrrp.ip)}`);
+      if (ic.vrrp.priority !== 100) out.push(` vrrp ${ic.vrrp.group} priority ${ic.vrrp.priority}`);
+      if (ic.vrrp.preempt) out.push(` vrrp ${ic.vrrp.group} preempt`);
+    }
+    if (ic.glbp) {
+      out.push(` glbp ${ic.glbp.group} ip ${formatIpv4(ic.glbp.ip)}`);
+      if (ic.glbp.priority !== 100) out.push(` glbp ${ic.glbp.group} priority ${ic.glbp.priority}`);
+      if (ic.glbp.preempt) out.push(` glbp ${ic.glbp.group} preempt`);
+    }
     if (ic.encapsulation) out.push(` encapsulation dot1Q ${ic.encapsulation.vlan}${ic.encapsulation.native ? " native" : ""}`);
+    if (ic.accessGroupIn !== null) out.push(" ip access-group " + ic.accessGroupIn + " in");
+    if (ic.accessGroupOut !== null) out.push(" ip access-group " + ic.accessGroupOut + " out");
+    if (ic.ipv6AccessGroupIn !== null) out.push(" ipv6 traffic-filter " + ic.ipv6AccessGroupIn + " in");
+    if (ic.ipv6AccessGroupOut !== null) out.push(" ipv6 traffic-filter " + ic.ipv6AccessGroupOut + " out");
     if (ic.switchport) out.push(...switchportLines(ic.switchport));
-    else out.push(ic.ip !== null ? ` ip address ${formatIpv4(ic.ip)} ${formatIpv4(ic.mask!)}` : " no ip address");
+    else {
+      if (isSwitch) out.push(" no switchport");
+      out.push(ic.ip !== null ? ` ip address ${formatIpv4(ic.ip)} ${formatIpv4(ic.mask!)}` : " no ip address");
+    }
+    if (ic.channelGroup !== null && ic.channelMode !== null) out.push(` channel-group ${ic.channelGroup} mode ${ic.channelMode}`);
     if (ic.shutdown) out.push(" shutdown");
-    if (physical && !isSwitch) out.push(" duplex auto", " speed auto");
+    if (physical && !isSwitch) out.push(` duplex ${ic.duplex}`, ` speed ${ic.speed}`);
     if (physical && !ic.cdp) out.push(" no cdp enable");
     out.push("!");
   }
@@ -83,9 +137,59 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
   out.push(isSwitch ? "ip http server" : "no ip http server", isSwitch ? "ip http secure-server" : "no ip http secure-server", "!");
   for (const r of c.staticRoutes) {
     const target = r.exitIface ?? formatIpv4(r.nextHop!);
-    out.push(`ip route ${formatIpv4(r.network)} ${formatIpv4(r.mask)} ${target}`);
+    out.push(`ip route ${formatIpv4(r.network)} ${formatIpv4(r.mask)} ${target}${(r.distance ?? 1) !== 1 ? ` ${r.distance}` : ""}`);
   }
   if (c.staticRoutes.length) out.push("!");
+  if (c.ospf) {
+    out.push(`router ospf ${c.ospf.processId}`);
+    if (c.ospf.routerId !== null) out.push(` router-id ${formatIpv4(c.ospf.routerId)}`);
+    if (c.ospf.defaultInformation) out.push(" default-information originate");
+    for (const n of c.ospf.networks) out.push(` network ${formatIpv4(n.network)} ${formatIpv4((~n.mask) >>> 0)} area ${n.area}`);
+    for (const iface of c.ospf.passiveInterfaces) out.push(` passive-interface ${iface}`);
+    for (const summary of c.ospf.summaries) out.push(` area ${summary.area} range ${formatIpv4(summary.network)} ${formatIpv4(summary.mask)}`);
+    out.push("!");
+  }
+  if (c.eigrp) {
+    out.push(`router eigrp ${c.eigrp.as}`);
+    for (const network of c.eigrp.networks) out.push(` network ${formatIpv4(network.network)} ${formatIpv4((~network.mask) >>> 0)}`);
+    for (const iface of c.eigrp.passiveInterfaces) out.push(` passive-interface ${iface}`);
+    out.push("!");
+  }
+  for (const nat of c.staticNat) out.push(`ip nat inside source static ${formatIpv4(nat.insideLocal)} ${formatIpv4(nat.insideGlobal)}`);
+  for (const rule of c.natOverloads) out.push(`ip nat inside source list ${rule.acl} interface ${rule.outsideInterface} overload`);
+  for (const server of c.ntpServers) out.push(`ntp server ${formatIpv4(server)}`);
+  for (const host of c.loggingHosts) out.push(`logging host ${formatIpv4(host)}`);
+  out.push(`logging trap ${c.loggingTrap}`);
+  for (const snmp of c.snmpCommunities) out.push(`snmp-server community ${snmp.community} ${snmp.access}`);
+  const aclSort = ([a]: [string, unknown], [b]: [string, unknown]) => {
+    const an = /^\d+$/.test(a); const bn = /^\d+$/.test(b);
+    if (an && bn) return Number(a) - Number(b);
+    if (an !== bn) return an ? -1 : 1;
+    return a.localeCompare(b);
+  };
+  for (const [number, rules] of Object.entries(c.standardAcls).sort(aclSort)) {
+    if (/^\d+$/.test(number)) for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + formatAclSource(rule));
+    else {
+      out.push(`ip access-list standard ${number}`);
+      for (const rule of rules) out.push(` ${rule.action} ${formatAclSource(rule)}`);
+    }
+  }
+  for (const [number, rules] of Object.entries(c.extendedAcls).sort(aclSort)) {
+    if (/^\d+$/.test(number)) for (const rule of rules) out.push("access-list " + number + " " + rule.action + " " + rule.protocol + " " + formatAclSource(rule.source) + " " + formatAclSource(rule.destination));
+    else {
+      out.push(`ip access-list extended ${number}`);
+      for (const rule of rules) out.push(` ${rule.action} ${rule.protocol} ${formatAclSource(rule.source)} ${formatAclSource(rule.destination)}`);
+    }
+  }
+  for (const [name, rules] of Object.entries(c.ipv6Acls).sort(([a], [b]) => a.localeCompare(b))) {
+    out.push(`ipv6 access-list ${name}`);
+    for (const rule of rules) {
+      const source = rule.source.address === null ? "any" : `${formatIpv6(rule.source.address)}/${rule.source.prefix}`;
+      const destination = rule.destination.address === null ? "any" : `${formatIpv6(rule.destination.address)}/${rule.destination.prefix}`;
+      out.push(` ${rule.action} ${rule.protocol === "icmpv6" ? "icmp" : "ipv6"} ${source} ${destination}`);
+    }
+  }
+  if (Object.keys(c.standardAcls).length || Object.keys(c.extendedAcls).length || Object.keys(c.ipv6Acls).length) out.push("!");
   if (!isSwitch) out.push("control-plane", "!");
 
   if (c.bannerMotd !== null) out.push("banner motd ^C", ...c.bannerMotd.split("\n"), "^C", "!");
@@ -95,7 +199,9 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     if (l.execTimeout) out.push(` exec-timeout ${l.execTimeout[0]} ${l.execTimeout[1]}`);
     if (l.password) out.push(` password ${pw(l.password)}`);
     if (l.loggingSynchronous) out.push(" logging synchronous");
-    if (l.login) out.push(" login");
+    if (l.loginLocal) out.push(" login local");
+    else if (l.login) out.push(" login");
+    if (l.transportInput !== "all") out.push(` transport input ${l.transportInput}`);
   };
   line("line con 0", c.con);
   if (!isSwitch) out.push("line aux 0");
@@ -109,11 +215,28 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
 function switchportLines(sp: SwitchportConfig): string[] {
   const out: string[] = [];
   if (sp.accessVlan !== 1) out.push(` switchport access vlan ${sp.accessVlan}`);
+  if (sp.voiceVlan !== null) out.push(` switchport voice vlan ${sp.voiceVlan}`);
   if (sp.nativeVlan !== 1) out.push(` switchport trunk native vlan ${sp.nativeVlan}`);
   if (sp.allowed !== null) out.push(` switchport trunk allowed vlan ${sp.allowed.length ? formatVlanList(sp.allowed) : "none"}`);
   if (sp.mode !== "dynamic auto") out.push(` switchport mode ${sp.mode}`);
   if (sp.nonegotiate) out.push(" switchport nonegotiate");
+  if (sp.portfast) out.push(" spanning-tree portfast");
+  if (sp.bpduGuard) out.push(" spanning-tree bpduguard enable");
+  if (sp.rootGuard) out.push(" spanning-tree guard root");
+  if (sp.channelGroup !== null && sp.channelMode !== null) out.push(` channel-group ${sp.channelGroup} mode ${sp.channelMode}`);
+  if (sp.portSecurity) out.push(" switchport port-security");
+  if (sp.portSecurityMaximum !== 1) out.push(` switchport port-security maximum ${sp.portSecurityMaximum}`);
+  if (sp.portSecurityViolation !== "shutdown") out.push(` switchport port-security violation ${sp.portSecurityViolation}`);
+  if (sp.portSecuritySticky) out.push(" switchport port-security mac-address sticky");
+  if (sp.dhcpTrust) out.push(" ip dhcp snooping trust");
+  if (sp.dhcpRateLimit !== null) out.push(` ip dhcp snooping limit rate ${sp.dhcpRateLimit}`);
+  if (sp.arpInspectionTrust) out.push(" ip arp inspection trust");
   return out;
+}
+
+function formatAclSource(rule: AclAddress): string {
+  if (rule.network === null) return "any";
+  return rule.wildcard === 0 ? formatIpv4(rule.network) : formatIpv4(rule.network) + " " + formatIpv4(rule.wildcard!);
 }
 
 function byteCount(lines: string[]): number {
@@ -148,6 +271,98 @@ export function showIpInterfaceBrief(device: IosDevice): string[] {
   return out;
 }
 
+export function showIpInterfaces(device: IosDevice, only?: string): string[] {
+  const out: string[] = [];
+  for (const iface of device.interfaces()) {
+    if (only && iface.name !== only) continue;
+    const c = device.config.interfaces[iface.name];
+    out.push(`${iface.name} is ${iface.status()}, line protocol is ${iface.protocol()}`);
+    if (c?.ip !== null && c?.ip !== undefined) out.push(`  Internet address is ${formatIpv4(c.ip)}/${maskToPrefix(c.mask!)}`);
+    if (c?.accessGroupIn) out.push(`  Inbound access list is ${c.accessGroupIn}`);
+    if (c?.accessGroupOut) out.push(`  Outgoing access list is ${c.accessGroupOut}`);
+    if (c?.ipv6AccessGroupIn) out.push(`  Inbound IPv6 access list is ${c.ipv6AccessGroupIn}`);
+    if (c?.ipv6AccessGroupOut) out.push(`  Outgoing IPv6 access list is ${c.ipv6AccessGroupOut}`);
+    for (const helper of c?.helperAddresses ?? []) out.push(`  DHCP relay is ${formatIpv4(helper)}`);
+    if (c?.natRole) out.push(`  IP NAT ${c.natRole}`);
+  }
+  return out;
+}
+
+export function showIpv6InterfaceBrief(device: IosDevice): string[] {
+  const out = [`${"Interface".padEnd(23)}${"IPv6-Address".padEnd(42)}${"Status".padEnd(22)}Protocol`];
+  for (const i of device.interfaces()) {
+    const addresses = device.config.interfaces[i.name]?.ipv6Addresses ?? [];
+    out.push(`${i.name.padEnd(23)}${(addresses.length ? addresses.map((a) => `${formatIpv6(a.address)}/${a.prefix}`).join(",") : "unassigned").padEnd(42)}${i.status().padEnd(22)}${i.protocol()}`);
+  }
+  return out;
+}
+
+export function showIpv6Interfaces(device: IosDevice, only?: string): string[] {
+  const out: string[] = [];
+  for (const iface of device.interfaces()) {
+    if (only && iface.name !== only) continue;
+    const c = device.config.interfaces[iface.name];
+    const addresses = c?.ipv6Addresses ?? [];
+    out.push(`${iface.name} is ${iface.status()}, line protocol is ${iface.protocol()}`);
+    if (addresses.length) for (const address of addresses) out.push(`  IPv6 address is ${formatIpv6(address.address)}/${address.prefix}`);
+    else out.push("  IPv6 is disabled");
+    if (c?.ipv6AccessGroupIn) out.push(`  Inbound IPv6 access list is ${c.ipv6AccessGroupIn}`);
+    if (c?.ipv6AccessGroupOut) out.push(`  Outgoing IPv6 access list is ${c.ipv6AccessGroupOut}`);
+    if (c?.ipv6OspfArea !== null && c?.ipv6OspfArea !== undefined) out.push(`  OSPFv3 area ${c.ipv6OspfArea}`);
+    out.push("  ND reachable time is 30000 milliseconds", "  ND advertised reachable time is 0 (unspecified)");
+  }
+  return out;
+}
+
+export function showIpv6Route(device: IosDevice): string[] {
+  const out = ["IPv6 Routing Table - default - 1 entries", "Codes: C - Connected, L - Local, S - Static", ""];
+  for (const iface of device.interfaces()) {
+    for (const address of device.config.interfaces[iface.name]?.ipv6Addresses ?? []) out.push(`C   ${formatIpv6(address.address)}/${address.prefix} is directly connected, ${iface.name}`);
+  }
+  for (const route of device.config.ipv6StaticRoutes) out.push(`S   ${formatIpv6(route.network)}/${route.prefix} [1/0] via ${route.nextHop ?? route.exitIface ?? "Null0"}`);
+  if (device.kind === "router") for (const route of (device as Router).ipv6OspfRoutes()) out.push(`O   ${formatIpv6(route.network)}/${route.prefix} [110/2] via ${route.nextHop ?? route.exitIface ?? "Null0"}`);
+  return out;
+}
+
+export function showIpv6Neighbors(device: IosDevice): string[] {
+  const out = [
+    "IPv6 Address                              Age Link-layer Addr State Interface",
+  ];
+  for (const entry of device.stack.ipv6NeighborEntries().sort((a, b) => a.address.localeCompare(b.address))) {
+    const age = Math.floor((device.clock.now - entry.learnedAt) / 1000);
+    out.push(`${formatIpv6(entry.address).padEnd(42)}${String(age).padStart(3)} ${formatMacCisco(entry.mac).padEnd(17)} REACH ${entry.iface.name}`);
+  }
+  return out;
+}
+
+export function showIpv6OspfNeighbor(router: Router): string[] {
+  const out = ["IPv6 OSPF neighbors", "Neighbor ID     Pri   State           Dead Time   Interface ID    Interface"];
+  for (const [index, n] of router.ospfv3Neighbors.entries()) {
+    out.push(`${n.router.hostname.padEnd(17)}1     FULL/ -         00:00:40    ${String(index + 1).padEnd(16)}${n.localInterface}`);
+  }
+  return out;
+}
+
+export function showIpv6OspfInterface(router: Router): string[] {
+  const ospfv3 = router.config.ospfv3;
+  if (!ospfv3) return ["OSPFv3 is not configured"];
+  const out: string[] = [];
+  for (const iface of router.l3Interfaces()) {
+    const area = router.config.interfaces[iface.name]?.ipv6OspfArea;
+    if (!iface.up() || area === null || area === undefined || !iface.ipv6Addresses.length) continue;
+    const peers = router.ospfv3Neighbors.filter((neighbor) => neighbor.localInterface === iface.name).length;
+    out.push(
+      `${iface.name} is up, line protocol is up`,
+      `  OSPFv3 process ${ospfv3.processId}, Area ${area}, Instance ID 0`,
+      `  IPv6 link-local address ${iface.ipv6Addresses[0].address}`,
+      `  Network Type POINT-TO-POINT, Cost 1, State ${peers ? "FULL" : "DOWN"}`,
+      `  Neighbor count ${peers}`,
+      "",
+    );
+  }
+  return out.length ? out : ["No OSPFv3 interfaces are active"];
+}
+
 /** How long ago, the way `show interfaces` prints it: 00:00:08, 1d02h, 3w2d, or never. */
 export function sinceText(now: number, at: number | null): string {
   if (at === null) return "never";
@@ -177,6 +392,11 @@ export function showInterfaces(device: IosDevice, only?: string): string[] {
     out.push(`  Hardware is ${hw}, address is ${mac} (bia ${mac})`);
     if (c?.description) out.push(`  Description: ${c.description}`);
     if (c?.ip != null) out.push(`  Internet address is ${formatIpv4(c.ip)}/${maskToPrefix(c.mask!)}`);
+    if (c?.accessGroupIn) out.push(`  Inbound access list is ${c.accessGroupIn}`);
+    if (c?.accessGroupOut) out.push(`  Outgoing access list is ${c.accessGroupOut}`);
+    if (c?.ipv6AccessGroupIn) out.push(`  Inbound IPv6 access list is ${c.ipv6AccessGroupIn}`);
+    if (c?.ipv6AccessGroupOut) out.push(`  Outgoing IPv6 access list is ${c.ipv6AccessGroupOut}`);
+    if (c?.natRole) out.push(`  IP NAT ${c.natRole}`);
     const fast = i.name.startsWith("Fast");
     out.push(
       `  MTU 1500 bytes, BW ${fast ? 100000 : 1000000} Kbit/sec, DLY ${fast ? 100 : 10} usec, `,
@@ -194,13 +414,17 @@ export function showInterfaces(device: IosDevice, only?: string): string[] {
     out.push("  Encapsulation ARPA, loopback not set", svi ? "  Keepalive not supported " : "  Keepalive set (10 sec)");
     if (i.port && isSwitch) {
       const media = gig ? "10/100/1000BaseTX" : "10/100BaseTX";
+      const duplex = c?.duplex === "auto" ? (status === "up" ? "Full-duplex" : "Auto-duplex") : `${c?.duplex === "full" ? "Full" : "Half"}-duplex`;
+      const speed = c?.speed === "auto" ? (status === "up" ? (gig ? "1000" : "100") : "Auto") : String(c?.speed);
       out.push(
-        status === "up" ? `  Full-duplex, ${gig ? "1000" : "100"}Mb/s, media type is ${media}` : `  Auto-duplex, Auto-speed, media type is ${media}`,
+        `  ${duplex}, ${speed === "Auto" ? "Auto-speed" : `${speed}Mb/s`}, media type is ${media}`,
         "  input flow-control is off, output flow-control is unsupported ",
       );
     } else if (i.port) {
+      const duplex = c?.duplex === "auto" ? (status === "up" ? "Full Duplex" : "Auto Duplex") : `${c?.duplex === "full" ? "Full" : "Half"} Duplex`;
+      const speed = c?.speed === "auto" ? (status === "up" ? "1Gbps" : "Auto Speed") : `${c?.speed}Mbps`;
       out.push(
-        status === "up" ? "  Full Duplex, 1Gbps, media type is RJ45" : "  Auto Duplex, Auto Speed, media type is RJ45",
+        `  ${duplex}, ${speed}, media type is RJ45`,
         "  output flow-control is unsupported, input flow-control is unsupported",
       );
     }
@@ -217,7 +441,7 @@ export function showInterfaces(device: IosDevice, only?: string): string[] {
       `     ${st?.inPackets ?? 0} packets input, ${st?.inBytes ?? 0} bytes, 0 no buffer`,
       `     Received ${st?.inBroadcasts ?? 0} broadcasts (0 ${isSwitch && !svi ? "multicasts" : "IP multicasts"})`,
       "     0 runts, 0 giants, 0 throttles ",
-      "     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored",
+      `     ${st?.inErrors ?? 0} input errors, ${st?.crcErrors ?? 0} CRC, 0 frame, 0 overrun, 0 ignored`,
     );
     if (!svi) out.push("     0 watchdog, 0 multicast, 0 pause input");
     if (isSwitch && !svi) out.push("     0 input packets with dribble condition detected");
@@ -226,13 +450,60 @@ export function showInterfaces(device: IosDevice, only?: string): string[] {
       out.push(`     0 output errors, ${proto === "up" ? 1 : 0} interface resets`, "     0 unknown protocol drops");
     } else {
       out.push(
-        `     0 output errors, 0 collisions, ${st?.resets ?? 0} interface resets`,
+        `     ${st?.outErrors ?? 0} output errors, ${st?.collisions ?? 0} collisions, ${st?.resets ?? 0} interface resets`,
         "     0 unknown protocol drops",
         "     0 babbles, 0 late collision, 0 deferred",
         "     0 lost carrier, 0 no carrier, 0 pause output",
       );
     }
     out.push("     0 output buffer failures, 0 output buffers swapped out");
+  }
+  return out;
+}
+
+export function showInterfacesStatus(sw: Switch): string[] {
+  const out = [
+    "Port      Name               Status       Vlan       Duplex  Speed Type",
+  ];
+  for (const port of sw.ports) {
+    const sp = sw.switchport(port);
+    const status = sw.isErrDisabled(port) ? "err-disabled" : port.adminDown ? "disabled" : port.protocolUp ? "connected" : "notconnect";
+    const vlan = sw.operationalMode(port) === "trunk" ? "trunk" : String(sp.accessVlan);
+    const duplex = port.protocolUp ? (sw.config.interfaces[port.name].duplex === "auto" ? "a-full" : `a-${sw.config.interfaces[port.name].duplex}`) : "auto";
+    const speed = port.protocolUp ? (sw.config.interfaces[port.name].speed === "auto" ? (port.name.startsWith("Gigabit") ? "a-1000" : "a-100") : `a-${sw.config.interfaces[port.name].speed}`) : "auto";
+    const type = port.name.startsWith("Gigabit") ? "10/100/1000BaseTX" : "10/100BaseTX";
+    out.push(
+      `${port.shortName.padEnd(10)}${(sw.config.interfaces[port.name].description ?? "").slice(0, 18).padEnd(19)}${status.padEnd(13)}${vlan.padEnd(11)}${duplex.padEnd(8)}${speed.padEnd(7)}${type}`,
+    );
+  }
+  return out;
+}
+
+export function showInterfaceErrorCounters(device: IosDevice): string[] {
+  const out = [
+    "Port        Align-Err     FCS-Err    Xmit-Err    Rcv-Err  UnderSize  OutDiscards",
+  ];
+  for (const iface of device.interfaces()) {
+    if (!iface.port) continue;
+    const stats = iface.port.stats;
+    out.push(`${iface.shortName.padEnd(12)}${String(0).padStart(10)}${String(stats.crcErrors).padStart(14)}${String(stats.outErrors).padStart(12)}${String(stats.inErrors).padStart(12)}${String(0).padStart(10)}${String(0).padStart(13)}`);
+  }
+  return out;
+}
+
+export function showInterfaceCounters(device: IosDevice): string[] {
+  const out = [
+    "Port        InOctets      InUcastPkts    InMcastPkts    InBcastPkts",
+    "",
+    "Port        OutOctets     OutUcastPkts   OutMcastPkts   OutBcastPkts",
+  ];
+  for (const iface of device.interfaces()) {
+    if (!iface.port) continue;
+    const stats = iface.port.stats;
+    const inUcast = Math.max(0, stats.inPackets - stats.inBroadcasts);
+    const outUcast = Math.max(0, stats.outPackets - stats.outBroadcasts);
+    out.push(`${iface.shortName.padEnd(12)}${String(stats.inBytes).padStart(12)}${String(inUcast).padStart(15)}${String(0).padStart(15)}${String(stats.inBroadcasts).padStart(15)}`);
+    out.push(`${iface.shortName.padEnd(12)}${String(stats.outBytes).padStart(12)}${String(outUcast).padStart(15)}${String(0).padStart(15)}${String(stats.outBroadcasts).padStart(15)}`);
   }
   return out;
 }
@@ -257,12 +528,15 @@ function classfulPrefix(ip: Ipv4): number {
 
 function routeTail(r: Route, withPrefix: boolean): string {
   const net = formatIpv4(r.network) + (withPrefix ? `/${maskToPrefix(r.mask)}` : "");
-  if (r.code === "S" && r.nextHop !== null) return `${net} [1/0] via ${formatIpv4(r.nextHop)}`;
+  if (r.code === "S" && r.nextHop !== null) return `${net} [${r.distance}/0] via ${formatIpv4(r.nextHop)}`;
+  if (r.code === "S" && r.iface) return `${net} [${r.distance}/0] is directly connected, ${r.iface.name}`;
+  if (r.code === "O" && r.nextHop !== null) return `${net} [110/2] via ${formatIpv4(r.nextHop)}`;
+  if (r.code === "D" && r.nextHop !== null) return `${net} [90/30720] via ${formatIpv4(r.nextHop)}`;
   return `${net} is directly connected, ${r.iface!.name}`;
 }
 
-export function showIpRoute(router: Router): string[] {
-  const routes = router.stack.routes();
+export function showIpRoute(device: IosDevice): string[] {
+  const routes = device.stack.routes();
   const defaultRoute = routes.find((r) => r.mask === 0 && r.network === 0);
   const out = [...ROUTE_CODES, ""];
   if (defaultRoute) {
@@ -295,8 +569,113 @@ export function showIpRoute(router: Router): string[] {
       for (const r of rs) out.push(`${code(r)}       ${routeTail(r, false)}`);
     }
   }
-  if (defaultRoute) out.push(`S*    0.0.0.0/0 [1/0] via ${formatIpv4(defaultRoute.nextHop ?? 0)}`);
+  if (defaultRoute) out.push(`S*  0.0.0.0/0 [${defaultRoute.distance}/0] via ${formatIpv4(defaultRoute.nextHop ?? 0)}`);
   out.push("");
+  return out;
+}
+
+export function showIpOspfNeighbor(router: Router): string[] {
+  const out = ["", "Neighbor ID     Pri   State           Dead Time   Address         Interface"];
+  for (const n of router.ospfNeighbors) {
+    out.push(`${formatIpv4(n.router.ospfRouterId() ?? n.remoteAddress).padEnd(16)}1     FULL/ ${n.remoteRole.padEnd(4)}      00:00:34    ${formatIpv4(n.remoteAddress).padEnd(16)}${n.localInterface}`);
+  }
+  return out;
+}
+
+export function showIpOspfInterface(router: Router, interfaceName?: string): string[] {
+  const ospf = router.config.ospf;
+  if (!ospf) return ["% OSPF is not enabled"];
+  const names = interfaceName ? [interfaceName] : router.l3Interfaces().map((iface) => iface.name);
+  const out: string[] = [];
+  for (const name of names) {
+    const iface = router.l3Interfaces().find((candidate) => candidate.name === name);
+    const network = iface?.ip === null || iface?.ip === undefined || iface.mask === null || iface.mask === undefined ? null : ospf.networks.find((n) => networkOf(iface.ip!, n.mask) === n.network);
+    if (!iface || !network || !iface.up()) continue;
+    const neighbors = router.ospfNeighbors.filter((neighbor) => neighbor.localInterface === name);
+    const multiaccess = neighbors.some((neighbor) => neighbor.localRole !== "P2P");
+    const localRole = neighbors[0]?.localRole ?? (multiaccess ? "DROTHER" : "P2P");
+    const dr = neighbors.find((neighbor) => neighbor.remoteRole === "DR");
+    const bdr = neighbors.find((neighbor) => neighbor.remoteRole === "BDR");
+    const localId = router.ospfRouterId();
+    const drId = localRole === "DR" ? localId : dr ? dr.router.ospfRouterId() : null;
+    const bdrId = localRole === "BDR" ? localId : bdr ? bdr.router.ospfRouterId() : null;
+    out.push(
+      `${name} is up, line protocol is up`,
+      `  Internet Address ${formatIpv4(iface.ip!)}/${maskToPrefix(iface.mask!)} , Area ${network.area}`,
+      `  Process ID ${ospf.processId}, Router ID ${localId === null ? "not set" : formatIpv4(localId)}`,
+      `  Network Type ${multiaccess ? "BROADCAST" : "POINT-TO-POINT"}, Cost 1`,
+      `  State ${localRole}, Priority ${router.config.interfaces[name]?.ospfPriority ?? 1}`,
+      `  Designated Router (ID) ${drId === null ? "none" : formatIpv4(drId)}`,
+      `  Backup Designated router (ID) ${bdrId === null ? "none" : formatIpv4(bdrId)}`,
+      "",
+    );
+  }
+  return out.length ? out : ["No OSPF interfaces are active"];
+}
+
+export function showIpEigrpNeighbor(router: Router): string[] {
+  const out = ["", "H   Address         Interface       Hold Uptime   SRTT   RTO  Q  Seq"];
+  router.eigrpNeighbors.forEach((n, index) => out.push(`${index}   ${formatIpv4(n.remoteAddress).padEnd(16)}${n.localInterface.padEnd(16)}15   00:00:08        0  5000  0  ${index + 1}`));
+  return out;
+}
+
+export function showIpEigrpInterfaces(router: Router): string[] {
+  const eigrp = router.config.eigrp;
+  if (!eigrp) return ["EIGRP is not configured"];
+  const out = [`EIGRP-IPv4 Interfaces for AS(${eigrp.as})`, "Interface        Peers   Xmit Queue   Mean   Pacing Time   Multicast   Pending"];
+  for (const iface of router.l3Interfaces()) {
+    if (!iface.up() || iface.ip === null || iface.mask === null) continue;
+    const enabled = eigrp.networks.some((network) => networkOf(iface.ip!, network.mask) === network.network);
+    if (!enabled) continue;
+    const peers = router.eigrpNeighbors.filter((neighbor) => neighbor.localInterface === iface.name).length;
+    out.push(`${iface.name.padEnd(18)}${String(peers).padEnd(9)}0             0      0 ms          0           0`);
+  }
+  return out;
+}
+
+export function showIpEigrpTopology(router: Router): string[] {
+  const eigrp = router.config.eigrp;
+  if (!eigrp) return ["EIGRP is not configured"];
+  const out = [`EIGRP-IPv4 Topology Table for AS(${eigrp.as})`, "Codes: P - Passive, A - Active, U - Update, Q - Query, R - Reply, r - Reply status"];
+  for (const route of router.eigrpTopology()) {
+    const via = route.nextHop === null ? "connected" : `via ${formatIpv4(route.nextHop)}`;
+    out.push(`P ${formatIpv4(route.network)}/${maskToPrefix(route.mask)}, ${via}, ${route.exitIface ?? "-"}`);
+  }
+  return out;
+}
+
+export function showIpProtocols(device: IosDevice): string[] {
+  if (device.kind !== "router" || (!device.config.ospf && !device.config.eigrp)) return ["Routing Protocol is \"connected\"", "  Routing Protocol is \"static\"", ""];
+  if (device.config.eigrp) return [`Routing Protocol is \"eigrp ${device.config.eigrp.as}\"`, "  Outgoing update filter list for all interfaces is not set", `  Routing for Networks: ${device.config.eigrp.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`, `  Passive Interfaces: ${device.config.eigrp.passiveInterfaces.join(", ") || "none"}`, ""];
+  const ospf = device.config.ospf!;
+  return [
+    `Routing Protocol is \"ospf ${ospf.processId}\"`,
+    `  Router ID ${(device as Router).ospfRouterId() === null ? "not set" : formatIpv4((device as Router).ospfRouterId()!)}`,
+    "  Outgoing update filter list for all interfaces is not set",
+    "  Incoming update filter list for all interfaces is not set",
+    `  Routing for Networks: ${ospf.networks.map((n) => formatIpv4(n.network)).join(", ") || "none"}`,
+    `  Passive Interfaces: ${ospf.passiveInterfaces.join(", ") || "none"}`,
+    `  Default route originated: ${ospf.defaultInformation ? "yes" : "no"}`,
+    `  Area ranges: ${ospf.summaries.map((s) => `${s.area}:${formatIpv4(s.network)} ${formatIpv4(s.mask)}`).join(", ") || "none"}`,
+    "  Routing Information Sources:",
+    "    Gateway         Distance      Last Update",
+    "  Distance: (default is 110)",
+    "",
+  ];
+}
+
+export function showIpv6Protocols(router: Router): string[] {
+  const out = ["IPv6 Routing Protocol is \"connected\"", "IPv6 Routing Protocol is \"static\""];
+  const ospfv3 = router.config.ospfv3;
+  if (!ospfv3) return [...out, ""];
+  const interfaces = router.l3Interfaces().filter((iface) => router.config.interfaces[iface.name]?.ipv6OspfArea !== null && router.config.interfaces[iface.name]?.ipv6OspfArea !== undefined);
+  out.push(
+    `IPv6 Routing Protocol is \"ospf ${ospfv3.processId}\"`,
+    `  Interfaces: ${interfaces.map((iface) => iface.name).join(", ") || "none"}`,
+    `  Areas: ${[...new Set(interfaces.map((iface) => router.config.interfaces[iface.name].ipv6OspfArea))].join(", ") || "none"}`,
+    "  Administrative distance: 110",
+    "",
+  );
   return out;
 }
 
@@ -341,7 +720,7 @@ function vlanTable(sw: Switch): string[] {
   ];
   for (const [id, name] of [...sw.vlans].sort((a, b) => a[0] - b[0])) {
     // Trunks aren't listed under any VLAN. Access ports are, even when they're down.
-    const ports = sw.ports.filter((p) => sw.operationalMode(p) !== "trunk" && sw.switchport(p).accessVlan === id).map((p) => p.shortName);
+    const ports = sw.ports.filter((p) => sw.operationalMode(p) !== "trunk" && sw.config.interfaces[p.name].switchport?.accessVlan === id).map((p) => p.shortName);
     const chunks: string[] = [];
     for (let i = 0; i < ports.length; i += 4) chunks.push(ports.slice(i, i + 4).join(", "));
     const status = UNSUPPORTED_VLANS.has(id) ? "act/unsup" : "active";
@@ -354,6 +733,250 @@ function vlanTable(sw: Switch): string[] {
 
 export function showVlanBrief(sw: Switch): string[] {
   return vlanTable(sw);
+}
+
+export function showVtpStatus(sw: Switch): string[] {
+  return [
+    "VTP Version                     : 2",
+    `Configuration Revision          : ${sw.vlanDat ? 1 : 0}`,
+    `VTP Operating Mode              : ${sw.config.vtpMode}`,
+    "Maximum VLANs supported locally : 1005",
+    `Number of existing VLANs        : ${sw.vlans.size}`,
+    `VTP Domain Name                 : ${sw.config.vtpDomain}`,
+    "VTP Pruning Mode                : Disabled",
+    "VTP V2 Mode                     : Disabled",
+    "VTP Traps Generation            : Disabled",
+    "MD5 digest                      : 0x00000000000000000000000000000000",
+    "Configuration last modified by  : 0.0.0.0 at 0-00-00 00:00:00",
+  ];
+}
+
+export function showSpanningTree(sw: Switch): string[] {
+  const out: string[] = [];
+  for (const vlan of [...sw.vlans.keys()].filter((v) => sw.vlanActive(v)).sort((a, b) => a - b)) {
+    const root = electedRoot(sw, vlan);
+    const rootPriority = root.bridgePriority(vlan) + vlan;
+    const rootPorts = stpPorts(sw).filter((p) => sw.stpRole(p, vlan) === "root");
+    out.push(`VLAN${String(vlan).padStart(4, "0")}`, "  Spanning tree enabled protocol ieee", `  Root ID    Priority    ${rootPriority}`,
+      `             Address     ${formatMacCisco(root.baseMac)}`);
+    if (root === sw) out.push("             This bridge is the root");
+    else if (rootPorts[0]) out.push(`             Cost        ${rootPorts[0].shortName.startsWith("Gi") ? 4 : 19}`, `             Port        ${rootPorts[0].shortName.replace(/^\D+/, "") || rootPorts[0].shortName}(${rootPorts[0].name})`);
+    out.push("", `  Bridge ID  Priority    ${sw.bridgePriority(vlan) + vlan}`, `             Address     ${formatMacCisco(sw.baseMac)}`, "", "Interface        Role Sts Cost      Prio.Nbr Type", "---------------- ---- --- --------- -------- --------------------------------");
+    for (const p of stpPorts(sw).filter((p) => sw.vlansOn(p).includes(vlan))) {
+      const role = sw.stpRole(p, vlan);
+      const state = sw.stpState(p, vlan);
+      const roleText = role === "root" ? "Root" : role === "alternate" ? "Altn" : "Desg";
+      const stateText = state === "blocking" ? "BLK" : state === "listening" ? "LST" : state === "learning" ? "LRN" : state === "forwarding" ? "FWD" : "---";
+      const cost = stpCost(p);
+      const group = sw.config.interfaces[p.name].channelGroup;
+      const label = group === null ? p.shortName : `Po${group}`;
+      const number = group === null ? Number(p.shortName.split("/").pop()) || 0 : 64 + group;
+      out.push(`${label.padEnd(16)} ${roleText.padEnd(4)} ${stateText.padEnd(3)} ${String(cost).padEnd(9)} 128.${number}    ${p.peer?.device.kind === "switch" ? "P2p" : "Edge"}`);
+    }
+    out.push("");
+  }
+  return out;
+}
+
+function stpVlans(sw: Switch, vlan?: number): number[] {
+  return [...sw.vlans.keys()].filter((v) => sw.vlanActive(v) && (vlan === undefined || v === vlan)).sort((a, b) => a - b);
+}
+
+function stpRoot(sw: Switch, vlan: number): Switch {
+  return electedRoot(sw, vlan);
+}
+
+function stpCost(port: ReturnType<Switch["port"]>): number {
+  const members = port.device.kind === "switch" ? (port.device as Switch).channelMembers(port) : [port];
+  if (members.length > 1) return members.every((p) => p.shortName.startsWith("Gi")) ? 3 : 12;
+  return port.shortName.startsWith("Gi") ? 4 : 19;
+}
+
+function stpPorts(sw: Switch): ReturnType<Switch["port"]>[] {
+  return sw.ports.filter((p) => sw.config.interfaces[p.name].channelGroup === null || sw.channelRepresentative(p) === p);
+}
+
+/** IOS's `show spanning-tree root` view. */
+export function showSpanningTreeRoot(sw: Switch): string[] {
+  const out = ["                                         Root    Hello Max Fwd", "Vlan                   Root ID          Cost    Time  Age  Dly  Root Port"];
+  for (const vlan of stpVlans(sw)) {
+    const root = stpRoot(sw, vlan);
+    const rootPort = sw.ports.find((p) => sw.stpRole(p, vlan) === "root");
+    out.push(`VLAN${String(vlan).padStart(4, "0")}                   ${root.bridgePriority(vlan) + vlan} ${formatMacCisco(root.baseMac)} ${rootPort ? String(stpCost(rootPort)).padStart(7) : "       0"}    2   20  15  ${rootPort?.shortName ?? "-"}`);
+  }
+  return out;
+}
+
+/** IOS's `show spanning-tree blockedports` view. */
+export function showSpanningTreeBlockedPorts(sw: Switch): string[] {
+  const out = ["Name                 Blocked Interfaces List", "-------------------- --------------------------------------------------"];
+  let count = 0;
+  for (const vlan of stpVlans(sw)) {
+    const blocked = sw.ports.filter((p) => sw.stpState(p, vlan) === "blocking");
+    if (!blocked.length) continue;
+    count += blocked.length;
+    out.push(`VLAN${String(vlan).padStart(4, "0")}               ${blocked.map((p) => p.shortName).join(", ")}`);
+  }
+  out.push("", `Number of blocked ports (segments) in the system : ${count}`);
+  return out;
+}
+
+/** IOS's `show spanning-tree summary` view. */
+export function showSpanningTreeSummary(sw: Switch): string[] {
+  const out = [
+    "Switch is in pvst mode",
+    "Root bridge for:",
+    "Extended system ID           is enabled",
+    `Portfast Default             is ${sw.config.spanningTreePortfastDefault ? "enabled" : "disabled"}`,
+    `PortFast BPDU Guard Default  is ${sw.config.spanningTreeBpduGuardDefault ? "enabled" : "disabled"}`,
+    "Portfast BPDU Filter Default is disabled",
+    "Loopguard Default            is disabled",
+    `EtherChannel misconfig guard is ${sw.etherchannelMisconfigGuard ? "enabled" : "disabled"}`,
+    "UplinkFast                   is disabled",
+    "BackboneFast                 is disabled",
+    "Configured Pathcost method used is short",
+    "",
+    "Name                   Blocking Listening Learning Forwarding STP Active",
+    "---------------------- -------- --------- -------- ---------- ----------",
+  ];
+  let totals = { blocking: 0, listening: 0, learning: 0, forwarding: 0, active: 0 };
+  for (const vlan of stpVlans(sw)) {
+    const ports = sw.ports.filter((p) => sw.vlansOn(p).includes(vlan));
+    const counts = { blocking: ports.filter((p) => sw.stpState(p, vlan) === "blocking").length, listening: ports.filter((p) => sw.stpState(p, vlan) === "listening").length, learning: ports.filter((p) => sw.stpState(p, vlan) === "learning").length, forwarding: ports.filter((p) => sw.stpState(p, vlan) === "forwarding").length };
+    const active = ports.length;
+    totals = { blocking: totals.blocking + counts.blocking, listening: totals.listening + counts.listening, learning: totals.learning + counts.learning, forwarding: totals.forwarding + counts.forwarding, active: totals.active + active };
+    out.push(`VLAN${String(vlan).padStart(4, "0")}                     ${String(counts.blocking).padStart(2)}        ${String(counts.listening).padStart(2)}        ${String(counts.learning).padStart(2)}          ${String(counts.forwarding).padStart(2)}          ${String(active).padStart(2)}`);
+  }
+  out.push("", "---------------------- -------- --------- -------- ---------- ----------", `${stpVlans(sw).length} vlans${" ".repeat(16)}${String(totals.blocking).padStart(2)}        ${String(totals.listening).padStart(2)}        ${String(totals.learning).padStart(2)}          ${String(totals.forwarding).padStart(2)}          ${String(totals.active).padStart(2)}`, "");
+  return out;
+}
+
+function stpDetailForPort(sw: Switch, port: ReturnType<Switch["port"]>, vlan: number): string[] {
+  const role = sw.stpRole(port, vlan);
+  const state = sw.stpState(port, vlan);
+  if (state === "disabled") return [];
+  const root = stpRoot(sw, vlan);
+  const roleWord = role === "root" ? "root" : role === "alternate" ? "alternate" : "designated";
+  const stateWord = state === "blocking" ? "blocking" : state === "listening" ? "listening" : state === "learning" ? "learning" : "forwarding";
+  const number = Number(port.shortName.split("/").pop()) || 0;
+  const out = [
+    `Port ${number} (${port.name}) of VLAN${String(vlan).padStart(4, "0")} is ${roleWord} ${stateWord}`,
+    `  Port path cost ${stpCost(port)}, Port priority 128, Port Identifier 128.${number}`,
+    `  Designated root has priority ${root.bridgePriority(vlan) + vlan}, address ${formatMacCisco(root.baseMac)}`,
+    `  Designated bridge has priority ${sw.bridgePriority(vlan) + vlan}, address ${formatMacCisco(sw.baseMac)}`,
+  ];
+  if (role !== "alternate") out.push(`  Designated port id is 128.${number}, designated path cost ${stpCost(port)}`);
+  out.push("  Timers: message age 16, forward delay 0, hold 0", "  Number of transitions to forwarding state: 1");
+  if (sw.portfastEnabled(port)) out.push("  The port is in the portfast mode");
+  out.push("  Link type is point-to-point by default", "");
+  return out;
+}
+
+/** IOS's `show spanning-tree detail` view. */
+export function showSpanningTreeDetail(sw: Switch): string[] {
+  const out: string[] = [];
+  for (const vlan of stpVlans(sw)) {
+    const root = stpRoot(sw, vlan);
+    const rootPort = sw.ports.find((p) => sw.stpRole(p, vlan) === "root");
+    out.push(`VLAN${String(vlan).padStart(4, "0")} is executing the ieee compatible Spanning Tree Protocol`, `  Bridge Identifier has priority of ${sw.bridgePriority(vlan)}, sysid ${vlan}, ${formatMacCisco(sw.baseMac)}`, "  Configured hello time 2, max age 20, forward delay 15", `  Current root has priority ${root.bridgePriority(vlan) + vlan}`);
+    if (rootPort) out.push(`  Root port is ${Number(rootPort.shortName.split("/").pop())} (${rootPort.name}), cost of root path is ${stpCost(rootPort)}`);
+    out.push("  Topology change flag not set, detected flag not set", "  Number of topology changes 0 last change occurred 00:00:00 ago", "  Times:  hold 1, topology change 35, notification 2", "  Timers: hello 0, topology change 0, notification 0, aging 300", "");
+    for (const port of sw.ports.filter((p) => sw.vlansOn(p).includes(vlan))) out.push(...stpDetailForPort(sw, port, vlan));
+  }
+  return out;
+}
+
+/** IOS's `show spanning-tree interface ... detail` view. */
+export function showSpanningTreeInterfaceDetail(sw: Switch, iface: string): string[] {
+  const port = sw.port(iface);
+  const out: string[] = [];
+  for (const vlan of stpVlans(sw)) if (sw.vlansOn(port).includes(vlan)) out.push(...stpDetailForPort(sw, port, vlan));
+  return out;
+}
+
+export function showSpanningTreeInconsistentPorts(sw: Switch): string[] {
+  const out = ["Name                 Interface            Inconsistency", "-------------------- -------------------- ------------------"];
+  let count = 0;
+  for (const vlan of stpVlans(sw)) for (const port of sw.ports) {
+    if (sw.isRootInconsistent(port, vlan)) {
+      out.push(`VLAN${String(vlan).padStart(4, "0")}             ${port.shortName.padEnd(20)}Root Inconsistent`);
+      count++;
+    }
+  }
+  out.push("", `Number of inconsistent ports (segments) in the system : ${count}`);
+  return out;
+}
+
+/** `active` is the normal STP report with ports that are not carrying the VLAN omitted. */
+export function showSpanningTreeActive(sw: Switch): string[] {
+  const out = showSpanningTree(sw);
+  return out;
+}
+
+export function showEtherchannelSummary(sw: Switch): string[] {
+  const groups = new Map<number, typeof sw.ports>();
+  for (const port of sw.ports) {
+    const group = sw.config.interfaces[port.name].channelGroup;
+    if (group !== null) groups.set(group, [...(groups.get(group) ?? []), port]);
+  }
+  const out = [
+    "",
+    "Flags:  D - down        P - bundled in port-channel",
+    "        I - stand-alone s - suspended",
+    "        H - Hot-standby (LACP only)",
+    "        R - Layer3      S - Layer2",
+    "        U - in use      f - failed to allocate aggregator",
+    "        M - not in use, minimum links not met",
+    "        u - unsuitable for bundling",
+    "        w - waiting to be aggregated",
+    "        d - default port",
+    "",
+    `Number of channel-groups in use: ${groups.size}`,
+    `Number of aggregators:           ${groups.size}`,
+    "",
+    "Group  Port-channel  Protocol    Ports",
+    "------+-------------+-----------+-----------------------------------------------",
+  ];
+  for (const [group, ports] of [...groups].sort(([a], [b]) => a - b)) {
+    const mode = sw.config.interfaces[ports[0].name].channelMode;
+    const protocol = mode === "active" || mode === "passive" ? "LACP" : mode === "desirable" || mode === "auto" ? "PAgP" : "-";
+    const bundled = ports.some((port) => sw.channelMemberState(port) === "P");
+    const routed = ports.some((port) => !sw.config.interfaces[port.name].switchport);
+    const poState = `${routed ? "R" : "S"}${bundled ? "U" : "D"}`;
+    const members = ports.map((port) => `${port.shortName}(${sw.channelMemberState(port)})`).join("    ");
+    out.push(`${String(group).padStart(1)}      Po${group}(${poState})         ${protocol.padEnd(8)}  ${members}`);
+  }
+  if (groups.size === 0) out.push("No EtherChannels configured.");
+  else out.push(...[...groups.keys()].sort((a, b) => a - b).map((group) => `Po${group}- (logical Port-channel)`));
+  out.push("");
+  return out;
+}
+
+export function showEtherchannelPortChannel(sw: Switch, group: number): string[] {
+  const ports = sw.channelGroupPorts(group);
+  if (!ports.length) return [`% Port-channel ${group} not found`];
+  const po = sw.config.interfaces[`Port-channel${group}`];
+  const mode = sw.config.interfaces[ports[0].name].channelMode;
+  const protocol = mode === "active" || mode === "passive" ? "LACP" : mode === "desirable" || mode === "auto" ? "PAgP" : "-";
+  return [
+    `Group Port-channel Protocol    Ports`,
+    `${group}     Po${group}          ${protocol}`, 
+    ...ports.map((p) => `                ${p.shortName}  ${sw.channelMemberState(p)}${po && !po.switchport ? " routed" : ""}`),
+  ];
+}
+
+export function showEtherchannelLoadBalance(sw: Switch): string[] {
+  return ["EtherChannel Load-Balancing Configuration:", `        ${sw.portChannelLoadBalance}`];
+}
+
+export function showLacpNeighbor(sw: Switch): string[] {
+  const ports = sw.ports.filter((p) => ["active", "passive"].includes(sw.config.interfaces[p.name].channelMode ?? ""));
+  return ["                 LACP port-channel                 LACP neighbor", "Port      Flags   Port-channel    Port       Age", ...ports.map((p) => `${p.shortName.padEnd(10)}${sw.channelMemberState(p).padEnd(8)}Po${sw.config.interfaces[p.name].channelGroup ?? "-"}`)];
+}
+
+export function showPagpNeighbor(sw: Switch): string[] {
+  const ports = sw.ports.filter((p) => ["desirable", "auto"].includes(sw.config.interfaces[p.name].channelMode ?? ""));
+  return ["Flags:  S - Device is sending Slow hello", "        U - Device is in Use", "Group Port      Partner Name", ...ports.map((p) => `${sw.config.interfaces[p.name].channelGroup ?? "-"}     ${p.shortName}      ${p.peer?.device.hostname ?? "-"}`)];
 }
 
 const VLAN_TYPES: Record<number, [string, string]> = { 1002: ["fddi", "-"], 1003: ["tr", "-"], 1004: ["fdnet", "ieee"], 1005: ["trnet", "ibm"] };
@@ -379,6 +1002,26 @@ export function showVlan(sw: Switch): string[] {
     "------- --------- ----------------- ------------------------------------------",
     "",
   );
+  return out;
+}
+
+/** `show vlan id N` prints the selected VLAN's table row and detail record. */
+export function showVlanId(sw: Switch, id: number): string[] {
+  const name = sw.vlans.get(id);
+  if (name === undefined) return [`% VLAN id ${id} not found in current VLAN database`];
+  const portNames = sw.ports
+    .filter((p) => sw.operationalMode(p) !== "trunk" && sw.config.interfaces[p.name].switchport?.accessVlan === id)
+    .map((p) => p.shortName);
+  const out = [
+    "VLAN Name                             Status    Ports",
+    "---- -------------------------------- --------- -------------------------------",
+    `${String(id).padEnd(5)}${name.padEnd(33)}${(UNSUPPORTED_VLANS.has(id) ? "act/unsup" : "active").padEnd(10)}${portNames.join(", ")}`,
+    "",
+    "VLAN Type  SAID       MTU   Parent RingNo BridgeNo Stp  BrdgMode Trans1 Trans2",
+    "---- ----- ---------- ----- ------ ------ -------- ---- -------- ------ ------",
+  ];
+  const [type, stp] = VLAN_TYPES[id] ?? ["enet", "-"];
+  out.push(`${String(id).padEnd(5)}${type.padEnd(6)}${String(100000 + id).padEnd(11)}1500  -      -      -        ${stp.padEnd(5)}-        0      0   `);
   return out;
 }
 
@@ -416,6 +1059,10 @@ export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
   for (const p of sw.ports) {
     if (only && p.name !== only) continue;
     const sp = sw.switchport(p);
+    if (!sp) {
+      out.push(`Name: ${p.shortName}`, "Switchport: Disabled", "");
+      continue;
+    }
     const op = sw.operationalMode(p);
     out.push(
       `Name: ${p.shortName}`,
@@ -428,7 +1075,15 @@ export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
       `Access Mode VLAN: ${vlanLabel(sp.accessVlan)}`,
       `Trunking Native Mode VLAN: ${vlanLabel(sp.nativeVlan)}`,
       "Administrative Native VLAN tagging: enabled",
-      "Voice VLAN: none",
+      `Voice VLAN: ${sp.voiceVlan === null ? "none" : vlanLabel(sp.voiceVlan)}`,
+      `Port Security: ${sp.portSecurity ? "Enabled" : "Disabled"}`,
+      `Port Security Maximum: ${sp.portSecurityMaximum}`,
+      `Port Security Violation Mode: ${sp.portSecurityViolation}`,
+      `Sticky MAC Addresses: ${sp.portSecuritySticky ? "Enabled" : "Disabled"}`,
+      `Secure MAC Addresses: ${sp.secureMacs.length}`,
+      `DHCP Snooping Trust: ${sp.dhcpTrust ? "trusted" : "untrusted"}`,
+      `DHCP Snooping Rate Limit: ${sp.dhcpRateLimit ?? "none"}`,
+      `ARP Inspection Trust: ${sp.arpInspectionTrust ? "trusted" : "untrusted"}`,
       "Administrative private-vlan host-association: none ",
       "Administrative private-vlan mapping: none ",
       "Administrative private-vlan trunk native VLAN: none",
@@ -451,6 +1106,78 @@ export function showInterfacesSwitchport(sw: Switch, only?: string): string[] {
     );
   }
   return out;
+}
+
+export function showPortSecurity(sw: Switch, only?: string): string[] {
+  const ports = sw.ports.filter((port) => !only || port.name === only);
+  const out = [
+    "Secure Port      MaxSecureAddr  CurrentAddr  SecurityViolation  Security Action",
+    "                 (Count)        (Count)      (Count)             ",
+  ];
+  for (const port of ports) {
+    const sp = sw.switchport(port);
+    if (!sp) continue;
+    const state = !sp.portSecurity ? "Disabled" : port.adminDown ? "Secure-shutdown" : "Secure-up";
+    out.push(`${port.shortName.padEnd(17)}${String(sp.portSecurityMaximum).padEnd(15)}${String(sp.secureMacs.length).padEnd(13)}0${"".padEnd(20)}${state}`);
+  }
+  return out;
+}
+
+export function showIpDhcpSnooping(sw: Switch): string[] {
+  const out = [
+    "DHCP snooping is " + (sw.config.dhcpSnooping ? "active" : "not configured"),
+    `DHCP snooping is configured on VLANs: ${sw.config.dhcpSnoopingVlans.length ? formatVlanList(sw.config.dhcpSnoopingVlans) : "none"}`,
+    "Insertion of option 82 is enabled",
+    "Verification of hwaddr field is enabled",
+    `Packets processed: ${sw.dhcpSnoopingStats.processed}`,
+    `Packets dropped on untrusted ports: ${sw.dhcpSnoopingStats.untrustedDrops}`,
+    `Packets dropped by rate limit: ${sw.dhcpSnoopingStats.rateLimitDrops}`,
+    "",
+    "Interface                  Trusted     Rate limit (pps)",
+  ];
+  for (const p of sw.ports) {
+    const sp = sw.switchport(p);
+    out.push(`${p.shortName.padEnd(27)}${(sp.dhcpTrust ? "yes" : "no").padEnd(12)}${sp.dhcpRateLimit ?? "none"}`);
+  }
+  return out;
+}
+
+export function showIpDhcpSnoopingStatistics(sw: Switch): string[] {
+  return [
+    "DHCP snooping statistics:",
+    `  Packets processed: ${sw.dhcpSnoopingStats.processed}`,
+    `  Packets dropped on untrusted ports: ${sw.dhcpSnoopingStats.untrustedDrops}`,
+    `  Packets dropped by rate limit: ${sw.dhcpSnoopingStats.rateLimitDrops}`,
+  ];
+}
+
+export function showIpDhcpSnoopingBinding(sw: Switch): string[] {
+  const out = ["MacAddress          IpAddress        Lease(sec)  Type           VLAN  Interface", "------------------  ---------------  ----------  -------------  ----  -----------------"];
+  for (const b of sw.config.dhcpSnoopingBindings) {
+    out.push(`${formatMacCisco(b.mac).padEnd(20)}${formatIpv4(b.ip).padEnd(17)}${"-".padEnd(12)}${"dhcp-snooping".padEnd(15)}${String(b.vlan).padEnd(6)}${b.port}`);
+  }
+  return out;
+}
+
+export function showIpArpInspection(sw: Switch): string[] {
+  const out = [
+    `Source MAC validation: ${sw.config.arpInspectionVlans.length ? "enabled" : "disabled"}`,
+    `Destination MAC validation: ${sw.config.arpInspectionVlans.length ? "enabled" : "disabled"}`,
+    `IP address validation: ${sw.config.arpInspectionVlans.length ? "enabled" : "disabled"}`,
+    `Inspection VLANs: ${sw.config.arpInspectionVlans.length ? formatVlanList(sw.config.arpInspectionVlans) : "none"}`,
+    "",
+    "Interface                  Trusted",
+  ];
+  for (const p of sw.ports) out.push(`${p.shortName.padEnd(27)}${sw.switchport(p).arpInspectionTrust ? "yes" : "no"}`);
+  return out;
+}
+
+export function showIpArpInspectionStatistics(sw: Switch): string[] {
+  return [
+    "Dynamic ARP inspection statistics:",
+    `  ARP packets inspected: ${sw.arpInspectionStats.inspected}`,
+    `  ARP packets dropped: ${sw.arpInspectionStats.drops}`,
+  ];
 }
 
 /** The first lines of `show version`, which IOS also prints while it boots. */
@@ -544,6 +1271,58 @@ export function showCdpNeighborsDetail(device: IosDevice): string[] {
   return out;
 }
 
+function lldpIfName(name: string): string {
+  const m = /^([A-Za-z]+)(.*)$/.exec(name)!;
+  return `${m[1].slice(0, 3)} ${m[2]}`;
+}
+
+export function showLldp(device: IosDevice): string[] {
+  if (!device.config.lldp) return ["% LLDP is not enabled"];
+  return [
+    "Global LLDP information:",
+    "    Transmit interval: 60 seconds",
+    "    Holdtime: 120 seconds",
+    "    Fast start repeat count: 3",
+  ];
+}
+
+export function showLldpNeighbors(device: IosDevice): string[] {
+  if (!device.config.lldp) return ["% LLDP is not enabled"];
+  const out = [
+    "Capability codes: R - Router, B - Bridge, T - Telephone, W - WLAN Access Point",
+    "                  S - Station, O - Other",
+    "Device ID        Local Intf     Hold-time  Capability      Port ID",
+  ];
+  const now = device.clock.now;
+  for (const n of device.liveLldpNeighbors()) {
+    const hold = String(Math.ceil((n.expiresAt - now) / 1000));
+    const cap = n.capability === "Router" ? "R" : "B,S";
+    out.push(`${n.deviceId.padEnd(17)}${lldpIfName(n.localPort.name).padEnd(15)}${hold.padEnd(11)}${cap.padEnd(16)}${lldpIfName(n.portId)}`);
+  }
+  return out;
+}
+
+export function showLldpNeighborsDetail(device: IosDevice): string[] {
+  if (!device.config.lldp) return ["% LLDP is not enabled"];
+  const out: string[] = [];
+  const now = device.clock.now;
+  for (const n of device.liveLldpNeighbors()) {
+    out.push(
+      "",
+      `Local Interface: ${n.localPort.name}`,
+      `Chassis id: ${n.deviceId}`,
+      `Port id: ${n.portId}`,
+      `Port Description: ${n.portId}`,
+      `System Name: ${n.deviceId}`,
+      `System Description: ${n.platform}`,
+      `Time remaining: ${Math.ceil((n.expiresAt - now) / 1000)} seconds`,
+      ...(n.address !== null ? [`Management address: ${formatIpv4(n.address)}`] : []),
+      `System Capabilities: ${n.capability}`,
+    );
+  }
+  return out;
+}
+
 export function showClock(device: IosDevice): string[] {
   // Every device in Static Springs believes it is March 1st, 1993.
   const ms = device.clock.now;
@@ -553,6 +1332,143 @@ export function showClock(device: IosDevice): string[] {
   const frac = ms % 1000;
   const pad = (n: number, w = 2) => String(n).padStart(w, "0");
   return [`*${pad(h)}:${pad(m)}:${pad(s)}.${pad(frac, 3)} UTC Mon Mar 1 1993`];
+}
+
+/** The last commands on this terminal, up to the history size. Like IOS, it ends with itself. */
+export function showHistory(device: IosDevice): string[] {
+  const size = device.console.historySize;
+  return size ? device.console.history.slice(-size).map((line) => `  ${line}`) : [];
+}
+
+/** The local console is the only active line in the simulator. */
+export function showUsers(_device: IosDevice): string[] {
+  return [
+    "    Line       User       Host(s)              Idle       Location",
+    "   *  0 con 0                idle                 00:00:00",
+    "",
+    "  Interface    User               Mode         Idle     Peer Address",
+  ];
+}
+
+export function showSsh(device: IosDevice): string[] {
+  const c = device.config;
+  return [
+    c.rsaKeysGenerated && c.domainName ? "SSH Enabled - version 1.99" : "SSH Disabled - version 1.99",
+    "Authentication timeout: 120 secs; Authentication retries: 3",
+    `Local user authentication: ${c.vty.loginLocal ? "enabled" : "disabled"}`,
+    `VTY transport input: ${c.vty.transportInput}`,
+  ];
+}
+
+export function showAccessLists(device: IosDevice): string[] {
+  const out: string[] = [];
+  for (const [number, rules] of Object.entries(device.config.standardAcls).sort(([a], [b]) => Number(a) - Number(b))) {
+    out.push(`Standard IP access list ${number}`);
+    rules.forEach((rule, index) => out.push(`    ${(index + 1) * 10} ${rule.action} ${formatAclSource(rule)}`));
+  }
+  for (const [number, rules] of Object.entries(device.config.extendedAcls).sort(([a], [b]) => Number(a) - Number(b))) {
+    out.push("Extended IP access list " + number);
+    rules.forEach((rule, index) => out.push("    " + ((index + 1) * 10) + " " + rule.action + " " + rule.protocol + " " + formatAclSource(rule.source) + " " + formatAclSource(rule.destination)));
+  }
+  return out.length ? out : ["No access lists configured"];
+}
+
+export function showIpv6AccessLists(device: IosDevice): string[] {
+  const out: string[] = [];
+  for (const [name, rules] of Object.entries(device.config.ipv6Acls).sort(([a], [b]) => a.localeCompare(b))) {
+    out.push(`IPv6 access list ${name}`);
+    rules.forEach((rule, index) => out.push(`    ${(index + 1) * 10} ${rule.action} ${rule.protocol} ${rule.source.address === null ? "any" : `${formatIpv6(rule.source.address)}/${rule.source.prefix}`} ${rule.destination.address === null ? "any" : `${formatIpv6(rule.destination.address)}/${rule.destination.prefix}`}`));
+  }
+  return out.length ? out : ["No IPv6 access lists configured"];
+}
+
+export function showIpNatTranslations(device: IosDevice): string[] {
+  const out = ["Pro Inside global      Pro Inside local       Outside local      Outside global", "--- -------------------- -------------------- --------------- ---------------"];
+  for (const nat of device.config.staticNat) out.push(`--- ${formatIpv4(nat.insideGlobal).padEnd(20)} ${formatIpv4(nat.insideLocal).padEnd(20)} ---               ---`);
+  if (device.kind === "router") for (const nat of (device as Router).natPatTranslations()) out.push(`icmp ${formatIpv4(nat.globalIp).padEnd(20)} ${formatIpv4(nat.localIp).padEnd(20)} ---               ---`);
+  return out;
+}
+
+export function showIpNatStatistics(router: Router): string[] {
+  const inside = router.interfaces().filter((iface) => router.config.interfaces[iface.name]?.natRole === "inside").map((iface) => iface.name);
+  const outside = router.interfaces().filter((iface) => router.config.interfaces[iface.name]?.natRole === "outside").map((iface) => iface.name);
+  const staticCount = router.config.staticNat.length;
+  const dynamicCount = router.natPatTranslations().length;
+  const counters = router.natStatistics();
+  const out = [
+    `Total active translations: ${staticCount + dynamicCount} (${staticCount} static, ${dynamicCount} dynamic; 0 extended)`,
+    `Inside interfaces: ${inside.length ? inside.join(", ") : "none"}`,
+    `Outside interfaces: ${outside.length ? outside.join(", ") : "none"}`,
+    `Hits: ${counters.hits}  Misses: ${counters.misses}`,
+    "Expired translations: 0",
+    "Dynamic mappings:",
+  ];
+  for (const rule of router.config.natOverloads) out.push(`  access-list ${rule.acl} interface ${rule.outsideInterface} overload (active ${dynamicCount})`);
+  return out;
+}
+
+export function showStandby(router: Router): string[] {
+  const out: string[] = [];
+  for (const iface of router.interfaces()) {
+    const h = router.config.interfaces[iface.name]?.hsrp;
+    if (!h || iface.status() !== "up") continue;
+    const active = router.hsrpActive(iface.name);
+    out.push(`${iface.name} - Group ${h.group}`, `  State is ${active === router ? "Active" : "Standby"}`, `  Virtual IP address is ${formatIpv4(h.ip)}`, `  Priority ${h.priority}`, `  Active router is ${active.hostname}`);
+  }
+  return out.length ? out : ["HSRP is not configured"];
+}
+
+export function showVrrp(router: Router): string[] {
+  const out: string[] = [];
+  for (const iface of router.interfaces()) {
+    const v = router.config.interfaces[iface.name]?.vrrp;
+    if (!v || iface.status() !== "up") continue;
+    const active = router.vrrpActive(iface.name);
+    out.push(`${iface.name} - Group ${v.group}`, `  State is ${active === router ? "Master" : "Backup"}`, `  Virtual IP address is ${formatIpv4(v.ip)}`, `  Priority ${v.priority}`, `  Master router is ${active.hostname}`);
+  }
+  return out.length ? out : ["VRRP is not configured"];
+}
+
+export function showGlbp(router: Router): string[] {
+  const out: string[] = [];
+  for (const iface of router.interfaces()) {
+    const g = router.config.interfaces[iface.name]?.glbp;
+    if (!g || iface.status() !== "up") continue;
+    const active = router.glbpActive(iface.name);
+    out.push(`${iface.name} - Group ${g.group}`, `  State is ${active === router ? "Active" : "Standby"}`, `  Virtual IP address is ${formatIpv4(g.ip)}`, `  Priority ${g.priority}`, `  Active Virtual Gateway is ${active.hostname}`);
+  }
+  return out.length ? out : ["GLBP is not configured"];
+}
+
+export function showNtpStatus(device: IosDevice): string[] {
+  if (!device.config.ntpServers.length) return ["Clock is unsynchronized, stratum 16", "No reference clock"];
+  return ["Clock is synchronized, stratum 8", `Reference clock is ${formatIpv4(device.config.ntpServers[0])}`, "Nominal frequency is 250.0000 Hz, actual frequency is 250.0000 Hz"];
+}
+
+export function showNtpAssociations(device: IosDevice): string[] {
+  const out = ["      address         ref clock     st  when  poll reach  delay  offset   disp", "*~" + (device.config.ntpServers[0] ? formatIpv4(device.config.ntpServers[0]) : "0.0.0.0") + "          .        8     0    64  377   0.00    0.00  0.01"];
+  return out;
+}
+
+export function showLogging(device: IosDevice): string[] {
+  return [
+    "Syslog logging: enabled",
+    `  Logging to ${device.config.loggingHosts.length ? device.config.loggingHosts.map(formatIpv4).join(", ") : "none"}`,
+    `  Trap logging: level ${device.config.loggingTrap}`,
+    `  Log buffer: ${device.logBuffer.length} messages (maximum 100)`,
+    ...(device.logBuffer.length ? ["Log Buffer:", ...device.logBuffer] : []),
+  ];
+}
+
+export function showSnmp(device: IosDevice): string[] {
+  const out = ["Chassis: CR-2911", `${device.snmpPacketsInput} SNMP packets input`, `${device.snmpPacketsOutput} SNMP packets output`, `SNMP communities configured: ${device.config.snmpCommunities.length}`];
+  for (const snmp of device.config.snmpCommunities) out.push(`  ${snmp.community} (${snmp.access})`);
+  return out;
+}
+
+export function showHosts(device: IosDevice): string[] {
+  const rows = Object.entries(device.config.hostRecords).flatMap(([name, addresses]) => addresses.map((address) => `${formatIpv4(address).padEnd(18)} ${name}`));
+  return rows.length ? ["Default domain is not set", "Name/address lookup uses static entries", "", "Host                      Address", "----                      -------", ...rows] : ["Default domain is not set", "Name/address lookup uses DNS", "", "No hosts configured"];
 }
 
 // ---- DHCP ----------------------------------------------------------------------
@@ -618,6 +1534,24 @@ export function showDhcpConflict(router: Router): string[] {
     out.push(`${formatIpv4(c.ip).padEnd(18)}${"Ping".padEnd(19)}${iosDate(c.detectedAt)}`);
   }
   return out;
+}
+
+export function showDhcpServerStatistics(router: Router): string[] {
+  const s = router.dhcp.statistics;
+  return [
+    "DHCP server statistics:",
+    `  DHCP messages received                 : ${s.received}`,
+    `    DHCPDISCOVER messages received      : ${s.discoverReceived}`,
+    `    DHCPREQUEST messages received       : ${s.requestReceived}`,
+    `    DHCPRELEASE messages received       : ${s.releaseReceived}`,
+    `  DHCP messages sent                    : ${s.sent}`,
+    `    DHCPOFFER messages sent             : ${s.offerSent}`,
+    `    DHCPACK messages sent               : ${s.ackSent}`,
+    `    DHCPNAK messages sent               : ${s.nakSent}`,
+    "  DHCP database:",
+    `    Active bindings                      : ${router.dhcp.liveBindings().length}`,
+    `    Address conflicts                    : ${router.dhcp.conflicts.size}`,
+  ];
 }
 
 function broadcastOfMask(network: number, mask: number): number {

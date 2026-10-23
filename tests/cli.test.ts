@@ -11,6 +11,51 @@ function router() {
 }
 
 describe("modes and prompts", () => {
+  it("shows the previous commands from user and privileged EXEC history", () => {
+    const r = router();
+    // Like IOS, the list ends with the show history that asked for it.
+    expect(type(r, "show clock", "show history")).toEqual([
+      "*00:00:00.000 UTC Mon Mar 1 1993",
+      "  show clock",
+      "  show history",
+    ]);
+    type(r, "en", "show version");
+    expect(type(r, "show history")).toContain("  show version");
+    expect(type(r, "terminal history size 2", "show clock", "show history")).toEqual([
+      "*00:00:00.000 UTC Mon Mar 1 1993",
+      "  show clock",
+      "  show history",
+    ]);
+  });
+
+  it("keeps every command for the work orders, whatever show history displays", () => {
+    // The laundromat's last task looks for show ip dhcp binding after a point in this list.
+    const r = router();
+    type(r, "en", ...Array.from({ length: 15 }, () => "show clock"));
+    const from = r.console.history.length;
+    type(r, "show ip dhcp binding");
+    expect(from).toBeGreaterThan(10);
+    expect(r.console.history.slice(from)).toEqual(["show ip dhcp binding"]);
+    expect(type(r, "show history")).toHaveLength(10);
+  });
+
+  it("shows the active console line and users table headers", () => {
+    const r = router();
+    expect(type(r, "show users")).toEqual([
+      "    Line       User       Host(s)              Idle       Location",
+      "   *  0 con 0                idle                 00:00:00",
+      "",
+      "  Interface    User               Mode         Idle     Peer Address",
+    ]);
+    type(r, "en");
+    expect(type(r, "show users")[1]).toContain("*");
+  });
+
+  it("shows interface error counters", () => {
+    const r = router();
+    expect(type(r, "", "en", "show interfaces counters errors").join("\n")).toContain("Align-Err");
+  });
+
   it("walks user, enable, config, interface and back", () => {
     const r = router();
     expect(r.console.prompt()).toBe("Router>");
@@ -129,7 +174,7 @@ describe("help and completion", () => {
     const r = router();
     type(r, "en");
     const lines = r.console.help("show ip ").lines.map((l) => l.trim().split(/\s+/)[0]);
-    expect(lines).toEqual(["arp", "dhcp", "interface", "route", ""]);
+    expect(lines).toEqual(["arp", "dhcp", "eigrp", "interface", "nat", "ospf", "protocols", "route", ""]);
     expect(r.console.help("show ip interface brief ").lines).toEqual(["  <cr>", ""]);
   });
 
@@ -250,5 +295,63 @@ describe("running config", () => {
     type(r, "");
     expect(r.console.prompt()).toBe("Router>");
     expect(type(r, "en", "show startup-config")).toEqual(["startup-config is not present"]);
+  });
+
+  it("keeps the setup dialog plain IOS outside story mode, however often you say yes", () => {
+    const r = router();
+    const factoryBoot = () => type(r, "en", "conf t", "hostname R1", "end", "wr", "erase startup-config", "", "reload", "", "");
+    for (let i = 0; i < 3; i++) {
+      factoryBoot();
+      expect(r.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [yes/no]: ");
+      expect(type(r, "yes")).toContain("Use ctrl-c to abort configuration dialog at any prompt.");
+      expect(type(r, "yes")).toEqual(["Configuration aborted, no changes made.", "", "", "Press RETURN to get started!", ""]);
+      type(r, "");
+      expect(r.console.prompt()).toBe("Router>");
+    }
+  });
+  it("takes yes to the setup dialog worse every time, then stops asking for good", () => {
+    const r = router();
+    r.console.story = true;
+    const factoryBoot = () => type(r, "en", "conf t", "hostname R1", "end", "wr", "erase startup-config", "", "reload", "", "");
+    const QUESTION = "Would you like to enter the initial configuration dialog? [yes/no]: ";
+    factoryBoot();
+    expect(r.console.prompt()).toBe(QUESTION);
+
+    // The first yes looks like real IOS, then backs out.
+    expect(type(r, "yes")).toContain("Use ctrl-c to abort configuration dialog at any prompt.");
+    expect(r.console.prompt()).toBe("Would you like to enter basic management setup? [yes/no]: ");
+    expect(type(r, "yes")).toContain("% Nobody uses setup. Are you sure you're a technician?");
+    expect(r.console.prompt()).toBe(QUESTION);
+
+    expect(type(r, "yes")).toContain("% You are not my administrator.");
+    expect(type(r, "y")).toContain("% Answer no. Everyone answers no. Walter answers no.");
+    expect(r.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [yes/no/please no]: ");
+    expect(type(r, "yes")).toContain("% STOP SAYING YES");
+    expect(r.console.prompt()).toMatch(/^W0uld y0u/);
+    expect(type(r, "yes")).toContain("You                    192.168.1.66    YES manual up                    up");
+    expect(r.console.prompt()).toBe("WOULD YOU LIKE TO ENTER [yes/no]: ");
+
+    // The last yes ends it, and nothing was actually configured.
+    const last = type(r, "yes");
+    expect(last).toContain("Some changes made.");
+    expect(last).toContain("Press RETURN to get started!");
+    type(r, "");
+    expect(r.console.prompt()).toBe("Router>");
+    expect(type(r, "en", "show startup-config")).toEqual(["startup-config is not present"]);
+
+    // It remembers across reloads: now it only takes no, and thanks you for it.
+    factoryBoot();
+    expect(r.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [no/no]: ");
+    expect(type(r, "yes")).toEqual(["% No."]);
+    expect(type(r, "no")).toEqual(["", "Thank you.", "", "Press RETURN to get started!", ""]);
+  });
+
+  it("accepts 'please no' when it asks for one", () => {
+    const r = router();
+    r.console.story = true;
+    type(r, "en", "conf t", "hostname R1", "end", "wr", "erase startup-config", "", "reload", "", "");
+    type(r, "yes", "yes", "yes", "yes");
+    expect(r.console.prompt()).toBe("Would you like to enter the initial configuration dialog? [yes/no/please no]: ");
+    expect(type(r, "please no")).toContain("Thank you.");
   });
 });

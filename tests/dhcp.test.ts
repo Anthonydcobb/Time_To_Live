@@ -18,6 +18,38 @@ function served() {
 const addr = (n: number | null) => (n === null ? null : formatIpv4(n));
 
 describe("DHCP", () => {
+  it("relays a client request to a DHCP server on another routed network", () => {
+    const net = new Network();
+    const relay = net.add(new Router("RELAY", "RELAY"));
+    const server = net.add(new Router("SERVER", "SERVER"));
+    const client = net.add(new Pc("CLIENT"));
+    net.connect(client.nic, relay.port("Gig0/0"));
+    net.connect(relay.port("Gig0/1"), server.port("Gig0/0"));
+    type(relay, "en", "conf t", "int g0/0", "ip address 10.10.0.1 255.255.255.0", "ip helper-address 10.20.0.1", "no shut", "int g0/1", "ip address 10.0.0.1 255.255.255.0", "no shut", "ip route 10.20.0.0 255.255.255.0 10.0.0.2", "end");
+    type(server, "en", "conf t", "int g0/0", "ip address 10.0.0.2 255.255.255.0", "no shut", "int g0/1", "ip address 10.20.0.1 255.255.255.0", "no shut", "ip route 10.10.0.0 255.255.255.0 10.0.0.1", "ip dhcp pool USERS", "network 10.10.0.0 255.255.255.0", "default-router 10.10.0.1", "end");
+    net.clock.advance(3_000);
+    client.useDhcp();
+    net.clock.advance(15_000);
+    expect(addr(client.ip)).toBe("10.10.0.2");
+    expect(addr(client.gateway)).toBe("10.10.0.1");
+    expect(type(relay, "show running-config").join("\n")).toContain(" ip helper-address 10.20.0.1");
+  });
+
+  it("falls back to APIPA when the routed client interface has no helper", () => {
+    const net = new Network();
+    const relay = net.add(new Router("RELAY", "RELAY"));
+    const server = net.add(new Router("SERVER", "SERVER"));
+    const client = net.add(new Pc("CLIENT"));
+    net.connect(client.nic, relay.port("Gig0/0"));
+    net.connect(relay.port("Gig0/1"), server.port("Gig0/0"));
+    type(relay, "en", "conf t", "int g0/0", "ip address 10.10.0.1 255.255.255.0", "no shut", "int g0/1", "ip address 10.0.0.1 255.255.255.0", "no shut", "end");
+    type(server, "en", "conf t", "int g0/0", "ip address 10.0.0.2 255.255.255.0", "no shut", "ip dhcp pool USERS", "network 10.10.0.0 255.255.255.0", "end");
+    net.clock.advance(3_000);
+    client.useDhcp();
+    net.clock.advance(65_000);
+    expect(addr(client.ip)).toMatch(/^169\.254\./);
+  });
+
   it("leases the first free address after the excluded range", () => {
     const { r1, register } = served();
     const out = run(register, "ipconfig /dhcp");
@@ -26,6 +58,17 @@ describe("DHCP", () => {
     const binding = type(r1, "show ip dhcp binding");
     expect(binding[4]).toMatch(/^192\.168\.1\.11 {8}01[0-9a-f]{2}\.[0-9a-f]{4}\.[0-9a-f]{4}\.[0-9a-f]{2} +Mar 02 1993 12:\d\d AM +Automatic$/);
     expect(run(register, "ping -n 1 192.168.1.1").some((l) => l.startsWith("Reply from 192.168.1.1"))).toBe(true);
+  });
+
+  it("reports IOS-style DHCP server message statistics", () => {
+    const { r1, register } = served();
+    run(register, "ipconfig /dhcp");
+    const output = type(r1, "show ip dhcp server statistics").join("\n");
+    expect(output).toContain("DHCP server statistics:");
+    expect(output).toContain("DHCPDISCOVER messages received      : 1");
+    expect(output).toContain("DHCPOFFER messages sent             : 1");
+    expect(output).toContain("DHCPACK messages sent               : 1");
+    expect(output).toContain("Active bindings                      : 1");
   });
 
   it("gives each client its own address and keeps it on renew", () => {

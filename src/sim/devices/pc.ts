@@ -1,10 +1,11 @@
-import { nextMac, type Ipv4 } from "../addr";
+import { nextMac, type Ipv4, type Ipv6, type Mac } from "../addr";
 import type { Frame } from "../frames";
 import { IpStack, type L3Interface } from "../ipstack";
 import { Device, Port } from "../network";
 import { IosDevice } from "./ios-device";
 import { PcShell } from "../pc/shell";
 import { apipaFor, DhcpClient, type DhcpLease } from "../dhcp";
+import { PcTerminal } from "../pc/terminal";
 
 /** Windows tries DHCP again this long after it fell back to a link-local address. */
 export const DHCP_RETRY_MS = 5 * 60_000;
@@ -15,6 +16,8 @@ export class Pc extends Device {
   ip: Ipv4 | null = null;
   mask: Ipv4 | null = null;
   gateway: Ipv4 | null = null;
+  ipv6Addresses: { address: Ipv6; prefix: number }[] = [];
+  ipv6Gateway: Ipv6 | null = null;
   dnsServers: Ipv4[] = [];
   /** Obtain an address automatically. When false, the address was set by hand. */
   dhcp = false;
@@ -27,11 +30,14 @@ export class Pc extends Device {
   readonly rs232: Port;
   readonly stack: IpStack;
   readonly shell: PcShell;
+  readonly terminal: PcTerminal;
+  private nextDnsId = 1;
+  private readonly dnsWaiters = new Map<number, (addresses: Ipv4[]) => void>();
   private readonly l3: L3Interface;
 
-  constructor(id: string, readonly name = id) {
+  constructor(id: string, readonly name = id, mac: Mac = nextMac("0060a8")) {
     super(id);
-    this.nic = new Port(this, "FastEthernet0", "Fa0", nextMac("0060a8"));
+    this.nic = new Port(this, "FastEthernet0", "Fa0", mac);
     this.ports.push(this.nic);
     this.rs232 = new Port(this, "RS 232", "RS232", "000000000000", "console");
     const self = this;
@@ -44,6 +50,9 @@ export class Pc extends Device {
       get mask() {
         return self.mask;
       },
+      get ipv6Addresses() {
+        return self.ipv6Addresses;
+      },
       up: () => this.nic.protocolUp,
       transmit: (frame) => this.send(this.nic, frame),
     };
@@ -55,7 +64,16 @@ export class Pc extends Device {
       initialTtl: 128,
       localRoutes: false,
       defaultGateway: () => this.gateway,
+      ipv6DefaultGateway: () => this.ipv6Gateway,
       onDhcp: (_iface, packet) => this.dhcpClient.handle(packet),
+      onDns: (_iface, packet) => {
+        const dns = packet.dns;
+        if (!dns?.response) return;
+        const waiter = this.dnsWaiters.get(dns.id);
+        if (!waiter) return;
+        this.dnsWaiters.delete(dns.id);
+        waiter(dns.addresses);
+      },
     });
     this.dhcpClient = new DhcpClient({
       clock: () => this.clock,
@@ -64,6 +82,35 @@ export class Pc extends Device {
       transmit: (frame) => this.send(this.nic, frame),
     });
     this.shell = new PcShell(this);
+    this.terminal = new PcTerminal(this);
+  }
+
+  resolve(name: string, done: (address: Ipv4 | null) => void): void {
+    const server = this.dnsServers[0];
+    if (server === undefined || this.ip === null || !this.nic.protocolUp || this.stack.sourceFor(server) === null) {
+      done(null);
+      return;
+    }
+    const id = this.nextDnsId++;
+    let settled = false;
+    const finish = (addresses: Ipv4[]) => {
+      if (settled) return;
+      settled = true;
+      this.dnsWaiters.delete(id);
+      done(addresses[0] ?? null);
+    };
+    this.dnsWaiters.set(id, finish);
+    if (!this.stack.send({
+      kind: "ipv4",
+      src: this.ip,
+      dst: server,
+      ttl: 128,
+      dns: { kind: "dns", id, response: false, name, addresses: [] },
+    })) {
+      finish([]);
+      return;
+    }
+    this.clock.schedule(2000, () => finish([]));
   }
 
   get hostname(): string {
@@ -82,6 +129,11 @@ export class Pc extends Device {
     this.autoconfigured = false;
     this.dnsServers = [];
     this.setAddress(ip, mask, gateway);
+  }
+
+  configureIpv6(address: Ipv6 | null, prefix: number, gateway: Ipv6 | null = null): void {
+    this.ipv6Addresses = address === null ? [] : [{ address, prefix }];
+    this.ipv6Gateway = gateway;
   }
 
   private setAddress(ip: Ipv4 | null, mask: Ipv4 | null, gateway: Ipv4 | null): void {

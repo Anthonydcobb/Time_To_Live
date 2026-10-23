@@ -1,0 +1,29 @@
+<!doctype html>
+<html>
+<body>
+<pre id="status">Diagnostic page loading...</pre>
+<script>
+var statusEl = document.getElementById("status");
+
+function log(text) {
+    statusEl.textContent = text;
+}
+
+try {
+    log("Script loaded. Checking Packet Tracer webView API...");
+    if (typeof webView === "undefined" || webView === null) {
+        log("ERROR: webView API is unavailable in this Custom Interface.");
+    } else if (typeof webView.ipcCallAsync !== "function") {
+        log("ERROR: webView.ipcCallAsync is unavailable.");
+    } else {
+        log("webView API found. Requesting web view ID...");
+        webView.ipcCallAsync("getWebViewId", function (id) {
+            log("Web view ID received: " + id);
+        });
+    }
+} catch (error) {
+    log("ERROR: " + error);
+}
+</script>
+</body>
+</html>

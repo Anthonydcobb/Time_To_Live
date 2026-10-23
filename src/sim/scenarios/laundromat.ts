@@ -72,7 +72,7 @@ export function laundromat() {
       done: () => printer.ip === PRINTER && printer.mask === MASK && printer.gateway === GW,
     },
     {
-      text: "Get both PCs an address from DHCP. (They already tried once and gave up. Try ipconfig /renew.)",
+      text: "Get both PCs an address from DHCP. (They already tried once and gave up.)",
       done: () => leased(kiosk) && leased(office),
     },
     {

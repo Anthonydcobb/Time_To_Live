@@ -1,10 +1,45 @@
 import type { Ipv4, Mac } from "../addr";
-import { Device, Port } from "../network";
+import { Device, Port, type LinkSettings } from "../network";
 import type { IpStack, L3Interface } from "../ipstack";
 import { cloneConfig, defaultConfig, type InterfaceConfig, type IosConfig } from "../ios/config";
-import { IosConsole } from "../ios/console";
+import { IosConsole, type ConsoleOutput } from "../ios/console";
 import { showVersion } from "../ios/show";
-import { CDP_MAC, type Frame } from "../frames";
+import { CDP_MAC, type Frame, type LldpPacket } from "../frames";
+import { type5Hash } from "../ios/passwords";
+
+export type RemoteProtocol = "ssh" | "telnet";
+export type RemoteLoginResult =
+  | { ok: true; protocol: RemoteProtocol; username: string }
+  | { ok: false; reason: "transport-disabled" | "ssh-not-ready" | "local-login-disabled" | "unknown-user" | "bad-password" };
+
+export type SnmpGetResult =
+  | { ok: true; oid: string; type: "STRING" | "TIMETICKS"; value: string | number }
+  | { ok: false; reason: "unknown-community" | "no-such-object" };
+
+/** An authenticated simulated SSH/Telnet session. It intentionally reuses the device CLI. */
+export class RemoteSession {
+  private closed = false;
+
+  constructor(
+    readonly device: IosDevice,
+    readonly protocol: RemoteProtocol,
+    readonly username: string,
+  ) {}
+
+  prompt(): string {
+    return this.closed ? "" : this.device.console.prompt();
+  }
+
+  input(line: string): ConsoleOutput {
+    if (this.closed) return { lines: ["% Session is closed."] };
+    return this.device.console.input(line);
+  }
+
+  close(): ConsoleOutput {
+    this.closed = true;
+    return { lines: ["Connection closed by remote host."] };
+  }
+}
 
 /** What `show ip interface brief` and friends need to know about any interface. */
 export interface InterfaceView {
@@ -30,6 +65,16 @@ export interface CdpNeighbor {
   expiresAt: number;
 }
 
+export interface LldpNeighbor {
+  localPort: Port;
+  deviceId: string;
+  platform: string;
+  capability: "Router" | "Switch";
+  portId: string;
+  expiresAt: number;
+  address: Ipv4 | null;
+}
+
 export const CDP_INTERVAL_MS = 60_000;
 export const CDP_HOLDTIME_SEC = 180;
 
@@ -49,6 +94,14 @@ export abstract class IosDevice extends Device {
   /** The header times as they were when startup-config was written. */
   startupStamps: { changed: number | null; nvram: number | null } = { changed: null, nvram: null };
   readonly cdpNeighbors = new Map<Port, CdpNeighbor>();
+  /** Last native-VLAN warning per local port, so repeated CDP frames do not spam the log. */
+  private readonly cdpNativeVlanMismatchAt = new Map<Port, number>();
+  readonly lldpNeighbors = new Map<Port, LldpNeighbor>();
+  /** Recent IOS messages retained by the local log buffer. */
+  readonly logBuffer: string[] = [];
+  /** Counters for the deliberately local SNMP GET simulation. */
+  snmpPacketsInput = 0;
+  snmpPacketsOutput = 0;
   /** Interface whose `shutdown` state is being changed right now, for log wording. */
   protected adminChanging: string | null = null;
 
@@ -70,6 +123,12 @@ export abstract class IosDevice extends Device {
 
   ifaceConfig(name: string): InterfaceConfig {
     return this.config.interfaces[name];
+  }
+
+  linkSettings(port: Port): LinkSettings {
+    const cfg = this.config.interfaces[port.name];
+    const maxSpeed = port.name.startsWith("FastEthernet") ? 100 : 1000;
+    return { maxSpeed, speed: cfg?.speed ?? "auto", duplex: cfg?.duplex ?? "auto" };
   }
 
   isPortShutdown(port: Port): boolean {
@@ -122,7 +181,7 @@ export abstract class IosDevice extends Device {
 
   onPortStateChange(port: Port, layer: "link" | "protocol"): void {
     this.logInterfaceChange(port.name, layer, layer === "link" ? port.linkUp : port.protocolUp);
-    if (layer === "protocol" && port.protocolUp) this.clock.schedule(0, () => this.sendCdp(port));
+    if (layer === "protocol" && port.protocolUp) this.clock.schedule(0, () => { this.sendCdp(port); this.sendLldp(port); });
   }
 
   onAttach(): void {
@@ -131,6 +190,11 @@ export abstract class IosDevice extends Device {
       this.clock.schedule(CDP_INTERVAL_MS, tick);
     };
     this.clock.schedule(CDP_INTERVAL_MS, tick);
+    const lldpTick = () => {
+      for (const p of this.ports) this.sendLldp(p);
+      this.clock.schedule(CDP_INTERVAL_MS, lldpTick);
+    };
+    this.clock.schedule(0, lldpTick);
   }
 
   /** The address CDP advertises: the first interface that has one. */
@@ -140,6 +204,50 @@ export abstract class IosDevice extends Device {
       if (ip != null) return ip;
     }
     return null;
+  }
+
+  attemptRemoteLogin(protocol: RemoteProtocol, username: string, password: string): RemoteLoginResult {
+    const line = this.config.vty;
+    if (line.transportInput === "none" || (line.transportInput !== "all" && line.transportInput !== protocol)) {
+      return { ok: false, reason: "transport-disabled" };
+    }
+    if (protocol === "ssh" && (!this.config.domainName || !this.config.rsaKeysGenerated)) {
+      return { ok: false, reason: "ssh-not-ready" };
+    }
+    if (!line.loginLocal && !(this.config.aaaNewModel && this.config.aaaLoginLocal)) return { ok: false, reason: "local-login-disabled" };
+    const stored = this.config.users[username];
+    if (!stored) return { ok: false, reason: "unknown-user" };
+    if (stored !== type5Hash(password, stored.split("$")[2])) return { ok: false, reason: "bad-password" };
+    return { ok: true, protocol, username };
+  }
+
+  openRemoteSession(protocol: RemoteProtocol, username: string, password: string): RemoteSession | RemoteLoginResult {
+    const login = this.attemptRemoteLogin(protocol, username, password);
+    return login.ok ? new RemoteSession(this, protocol, username) : login;
+  }
+
+  /**
+   * A small, transport-free SNMPv2c surface for labs and automation exercises.
+   * It models community authorization and common system OIDs, not UDP polling,
+   * SET operations, traps, or a full MIB.
+   */
+  snmpGet(community: string, oid: string): SnmpGetResult {
+    this.snmpPacketsInput++;
+    const configured = this.config.snmpCommunities.find((entry) => entry.community === community);
+    if (!configured) return { ok: false, reason: "unknown-community" };
+    const normalized = oid.replace(/^\./, "").toLowerCase();
+    const values: Record<string, { type: "STRING" | "TIMETICKS"; value: string | number }> = {
+      "1.3.6.1.2.1.1.1.0": { type: "STRING", value: `${this.model} IOS-style simulator` },
+      "1.3.6.1.2.1.1.3.0": { type: "TIMETICKS", value: this.clock.now * 100 },
+      "1.3.6.1.2.1.1.5.0": { type: "STRING", value: this.hostname },
+      "sysdescr.0": { type: "STRING", value: `${this.model} IOS-style simulator` },
+      "sysuptime.0": { type: "TIMETICKS", value: this.clock.now * 100 },
+      "sysname.0": { type: "STRING", value: this.hostname },
+    };
+    const value = values[normalized];
+    if (!value) return { ok: false, reason: "no-such-object" };
+    this.snmpPacketsOutput++;
+    return { ok: true, oid, ...value };
   }
 
   private sendCdp(port: Port): void {
@@ -162,6 +270,21 @@ export abstract class IosDevice extends Device {
     });
   }
 
+  private sendLldp(port: Port): void {
+    const c = this.config;
+    if (!c.lldp || !port.protocolUp) return;
+    const payload: LldpPacket = {
+      kind: "lldp",
+      deviceId: c.hostname,
+      platform: `Cryptis ${this.model}`,
+      capability: this.kind === "router" ? "Router" : "Switch",
+      portId: port.name,
+      ttlSec: 120,
+      address: this.managementAddress(),
+    };
+    this.send(port, { src: port.mac, dst: "0180c200000e", payload });
+  }
+
   /** Returns true if the frame was a CDP advertisement (which is never forwarded). */
   protected handleCdp(port: Port, frame: Frame): boolean {
     const p = frame.payload;
@@ -179,14 +302,41 @@ export abstract class IosDevice extends Device {
     });
     const ours = this.cdpNativeVlan(port);
     if (p.nativeVlan !== undefined && ours !== undefined && p.nativeVlan !== ours) {
-      this.emit(`%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on ${port.name} (${ours}), with ${p.deviceId} ${p.portId} (${p.nativeVlan}).`);
+      const last = this.cdpNativeVlanMismatchAt.get(port);
+      if (last === undefined || this.clock.now - last >= CDP_INTERVAL_MS) {
+        this.cdpNativeVlanMismatchAt.set(port, this.clock.now);
+        this.emit(`%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on ${port.name} (${ours}), with ${p.deviceId} ${p.portId} (${p.nativeVlan}).`);
+      }
+    } else {
+      this.cdpNativeVlanMismatchAt.delete(port);
     }
+    return true;
+  }
+
+  protected handleLldp(port: Port, frame: Frame): boolean {
+    if (frame.payload.kind !== "lldp") return false;
+    if (!this.config.lldp) return true;
+    const p = frame.payload;
+    this.lldpNeighbors.set(port, {
+      localPort: port,
+      deviceId: p.deviceId,
+      platform: p.platform,
+      capability: p.capability,
+      portId: p.portId,
+      expiresAt: this.clock.now + p.ttlSec * 1000,
+      address: p.address,
+    });
     return true;
   }
 
   liveCdpNeighbors(): CdpNeighbor[] {
     const now = this.clock.now;
     return [...this.cdpNeighbors.values()].filter((n) => n.expiresAt > now);
+  }
+
+  liveLldpNeighbors(): LldpNeighbor[] {
+    const now = this.clock.now;
+    return [...this.lldpNeighbors.values()].filter((n) => n.expiresAt > now);
   }
 
   protected logInterfaceChange(name: string, layer: "link" | "protocol", up: boolean): void {
@@ -201,7 +351,12 @@ export abstract class IosDevice extends Device {
 
   /** Console log messages carry IOS's default timestamp: `*Mar  1 00:01:02.345: `. */
   emit(text: string): void {
-    super.emit(text.startsWith("%") ? `*${logTimestamp(this.clock.now)}: ${text}` : text);
+    const formatted = text.startsWith("%") ? `*${logTimestamp(this.clock.now)}: ${text}` : text;
+    if (text.startsWith("%")) {
+      this.logBuffer.push(formatted);
+      if (this.logBuffer.length > 100) this.logBuffer.shift();
+    }
+    super.emit(formatted);
   }
 
   saveConfig(): void {
@@ -224,6 +379,7 @@ export abstract class IosDevice extends Device {
     this.afterReload();
     this.dirty = false;
     this.configChangedAt = null;
+    this.cdpNativeVlanMismatchAt.clear();
     for (const p of this.ports) this.network?.refresh(p);
   }
 

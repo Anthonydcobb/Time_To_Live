@@ -108,6 +108,11 @@ describe("cables", () => {
     expect(() => net.connect(pc.rs232, r.port("Gig0/0"), "console")).toThrow(CableError);
     net.connect(pc.rs232, r.consolePort, "console");
     expect(pc.consoleTarget()).toBe(r);
+    expect(pc.shell.execute("terminal").lines).toEqual(["[Connected to Router console]", "Router>"]);
+    expect(pc.shell.execute("enable").lines).toEqual([]);
+    expect(r.console.prompt()).toBe("Router#");
+    expect(pc.shell.execute("disconnect").lines).toEqual(["[Console connection closed]"]);
+    expect(pc.shell.execute("ipconfig").lines[0]).toBe("");
   });
 });
 
