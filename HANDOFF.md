@@ -291,4 +291,4 @@ The VLAN plan for each site from job 3 on, and where subnetting and VLSM come in
 
 ## Latest handoff update (2026-10-23, Codex)
 
-- Completed OSPFv2 single-area and IPv4 ACL research without changing src/sim. Raw captures and reports are in harness/artifacts/ospfv2-research-{pt,sim}.json and docs/{ospfv2,acls}-research.md. PT was restored and verified after each run. The next ordered research topic is NAT/PAT.
+- Completed OSPFv2, IPv4 ACL, and NAT/PAT research without changing src/sim. Raw captures and reports are in harness/artifacts/{ospfv2,acls,natpat}-research-{pt,sim}.json and docs/{ospfv2,acls,natpat}-research.md. PT was restored and verified after each run. The next ordered research topic is port security.
