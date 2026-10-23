@@ -1,6 +1,6 @@
 /**
- * All of the game's sound, generated live with the Web Audio API. There are no audio files:
- * hums, static, whispers and crackles are built from oscillators and filtered noise.
+ * All of the game's sound, through the Web Audio API. Hums, static, whispers and crackles are
+ * built live from oscillators and filtered noise; the only files are each room's music.
  *
  * Browsers only allow sound after a click, so nothing plays until `start()` is called from
  * the "Click to play" button. Calls made before that are remembered or quietly ignored.
@@ -11,6 +11,12 @@ import type { RoomId } from "./rooms";
 const FRIDGES = { x: 13, y: 2.5 };
 const JACK = { x: 7.5, y: 5 };
 const GARY_DOOR = { x: 5, y: 1.5 };
+
+/** Looping music per room, from public/assets/audio. Rooms not listed have none. */
+const MUSIC: Partial<Record<RoomId, string>> = {
+  office: "assets/audio/bobs-office.mp3",
+};
+const MUSIC_LEVEL = 0.35;
 
 const near = (px: number, py: number, p: { x: number; y: number }, reach: number) =>
   Math.max(0, 1 - Math.hypot(px - p.x, py - p.y) / reach);
@@ -31,6 +37,8 @@ class GameAudio {
   private ambience: Ambience | null = null;
   private drone: { gain: GainNode; stop(): void } | null = null;
   private radio: { stop(): void } | null = null;
+  private music: { url: string; stop(): void } | null = null;
+  private tracks = new Map<string, Promise<AudioBuffer>>();
   private lastUpdate = 0;
   private pos = { x: 0, y: 0 };
 
@@ -423,7 +431,53 @@ class GameAudio {
     };
   }
 
+  /** Fades the room's track in, or out if it has none. Leaves it alone if it's already playing. */
+  private playMusic(url: string | undefined): void {
+    const ctx = this.ctx!;
+    if (this.music?.url === url) return;
+    this.music?.stop();
+    this.music = null;
+    if (!url) return;
+    let track = this.tracks.get(url);
+    if (!track) {
+      track = fetch(url)
+        .then((r) => r.arrayBuffer())
+        .then((data) => ctx.decodeAudioData(data));
+      this.tracks.set(url, track);
+    }
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    gain.connect(this.master);
+    let src: AudioBufferSourceNode | null = null;
+    let stopped = false;
+    const music = {
+      url,
+      stop: () => {
+        stopped = true;
+        gain.gain.setTargetAtTime(0, ctx.currentTime, 0.4);
+        src?.stop(ctx.currentTime + 2);
+      },
+    };
+    this.music = music;
+    track
+      .then((buffer) => {
+        if (stopped) return;
+        src = ctx.createBufferSource();
+        src.buffer = buffer;
+        src.loop = true;
+        src.connect(gain);
+        src.start();
+        gain.gain.setTargetAtTime(MUSIC_LEVEL, ctx.currentTime, 0.8);
+      })
+      .catch(() => {
+        // A missing or broken file just means silence, never a crash.
+        this.tracks.delete(url);
+        if (this.music === music) this.music = null;
+      });
+  }
+
   private buildRoom(): void {
+    this.playMusic(this.room ? MUSIC[this.room] : undefined);
     this.ambience?.stop();
     this.drone?.stop();
     this.drone = null;
