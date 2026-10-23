@@ -1,0 +1,1207 @@
+{
+  "capturedAt": "2026-10-23T22:48:20.446Z",
+  "backend": "sim",
+  "topology": {
+    "id": "port-security-research",
+    "description": "Three PCs through two switches; secure S1 uplink sees multiple learned source MACs",
+    "devices": [
+      {
+        "name": "S1",
+        "type": "switch",
+        "hostname": "S1",
+        "startupConfig": [
+          "enable",
+          "configure terminal",
+          "interface fa0/1",
+          "switchport mode trunk",
+          "interface fa0/2",
+          "switchport mode access",
+          "end"
+        ]
+      },
+      {
+        "name": "S2",
+        "type": "switch",
+        "hostname": "S2",
+        "startupConfig": [
+          "enable",
+          "configure terminal",
+          "interface fa0/1",
+          "switchport mode trunk",
+          "interface fa0/2",
+          "switchport mode access",
+          "interface fa0/3",
+          "switchport mode access",
+          "end"
+        ]
+      },
+      {
+        "name": "PC0",
+        "type": "pc",
+        "ip": "192.168.10.10/24"
+      },
+      {
+        "name": "PC1",
+        "type": "pc",
+        "ip": "192.168.10.11/24"
+      },
+      {
+        "name": "PC2",
+        "type": "pc",
+        "ip": "192.168.10.12/24"
+      }
+    ],
+    "links": [
+      {
+        "a": "PC0 Fa0",
+        "b": "S1 Fa0/2"
+      },
+      {
+        "a": "S1 Fa0/1",
+        "b": "S2 Fa0/1"
+      },
+      {
+        "a": "PC1 Fa0",
+        "b": "S2 Fa0/2"
+      },
+      {
+        "a": "PC2 Fa0",
+        "b": "S2 Fa0/3"
+      }
+    ]
+  },
+  "observations": [
+    {
+      "backend": "sim",
+      "experiment": "stp-convergence",
+      "operation": "advance",
+      "waitedMs": 35000,
+      "logs": [
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface FastEthernet0/2, changed state to up"
+        },
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface FastEthernet0/1, changed state to up"
+        },
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/2, changed state to up"
+        },
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up"
+        },
+        {
+          "device": "S2",
+          "text": "*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface FastEthernet0/1, changed state to up"
+        },
+        {
+          "device": "S2",
+          "text": "*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface FastEthernet0/2, changed state to up"
+        },
+        {
+          "device": "S2",
+          "text": "*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface FastEthernet0/3, changed state to up"
+        },
+        {
+          "device": "S2",
+          "text": "*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up"
+        },
+        {
+          "device": "S2",
+          "text": "*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/2, changed state to up"
+        },
+        {
+          "device": "S2",
+          "text": "*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/3, changed state to up"
+        }
+      ],
+      "capturedAt": "2026-10-23T22:48:20.408Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline-connectivity",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.11",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.10.11 with 32 bytes of data:\n\nReply from 192.168.10.11: bytes=32 time=3ms TTL=128\nReply from 192.168.10.11: bytes=32 time=2ms TTL=128\n\nPing statistics for 192.168.10.11:\n    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 3ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.411Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline-connectivity",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.12",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.10.12 with 32 bytes of data:\n\nReply from 192.168.10.12: bytes=32 time=3ms TTL=128\nReply from 192.168.10.12: bytes=32 time=2ms TTL=128\n\nPing statistics for 192.168.10.12:\n    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 3ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.412Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline",
+      "device": "S1",
+      "input": "show port-security interface fa0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Secure Port      MaxSecureAddr  CurrentAddr  SecurityViolation  Security Action\n                 (Count)        (Count)      (Count)             \nFa0/1            1              0            0                    Disabled",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.412Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline",
+      "device": "S1",
+      "input": "show running-config",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 1360 bytes\n!\n! Last configuration change at 00:00:00 UTC Mon Mar 1 1993\n!\nversion 15.0\nno service pad\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname S1\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\nsystem mtu routing 1500\n!\nspanning-tree mode pvst\nspanning-tree extend system-id\n!\nvlan internal allocation policy ascending\n!\ninterface FastEthernet0/1\n switchport mode trunk\n!\ninterface FastEthernet0/2\n switchport mode access\n!\ninterface FastEthernet0/3\n!\ninterface FastEthernet0/4\n!\ninterface FastEthernet0/5\n!\ninterface FastEthernet0/6\n!\ninterface FastEthernet0/7\n!\ninterface FastEthernet0/8\n!\ninterface FastEthernet0/9\n!\ninterface FastEthernet0/10\n!\ninterface FastEthernet0/11\n!\ninterface FastEthernet0/12\n!\ninterface FastEthernet0/13\n!\ninterface FastEthernet0/14\n!\ninterface FastEthernet0/15\n!\ninterface FastEthernet0/16\n!\ninterface FastEthernet0/17\n!\ninterface FastEthernet0/18\n!\ninterface FastEthernet0/19\n!\ninterface FastEthernet0/20\n!\ninterface FastEthernet0/21\n!\ninterface FastEthernet0/22\n!\ninterface FastEthernet0/23\n!\ninterface FastEthernet0/24\n!\ninterface GigabitEthernet0/1\n!\ninterface GigabitEthernet0/2\n!\ninterface Vlan1\n no switchport\n no ip address\n shutdown\n!\nip http server\nip http secure-server\n!\nlogging trap 6\nline con 0\nline vty 0 4\n login\nline vty 5 15\n login\n!\nend\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.413Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline",
+      "device": "S1",
+      "input": "show interfaces status",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Port      Name               Status       Vlan       Duplex  Speed Type\nFa0/1                        connected    trunk      a-full  a-100  10/100BaseTX\nFa0/2                        connected    1          a-full  a-100  10/100BaseTX\nFa0/3                        notconnect   1          auto    auto   10/100BaseTX\nFa0/4                        notconnect   1          auto    auto   10/100BaseTX\nFa0/5                        notconnect   1          auto    auto   10/100BaseTX\nFa0/6                        notconnect   1          auto    auto   10/100BaseTX\nFa0/7                        notconnect   1          auto    auto   10/100BaseTX\nFa0/8                        notconnect   1          auto    auto   10/100BaseTX\nFa0/9                        notconnect   1          auto    auto   10/100BaseTX\nFa0/10                       notconnect   1          auto    auto   10/100BaseTX\nFa0/11                       notconnect   1          auto    auto   10/100BaseTX\nFa0/12                       notconnect   1          auto    auto   10/100BaseTX\nFa0/13                       notconnect   1          auto    auto   10/100BaseTX\nFa0/14                       notconnect   1          auto    auto   10/100BaseTX\nFa0/15                       notconnect   1          auto    auto   10/100BaseTX\nFa0/16                       notconnect   1          auto    auto   10/100BaseTX\nFa0/17                       notconnect   1          auto    auto   10/100BaseTX\nFa0/18                       notconnect   1          auto    auto   10/100BaseTX\nFa0/19                       notconnect   1          auto    auto   10/100BaseTX\nFa0/20                       notconnect   1          auto    auto   10/100BaseTX\nFa0/21                       notconnect   1          auto    auto   10/100BaseTX\nFa0/22                       notconnect   1          auto    auto   10/100BaseTX\nFa0/23                       notconnect   1          auto    auto   10/100BaseTX\nFa0/24                       notconnect   1          auto    auto   10/100BaseTX\nGi0/1                        notconnect   1          auto    auto   10/100/1000BaseTX\nGi0/2                        notconnect   1          auto    auto   10/100/1000BaseTX",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.414Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline",
+      "device": "S1",
+      "input": "show mac address-table",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "          Mac Address Table\n-------------------------------------------\n\nVlan    Mac Address       Type        Ports\n----    -----------       --------    -----\n\n   1    0060.a80a.0037    DYNAMIC     Fa0/2\n   1    0060.a80a.0038    DYNAMIC     Fa0/1\n   1    0060.a80a.0039    DYNAMIC     Fa0/1",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.415Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline",
+      "operation": "snapshot",
+      "rawOutput": "{\n  \"shutdown\": false,\n  \"description\": null,\n  \"speed\": \"auto\",\n  \"duplex\": \"auto\",\n  \"ip\": null,\n  \"mask\": null,\n  \"ipv6Addresses\": [],\n  \"ipv6OspfArea\": null,\n  \"helperAddresses\": [],\n  \"accessGroupIn\": null,\n  \"accessGroupOut\": null,\n  \"ipv6AccessGroupIn\": null,\n  \"ipv6AccessGroupOut\": null,\n  \"cdp\": true,\n  \"natRole\": null,\n  \"hsrp\": null,\n  \"vrrp\": null,\n  \"glbp\": null,\n  \"ospfPriority\": 1,\n  \"channelGroup\": null,\n  \"channelMode\": null,\n  \"switchport\": {\n    \"mode\": \"trunk\",\n    \"accessVlan\": 1,\n    \"voiceVlan\": null,\n    \"nativeVlan\": 1,\n    \"allowed\": null,\n    \"nonegotiate\": false,\n    \"portfast\": false,\n    \"bpduGuard\": false,\n    \"rootGuard\": false,\n    \"channelGroup\": null,\n    \"channelMode\": null,\n    \"portSecurity\": false,\n    \"portSecurityMaximum\": 1,\n    \"portSecurityViolation\": \"shutdown\",\n    \"portSecuritySticky\": false,\n    \"secureMacs\": [],\n    \"dhcpTrust\": false,\n    \"dhcpRateLimit\": null,\n    \"arpInspectionTrust\": false\n  }\n}",
+      "capturedAt": "2026-10-23T22:48:20.415Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "S1",
+      "input": "enable",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.416Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "S1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.416Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "S1",
+      "input": "interface fa0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.416Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "S1",
+      "input": "switchport port-security",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.416Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "S1",
+      "input": "switchport port-security maximum 4",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.417Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "S1",
+      "input": "switchport port-security mac-address sticky",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.417Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "S1",
+      "input": "end",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.418Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.11",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.10.11 with 32 bytes of data:\n\nReply from 192.168.10.11: bytes=32 time=2ms TTL=128\nReply from 192.168.10.11: bytes=32 time=2ms TTL=128\n\nPing statistics for 192.168.10.11:\n    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.418Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.12",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.10.12 with 32 bytes of data:\n\nReply from 192.168.10.12: bytes=32 time=2ms TTL=128\nReply from 192.168.10.12: bytes=32 time=2ms TTL=128\n\nPing statistics for 192.168.10.12:\n    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.418Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "S1",
+      "input": "show port-security interface fa0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Secure Port      MaxSecureAddr  CurrentAddr  SecurityViolation  Security Action\n                 (Count)        (Count)      (Count)             \nFa0/1            4              2            0                    Secure-up",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.419Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "S1",
+      "input": "show running-config",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 1467 bytes\n!\n! Last configuration change at 00:00:39 UTC Mon Mar 1 1993\n!\nversion 15.0\nno service pad\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname S1\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\nsystem mtu routing 1500\n!\nspanning-tree mode pvst\nspanning-tree extend system-id\n!\nvlan internal allocation policy ascending\n!\ninterface FastEthernet0/1\n switchport mode trunk\n switchport port-security\n switchport port-security maximum 4\n switchport port-security mac-address sticky\n!\ninterface FastEthernet0/2\n switchport mode access\n!\ninterface FastEthernet0/3\n!\ninterface FastEthernet0/4\n!\ninterface FastEthernet0/5\n!\ninterface FastEthernet0/6\n!\ninterface FastEthernet0/7\n!\ninterface FastEthernet0/8\n!\ninterface FastEthernet0/9\n!\ninterface FastEthernet0/10\n!\ninterface FastEthernet0/11\n!\ninterface FastEthernet0/12\n!\ninterface FastEthernet0/13\n!\ninterface FastEthernet0/14\n!\ninterface FastEthernet0/15\n!\ninterface FastEthernet0/16\n!\ninterface FastEthernet0/17\n!\ninterface FastEthernet0/18\n!\ninterface FastEthernet0/19\n!\ninterface FastEthernet0/20\n!\ninterface FastEthernet0/21\n!\ninterface FastEthernet0/22\n!\ninterface FastEthernet0/23\n!\ninterface FastEthernet0/24\n!\ninterface GigabitEthernet0/1\n!\ninterface GigabitEthernet0/2\n!\ninterface Vlan1\n no switchport\n no ip address\n shutdown\n!\nip http server\nip http secure-server\n!\nlogging trap 6\nline con 0\nline vty 0 4\n login\nline vty 5 15\n login\n!\nend\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.419Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "S1",
+      "input": "show interfaces status",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Port      Name               Status       Vlan       Duplex  Speed Type\nFa0/1                        connected    trunk      a-full  a-100  10/100BaseTX\nFa0/2                        connected    1          a-full  a-100  10/100BaseTX\nFa0/3                        notconnect   1          auto    auto   10/100BaseTX\nFa0/4                        notconnect   1          auto    auto   10/100BaseTX\nFa0/5                        notconnect   1          auto    auto   10/100BaseTX\nFa0/6                        notconnect   1          auto    auto   10/100BaseTX\nFa0/7                        notconnect   1          auto    auto   10/100BaseTX\nFa0/8                        notconnect   1          auto    auto   10/100BaseTX\nFa0/9                        notconnect   1          auto    auto   10/100BaseTX\nFa0/10                       notconnect   1          auto    auto   10/100BaseTX\nFa0/11                       notconnect   1          auto    auto   10/100BaseTX\nFa0/12                       notconnect   1          auto    auto   10/100BaseTX\nFa0/13                       notconnect   1          auto    auto   10/100BaseTX\nFa0/14                       notconnect   1          auto    auto   10/100BaseTX\nFa0/15                       notconnect   1          auto    auto   10/100BaseTX\nFa0/16                       notconnect   1          auto    auto   10/100BaseTX\nFa0/17                       notconnect   1          auto    auto   10/100BaseTX\nFa0/18                       notconnect   1          auto    auto   10/100BaseTX\nFa0/19                       notconnect   1          auto    auto   10/100BaseTX\nFa0/20                       notconnect   1          auto    auto   10/100BaseTX\nFa0/21                       notconnect   1          auto    auto   10/100BaseTX\nFa0/22                       notconnect   1          auto    auto   10/100BaseTX\nFa0/23                       notconnect   1          auto    auto   10/100BaseTX\nFa0/24                       notconnect   1          auto    auto   10/100BaseTX\nGi0/1                        notconnect   1          auto    auto   10/100/1000BaseTX\nGi0/2                        notconnect   1          auto    auto   10/100/1000BaseTX",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.419Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "device": "S1",
+      "input": "show mac address-table",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "          Mac Address Table\n-------------------------------------------\n\nVlan    Mac Address       Type        Ports\n----    -----------       --------    -----\n\n   1    0060.a80a.0037    DYNAMIC     Fa0/2\n   1    0060.a80a.0038    DYNAMIC     Fa0/1\n   1    0060.a80a.0039    DYNAMIC     Fa0/1",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.419Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "sticky-and-maximum",
+      "operation": "snapshot",
+      "rawOutput": "{\n  \"shutdown\": false,\n  \"description\": null,\n  \"speed\": \"auto\",\n  \"duplex\": \"auto\",\n  \"ip\": null,\n  \"mask\": null,\n  \"ipv6Addresses\": [],\n  \"ipv6OspfArea\": null,\n  \"helperAddresses\": [],\n  \"accessGroupIn\": null,\n  \"accessGroupOut\": null,\n  \"ipv6AccessGroupIn\": null,\n  \"ipv6AccessGroupOut\": null,\n  \"cdp\": true,\n  \"natRole\": null,\n  \"hsrp\": null,\n  \"vrrp\": null,\n  \"glbp\": null,\n  \"ospfPriority\": 1,\n  \"channelGroup\": null,\n  \"channelMode\": null,\n  \"switchport\": {\n    \"mode\": \"trunk\",\n    \"accessVlan\": 1,\n    \"voiceVlan\": null,\n    \"nativeVlan\": 1,\n    \"allowed\": null,\n    \"nonegotiate\": false,\n    \"portfast\": false,\n    \"bpduGuard\": false,\n    \"rootGuard\": false,\n    \"channelGroup\": null,\n    \"channelMode\": null,\n    \"portSecurity\": true,\n    \"portSecurityMaximum\": 4,\n    \"portSecurityViolation\": \"shutdown\",\n    \"portSecuritySticky\": true,\n    \"secureMacs\": [\n      \"0060a80a0038\",\n      \"0060a80a0039\"\n    ],\n    \"dhcpTrust\": false,\n    \"dhcpRateLimit\": null,\n    \"arpInspectionTrust\": false\n  }\n}",
+      "capturedAt": "2026-10-23T22:48:20.420Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "enable",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.420Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.420Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "interface fa0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.420Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "no switchport port-security",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.421Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "switchport mode trunk",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.421Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "switchport port-security",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.421Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "switchport port-security maximum 1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.422Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "switchport port-security violation protect",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.423Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "switchport port-security mac-address sticky",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.423Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "end",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.424Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect-learn-first",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.11",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.10.11 with 32 bytes of data:\n\nReply from 192.168.10.11: bytes=32 time=2ms TTL=128\nReply from 192.168.10.11: bytes=32 time=2ms TTL=128\n\nPing statistics for 192.168.10.11:\n    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.424Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect-second-mac",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.12",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.10.12 with 32 bytes of data:\n\nReply from 192.168.10.12: bytes=32 time=2ms TTL=128\nReply from 192.168.10.12: bytes=32 time=2ms TTL=128\n\nPing statistics for 192.168.10.12:\n    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.425Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect-logs",
+      "operation": "advance",
+      "waitedMs": 0,
+      "logs": [
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:39.009: %SYS-5-CONFIG_I: Configured from console by console"
+        },
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:43.015: %SYS-5-CONFIG_I: Configured from console by console"
+        },
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:45.019: %PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address 0060a80a0039 on port Fa0/1."
+        },
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:46.020: %PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address 0060a80a0039 on port Fa0/1."
+        }
+      ],
+      "capturedAt": "2026-10-23T22:48:20.425Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "show port-security interface fa0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Secure Port      MaxSecureAddr  CurrentAddr  SecurityViolation  Security Action\n                 (Count)        (Count)      (Count)             \nFa0/1            1              1            0                    Secure-up",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.425Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "show running-config",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 1475 bytes\n!\n! Last configuration change at 00:00:43 UTC Mon Mar 1 1993\n!\nversion 15.0\nno service pad\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname S1\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\nsystem mtu routing 1500\n!\nspanning-tree mode pvst\nspanning-tree extend system-id\n!\nvlan internal allocation policy ascending\n!\ninterface FastEthernet0/1\n switchport mode trunk\n switchport port-security\n switchport port-security violation protect\n switchport port-security mac-address sticky\n!\ninterface FastEthernet0/2\n switchport mode access\n!\ninterface FastEthernet0/3\n!\ninterface FastEthernet0/4\n!\ninterface FastEthernet0/5\n!\ninterface FastEthernet0/6\n!\ninterface FastEthernet0/7\n!\ninterface FastEthernet0/8\n!\ninterface FastEthernet0/9\n!\ninterface FastEthernet0/10\n!\ninterface FastEthernet0/11\n!\ninterface FastEthernet0/12\n!\ninterface FastEthernet0/13\n!\ninterface FastEthernet0/14\n!\ninterface FastEthernet0/15\n!\ninterface FastEthernet0/16\n!\ninterface FastEthernet0/17\n!\ninterface FastEthernet0/18\n!\ninterface FastEthernet0/19\n!\ninterface FastEthernet0/20\n!\ninterface FastEthernet0/21\n!\ninterface FastEthernet0/22\n!\ninterface FastEthernet0/23\n!\ninterface FastEthernet0/24\n!\ninterface GigabitEthernet0/1\n!\ninterface GigabitEthernet0/2\n!\ninterface Vlan1\n no switchport\n no ip address\n shutdown\n!\nip http server\nip http secure-server\n!\nlogging trap 6\nline con 0\nline vty 0 4\n login\nline vty 5 15\n login\n!\nend\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.425Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "show interfaces status",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Port      Name               Status       Vlan       Duplex  Speed Type\nFa0/1                        connected    trunk      a-full  a-100  10/100BaseTX\nFa0/2                        connected    1          a-full  a-100  10/100BaseTX\nFa0/3                        notconnect   1          auto    auto   10/100BaseTX\nFa0/4                        notconnect   1          auto    auto   10/100BaseTX\nFa0/5                        notconnect   1          auto    auto   10/100BaseTX\nFa0/6                        notconnect   1          auto    auto   10/100BaseTX\nFa0/7                        notconnect   1          auto    auto   10/100BaseTX\nFa0/8                        notconnect   1          auto    auto   10/100BaseTX\nFa0/9                        notconnect   1          auto    auto   10/100BaseTX\nFa0/10                       notconnect   1          auto    auto   10/100BaseTX\nFa0/11                       notconnect   1          auto    auto   10/100BaseTX\nFa0/12                       notconnect   1          auto    auto   10/100BaseTX\nFa0/13                       notconnect   1          auto    auto   10/100BaseTX\nFa0/14                       notconnect   1          auto    auto   10/100BaseTX\nFa0/15                       notconnect   1          auto    auto   10/100BaseTX\nFa0/16                       notconnect   1          auto    auto   10/100BaseTX\nFa0/17                       notconnect   1          auto    auto   10/100BaseTX\nFa0/18                       notconnect   1          auto    auto   10/100BaseTX\nFa0/19                       notconnect   1          auto    auto   10/100BaseTX\nFa0/20                       notconnect   1          auto    auto   10/100BaseTX\nFa0/21                       notconnect   1          auto    auto   10/100BaseTX\nFa0/22                       notconnect   1          auto    auto   10/100BaseTX\nFa0/23                       notconnect   1          auto    auto   10/100BaseTX\nFa0/24                       notconnect   1          auto    auto   10/100BaseTX\nGi0/1                        notconnect   1          auto    auto   10/100/1000BaseTX\nGi0/2                        notconnect   1          auto    auto   10/100/1000BaseTX",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.425Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "S1",
+      "input": "show mac address-table",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "          Mac Address Table\n-------------------------------------------\n\nVlan    Mac Address       Type        Ports\n----    -----------       --------    -----\n\n   1    0060.a80a.0037    DYNAMIC     Fa0/2\n   1    0060.a80a.0038    DYNAMIC     Fa0/1\n   1    0060.a80a.0039    DYNAMIC     Fa0/1",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.426Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "operation": "snapshot",
+      "rawOutput": "{\n  \"shutdown\": false,\n  \"description\": null,\n  \"speed\": \"auto\",\n  \"duplex\": \"auto\",\n  \"ip\": null,\n  \"mask\": null,\n  \"ipv6Addresses\": [],\n  \"ipv6OspfArea\": null,\n  \"helperAddresses\": [],\n  \"accessGroupIn\": null,\n  \"accessGroupOut\": null,\n  \"ipv6AccessGroupIn\": null,\n  \"ipv6AccessGroupOut\": null,\n  \"cdp\": true,\n  \"natRole\": null,\n  \"hsrp\": null,\n  \"vrrp\": null,\n  \"glbp\": null,\n  \"ospfPriority\": 1,\n  \"channelGroup\": null,\n  \"channelMode\": null,\n  \"switchport\": {\n    \"mode\": \"trunk\",\n    \"accessVlan\": 1,\n    \"voiceVlan\": null,\n    \"nativeVlan\": 1,\n    \"allowed\": null,\n    \"nonegotiate\": false,\n    \"portfast\": false,\n    \"bpduGuard\": false,\n    \"rootGuard\": false,\n    \"channelGroup\": null,\n    \"channelMode\": null,\n    \"portSecurity\": true,\n    \"portSecurityMaximum\": 1,\n    \"portSecurityViolation\": \"protect\",\n    \"portSecuritySticky\": true,\n    \"secureMacs\": [\n      \"0060a80a0038\"\n    ],\n    \"dhcpTrust\": false,\n    \"dhcpRateLimit\": null,\n    \"arpInspectionTrust\": false\n  }\n}",
+      "capturedAt": "2026-10-23T22:48:20.426Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-protect",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.12",
+      "rawOutput": "Pinging 192.168.10.12 with 32 bytes of data:\n\nReply from 192.168.10.12: bytes=32 time=2ms TTL=128\nReply from 192.168.10.12: bytes=32 time=2ms TTL=128\n\nPing statistics for 192.168.10.12:\n    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "capturedAt": "2026-10-23T22:48:20.426Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "enable",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.427Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.427Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "interface fa0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.427Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "no switchport port-security",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.428Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "switchport mode trunk",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.428Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "switchport port-security",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.429Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "switchport port-security maximum 1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.430Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "switchport port-security violation restrict",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.431Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "switchport port-security mac-address sticky",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.431Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "end",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.432Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict-learn-first",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.11",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.10.11 with 32 bytes of data:\n\nReply from 192.168.10.11: bytes=32 time=2ms TTL=128\nReply from 192.168.10.11: bytes=32 time=2ms TTL=128\n\nPing statistics for 192.168.10.11:\n    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.432Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict-second-mac",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.12",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.10.12 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\n\nPing statistics for 192.168.10.12:\n    Packets: Sent = 2, Received = 0, Lost = 2 (100% loss),",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.433Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict-logs",
+      "operation": "advance",
+      "waitedMs": 0,
+      "logs": [
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:47.021: %SYS-5-CONFIG_I: Configured from console by console"
+        },
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:49.025: %PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address 0060a80a0039 on port Fa0/1."
+        },
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:53.025: %PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address 0060a80a0039 on port Fa0/1."
+        }
+      ],
+      "capturedAt": "2026-10-23T22:48:20.433Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "show port-security interface fa0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Secure Port      MaxSecureAddr  CurrentAddr  SecurityViolation  Security Action\n                 (Count)        (Count)      (Count)             \nFa0/1            1              1            0                    Secure-up",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.433Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "show running-config",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 1476 bytes\n!\n! Last configuration change at 00:00:47 UTC Mon Mar 1 1993\n!\nversion 15.0\nno service pad\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname S1\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\nsystem mtu routing 1500\n!\nspanning-tree mode pvst\nspanning-tree extend system-id\n!\nvlan internal allocation policy ascending\n!\ninterface FastEthernet0/1\n switchport mode trunk\n switchport port-security\n switchport port-security violation restrict\n switchport port-security mac-address sticky\n!\ninterface FastEthernet0/2\n switchport mode access\n!\ninterface FastEthernet0/3\n!\ninterface FastEthernet0/4\n!\ninterface FastEthernet0/5\n!\ninterface FastEthernet0/6\n!\ninterface FastEthernet0/7\n!\ninterface FastEthernet0/8\n!\ninterface FastEthernet0/9\n!\ninterface FastEthernet0/10\n!\ninterface FastEthernet0/11\n!\ninterface FastEthernet0/12\n!\ninterface FastEthernet0/13\n!\ninterface FastEthernet0/14\n!\ninterface FastEthernet0/15\n!\ninterface FastEthernet0/16\n!\ninterface FastEthernet0/17\n!\ninterface FastEthernet0/18\n!\ninterface FastEthernet0/19\n!\ninterface FastEthernet0/20\n!\ninterface FastEthernet0/21\n!\ninterface FastEthernet0/22\n!\ninterface FastEthernet0/23\n!\ninterface FastEthernet0/24\n!\ninterface GigabitEthernet0/1\n!\ninterface GigabitEthernet0/2\n!\ninterface Vlan1\n no switchport\n no ip address\n shutdown\n!\nip http server\nip http secure-server\n!\nlogging trap 6\nline con 0\nline vty 0 4\n login\nline vty 5 15\n login\n!\nend\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.434Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "show interfaces status",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Port      Name               Status       Vlan       Duplex  Speed Type\nFa0/1                        connected    trunk      a-full  a-100  10/100BaseTX\nFa0/2                        connected    1          a-full  a-100  10/100BaseTX\nFa0/3                        notconnect   1          auto    auto   10/100BaseTX\nFa0/4                        notconnect   1          auto    auto   10/100BaseTX\nFa0/5                        notconnect   1          auto    auto   10/100BaseTX\nFa0/6                        notconnect   1          auto    auto   10/100BaseTX\nFa0/7                        notconnect   1          auto    auto   10/100BaseTX\nFa0/8                        notconnect   1          auto    auto   10/100BaseTX\nFa0/9                        notconnect   1          auto    auto   10/100BaseTX\nFa0/10                       notconnect   1          auto    auto   10/100BaseTX\nFa0/11                       notconnect   1          auto    auto   10/100BaseTX\nFa0/12                       notconnect   1          auto    auto   10/100BaseTX\nFa0/13                       notconnect   1          auto    auto   10/100BaseTX\nFa0/14                       notconnect   1          auto    auto   10/100BaseTX\nFa0/15                       notconnect   1          auto    auto   10/100BaseTX\nFa0/16                       notconnect   1          auto    auto   10/100BaseTX\nFa0/17                       notconnect   1          auto    auto   10/100BaseTX\nFa0/18                       notconnect   1          auto    auto   10/100BaseTX\nFa0/19                       notconnect   1          auto    auto   10/100BaseTX\nFa0/20                       notconnect   1          auto    auto   10/100BaseTX\nFa0/21                       notconnect   1          auto    auto   10/100BaseTX\nFa0/22                       notconnect   1          auto    auto   10/100BaseTX\nFa0/23                       notconnect   1          auto    auto   10/100BaseTX\nFa0/24                       notconnect   1          auto    auto   10/100BaseTX\nGi0/1                        notconnect   1          auto    auto   10/100/1000BaseTX\nGi0/2                        notconnect   1          auto    auto   10/100/1000BaseTX",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.434Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "S1",
+      "input": "show mac address-table",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "          Mac Address Table\n-------------------------------------------\n\nVlan    Mac Address       Type        Ports\n----    -----------       --------    -----\n\n   1    0060.a80a.0037    DYNAMIC     Fa0/2\n   1    0060.a80a.0038    DYNAMIC     Fa0/1\n   1    0060.a80a.0039    DYNAMIC     Fa0/1",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.434Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "operation": "snapshot",
+      "rawOutput": "{\n  \"shutdown\": false,\n  \"description\": null,\n  \"speed\": \"auto\",\n  \"duplex\": \"auto\",\n  \"ip\": null,\n  \"mask\": null,\n  \"ipv6Addresses\": [],\n  \"ipv6OspfArea\": null,\n  \"helperAddresses\": [],\n  \"accessGroupIn\": null,\n  \"accessGroupOut\": null,\n  \"ipv6AccessGroupIn\": null,\n  \"ipv6AccessGroupOut\": null,\n  \"cdp\": true,\n  \"natRole\": null,\n  \"hsrp\": null,\n  \"vrrp\": null,\n  \"glbp\": null,\n  \"ospfPriority\": 1,\n  \"channelGroup\": null,\n  \"channelMode\": null,\n  \"switchport\": {\n    \"mode\": \"trunk\",\n    \"accessVlan\": 1,\n    \"voiceVlan\": null,\n    \"nativeVlan\": 1,\n    \"allowed\": null,\n    \"nonegotiate\": false,\n    \"portfast\": false,\n    \"bpduGuard\": false,\n    \"rootGuard\": false,\n    \"channelGroup\": null,\n    \"channelMode\": null,\n    \"portSecurity\": true,\n    \"portSecurityMaximum\": 1,\n    \"portSecurityViolation\": \"restrict\",\n    \"portSecuritySticky\": true,\n    \"secureMacs\": [\n      \"0060a80a0038\"\n    ],\n    \"dhcpTrust\": false,\n    \"dhcpRateLimit\": null,\n    \"arpInspectionTrust\": false\n  }\n}",
+      "capturedAt": "2026-10-23T22:48:20.435Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-restrict",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.12",
+      "rawOutput": "Pinging 192.168.10.12 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\n\nPing statistics for 192.168.10.12:\n    Packets: Sent = 2, Received = 0, Lost = 2 (100% loss),",
+      "capturedAt": "2026-10-23T22:48:20.435Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "enable",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.435Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.435Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "interface fa0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.435Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "no switchport port-security",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.435Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "switchport mode trunk",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.437Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "switchport port-security",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.437Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "switchport port-security maximum 1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.438Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "switchport port-security violation shutdown",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.438Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "switchport port-security mac-address sticky",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.439Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "end",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.439Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown-learn-first",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.11",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.10.11 with 32 bytes of data:\n\nReply from 192.168.10.11: bytes=32 time=2ms TTL=128\nReply from 192.168.10.11: bytes=32 time=2ms TTL=128\n\nPing statistics for 192.168.10.11:\n    Packets: Sent = 2, Received = 2, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.439Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown-second-mac",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.12",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.10.12 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\n\nPing statistics for 192.168.10.12:\n    Packets: Sent = 2, Received = 0, Lost = 2 (100% loss),",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.440Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown-logs",
+      "operation": "advance",
+      "waitedMs": 0,
+      "logs": [
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:57.024: %SYS-5-CONFIG_I: Configured from console by console"
+        },
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:59.028: %PORT_SECURITY-2-PSECURE_VIOLATION: Security violation occurred, caused by MAC address 0060a80a0039 on port Fa0/1."
+        },
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:59.028: %LINK-5-CHANGED: Interface FastEthernet0/1, changed state to administratively down"
+        },
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:00:59.028: %LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down"
+        },
+        {
+          "device": "S2",
+          "text": "*Mar  1 00:00:59.028: %LINK-3-UPDOWN: Interface FastEthernet0/1, changed state to down"
+        },
+        {
+          "device": "S2",
+          "text": "*Mar  1 00:00:59.028: %LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down"
+        }
+      ],
+      "capturedAt": "2026-10-23T22:48:20.440Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "show port-security interface fa0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Secure Port      MaxSecureAddr  CurrentAddr  SecurityViolation  Security Action\n                 (Count)        (Count)      (Count)             \nFa0/1            1              1            0                    Secure-shutdown",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.441Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "show running-config",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 1441 bytes\n!\n! Last configuration change at 00:00:57 UTC Mon Mar 1 1993\n!\nversion 15.0\nno service pad\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname S1\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\nsystem mtu routing 1500\n!\nspanning-tree mode pvst\nspanning-tree extend system-id\n!\nvlan internal allocation policy ascending\n!\ninterface FastEthernet0/1\n switchport mode trunk\n switchport port-security\n switchport port-security mac-address sticky\n shutdown\n!\ninterface FastEthernet0/2\n switchport mode access\n!\ninterface FastEthernet0/3\n!\ninterface FastEthernet0/4\n!\ninterface FastEthernet0/5\n!\ninterface FastEthernet0/6\n!\ninterface FastEthernet0/7\n!\ninterface FastEthernet0/8\n!\ninterface FastEthernet0/9\n!\ninterface FastEthernet0/10\n!\ninterface FastEthernet0/11\n!\ninterface FastEthernet0/12\n!\ninterface FastEthernet0/13\n!\ninterface FastEthernet0/14\n!\ninterface FastEthernet0/15\n!\ninterface FastEthernet0/16\n!\ninterface FastEthernet0/17\n!\ninterface FastEthernet0/18\n!\ninterface FastEthernet0/19\n!\ninterface FastEthernet0/20\n!\ninterface FastEthernet0/21\n!\ninterface FastEthernet0/22\n!\ninterface FastEthernet0/23\n!\ninterface FastEthernet0/24\n!\ninterface GigabitEthernet0/1\n!\ninterface GigabitEthernet0/2\n!\ninterface Vlan1\n no switchport\n no ip address\n shutdown\n!\nip http server\nip http secure-server\n!\nlogging trap 6\nline con 0\nline vty 0 4\n login\nline vty 5 15\n login\n!\nend\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.441Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "show interfaces status",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Port      Name               Status       Vlan       Duplex  Speed Type\nFa0/1                        disabled     1          auto    auto   10/100BaseTX\nFa0/2                        connected    1          a-full  a-100  10/100BaseTX\nFa0/3                        notconnect   1          auto    auto   10/100BaseTX\nFa0/4                        notconnect   1          auto    auto   10/100BaseTX\nFa0/5                        notconnect   1          auto    auto   10/100BaseTX\nFa0/6                        notconnect   1          auto    auto   10/100BaseTX\nFa0/7                        notconnect   1          auto    auto   10/100BaseTX\nFa0/8                        notconnect   1          auto    auto   10/100BaseTX\nFa0/9                        notconnect   1          auto    auto   10/100BaseTX\nFa0/10                       notconnect   1          auto    auto   10/100BaseTX\nFa0/11                       notconnect   1          auto    auto   10/100BaseTX\nFa0/12                       notconnect   1          auto    auto   10/100BaseTX\nFa0/13                       notconnect   1          auto    auto   10/100BaseTX\nFa0/14                       notconnect   1          auto    auto   10/100BaseTX\nFa0/15                       notconnect   1          auto    auto   10/100BaseTX\nFa0/16                       notconnect   1          auto    auto   10/100BaseTX\nFa0/17                       notconnect   1          auto    auto   10/100BaseTX\nFa0/18                       notconnect   1          auto    auto   10/100BaseTX\nFa0/19                       notconnect   1          auto    auto   10/100BaseTX\nFa0/20                       notconnect   1          auto    auto   10/100BaseTX\nFa0/21                       notconnect   1          auto    auto   10/100BaseTX\nFa0/22                       notconnect   1          auto    auto   10/100BaseTX\nFa0/23                       notconnect   1          auto    auto   10/100BaseTX\nFa0/24                       notconnect   1          auto    auto   10/100BaseTX\nGi0/1                        notconnect   1          auto    auto   10/100/1000BaseTX\nGi0/2                        notconnect   1          auto    auto   10/100/1000BaseTX",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.441Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "S1",
+      "input": "show mac address-table",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "          Mac Address Table\n-------------------------------------------\n\nVlan    Mac Address       Type        Ports\n----    -----------       --------    -----\n\n   1    0060.a80a.0037    DYNAMIC     Fa0/2",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.441Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "operation": "snapshot",
+      "rawOutput": "{\n  \"shutdown\": true,\n  \"description\": null,\n  \"speed\": \"auto\",\n  \"duplex\": \"auto\",\n  \"ip\": null,\n  \"mask\": null,\n  \"ipv6Addresses\": [],\n  \"ipv6OspfArea\": null,\n  \"helperAddresses\": [],\n  \"accessGroupIn\": null,\n  \"accessGroupOut\": null,\n  \"ipv6AccessGroupIn\": null,\n  \"ipv6AccessGroupOut\": null,\n  \"cdp\": true,\n  \"natRole\": null,\n  \"hsrp\": null,\n  \"vrrp\": null,\n  \"glbp\": null,\n  \"ospfPriority\": 1,\n  \"channelGroup\": null,\n  \"channelMode\": null,\n  \"switchport\": {\n    \"mode\": \"trunk\",\n    \"accessVlan\": 1,\n    \"voiceVlan\": null,\n    \"nativeVlan\": 1,\n    \"allowed\": null,\n    \"nonegotiate\": false,\n    \"portfast\": false,\n    \"bpduGuard\": false,\n    \"rootGuard\": false,\n    \"channelGroup\": null,\n    \"channelMode\": null,\n    \"portSecurity\": true,\n    \"portSecurityMaximum\": 1,\n    \"portSecurityViolation\": \"shutdown\",\n    \"portSecuritySticky\": true,\n    \"secureMacs\": [\n      \"0060a80a0038\"\n    ],\n    \"dhcpTrust\": false,\n    \"dhcpRateLimit\": null,\n    \"arpInspectionTrust\": false\n  }\n}",
+      "capturedAt": "2026-10-23T22:48:20.442Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "violation-shutdown",
+      "device": "PC0",
+      "input": "ping -n 2 192.168.10.12",
+      "rawOutput": "Pinging 192.168.10.12 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\n\nPing statistics for 192.168.10.12:\n    Packets: Sent = 2, Received = 0, Lost = 2 (100% loss),",
+      "capturedAt": "2026-10-23T22:48:20.442Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "errdisable-recovery-probe",
+      "device": "S1",
+      "input": "show errdisable recovery",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "         ^\n% Invalid input detected at '^' marker.\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.442Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "errdisable-recovery-probe",
+      "device": "S1",
+      "input": "enable",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.442Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "errdisable-recovery-probe",
+      "device": "S1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.442Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "errdisable-recovery-probe",
+      "device": "S1",
+      "input": "errdisable recovery cause psecure-violation",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "            ^\n% Invalid input detected at '^' marker.\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.442Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "errdisable-recovery-probe",
+      "device": "S1",
+      "input": "errdisable recovery interval 30",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "            ^\n% Invalid input detected at '^' marker.\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.442Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "errdisable-recovery-probe",
+      "device": "S1",
+      "input": "end",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.443Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "errdisable-recovery-wait",
+      "operation": "advance",
+      "waitedMs": 35000,
+      "logs": [
+        {
+          "device": "S1",
+          "text": "*Mar  1 00:01:07.027: %SYS-5-CONFIG_I: Configured from console by console"
+        }
+      ],
+      "capturedAt": "2026-10-23T22:48:20.443Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "errdisable-recovery-wait",
+      "device": "S1",
+      "input": "show port-security interface fa0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Secure Port      MaxSecureAddr  CurrentAddr  SecurityViolation  Security Action\n                 (Count)        (Count)      (Count)             \nFa0/1            1              1            0                    Secure-shutdown",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.443Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "errdisable-recovery-wait",
+      "device": "S1",
+      "input": "show running-config",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 1441 bytes\n!\n! Last configuration change at 00:01:07 UTC Mon Mar 1 1993\n!\nversion 15.0\nno service pad\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname S1\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\nsystem mtu routing 1500\n!\nspanning-tree mode pvst\nspanning-tree extend system-id\n!\nvlan internal allocation policy ascending\n!\ninterface FastEthernet0/1\n switchport mode trunk\n switchport port-security\n switchport port-security mac-address sticky\n shutdown\n!\ninterface FastEthernet0/2\n switchport mode access\n!\ninterface FastEthernet0/3\n!\ninterface FastEthernet0/4\n!\ninterface FastEthernet0/5\n!\ninterface FastEthernet0/6\n!\ninterface FastEthernet0/7\n!\ninterface FastEthernet0/8\n!\ninterface FastEthernet0/9\n!\ninterface FastEthernet0/10\n!\ninterface FastEthernet0/11\n!\ninterface FastEthernet0/12\n!\ninterface FastEthernet0/13\n!\ninterface FastEthernet0/14\n!\ninterface FastEthernet0/15\n!\ninterface FastEthernet0/16\n!\ninterface FastEthernet0/17\n!\ninterface FastEthernet0/18\n!\ninterface FastEthernet0/19\n!\ninterface FastEthernet0/20\n!\ninterface FastEthernet0/21\n!\ninterface FastEthernet0/22\n!\ninterface FastEthernet0/23\n!\ninterface FastEthernet0/24\n!\ninterface GigabitEthernet0/1\n!\ninterface GigabitEthernet0/2\n!\ninterface Vlan1\n no switchport\n no ip address\n shutdown\n!\nip http server\nip http secure-server\n!\nlogging trap 6\nline con 0\nline vty 0 4\n login\nline vty 5 15\n login\n!\nend\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.443Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "errdisable-recovery-wait",
+      "device": "S1",
+      "input": "show interfaces status",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Port      Name               Status       Vlan       Duplex  Speed Type\nFa0/1                        disabled     1          auto    auto   10/100BaseTX\nFa0/2                        connected    1          a-full  a-100  10/100BaseTX\nFa0/3                        notconnect   1          auto    auto   10/100BaseTX\nFa0/4                        notconnect   1          auto    auto   10/100BaseTX\nFa0/5                        notconnect   1          auto    auto   10/100BaseTX\nFa0/6                        notconnect   1          auto    auto   10/100BaseTX\nFa0/7                        notconnect   1          auto    auto   10/100BaseTX\nFa0/8                        notconnect   1          auto    auto   10/100BaseTX\nFa0/9                        notconnect   1          auto    auto   10/100BaseTX\nFa0/10                       notconnect   1          auto    auto   10/100BaseTX\nFa0/11                       notconnect   1          auto    auto   10/100BaseTX\nFa0/12                       notconnect   1          auto    auto   10/100BaseTX\nFa0/13                       notconnect   1          auto    auto   10/100BaseTX\nFa0/14                       notconnect   1          auto    auto   10/100BaseTX\nFa0/15                       notconnect   1          auto    auto   10/100BaseTX\nFa0/16                       notconnect   1          auto    auto   10/100BaseTX\nFa0/17                       notconnect   1          auto    auto   10/100BaseTX\nFa0/18                       notconnect   1          auto    auto   10/100BaseTX\nFa0/19                       notconnect   1          auto    auto   10/100BaseTX\nFa0/20                       notconnect   1          auto    auto   10/100BaseTX\nFa0/21                       notconnect   1          auto    auto   10/100BaseTX\nFa0/22                       notconnect   1          auto    auto   10/100BaseTX\nFa0/23                       notconnect   1          auto    auto   10/100BaseTX\nFa0/24                       notconnect   1          auto    auto   10/100BaseTX\nGi0/1                        notconnect   1          auto    auto   10/100/1000BaseTX\nGi0/2                        notconnect   1          auto    auto   10/100/1000BaseTX",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.443Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "errdisable-recovery-wait",
+      "device": "S1",
+      "input": "show mac address-table",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "          Mac Address Table\n-------------------------------------------\n\nVlan    Mac Address       Type        Ports\n----    -----------       --------    -----\n\n   1    0060.a80a.0037    DYNAMIC     Fa0/2",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.444Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "errdisable-recovery-wait",
+      "operation": "snapshot",
+      "rawOutput": "{\n  \"shutdown\": true,\n  \"description\": null,\n  \"speed\": \"auto\",\n  \"duplex\": \"auto\",\n  \"ip\": null,\n  \"mask\": null,\n  \"ipv6Addresses\": [],\n  \"ipv6OspfArea\": null,\n  \"helperAddresses\": [],\n  \"accessGroupIn\": null,\n  \"accessGroupOut\": null,\n  \"ipv6AccessGroupIn\": null,\n  \"ipv6AccessGroupOut\": null,\n  \"cdp\": true,\n  \"natRole\": null,\n  \"hsrp\": null,\n  \"vrrp\": null,\n  \"glbp\": null,\n  \"ospfPriority\": 1,\n  \"channelGroup\": null,\n  \"channelMode\": null,\n  \"switchport\": {\n    \"mode\": \"trunk\",\n    \"accessVlan\": 1,\n    \"voiceVlan\": null,\n    \"nativeVlan\": 1,\n    \"allowed\": null,\n    \"nonegotiate\": false,\n    \"portfast\": false,\n    \"bpduGuard\": false,\n    \"rootGuard\": false,\n    \"channelGroup\": null,\n    \"channelMode\": null,\n    \"portSecurity\": true,\n    \"portSecurityMaximum\": 1,\n    \"portSecurityViolation\": \"shutdown\",\n    \"portSecuritySticky\": true,\n    \"secureMacs\": [\n      \"0060a80a0038\"\n    ],\n    \"dhcpTrust\": false,\n    \"dhcpRateLimit\": null,\n    \"arpInspectionTrust\": false\n  }\n}",
+      "capturedAt": "2026-10-23T22:48:20.444Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "shutdown-reenable",
+      "device": "S1",
+      "input": "enable",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.444Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "shutdown-reenable",
+      "device": "S1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.444Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "shutdown-reenable",
+      "device": "S1",
+      "input": "interface fa0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.445Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "shutdown-reenable",
+      "device": "S1",
+      "input": "no shutdown",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.445Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "shutdown-reenable",
+      "device": "S1",
+      "input": "no switchport port-security",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.445Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "shutdown-reenable",
+      "device": "S1",
+      "input": "switchport mode trunk",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.446Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "shutdown-reenable",
+      "device": "S1",
+      "input": "end",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:48:20.446Z"
+    }
+  ],
+  "harnessNote": "The simulator network was isolated in sim-server and discarded on exit."
+}
