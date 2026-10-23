@@ -32,12 +32,12 @@ await record("baseline", "Switch0", "show cdp neighbors detail", "enable", 65000
 await pair("active-active", "active", "active", 35000);
 for (const command of ["show etherchannel summary", "show etherchannel port-channel 1", "show interfaces port-channel 1", "show lacp neighbor", "show pagp neighbor", "show etherchannel load-balance", "show spanning-tree"]) await record("active-active", "Switch0", command, "enable", 35000);
 
-for (const [name, left, right] of [["active-passive", "active", "passive"], ["passive-passive", "passive", "passive"], ["desirable-auto", "desirable", "auto"], ["auto-auto", "auto", "auto"], ["desirable-desirable", "desirable", "desirable"], ["on-on", "on", "on"], ["on-active", "on", "active"]]) await pair(name, left, right, 5000, 1);
+for (const [name, left, right] of [["active-passive", "active", "passive"], ["passive-passive", "passive", "passive"], ["lacp-pagp", "active", "desirable"], ["desirable-auto", "desirable", "auto"], ["auto-auto", "auto", "auto"], ["desirable-desirable", "desirable", "desirable"], ["on-on", "on", "on"], ["on-active", "on", "active"]]) await pair(name, left, right, 35000, 1);
 
 await config("mismatch-member-settings", "Switch0", [{ mode: "enable", line: "configure terminal" }, g("interface fastEthernet 0/1"), i("no channel-group"), i("switchport mode trunk"), i("channel-group 20 mode active"), g("interface fastEthernet 0/5"), i("no channel-group"), i("switchport mode access"), i("speed 10"), i("duplex half"), i("channel-group 20 mode active"), i("end")]);
 await config("mismatch-member-settings", "Switch1", [{ mode: "enable", line: "configure terminal" }, g("interface fastEthernet 0/1"), i("no channel-group"), i("switchport mode trunk"), i("channel-group 20 mode active"), g("interface fastEthernet 0/3"), i("no channel-group"), i("switchport mode trunk"), i("channel-group 20 mode active"), i("end")]);
-await sleep(5000);
-for (const command of ["show etherchannel summary", "show interfaces status", "show logging"]) await record("mismatch-member-settings", "Switch0", command, "enable", 5000);
+await sleep(35000);
+for (const command of ["show etherchannel summary", "show interfaces status", "show logging"]) await record("mismatch-member-settings", "Switch0", command, "enable", 35000);
 await config("member-failure", "Switch0", [{ mode: "enable", line: "configure terminal" }, g("interface fastEthernet 0/5"), i("shutdown"), i("end")]);
 await sleep(5000);
 await record("member-failure", "Switch0", "show etherchannel summary", "enable", 5000);
@@ -62,7 +62,7 @@ await record("routed-etherchannel", "Switch2", "show running-config");
 // Restore the baseline: the two existing parallel links remain trunks and no temporary L3/SVI config remains.
 await config("restore", "Switch0", [{ mode: "enable", line: "configure terminal" }, g("no interface port-channel 1"), g("interface fastEthernet 0/1"), i("no channel-group"), i("switchport mode trunk"), i("speed 100"), i("duplex full"), i("no shutdown"), g("interface fastEthernet 0/5"), i("no channel-group"), i("switchport mode access"), i("speed 100"), i("duplex full"), i("shutdown"), i("no shutdown"), i("end")]);
 await config("restore", "Switch1", [{ mode: "enable", line: "configure terminal" }, g("no interface port-channel 1"), g("interface fastEthernet 0/1"), i("no channel-group"), i("switchport mode trunk"), i("speed 100"), i("duplex full"), i("no shutdown"), g("interface fastEthernet 0/3"), i("no channel-group"), i("switchport mode access"), i("speed 100"), i("duplex full"), i("shutdown"), i("no shutdown"), i("end")]);
-await config("restore", "Switch2", [{ mode: "enable", line: "configure terminal" }, g("interface fastEthernet 0/7"), i("shutdown"), i("no switchport"), i("no ip address"), g("no interface vlan 30"), i("no ip route 0.0.0.0 0.0.0.0 192.168.30.254"), i("end")]);
+await config("restore", "Switch2", [{ mode: "enable", line: "configure terminal" }, g("no ip routing"), g("interface fastEthernet 0/7"), i("shutdown"), i("no switchport"), i("no ip address"), g("no interface vlan 30"), g("no vlan 30"), i("no ip route 0.0.0.0 0.0.0.0 192.168.30.254"), i("end")]);
 await sleep(35000);
 for (const [device, command] of [["Switch0", "show interfaces status"], ["Switch1", "show interfaces status"], ["Switch2", "show vlan brief"], ["PC0", "ping 192.168.10.1"], ["PC1", "ping 192.168.20.1"]]) await record("restore-verification", device, command, device.startsWith("PC") ? "" : "enable", 35000);
 

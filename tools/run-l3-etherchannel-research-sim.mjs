@@ -85,15 +85,15 @@ let group = 10;
 for (const [name, leftMode, rightMode] of matrix) {
   config(a, `matrix-${name}`, ["interface range gi0/1 - 2", "no channel-group", `channel-group ${group} mode ${leftMode}`, "end"]);
   config(b, `matrix-${name}`, ["interface range gi0/1 - 2", "no channel-group", `channel-group ${group} mode ${rightMode}`, "end"]);
-  net.clock.advance(5000);
-  record(a, `matrix-${name}`, "show etherchannel summary", { waitedMs: 5000 });
+  net.clock.advance(35000);
+  record(a, `matrix-${name}`, "show etherchannel summary", { waitedMs: 35000 });
   group++;
 }
 
 config(a, "mismatch-member-settings", ["interface gi0/1", "no channel-group", "switchport mode trunk", "channel-group 20 mode active", "interface gi0/2", "no channel-group", "switchport mode access", "speed 10", "duplex half", "channel-group 20 mode active", "end"]);
 config(b, "mismatch-member-settings", ["interface range gi0/1 - 2", "no channel-group", "switchport mode trunk", "channel-group 20 mode active", "end"]);
-net.clock.advance(5000);
-for (const command of ["show etherchannel summary", "show interfaces status", "show logging"]) record(a, "mismatch-member-settings", command, { waitedMs: 5000 });
+net.clock.advance(35000);
+for (const command of ["show etherchannel summary", "show interfaces status", "show logging"]) record(a, "mismatch-member-settings", command, { waitedMs: 35000 });
 config(core, "l3-switch-off", ["interface gi0/1", "no switchport", "ip address 10.0.0.1 255.255.255.0", "no shutdown", "interface gi0/2", "no switchport", "ip address 10.0.1.1 255.255.255.0", "no shutdown", "end"]);
 net.connect(l3left.nic, core.port("Gi0/1"));
 net.connect(l3right.nic, core.port("Gi0/2"));

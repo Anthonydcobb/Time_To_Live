@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-10-23T18:10:36.931Z",
+  "capturedAt": "2026-10-23T20:31:46.985Z",
   "backend": "sim",
   "version": "workspace-sim",
   "image": "src/sim",
@@ -18,7 +18,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.869Z"
+      "capturedAt": "2026-10-23T20:31:46.911Z"
     },
     {
       "backend": "sim",
@@ -35,7 +35,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.871Z"
+      "capturedAt": "2026-10-23T20:31:46.913Z"
     },
     {
       "backend": "sim",
@@ -52,7 +52,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.872Z"
+      "capturedAt": "2026-10-23T20:31:46.914Z"
     },
     {
       "backend": "sim",
@@ -69,7 +69,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.872Z"
+      "capturedAt": "2026-10-23T20:31:46.915Z"
     },
     {
       "backend": "sim",
@@ -86,7 +86,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.873Z"
+      "capturedAt": "2026-10-23T20:31:46.915Z"
     },
     {
       "backend": "sim",
@@ -103,7 +103,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.873Z"
+      "capturedAt": "2026-10-23T20:31:46.915Z"
     },
     {
       "backend": "sim",
@@ -120,7 +120,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.873Z"
+      "capturedAt": "2026-10-23T20:31:46.916Z"
     },
     {
       "backend": "sim",
@@ -137,7 +137,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.873Z"
+      "capturedAt": "2026-10-23T20:31:46.916Z"
     },
     {
       "backend": "sim",
@@ -153,7 +153,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.873Z"
+      "capturedAt": "2026-10-23T20:31:46.916Z"
     },
     {
       "backend": "sim",
@@ -170,7 +170,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.874Z"
+      "capturedAt": "2026-10-23T20:31:46.916Z"
     },
     {
       "backend": "sim",
@@ -187,7 +187,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.874Z"
+      "capturedAt": "2026-10-23T20:31:46.916Z"
     },
     {
       "backend": "sim",
@@ -204,7 +204,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.874Z"
+      "capturedAt": "2026-10-23T20:31:46.917Z"
     },
     {
       "backend": "sim",
@@ -221,7 +221,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.874Z"
+      "capturedAt": "2026-10-23T20:31:46.917Z"
     },
     {
       "backend": "sim",
@@ -238,7 +238,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.875Z"
+      "capturedAt": "2026-10-23T20:31:46.917Z"
     },
     {
       "backend": "sim",
@@ -255,7 +255,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.875Z"
+      "capturedAt": "2026-10-23T20:31:46.918Z"
     },
     {
       "backend": "sim",
@@ -272,7 +272,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.875Z"
+      "capturedAt": "2026-10-23T20:31:46.918Z"
     },
     {
       "backend": "sim",
@@ -288,7 +288,7 @@
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.880Z"
+      "capturedAt": "2026-10-23T20:31:46.922Z"
     },
     {
       "backend": "sim",
@@ -304,7 +304,7 @@
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.880Z"
+      "capturedAt": "2026-10-23T20:31:46.922Z"
     },
     {
       "backend": "sim",
@@ -320,7 +320,7 @@
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.880Z"
+      "capturedAt": "2026-10-23T20:31:46.922Z"
     },
     {
       "backend": "sim",
@@ -336,7 +336,7 @@
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.880Z"
+      "capturedAt": "2026-10-23T20:31:46.923Z"
     },
     {
       "backend": "sim",
@@ -352,7 +352,7 @@
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.880Z"
+      "capturedAt": "2026-10-23T20:31:46.923Z"
     },
     {
       "backend": "sim",
@@ -368,7 +368,7 @@
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.880Z"
+      "capturedAt": "2026-10-23T20:31:46.923Z"
     },
     {
       "backend": "sim",
@@ -384,7 +384,7 @@
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.880Z"
+      "capturedAt": "2026-10-23T20:31:46.923Z"
     },
     {
       "backend": "sim",
@@ -400,7 +400,7 @@
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 5000,
-      "capturedAt": "2026-10-23T18:10:36.881Z"
+      "capturedAt": "2026-10-23T20:31:46.924Z"
     },
     {
       "backend": "sim",
@@ -416,7 +416,7 @@
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.883Z"
+      "capturedAt": "2026-10-23T20:31:46.925Z"
     },
     {
       "backend": "sim",
@@ -432,7 +432,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.883Z"
+      "capturedAt": "2026-10-23T20:31:46.926Z"
     },
     {
       "backend": "sim",
@@ -449,7 +449,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.883Z"
+      "capturedAt": "2026-10-23T20:31:46.926Z"
     },
     {
       "backend": "sim",
@@ -466,7 +466,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.884Z"
+      "capturedAt": "2026-10-23T20:31:46.927Z"
     },
     {
       "backend": "sim",
@@ -483,7 +483,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.885Z"
+      "capturedAt": "2026-10-23T20:31:46.928Z"
     },
     {
       "backend": "sim",
@@ -500,7 +500,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.885Z"
+      "capturedAt": "2026-10-23T20:31:46.929Z"
     },
     {
       "backend": "sim",
@@ -516,7 +516,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.885Z"
+      "capturedAt": "2026-10-23T20:31:46.929Z"
     },
     {
       "backend": "sim",
@@ -533,7 +533,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.885Z"
+      "capturedAt": "2026-10-23T20:31:46.929Z"
     },
     {
       "backend": "sim",
@@ -550,7 +550,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.886Z"
+      "capturedAt": "2026-10-23T20:31:46.930Z"
     },
     {
       "backend": "sim",
@@ -567,7 +567,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.888Z"
+      "capturedAt": "2026-10-23T20:31:46.933Z"
     },
     {
       "backend": "sim",
@@ -584,7 +584,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.888Z"
+      "capturedAt": "2026-10-23T20:31:46.933Z"
     },
     {
       "backend": "sim",
@@ -599,8 +599,8 @@
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
-      "waitedMs": 5000,
-      "capturedAt": "2026-10-23T18:10:36.890Z"
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T20:31:46.934Z"
     },
     {
       "backend": "sim",
@@ -616,7 +616,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.890Z"
+      "capturedAt": "2026-10-23T20:31:46.934Z"
     },
     {
       "backend": "sim",
@@ -633,7 +633,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.890Z"
+      "capturedAt": "2026-10-23T20:31:46.934Z"
     },
     {
       "backend": "sim",
@@ -650,7 +650,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.890Z"
+      "capturedAt": "2026-10-23T20:31:46.934Z"
     },
     {
       "backend": "sim",
@@ -667,7 +667,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.891Z"
+      "capturedAt": "2026-10-23T20:31:46.935Z"
     },
     {
       "backend": "sim",
@@ -684,7 +684,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.891Z"
+      "capturedAt": "2026-10-23T20:31:46.935Z"
     },
     {
       "backend": "sim",
@@ -700,7 +700,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.891Z"
+      "capturedAt": "2026-10-23T20:31:46.935Z"
     },
     {
       "backend": "sim",
@@ -717,7 +717,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.891Z"
+      "capturedAt": "2026-10-23T20:31:46.935Z"
     },
     {
       "backend": "sim",
@@ -734,7 +734,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.892Z"
+      "capturedAt": "2026-10-23T20:31:46.936Z"
     },
     {
       "backend": "sim",
@@ -751,7 +751,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.892Z"
+      "capturedAt": "2026-10-23T20:31:46.936Z"
     },
     {
       "backend": "sim",
@@ -768,7 +768,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.892Z"
+      "capturedAt": "2026-10-23T20:31:46.937Z"
     },
     {
       "backend": "sim",
@@ -783,8 +783,8 @@
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
-      "waitedMs": 5000,
-      "capturedAt": "2026-10-23T18:10:36.893Z"
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T20:31:46.938Z"
     },
     {
       "backend": "sim",
@@ -800,7 +800,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.893Z"
+      "capturedAt": "2026-10-23T20:31:46.938Z"
     },
     {
       "backend": "sim",
@@ -817,7 +817,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.893Z"
+      "capturedAt": "2026-10-23T20:31:46.938Z"
     },
     {
       "backend": "sim",
@@ -834,7 +834,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.893Z"
+      "capturedAt": "2026-10-23T20:31:46.938Z"
     },
     {
       "backend": "sim",
@@ -851,7 +851,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.894Z"
+      "capturedAt": "2026-10-23T20:31:46.939Z"
     },
     {
       "backend": "sim",
@@ -868,7 +868,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.894Z"
+      "capturedAt": "2026-10-23T20:31:46.940Z"
     },
     {
       "backend": "sim",
@@ -884,7 +884,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.894Z"
+      "capturedAt": "2026-10-23T20:31:46.940Z"
     },
     {
       "backend": "sim",
@@ -901,7 +901,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.894Z"
+      "capturedAt": "2026-10-23T20:31:46.940Z"
     },
     {
       "backend": "sim",
@@ -918,7 +918,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.894Z"
+      "capturedAt": "2026-10-23T20:31:46.941Z"
     },
     {
       "backend": "sim",
@@ -935,7 +935,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.895Z"
+      "capturedAt": "2026-10-23T20:31:46.942Z"
     },
     {
       "backend": "sim",
@@ -952,7 +952,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.895Z"
+      "capturedAt": "2026-10-23T20:31:46.942Z"
     },
     {
       "backend": "sim",
@@ -967,8 +967,8 @@
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
-      "waitedMs": 5000,
-      "capturedAt": "2026-10-23T18:10:36.895Z"
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T20:31:46.943Z"
     },
     {
       "backend": "sim",
@@ -984,7 +984,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.895Z"
+      "capturedAt": "2026-10-23T20:31:46.943Z"
     },
     {
       "backend": "sim",
@@ -1001,7 +1001,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.895Z"
+      "capturedAt": "2026-10-23T20:31:46.943Z"
     },
     {
       "backend": "sim",
@@ -1018,7 +1018,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.896Z"
+      "capturedAt": "2026-10-23T20:31:46.944Z"
     },
     {
       "backend": "sim",
@@ -1035,7 +1035,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.896Z"
+      "capturedAt": "2026-10-23T20:31:46.946Z"
     },
     {
       "backend": "sim",
@@ -1052,7 +1052,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.897Z"
+      "capturedAt": "2026-10-23T20:31:46.946Z"
     },
     {
       "backend": "sim",
@@ -1068,7 +1068,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.897Z"
+      "capturedAt": "2026-10-23T20:31:46.946Z"
     },
     {
       "backend": "sim",
@@ -1085,7 +1085,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.897Z"
+      "capturedAt": "2026-10-23T20:31:46.946Z"
     },
     {
       "backend": "sim",
@@ -1102,7 +1102,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.897Z"
+      "capturedAt": "2026-10-23T20:31:46.947Z"
     },
     {
       "backend": "sim",
@@ -1119,7 +1119,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.899Z"
+      "capturedAt": "2026-10-23T20:31:46.948Z"
     },
     {
       "backend": "sim",
@@ -1136,7 +1136,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.899Z"
+      "capturedAt": "2026-10-23T20:31:46.948Z"
     },
     {
       "backend": "sim",
@@ -1151,8 +1151,8 @@
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
-      "waitedMs": 5000,
-      "capturedAt": "2026-10-23T18:10:36.899Z"
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T20:31:46.949Z"
     },
     {
       "backend": "sim",
@@ -1168,7 +1168,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.899Z"
+      "capturedAt": "2026-10-23T20:31:46.949Z"
     },
     {
       "backend": "sim",
@@ -1185,7 +1185,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.899Z"
+      "capturedAt": "2026-10-23T20:31:46.949Z"
     },
     {
       "backend": "sim",
@@ -1202,7 +1202,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.900Z"
+      "capturedAt": "2026-10-23T20:31:46.949Z"
     },
     {
       "backend": "sim",
@@ -1219,7 +1219,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.900Z"
+      "capturedAt": "2026-10-23T20:31:46.950Z"
     },
     {
       "backend": "sim",
@@ -1236,7 +1236,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.900Z"
+      "capturedAt": "2026-10-23T20:31:46.950Z"
     },
     {
       "backend": "sim",
@@ -1252,7 +1252,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.900Z"
+      "capturedAt": "2026-10-23T20:31:46.950Z"
     },
     {
       "backend": "sim",
@@ -1269,7 +1269,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.900Z"
+      "capturedAt": "2026-10-23T20:31:46.950Z"
     },
     {
       "backend": "sim",
@@ -1286,7 +1286,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.901Z"
+      "capturedAt": "2026-10-23T20:31:46.950Z"
     },
     {
       "backend": "sim",
@@ -1303,7 +1303,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.901Z"
+      "capturedAt": "2026-10-23T20:31:46.951Z"
     },
     {
       "backend": "sim",
@@ -1320,7 +1320,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.901Z"
+      "capturedAt": "2026-10-23T20:31:46.951Z"
     },
     {
       "backend": "sim",
@@ -1335,8 +1335,8 @@
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
-      "waitedMs": 5000,
-      "capturedAt": "2026-10-23T18:10:36.902Z"
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T20:31:46.951Z"
     },
     {
       "backend": "sim",
@@ -1352,7 +1352,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.902Z"
+      "capturedAt": "2026-10-23T20:31:46.951Z"
     },
     {
       "backend": "sim",
@@ -1369,7 +1369,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.902Z"
+      "capturedAt": "2026-10-23T20:31:46.952Z"
     },
     {
       "backend": "sim",
@@ -1386,7 +1386,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.902Z"
+      "capturedAt": "2026-10-23T20:31:46.952Z"
     },
     {
       "backend": "sim",
@@ -1403,7 +1403,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.902Z"
+      "capturedAt": "2026-10-23T20:31:46.952Z"
     },
     {
       "backend": "sim",
@@ -1420,7 +1420,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.903Z"
+      "capturedAt": "2026-10-23T20:31:46.953Z"
     },
     {
       "backend": "sim",
@@ -1436,7 +1436,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.903Z"
+      "capturedAt": "2026-10-23T20:31:46.953Z"
     },
     {
       "backend": "sim",
@@ -1453,7 +1453,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.903Z"
+      "capturedAt": "2026-10-23T20:31:46.953Z"
     },
     {
       "backend": "sim",
@@ -1470,7 +1470,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.903Z"
+      "capturedAt": "2026-10-23T20:31:46.953Z"
     },
     {
       "backend": "sim",
@@ -1487,7 +1487,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.904Z"
+      "capturedAt": "2026-10-23T20:31:46.954Z"
     },
     {
       "backend": "sim",
@@ -1504,7 +1504,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.904Z"
+      "capturedAt": "2026-10-23T20:31:46.954Z"
     },
     {
       "backend": "sim",
@@ -1519,8 +1519,8 @@
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
-      "waitedMs": 5000,
-      "capturedAt": "2026-10-23T18:10:36.904Z"
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T20:31:46.955Z"
     },
     {
       "backend": "sim",
@@ -1536,7 +1536,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.904Z"
+      "capturedAt": "2026-10-23T20:31:46.955Z"
     },
     {
       "backend": "sim",
@@ -1553,7 +1553,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.904Z"
+      "capturedAt": "2026-10-23T20:31:46.955Z"
     },
     {
       "backend": "sim",
@@ -1570,7 +1570,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.905Z"
+      "capturedAt": "2026-10-23T20:31:46.955Z"
     },
     {
       "backend": "sim",
@@ -1587,7 +1587,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.905Z"
+      "capturedAt": "2026-10-23T20:31:46.955Z"
     },
     {
       "backend": "sim",
@@ -1604,7 +1604,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.905Z"
+      "capturedAt": "2026-10-23T20:31:46.956Z"
     },
     {
       "backend": "sim",
@@ -1620,7 +1620,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.905Z"
+      "capturedAt": "2026-10-23T20:31:46.956Z"
     },
     {
       "backend": "sim",
@@ -1637,7 +1637,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.905Z"
+      "capturedAt": "2026-10-23T20:31:46.956Z"
     },
     {
       "backend": "sim",
@@ -1654,7 +1654,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.906Z"
+      "capturedAt": "2026-10-23T20:31:46.956Z"
     },
     {
       "backend": "sim",
@@ -1671,7 +1671,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.906Z"
+      "capturedAt": "2026-10-23T20:31:46.957Z"
     },
     {
       "backend": "sim",
@@ -1688,7 +1688,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.907Z"
+      "capturedAt": "2026-10-23T20:31:46.957Z"
     },
     {
       "backend": "sim",
@@ -1703,8 +1703,8 @@
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
-      "waitedMs": 5000,
-      "capturedAt": "2026-10-23T18:10:36.907Z"
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T20:31:46.957Z"
     },
     {
       "backend": "sim",
@@ -1720,7 +1720,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.907Z"
+      "capturedAt": "2026-10-23T20:31:46.957Z"
     },
     {
       "backend": "sim",
@@ -1737,7 +1737,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.907Z"
+      "capturedAt": "2026-10-23T20:31:46.957Z"
     },
     {
       "backend": "sim",
@@ -1754,7 +1754,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.907Z"
+      "capturedAt": "2026-10-23T20:31:46.958Z"
     },
     {
       "backend": "sim",
@@ -1771,7 +1771,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.907Z"
+      "capturedAt": "2026-10-23T20:31:46.958Z"
     },
     {
       "backend": "sim",
@@ -1788,7 +1788,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.908Z"
+      "capturedAt": "2026-10-23T20:31:46.958Z"
     },
     {
       "backend": "sim",
@@ -1805,7 +1805,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.908Z"
+      "capturedAt": "2026-10-23T20:31:46.958Z"
     },
     {
       "backend": "sim",
@@ -1822,7 +1822,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.908Z"
+      "capturedAt": "2026-10-23T20:31:46.959Z"
     },
     {
       "backend": "sim",
@@ -1839,7 +1839,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.908Z"
+      "capturedAt": "2026-10-23T20:31:46.959Z"
     },
     {
       "backend": "sim",
@@ -1856,7 +1856,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.909Z"
+      "capturedAt": "2026-10-23T20:31:46.959Z"
     },
     {
       "backend": "sim",
@@ -1873,7 +1873,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.909Z"
+      "capturedAt": "2026-10-23T20:31:46.959Z"
     },
     {
       "backend": "sim",
@@ -1890,7 +1890,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.909Z"
+      "capturedAt": "2026-10-23T20:31:46.960Z"
     },
     {
       "backend": "sim",
@@ -1907,7 +1907,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.909Z"
+      "capturedAt": "2026-10-23T20:31:46.960Z"
     },
     {
       "backend": "sim",
@@ -1923,7 +1923,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.909Z"
+      "capturedAt": "2026-10-23T20:31:46.960Z"
     },
     {
       "backend": "sim",
@@ -1940,7 +1940,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.909Z"
+      "capturedAt": "2026-10-23T20:31:46.960Z"
     },
     {
       "backend": "sim",
@@ -1957,7 +1957,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.910Z"
+      "capturedAt": "2026-10-23T20:31:46.960Z"
     },
     {
       "backend": "sim",
@@ -1974,7 +1974,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.910Z"
+      "capturedAt": "2026-10-23T20:31:46.961Z"
     },
     {
       "backend": "sim",
@@ -1991,7 +1991,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.911Z"
+      "capturedAt": "2026-10-23T20:31:46.962Z"
     },
     {
       "backend": "sim",
@@ -2008,7 +2008,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.912Z"
+      "capturedAt": "2026-10-23T20:31:46.962Z"
     },
     {
       "backend": "sim",
@@ -2023,8 +2023,8 @@
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
-      "waitedMs": 5000,
-      "capturedAt": "2026-10-23T18:10:36.912Z"
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T20:31:46.963Z"
     },
     {
       "backend": "sim",
@@ -2039,8 +2039,8 @@
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
-      "waitedMs": 5000,
-      "capturedAt": "2026-10-23T18:10:36.913Z"
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T20:31:46.963Z"
     },
     {
       "backend": "sim",
@@ -2051,12 +2051,12 @@
       "input": "show logging",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "Syslog logging: enabled\n  Logging to none\n  Trap logging: level 6\n  Log buffer: 21 messages (maximum 100)\nLog Buffer:\n*Mar  1 00:00:00.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/1, changed state to up\n*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up\n*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:00:35.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/2, changed state to down\n*Mar  1 00:00:35.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to down\n*Mar  1 00:00:42.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:00:43.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:01:15.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:20.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:25.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:30.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:35.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:40.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:45.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:50.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:50.000: %EC-5-CANNOT_BUNDLE2: Gi0/1 is not compatible with Gi0/1 and will be suspended (switchport parameters do not match)\n*Mar  1 00:01:50.000: %EC-5-CANNOT_BUNDLE2: Gi0/2 is not compatible with Gi0/2 and will be suspended (speed of Gi0/2 is 10M, peer is autoM)\n*Mar  1 00:01:50.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to down\n*Mar  1 00:01:53.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to up",
+      "rawOutput": "Syslog logging: enabled\n  Logging to none\n  Trap logging: level 6\n  Log buffer: 21 messages (maximum 100)\nLog Buffer:\n*Mar  1 00:00:00.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/1, changed state to up\n*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up\n*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:00:35.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/2, changed state to down\n*Mar  1 00:00:35.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to down\n*Mar  1 00:00:42.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:00:43.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:01:15.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:50.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:02:25.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:03:00.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:03:35.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:04:10.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:04:45.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:05:20.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:05:20.000: %EC-5-CANNOT_BUNDLE2: Gi0/1 is not compatible with Gi0/1 and will be suspended (switchport parameters do not match)\n*Mar  1 00:05:20.000: %EC-5-CANNOT_BUNDLE2: Gi0/2 is not compatible with Gi0/2 and will be suspended (speed of Gi0/2 is 10M, peer is autoM)\n*Mar  1 00:05:20.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to down\n*Mar  1 00:05:23.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to up",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
-      "waitedMs": 5000,
-      "capturedAt": "2026-10-23T18:10:36.913Z"
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T20:31:46.963Z"
     },
     {
       "backend": "sim",
@@ -2072,7 +2072,7 @@
       "promptAfter": "CORE(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.913Z"
+      "capturedAt": "2026-10-23T20:31:46.964Z"
     },
     {
       "backend": "sim",
@@ -2089,7 +2089,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.913Z"
+      "capturedAt": "2026-10-23T20:31:46.964Z"
     },
     {
       "backend": "sim",
@@ -2106,7 +2106,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.913Z"
+      "capturedAt": "2026-10-23T20:31:46.964Z"
     },
     {
       "backend": "sim",
@@ -2123,7 +2123,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.913Z"
+      "capturedAt": "2026-10-23T20:31:46.965Z"
     },
     {
       "backend": "sim",
@@ -2140,7 +2140,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.914Z"
+      "capturedAt": "2026-10-23T20:31:46.965Z"
     },
     {
       "backend": "sim",
@@ -2157,7 +2157,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.914Z"
+      "capturedAt": "2026-10-23T20:31:46.965Z"
     },
     {
       "backend": "sim",
@@ -2174,7 +2174,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.914Z"
+      "capturedAt": "2026-10-23T20:31:46.965Z"
     },
     {
       "backend": "sim",
@@ -2191,7 +2191,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.914Z"
+      "capturedAt": "2026-10-23T20:31:46.965Z"
     },
     {
       "backend": "sim",
@@ -2208,7 +2208,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.914Z"
+      "capturedAt": "2026-10-23T20:31:46.966Z"
     },
     {
       "backend": "sim",
@@ -2225,7 +2225,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.915Z"
+      "capturedAt": "2026-10-23T20:31:46.966Z"
     },
     {
       "backend": "sim",
@@ -2238,7 +2238,7 @@
       "status": "ok",
       "rawOutput": "Pinging 10.0.1.10 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\nRequest timed out.\nRequest timed out.\n\nPing statistics for 10.0.1.10:\n    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),",
       "waitedMs": 3000,
-      "capturedAt": "2026-10-23T18:10:36.916Z"
+      "capturedAt": "2026-10-23T20:31:46.968Z"
     },
     {
       "backend": "sim",
@@ -2254,7 +2254,7 @@
       "promptAfter": "CORE(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.916Z"
+      "capturedAt": "2026-10-23T20:31:46.968Z"
     },
     {
       "backend": "sim",
@@ -2271,7 +2271,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.916Z"
+      "capturedAt": "2026-10-23T20:31:46.968Z"
     },
     {
       "backend": "sim",
@@ -2288,7 +2288,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.916Z"
+      "capturedAt": "2026-10-23T20:31:46.968Z"
     },
     {
       "backend": "sim",
@@ -2301,7 +2301,7 @@
       "status": "ok",
       "rawOutput": "Pinging 10.0.1.10 with 32 bytes of data:\n\nRequest timed out.\nReply from 10.0.1.10: bytes=32 time=1ms TTL=127\nReply from 10.0.1.10: bytes=32 time=1ms TTL=127\nReply from 10.0.1.10: bytes=32 time=1ms TTL=127\n\nPing statistics for 10.0.1.10:\n    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 1ms, Maximum = 1ms, Average = 1ms",
       "waitedMs": 3000,
-      "capturedAt": "2026-10-23T18:10:36.917Z"
+      "capturedAt": "2026-10-23T20:31:46.969Z"
     },
     {
       "backend": "sim",
@@ -2317,7 +2317,7 @@
       "promptAfter": "CORE#",
       "preSettlements": [],
       "waitedMs": 3000,
-      "capturedAt": "2026-10-23T18:10:36.917Z"
+      "capturedAt": "2026-10-23T20:31:46.969Z"
     },
     {
       "backend": "sim",
@@ -2333,7 +2333,7 @@
       "promptAfter": "CORE(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.917Z"
+      "capturedAt": "2026-10-23T20:31:46.969Z"
     },
     {
       "backend": "sim",
@@ -2350,7 +2350,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.917Z"
+      "capturedAt": "2026-10-23T20:31:46.969Z"
     },
     {
       "backend": "sim",
@@ -2367,7 +2367,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.918Z"
+      "capturedAt": "2026-10-23T20:31:46.970Z"
     },
     {
       "backend": "sim",
@@ -2384,7 +2384,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.918Z"
+      "capturedAt": "2026-10-23T20:31:46.970Z"
     },
     {
       "backend": "sim",
@@ -2401,7 +2401,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.918Z"
+      "capturedAt": "2026-10-23T20:31:46.970Z"
     },
     {
       "backend": "sim",
@@ -2418,7 +2418,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.918Z"
+      "capturedAt": "2026-10-23T20:31:46.970Z"
     },
     {
       "backend": "sim",
@@ -2435,7 +2435,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.918Z"
+      "capturedAt": "2026-10-23T20:31:46.970Z"
     },
     {
       "backend": "sim",
@@ -2452,7 +2452,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.919Z"
+      "capturedAt": "2026-10-23T20:31:46.971Z"
     },
     {
       "backend": "sim",
@@ -2469,7 +2469,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.919Z"
+      "capturedAt": "2026-10-23T20:31:46.971Z"
     },
     {
       "backend": "sim",
@@ -2486,7 +2486,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.919Z"
+      "capturedAt": "2026-10-23T20:31:46.971Z"
     },
     {
       "backend": "sim",
@@ -2503,7 +2503,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.920Z"
+      "capturedAt": "2026-10-23T20:31:46.972Z"
     },
     {
       "backend": "sim",
@@ -2520,7 +2520,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.920Z"
+      "capturedAt": "2026-10-23T20:31:46.972Z"
     },
     {
       "backend": "sim",
@@ -2537,7 +2537,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.920Z"
+      "capturedAt": "2026-10-23T20:31:46.972Z"
     },
     {
       "backend": "sim",
@@ -2554,7 +2554,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.921Z"
+      "capturedAt": "2026-10-23T20:31:46.973Z"
     },
     {
       "backend": "sim",
@@ -2571,7 +2571,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.921Z"
+      "capturedAt": "2026-10-23T20:31:46.973Z"
     },
     {
       "backend": "sim",
@@ -2588,7 +2588,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.921Z"
+      "capturedAt": "2026-10-23T20:31:46.973Z"
     },
     {
       "backend": "sim",
@@ -2601,7 +2601,7 @@
       "status": "ok",
       "rawOutput": "Pinging 192.168.20.10 with 32 bytes of data:\n\nRequest timed out.\nReply from 192.168.20.10: bytes=32 time=1ms TTL=127\nReply from 192.168.20.10: bytes=32 time=1ms TTL=127\nReply from 192.168.20.10: bytes=32 time=1ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 1ms, Maximum = 1ms, Average = 1ms",
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.923Z"
+      "capturedAt": "2026-10-23T20:31:46.975Z"
     },
     {
       "backend": "sim",
@@ -2617,7 +2617,7 @@
       "promptAfter": "CORE#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.923Z"
+      "capturedAt": "2026-10-23T20:31:46.975Z"
     },
     {
       "backend": "sim",
@@ -2633,7 +2633,7 @@
       "promptAfter": "CORE(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.923Z"
+      "capturedAt": "2026-10-23T20:31:46.975Z"
     },
     {
       "backend": "sim",
@@ -2650,7 +2650,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.923Z"
+      "capturedAt": "2026-10-23T20:31:46.975Z"
     },
     {
       "backend": "sim",
@@ -2667,7 +2667,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.923Z"
+      "capturedAt": "2026-10-23T20:31:46.975Z"
     },
     {
       "backend": "sim",
@@ -2684,7 +2684,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.923Z"
+      "capturedAt": "2026-10-23T20:31:46.976Z"
     },
     {
       "backend": "sim",
@@ -2701,7 +2701,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.923Z"
+      "capturedAt": "2026-10-23T20:31:46.976Z"
     },
     {
       "backend": "sim",
@@ -2718,7 +2718,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.924Z"
+      "capturedAt": "2026-10-23T20:31:46.976Z"
     },
     {
       "backend": "sim",
@@ -2735,7 +2735,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.924Z"
+      "capturedAt": "2026-10-23T20:31:46.976Z"
     },
     {
       "backend": "sim",
@@ -2752,7 +2752,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.924Z"
+      "capturedAt": "2026-10-23T20:31:46.976Z"
     },
     {
       "backend": "sim",
@@ -2768,7 +2768,7 @@
       "promptAfter": "CORE#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.924Z"
+      "capturedAt": "2026-10-23T20:31:46.976Z"
     },
     {
       "backend": "sim",
@@ -2784,7 +2784,7 @@
       "promptAfter": "CORE(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.924Z"
+      "capturedAt": "2026-10-23T20:31:46.976Z"
     },
     {
       "backend": "sim",
@@ -2801,7 +2801,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.924Z"
+      "capturedAt": "2026-10-23T20:31:46.976Z"
     },
     {
       "backend": "sim",
@@ -2818,7 +2818,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.924Z"
+      "capturedAt": "2026-10-23T20:31:46.977Z"
     },
     {
       "backend": "sim",
@@ -2835,7 +2835,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.925Z"
+      "capturedAt": "2026-10-23T20:31:46.977Z"
     },
     {
       "backend": "sim",
@@ -2852,7 +2852,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.925Z"
+      "capturedAt": "2026-10-23T20:31:46.978Z"
     },
     {
       "backend": "sim",
@@ -2869,7 +2869,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.926Z"
+      "capturedAt": "2026-10-23T20:31:46.979Z"
     },
     {
       "backend": "sim",
@@ -2886,7 +2886,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.926Z"
+      "capturedAt": "2026-10-23T20:31:46.979Z"
     },
     {
       "backend": "sim",
@@ -2903,7 +2903,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.926Z"
+      "capturedAt": "2026-10-23T20:31:46.980Z"
     },
     {
       "backend": "sim",
@@ -2920,7 +2920,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.927Z"
+      "capturedAt": "2026-10-23T20:31:46.980Z"
     },
     {
       "backend": "sim",
@@ -2936,7 +2936,7 @@
       "promptAfter": "RPOER(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T18:10:36.927Z"
+      "capturedAt": "2026-10-23T20:31:46.980Z"
     },
     {
       "backend": "sim",
@@ -2953,7 +2953,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.927Z"
+      "capturedAt": "2026-10-23T20:31:46.980Z"
     },
     {
       "backend": "sim",
@@ -2970,7 +2970,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.927Z"
+      "capturedAt": "2026-10-23T20:31:46.980Z"
     },
     {
       "backend": "sim",
@@ -2987,7 +2987,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.927Z"
+      "capturedAt": "2026-10-23T20:31:46.980Z"
     },
     {
       "backend": "sim",
@@ -3004,7 +3004,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.928Z"
+      "capturedAt": "2026-10-23T20:31:46.981Z"
     },
     {
       "backend": "sim",
@@ -3021,7 +3021,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.928Z"
+      "capturedAt": "2026-10-23T20:31:46.981Z"
     },
     {
       "backend": "sim",
@@ -3038,7 +3038,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.928Z"
+      "capturedAt": "2026-10-23T20:31:46.981Z"
     },
     {
       "backend": "sim",
@@ -3055,7 +3055,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.928Z"
+      "capturedAt": "2026-10-23T20:31:46.981Z"
     },
     {
       "backend": "sim",
@@ -3072,7 +3072,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T18:10:36.929Z"
+      "capturedAt": "2026-10-23T20:31:46.982Z"
     },
     {
       "backend": "sim",
@@ -3088,7 +3088,7 @@
       "promptAfter": "CORE#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.929Z"
+      "capturedAt": "2026-10-23T20:31:46.983Z"
     },
     {
       "backend": "sim",
@@ -3104,7 +3104,7 @@
       "promptAfter": "CORE#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.929Z"
+      "capturedAt": "2026-10-23T20:31:46.983Z"
     },
     {
       "backend": "sim",
@@ -3120,7 +3120,7 @@
       "promptAfter": "CORE#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.930Z"
+      "capturedAt": "2026-10-23T20:31:46.983Z"
     },
     {
       "backend": "sim",
@@ -3136,7 +3136,7 @@
       "promptAfter": "CORE#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.930Z"
+      "capturedAt": "2026-10-23T20:31:46.983Z"
     },
     {
       "backend": "sim",
@@ -3147,12 +3147,12 @@
       "input": "show running-config",
       "mode": "CORE#",
       "status": "ok",
-      "rawOutput": "Building configuration...\n\nCurrent configuration : 1965 bytes\n!\n! Last configuration change at 00:03:06 UTC Mon Mar 1 1993\n!\nversion 15.0\nno service pad\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname CORE\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\nsystem mtu routing 1500\n!\nip routing\nspanning-tree mode pvst\nspanning-tree extend system-id\n!\nvlan internal allocation policy ascending\n!\ninterface FastEthernet0/1\n switchport access vlan 10\n switchport mode access\n!\ninterface FastEthernet0/2\n switchport access vlan 20\n switchport mode access\n!\ninterface FastEthernet0/3\n no switchport\n no ip address\n channel-group 30 mode active\n!\ninterface FastEthernet0/4\n no switchport\n no ip address\n channel-group 30 mode active\n!\ninterface FastEthernet0/5\n no switchport\n ip address 172.16.0.2 255.255.255.0\n!\ninterface FastEthernet0/6\n!\ninterface FastEthernet0/7\n!\ninterface FastEthernet0/8\n!\ninterface FastEthernet0/9\n!\ninterface FastEthernet0/10\n!\ninterface FastEthernet0/11\n!\ninterface FastEthernet0/12\n!\ninterface FastEthernet0/13\n!\ninterface FastEthernet0/14\n!\ninterface FastEthernet0/15\n!\ninterface FastEthernet0/16\n!\ninterface FastEthernet0/17\n!\ninterface FastEthernet0/18\n!\ninterface FastEthernet0/19\n!\ninterface FastEthernet0/20\n!\ninterface FastEthernet0/21\n!\ninterface FastEthernet0/22\n!\ninterface FastEthernet0/23\n!\ninterface FastEthernet0/24\n!\ninterface GigabitEthernet0/1\n no switchport\n ip address 10.0.0.1 255.255.255.0\n!\ninterface GigabitEthernet0/2\n no switchport\n ip address 10.0.1.1 255.255.255.0\n!\ninterface Port-channel30\n no switchport\n ip address 172.31.0.2 255.255.255.252\n!\ninterface Vlan1\n no switchport\n no ip address\n shutdown\n!\ninterface Vlan10\n no switchport\n ip address 192.168.10.1 255.255.255.0\n!\ninterface Vlan20\n no switchport\n ip address 192.168.20.1 255.255.255.0\n!\nip http server\nip http secure-server\n!\nip route 0.0.0.0 0.0.0.0 172.16.0.1\n!\nlogging trap 6\nline con 0\nline vty 0 4\n login\nline vty 5 15\n login\n!\nend\n",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 1965 bytes\n!\n! Last configuration change at 00:07:06 UTC Mon Mar 1 1993\n!\nversion 15.0\nno service pad\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname CORE\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\nsystem mtu routing 1500\n!\nip routing\nspanning-tree mode pvst\nspanning-tree extend system-id\n!\nvlan internal allocation policy ascending\n!\ninterface FastEthernet0/1\n switchport access vlan 10\n switchport mode access\n!\ninterface FastEthernet0/2\n switchport access vlan 20\n switchport mode access\n!\ninterface FastEthernet0/3\n no switchport\n no ip address\n channel-group 30 mode active\n!\ninterface FastEthernet0/4\n no switchport\n no ip address\n channel-group 30 mode active\n!\ninterface FastEthernet0/5\n no switchport\n ip address 172.16.0.2 255.255.255.0\n!\ninterface FastEthernet0/6\n!\ninterface FastEthernet0/7\n!\ninterface FastEthernet0/8\n!\ninterface FastEthernet0/9\n!\ninterface FastEthernet0/10\n!\ninterface FastEthernet0/11\n!\ninterface FastEthernet0/12\n!\ninterface FastEthernet0/13\n!\ninterface FastEthernet0/14\n!\ninterface FastEthernet0/15\n!\ninterface FastEthernet0/16\n!\ninterface FastEthernet0/17\n!\ninterface FastEthernet0/18\n!\ninterface FastEthernet0/19\n!\ninterface FastEthernet0/20\n!\ninterface FastEthernet0/21\n!\ninterface FastEthernet0/22\n!\ninterface FastEthernet0/23\n!\ninterface FastEthernet0/24\n!\ninterface GigabitEthernet0/1\n no switchport\n ip address 10.0.0.1 255.255.255.0\n!\ninterface GigabitEthernet0/2\n no switchport\n ip address 10.0.1.1 255.255.255.0\n!\ninterface Port-channel30\n no switchport\n ip address 172.31.0.2 255.255.255.252\n!\ninterface Vlan1\n no switchport\n no ip address\n shutdown\n!\ninterface Vlan10\n no switchport\n ip address 192.168.10.1 255.255.255.0\n!\ninterface Vlan20\n no switchport\n ip address 192.168.20.1 255.255.255.0\n!\nip http server\nip http secure-server\n!\nip route 0.0.0.0 0.0.0.0 172.16.0.1\n!\nlogging trap 6\nline con 0\nline vty 0 4\n login\nline vty 5 15\n login\n!\nend\n",
       "promptBefore": "CORE#",
       "promptAfter": "CORE#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T18:10:36.931Z"
+      "capturedAt": "2026-10-23T20:31:46.984Z"
     }
   ]
 }
