@@ -171,11 +171,14 @@ class GameAudio {
     src.stop(t + seconds + 0.1);
   }
 
-  /** Walter's radio: squelch in, static under his voice, squelch out. Safe to call repeatedly. */
+  /**
+   * Walter's radio: squelch in when he starts talking, static under his voice for as long as he
+   * holds the channel, squelch out when he's done. Safe to call repeatedly.
+   */
   walkie(on: boolean): void {
     const ctx = this.ctx;
     if (!ctx || on === !!this.radio) return;
-    this.squelch();
+    this.squelch(on);
     if (!on) {
       this.radio?.stop();
       this.radio = null;
@@ -217,28 +220,32 @@ class GameAudio {
     return src;
   }
 
-  private squelch(): void {
+  /** Opening: the key click and a short rush of static. Closing: a longer static tail and a falling chirp. */
+  private squelch(open: boolean): void {
     const ctx = this.ctx!;
     const t = ctx.currentTime;
     const click = ctx.createOscillator();
     click.type = "square";
-    click.frequency.value = 1400;
+    click.frequency.setValueAtTime(open ? 1400 : 1100, t);
+    if (!open) click.frequency.exponentialRampToValueAtTime(420, t + 0.09);
     const cg = ctx.createGain();
-    cg.gain.setValueAtTime(0.04, t);
-    cg.gain.exponentialRampToValueAtTime(0.0001, t + 0.04);
+    cg.gain.setValueAtTime(open ? 0.04 : 0.03, t);
+    cg.gain.exponentialRampToValueAtTime(0.0001, t + (open ? 0.04 : 0.1));
     click.connect(cg).connect(this.master);
     click.start(t);
-    click.stop(t + 0.05);
+    click.stop(t + 0.12);
+    const tail = open ? 0.16 : 0.32;
     const src = this.noiseSource();
     const bp = ctx.createBiquadFilter();
     bp.type = "bandpass";
-    bp.frequency.value = 1800;
+    bp.frequency.setValueAtTime(1800, t);
+    if (!open) bp.frequency.exponentialRampToValueAtTime(900, t + tail);
     const g = ctx.createGain();
-    g.gain.setValueAtTime(0.05, t);
-    g.gain.exponentialRampToValueAtTime(0.0001, t + 0.16);
+    g.gain.setValueAtTime(open ? 0.05 : 0.06, t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + tail);
     src.connect(bp).connect(g).connect(this.master);
     src.start(t);
-    src.stop(t + 0.2);
+    src.stop(t + tail + 0.04);
   }
 
   private thump(t: number, level: number): void {

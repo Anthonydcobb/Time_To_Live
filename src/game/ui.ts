@@ -359,11 +359,11 @@ export class Ui {
       return;
     }
     this.current = null;
-    // Unkey the radio after every line; the next Walter line keys it again, like a real walkie.
-    audio.walkie(false);
     c.after?.forEach((event) => this.onCue(event));
     c.then?.();
     if (!this.current && !this.choices && !this.screen && !this.panelOpen) this.showNext();
+    // Walter holds the channel open across his lines; whatever interrupts the talk closes it.
+    else if (!this.choices) audio.walkie(isWalter(this.current ?? undefined));
   }
 
   choose(prompt: Line, options: Choice[]): void {

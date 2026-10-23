@@ -4,6 +4,25 @@ Every line of dialogue in the game comes from this file. Save it while `npm run 
 and the game picks up the change straight away, without restarting or losing your place. Trigger
 the scene again to hear the new line.
 
+Cheat sheet (the full rules are below it):
+
+| You write | What it does |
+|---|---|
+| `## scene-name` | Starts a scene. Don't rename these; the game asks for them by name. |
+| `# Chapter` | A chapter heading, just for finding your way. Ends the scene above it. |
+| `WALTER: text` | A spoken line. |
+| `GUS (paranoid): text` | A line with a portrait mood: calm, paranoid or frantic. |
+| `> text` | Narration, with no speaker. |
+| `(a note)` | A note for us. The game skips it. |
+| `(LIGHTS FLICKER)` | A stage cue, in capitals. Also `(FLICKER)`, `(LIGHTS OUT)`, `(LIGHTS ON)`. |
+| `*word*` / `~word~` | Cold blue / red text. |
+| `((note for Claude))` | A request or question for Claude. Hidden in game. Say "check the script". |
+| `#idea anything` | Any tag the game doesn't know is a note too. |
+| `#set flag` / `#clear flag` | Turns a flag on / off. |
+| `#give item` | Gives you something (works like `#set` for now). |
+| `#if flag` … `#else` … `#end` | Lines that only play if the flag is on. `#if not flag` for off. |
+| `#goto scene-name` | Jumps to another scene instead of finishing this one. |
+
 How it reads:
 
 - `## scene-name` starts a scene. The game asks for scenes by these names, so rewrite the lines

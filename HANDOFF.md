@@ -2,7 +2,7 @@
 
 Read this first if you're picking up the project, human or AI. Update it whenever you finish something or change a plan.
 
-Last updated: 2026-10-19.
+Last updated: 2026-10-23.
 
 ## Latest handoff update (2026-10-23, Claude)
 
@@ -10,21 +10,21 @@ Last updated: 2026-10-19.
   `public/assets/audio/`). Bob's office plays take 6 of Bob's theme (`bobs-office.mp3`,
   copied from `art/music/`, so renaming the source doesn't break it). Level is
   `MUSIC_LEVEL` (0.35), not yet tuned by ear. `art/music/` is uncommitted.
-- **Job 4 (Library) sim work, in progress with Codex.** Its research is in 58a2390
-  (`docs/l3-etherchannel-research.md`). Claude's review found two rows of its
-  "verified matching" table wrong and four misses; Codex has the full fix brief
-  (A–J) and is doing them after finishing a Packet Tracer EtherChannel rerun on the
-  new Switch0 Fa0/5 ↔ Switch1 Fa0/3 cable. The ones to check closest when reviewing:
-  - A: unplugging one member suspends the whole bundle (`channelGroupActive` in
-    `src/sim/devices/switch.ts` needs every member up). IOS keeps `Po(SU)` with the
-    survivor `(P)` and the dead port `(D)`.
-  - B: `show spanning-tree` lists the member ports instead of one `Po1` row.
-  - D: non-forming pairs show `(s)`; IOS shows stand-alone `(I)` and `Po(SD)`.
-  - E: misconfig guard should default to enabled. H: `ip route` is rejected on the
-    L3 switch. I: routed ports miss ` no switchport` in running-config.
-  Nothing in `src/game` uses EtherChannel or the L3 switch yet, but STP and switch
-  forwarding are shared with jobs 1–3. Review Codex's commits, then push them
-  (Codex can't reach GitHub).
+- **Job 4 (Library) sim fixes done.** Codex's 2a3b3dd (Packet Tracer rerun on the
+  Switch0 Fa0/5 ↔ Switch1 Fa0/3 cable) and 7ede0e6 (the A–J fixes) were reviewed by
+  Claude and pushed. A bundle survives a dead member (`(P)`/`(D)`), STP sees one `Po`,
+  non-forming pairs are `(I)`/`Po(SD)`, the misconfig guard defaults on, the L3 switch
+  takes `ip route`, routed ports print `no switchport`, and routed Port-channels work.
+  `channel-group` now lives on the interface config, not the switchport. Open question:
+  `channelMemberState` returns `(s)` for LACP facing PAgP; real IOS probably shows
+  stand-alone `(I)` there, since neither side negotiates. Check in CML.
+- **Walter's walkie** squelches open once when he starts talking and closes (longer
+  tail, falling chirp) when another speaker, the end of the talk or a screen takes over,
+  instead of keying per line (`audio.walkie`, `Ui.advance`).
+- **Audio direction for agy** is in `docs/audio-direction.md`: cosmic horror over
+  Dungeon Crawler Carl, Silent Hill first, lo-fi drums with a Night Vale feel, walkie
+  static for Walter, metal door banging for Gary.
+- `script/dialogue.md` starts with a cheat-sheet table of everything you can write.
 - Run the game at `http://localhost:5173/game.html` (`/` is the bench terminal).
 
 ## Latest handoff update (2026-10-22, Phase 5)
