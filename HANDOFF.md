@@ -6,6 +6,15 @@ Last updated: 2026-10-23.
 
 ## Latest handoff update (2026-10-23, Claude)
 
+- **New town map:** Ant's foggy seaside map (`art/concepts/locations/static-springs-seaside-map-v1.jpg`,
+  now `public/assets/ui/town-map.webp`). `SITES` in `town-map.ts` follows it: the shopfront row
+  (Bob's, laundromat, Quik-Stop, dentist), the tunnel (the closed road to Bellwether), town hall,
+  library, hospital, the old garage, the church as the funeral home, the beach graveyard as the
+  crematorium (job 5's second site), the hotel on the cliff, the lighthouse and tower as the radio
+  station, and the docks. The school, dog park and outskirts are gone with the old map. The map's
+  painted key is garbled AI lettering, so the CLOSE MAP button now sits over it. Bob's sign on the
+  art is misspelled ("BANDMHOTH"); fix it in the art when there's a cleaned-up version.
+
 - **No more van drive.** Picking a place on the town map closes it and the trip is a
   loading screen (`Story.travel` → `showLoading`): the posters (`public/assets/screens/`:
   loading, title, poster-montage; each loading screen starts on the next one and they

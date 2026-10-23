@@ -1,11 +1,12 @@
 /**
- * The town map you get when you leave a building: Ant's map of Static Springs with a
- * clickable spot on every place. Places you can travel to right now light up; everything
- * else just tells you about itself. The map's own CLOSE MAP button (or Esc) keeps you put.
+ * The town map you get when you leave a building: Ant's foggy seaside map of Static Springs
+ * with a clickable spot on every place. Places you can travel to right now light up;
+ * everything else just tells you about itself. The CLOSE MAP button (over the map's painted
+ * key) or Esc keeps you put.
  */
 export type SiteId =
-  | "bobs" | "quikstop" | "laundromat" | "dentist" | "library" | "funeral" | "townhall"
-  | "comm" | "hotel" | "church" | "school" | "dogpark" | "outskirts";
+  | "bobs" | "quikstop" | "laundromat" | "dentist" | "library" | "funeral" | "crematorium" | "townhall"
+  | "hospital" | "radio" | "hotel" | "garage" | "docks" | "tunnel";
 
 interface Site {
   id: SiteId;
@@ -17,23 +18,24 @@ interface Site {
 }
 
 const SITES: Site[] = [
-  { id: "bobs", name: "Bob's Bandwidth & Bloodletting", box: [0.452, 0.735, 0.54, 0.9], note: "Home base. The coffee is always warm." },
-  { id: "quikstop", name: "Quik-Stop Forever · job 1", box: [0.58, 0.405, 0.79, 0.625], note: "Mrs. Finch's corner store." },
-  { id: "laundromat", name: "24-Hour Laundromat · job 2", box: [0.205, 0.695, 0.35, 0.885], note: "No work order yet. The dryers are running anyway." },
-  { id: "dentist", name: "Dentist Office · job 3", box: [0.457, 0.448, 0.573, 0.618], note: "No work order yet. Someone inside is still smiling." },
-  { id: "library", name: "Library · job 4", box: [0.225, 0.408, 0.395, 0.618], note: "No work order yet. Every book is checked out to the same name." },
-  { id: "funeral", name: "Funeral Home & Crematorium · job 5", box: [0.615, 0.68, 0.73, 0.86], note: "No work order yet. They'll call. They always do." },
-  { id: "townhall", name: "Town Hall & Sheriff · job 6", box: [0.055, 0.385, 0.222, 0.627], note: "No work order yet. The flag is at half-mast. It always is." },
-  { id: "comm", name: "The Comm · job 7", box: [0.54, 0.7, 0.615, 0.92], note: "No work order yet. The tower hums the same note as the fridges." },
-  { id: "hotel", name: "The Void-View Hotel · job 9", box: [0.035, 0.66, 0.2, 0.93], note: "No work order yet. Vacancy: yes. Checkout: no." },
-  { id: "church", name: "The Cultric Church & Graveyard", box: [0.135, 0.072, 0.385, 0.358], note: "The doors are chained from the inside." },
-  { id: "school", name: "School", box: [0.445, 0.085, 0.66, 0.332], note: "Closed for the year. Which year, it doesn't say." },
-  { id: "dogpark", name: "Dog Park & Forest", box: [0.683, 0.116, 0.97, 0.332], note: "The dogs are always there. Nobody has ever seen their owners." },
-  { id: "outskirts", name: "The Outskirts", box: [0.735, 0.627, 0.885, 0.93], note: "The road to Bellwether. The sign says it's closed. The sign has always said that." },
+  { id: "bobs", name: "Bob's Bandwidth & Bloodletting", box: [0.29, 0.495, 0.396, 0.665], note: "Home base. The coffee is always warm." },
+  { id: "laundromat", name: "Spin Cycle Eternal · job 2", box: [0.396, 0.48, 0.477, 0.64], note: "No work order yet. The dryers are running anyway." },
+  { id: "quikstop", name: "Quik-Stop Forever · job 1", box: [0.477, 0.455, 0.57, 0.6], note: "Mrs. Finch's corner store." },
+  { id: "dentist", name: "Dentist's Office · job 3", box: [0.57, 0.46, 0.627, 0.56], note: "No work order yet. Someone inside is still smiling." },
+  { id: "tunnel", name: "The Tunnel", box: [0.632, 0.45, 0.69, 0.545], note: "The road to Bellwether. The sign says it's closed. The sign has always said that." },
+  { id: "townhall", name: "Town Hall & Sheriff · job 6", box: [0.207, 0.3, 0.316, 0.45], note: "No work order yet. The flag is at half-mast. It always is." },
+  { id: "library", name: "Library · job 4", box: [0.323, 0.285, 0.405, 0.42], note: "No work order yet. Every book is checked out to the same name." },
+  { id: "hospital", name: "Hospital · job 8", box: [0.31, 0.175, 0.41, 0.28], note: "No work order yet. Visiting hours ended in 1974." },
+  { id: "garage", name: "The Old Garage", box: [0.428, 0.195, 0.48, 0.282], note: "The bay door is shut. It's warm to the touch." },
+  { id: "funeral", name: "Funeral Home · job 5", box: [0.14, 0.1, 0.29, 0.29], note: "No work order yet. They'll call. They always do." },
+  { id: "crematorium", name: "Crematorium · job 5", box: [0.1, 0.73, 0.23, 0.86], note: "The other half of the funeral home's job. The fog doesn't go in." },
+  { id: "hotel", name: "The Void-View Hotel · job 9", box: [0.56, 0.15, 0.695, 0.355], note: "No work order yet. Vacancy: yes. Checkout: no." },
+  { id: "radio", name: "Radio Station & Lighthouse · job 7", box: [0.712, 0.11, 0.79, 0.37], note: "No work order yet. The beam sweeps the sea for something. The tower hums the same note as the fridges." },
+  { id: "docks", name: "The Docks", box: [0.26, 0.69, 0.57, 0.9], note: "The boats come back. Not always with the same people." },
 ];
 
-/** The CLOSE MAP button painted into the bottom-right corner of the map. */
-const CLOSE_BOX: [number, number, number, number] = [0.872, 0.945, 0.98, 0.99];
+/** The CLOSE MAP button, laid over the key painted in the bottom-right corner of the map. */
+const CLOSE_BOX: [number, number, number, number] = [0.853, 0.762, 0.97, 0.945];
 
 const h = (html: string) => {
   const t = document.createElement("template");
@@ -78,7 +80,7 @@ export class TownMap {
     }
     const close = document.createElement("button");
     close.className = "spot close";
-    close.setAttribute("aria-label", "Close map");
+    close.innerHTML = "CLOSE MAP<small>Esc</small>";
     place(close, CLOSE_BOX);
     close.addEventListener("click", () => this.cancel());
     spots.appendChild(close);
