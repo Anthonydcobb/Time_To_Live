@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-10-22T21:19:13.852Z",
+  "capturedAt": "2026-10-23T00:37:06.522Z",
   "backend": "pt",
   "version": "Packet Tracer live bridge",
   "image": "Cisco IOS 15.0(2)SE4 / 15.1",
@@ -15,7 +15,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:33.207Z"
+      "capturedAt": "2026-10-23T00:34:16.148Z"
     },
     {
       "backend": "pt",
@@ -28,7 +28,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:33.471Z"
+      "capturedAt": "2026-10-23T00:34:16.412Z"
     },
     {
       "backend": "pt",
@@ -41,7 +41,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:33.732Z"
+      "capturedAt": "2026-10-23T00:34:16.675Z"
     },
     {
       "backend": "pt",
@@ -50,11 +50,11 @@
       "input": "show cdp neighbors detail",
       "mode": "enable",
       "status": "STATUS_OK",
-      "rawOutput": "\nDevice ID: Switch\nEntry address(es): \nPlatform: cisco 2960, Capabilities: Switch\nInterface: FastEthernet0/1, Port ID (outgoing port): FastEthernet0/1\nHoldtime: 138\n\nVersion :\nCisco IOS Software, C2960 Software (C2960-LANBASEK9-M), Version 15.0(2)SE4, RELEASE SOFTWARE (fc1)\nTechnical Support: http://www.cisco.com/techsupport\nCopyright (c) 1986-2013 by Cisco Systems, Inc.\nCompiled Wed 26-Jun-13 02:49 by mnguyen\n\nadvertisement version: 2\nDuplex: full\n---------------------------\n\nDevice ID: Switch\nEntry address(es): \nPlatform: cisco 2960, Capabilities: Switch\nInterface: FastEthernet0/4, Port ID (outgoing port): FastEthernet0/5\nHoldtime: 172\n\nVersion :\nCisco IOS Software, C2960 Software (C2960-LANBASEK9-M), Version 15.0(2)SE4, RELEASE SOFTWARE (fc1)\nTechnical Support: http://www.cisco.com/techsupport\nCopyright (c) 1986-2013 by Cisco Systems, Inc.\nCompiled Wed 26-Jun-13 02:49 by mnguyen\n\nadvertisement version: 2\nDuplex: full\n\n\n",
+      "rawOutput": "\nDevice ID: Switch\nEntry address(es): \nPlatform: cisco 2960, Capabilities: Switch\nInterface: FastEthernet0/1, Port ID (outgoing port): FastEthernet0/1\nHoldtime: 162\n\nVersion :\nCisco IOS Software, C2960 Software (C2960-LANBASEK9-M), Version 15.0(2)SE4, RELEASE SOFTWARE (fc1)\nTechnical Support: http://www.cisco.com/techsupport\nCopyright (c) 1986-2013 by Cisco Systems, Inc.\nCompiled Wed 26-Jun-13 02:49 by mnguyen\n\nadvertisement version: 2\nDuplex: full\n---------------------------\n\nDevice ID: Switch\nEntry address(es): \nPlatform: cisco 2960, Capabilities: Switch\nInterface: FastEthernet0/4, Port ID (outgoing port): FastEthernet0/5\nHoldtime: 178\n\nVersion :\nCisco IOS Software, C2960 Software (C2960-LANBASEK9-M), Version 15.0(2)SE4, RELEASE SOFTWARE (fc1)\nTechnical Support: http://www.cisco.com/techsupport\nCopyright (c) 1986-2013 by Cisco Systems, Inc.\nCompiled Wed 26-Jun-13 02:49 by mnguyen\n\nadvertisement version: 2\nDuplex: full\n\n\n",
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:33.994Z"
+      "capturedAt": "2026-10-23T00:34:16.941Z"
     },
     {
       "backend": "pt",
@@ -67,7 +67,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:37.140Z"
+      "capturedAt": "2026-10-23T00:34:20.102Z"
     },
     {
       "backend": "pt",
@@ -80,7 +80,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:37.402Z"
+      "capturedAt": "2026-10-23T00:34:20.364Z"
     },
     {
       "backend": "pt",
@@ -93,7 +93,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:37.667Z"
+      "capturedAt": "2026-10-23T00:34:20.629Z"
     },
     {
       "backend": "pt",
@@ -106,7 +106,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:37.931Z"
+      "capturedAt": "2026-10-23T00:34:20.894Z"
     },
     {
       "backend": "pt",
@@ -119,7 +119,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:38.195Z"
+      "capturedAt": "2026-10-23T00:34:21.155Z"
     },
     {
       "backend": "pt",
@@ -132,7 +132,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:38.455Z"
+      "capturedAt": "2026-10-23T00:34:21.417Z"
     },
     {
       "backend": "pt",
@@ -145,7 +145,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:38.707Z"
+      "capturedAt": "2026-10-23T00:34:21.681Z"
     },
     {
       "backend": "pt",
@@ -158,7 +158,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:38.973Z"
+      "capturedAt": "2026-10-23T00:34:21.946Z"
     },
     {
       "backend": "pt",
@@ -171,7 +171,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:39.233Z"
+      "capturedAt": "2026-10-23T00:34:22.208Z"
     },
     {
       "backend": "pt",
@@ -184,7 +184,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:39.484Z"
+      "capturedAt": "2026-10-23T00:34:22.470Z"
     },
     {
       "backend": "pt",
@@ -197,7 +197,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:39.748Z"
+      "capturedAt": "2026-10-23T00:34:22.735Z"
     },
     {
       "backend": "pt",
@@ -210,7 +210,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:40.013Z"
+      "capturedAt": "2026-10-23T00:34:22.999Z"
     },
     {
       "backend": "pt",
@@ -219,11 +219,11 @@
       "input": "show vlan brief",
       "mode": "enable",
       "status": "STATUS_OK",
-      "rawOutput": "\nVLAN Name                             Status    Ports\n---- -------------------------------- --------- -------------------------------\n1    default                          active    Fa0/6, Fa0/7, Fa0/8, Fa0/9\n                                                Fa0/10, Fa0/11, Fa0/12, Fa0/13\n                                                Fa0/14, Fa0/15, Fa0/16, Fa0/17\n                                                Fa0/18, Fa0/19, Fa0/20, Fa0/21\n                                                Fa0/22, Fa0/23, Fa0/24, Gig0/1\n                                                Gig0/2\n10   STAFF                            active    Fa0/2\n20   XRAY                             active    Fa0/5\n150  VLAN0150                         active    \n1002 fddi-default                     active    \n1003 token-ring-default               active    \n1004 fddinet-default                  active    \n1005 trnet-default                    active    \n\n",
+      "rawOutput": "\nVLAN Name                             Status    Ports\n---- -------------------------------- --------- -------------------------------\n1    default                          active    Fa0/6, Fa0/7, Fa0/8, Fa0/9\n                                                Fa0/10, Fa0/11, Fa0/12, Fa0/13\n                                                Fa0/14, Fa0/15, Fa0/16, Fa0/17\n                                                Fa0/18, Fa0/19, Fa0/20, Fa0/21\n                                                Fa0/22, Fa0/23, Fa0/24, Gig0/1\n                                                Gig0/2\n10   STAFF                            active    Fa0/2\n20   XRAY                             active    Fa0/5\n1002 fddi-default                     active    \n1003 token-ring-default               active    \n1004 fddinet-default                  active    \n1005 trnet-default                    active    \n\n",
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:40.543Z"
+      "capturedAt": "2026-10-23T00:34:23.524Z"
     },
     {
       "backend": "pt",
@@ -236,7 +236,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:40.805Z"
+      "capturedAt": "2026-10-23T00:34:23.788Z"
     },
     {
       "backend": "pt",
@@ -249,7 +249,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:41.069Z"
+      "capturedAt": "2026-10-23T00:34:24.054Z"
     },
     {
       "backend": "pt",
@@ -262,7 +262,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:41.330Z"
+      "capturedAt": "2026-10-23T00:34:24.317Z"
     },
     {
       "backend": "pt",
@@ -275,7 +275,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:42.652Z"
+      "capturedAt": "2026-10-23T00:34:25.632Z"
     },
     {
       "backend": "pt",
@@ -288,7 +288,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:42.914Z"
+      "capturedAt": "2026-10-23T00:34:25.892Z"
     },
     {
       "backend": "pt",
@@ -301,7 +301,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:43.179Z"
+      "capturedAt": "2026-10-23T00:34:26.156Z"
     },
     {
       "backend": "pt",
@@ -314,7 +314,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:43.440Z"
+      "capturedAt": "2026-10-23T00:34:26.418Z"
     },
     {
       "backend": "pt",
@@ -327,7 +327,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:43.691Z"
+      "capturedAt": "2026-10-23T00:34:26.682Z"
     },
     {
       "backend": "pt",
@@ -340,7 +340,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:45.275Z"
+      "capturedAt": "2026-10-23T00:34:28.266Z"
     },
     {
       "backend": "pt",
@@ -353,7 +353,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:45.534Z"
+      "capturedAt": "2026-10-23T00:34:28.527Z"
     },
     {
       "backend": "pt",
@@ -366,7 +366,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:45.795Z"
+      "capturedAt": "2026-10-23T00:34:28.789Z"
     },
     {
       "backend": "pt",
@@ -379,7 +379,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:46.059Z"
+      "capturedAt": "2026-10-23T00:34:29.052Z"
     },
     {
       "backend": "pt",
@@ -392,7 +392,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:46.320Z"
+      "capturedAt": "2026-10-23T00:34:29.313Z"
     },
     {
       "backend": "pt",
@@ -405,7 +405,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:48.058Z"
+      "capturedAt": "2026-10-23T00:34:31.054Z"
     },
     {
       "backend": "pt",
@@ -418,7 +418,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:48.323Z"
+      "capturedAt": "2026-10-23T00:34:31.316Z"
     },
     {
       "backend": "pt",
@@ -431,7 +431,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:49.646Z"
+      "capturedAt": "2026-10-23T00:34:32.627Z"
     },
     {
       "backend": "pt",
@@ -444,7 +444,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:49.906Z"
+      "capturedAt": "2026-10-23T00:34:32.889Z"
     },
     {
       "backend": "pt",
@@ -457,7 +457,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:50.156Z"
+      "capturedAt": "2026-10-23T00:34:33.154Z"
     },
     {
       "backend": "pt",
@@ -470,7 +470,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:50.419Z"
+      "capturedAt": "2026-10-23T00:34:33.418Z"
     },
     {
       "backend": "pt",
@@ -483,7 +483,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:50.670Z"
+      "capturedAt": "2026-10-23T00:34:33.679Z"
     },
     {
       "backend": "pt",
@@ -496,7 +496,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:52.518Z"
+      "capturedAt": "2026-10-23T00:34:35.263Z"
     },
     {
       "backend": "pt",
@@ -509,7 +509,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:52.778Z"
+      "capturedAt": "2026-10-23T00:34:35.524Z"
     },
     {
       "backend": "pt",
@@ -522,7 +522,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:53.039Z"
+      "capturedAt": "2026-10-23T00:34:35.788Z"
     },
     {
       "backend": "pt",
@@ -535,7 +535,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:53.302Z"
+      "capturedAt": "2026-10-23T00:34:36.052Z"
     },
     {
       "backend": "pt",
@@ -548,7 +548,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:53.552Z"
+      "capturedAt": "2026-10-23T00:34:36.314Z"
     },
     {
       "backend": "pt",
@@ -561,7 +561,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:55.281Z"
+      "capturedAt": "2026-10-23T00:34:38.056Z"
     },
     {
       "backend": "pt",
@@ -574,7 +574,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:55.544Z"
+      "capturedAt": "2026-10-23T00:34:38.323Z"
     },
     {
       "backend": "pt",
@@ -587,7 +587,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:56.860Z"
+      "capturedAt": "2026-10-23T00:34:39.640Z"
     },
     {
       "backend": "pt",
@@ -600,7 +600,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:57.124Z"
+      "capturedAt": "2026-10-23T00:34:39.902Z"
     },
     {
       "backend": "pt",
@@ -613,7 +613,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:57.386Z"
+      "capturedAt": "2026-10-23T00:34:40.165Z"
     },
     {
       "backend": "pt",
@@ -626,7 +626,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:57.648Z"
+      "capturedAt": "2026-10-23T00:34:40.415Z"
     },
     {
       "backend": "pt",
@@ -639,7 +639,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:57.913Z"
+      "capturedAt": "2026-10-23T00:34:40.677Z"
     },
     {
       "backend": "pt",
@@ -652,7 +652,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:15:59.758Z"
+      "capturedAt": "2026-10-23T00:34:42.595Z"
     },
     {
       "backend": "pt",
@@ -665,7 +665,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:00.022Z"
+      "capturedAt": "2026-10-23T00:34:42.856Z"
     },
     {
       "backend": "pt",
@@ -678,7 +678,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:00.273Z"
+      "capturedAt": "2026-10-23T00:34:43.122Z"
     },
     {
       "backend": "pt",
@@ -691,7 +691,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:00.535Z"
+      "capturedAt": "2026-10-23T00:34:43.385Z"
     },
     {
       "backend": "pt",
@@ -704,7 +704,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:00.796Z"
+      "capturedAt": "2026-10-23T00:34:43.649Z"
     },
     {
       "backend": "pt",
@@ -717,7 +717,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:02.533Z"
+      "capturedAt": "2026-10-23T00:34:45.384Z"
     },
     {
       "backend": "pt",
@@ -730,7 +730,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:02.794Z"
+      "capturedAt": "2026-10-23T00:34:45.650Z"
     },
     {
       "backend": "pt",
@@ -743,7 +743,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:04.117Z"
+      "capturedAt": "2026-10-23T00:34:46.965Z"
     },
     {
       "backend": "pt",
@@ -756,7 +756,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:04.381Z"
+      "capturedAt": "2026-10-23T00:34:47.225Z"
     },
     {
       "backend": "pt",
@@ -769,7 +769,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:04.642Z"
+      "capturedAt": "2026-10-23T00:34:47.489Z"
     },
     {
       "backend": "pt",
@@ -782,7 +782,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:04.905Z"
+      "capturedAt": "2026-10-23T00:34:47.750Z"
     },
     {
       "backend": "pt",
@@ -795,7 +795,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:05.170Z"
+      "capturedAt": "2026-10-23T00:34:48.012Z"
     },
     {
       "backend": "pt",
@@ -808,7 +808,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:06.754Z"
+      "capturedAt": "2026-10-23T00:34:49.596Z"
     },
     {
       "backend": "pt",
@@ -821,7 +821,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:07.014Z"
+      "capturedAt": "2026-10-23T00:34:49.857Z"
     },
     {
       "backend": "pt",
@@ -834,7 +834,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:07.278Z"
+      "capturedAt": "2026-10-23T00:34:50.122Z"
     },
     {
       "backend": "pt",
@@ -847,7 +847,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:07.532Z"
+      "capturedAt": "2026-10-23T00:34:50.384Z"
     },
     {
       "backend": "pt",
@@ -860,7 +860,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:07.796Z"
+      "capturedAt": "2026-10-23T00:34:50.647Z"
     },
     {
       "backend": "pt",
@@ -873,7 +873,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:09.536Z"
+      "capturedAt": "2026-10-23T00:34:52.648Z"
     },
     {
       "backend": "pt",
@@ -886,7 +886,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:09.798Z"
+      "capturedAt": "2026-10-23T00:34:53.174Z"
     },
     {
       "backend": "pt",
@@ -899,7 +899,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:11.115Z"
+      "capturedAt": "2026-10-23T00:34:54.492Z"
     },
     {
       "backend": "pt",
@@ -912,7 +912,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:11.376Z"
+      "capturedAt": "2026-10-23T00:34:54.754Z"
     },
     {
       "backend": "pt",
@@ -925,7 +925,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:11.640Z"
+      "capturedAt": "2026-10-23T00:34:55.018Z"
     },
     {
       "backend": "pt",
@@ -938,7 +938,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:11.905Z"
+      "capturedAt": "2026-10-23T00:34:55.284Z"
     },
     {
       "backend": "pt",
@@ -951,7 +951,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:12.170Z"
+      "capturedAt": "2026-10-23T00:34:55.547Z"
     },
     {
       "backend": "pt",
@@ -964,7 +964,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:13.749Z"
+      "capturedAt": "2026-10-23T00:34:57.135Z"
     },
     {
       "backend": "pt",
@@ -977,7 +977,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:14.011Z"
+      "capturedAt": "2026-10-23T00:34:57.385Z"
     },
     {
       "backend": "pt",
@@ -990,7 +990,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:14.276Z"
+      "capturedAt": "2026-10-23T00:34:57.648Z"
     },
     {
       "backend": "pt",
@@ -1003,7 +1003,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:14.526Z"
+      "capturedAt": "2026-10-23T00:34:57.899Z"
     },
     {
       "backend": "pt",
@@ -1016,7 +1016,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:14.791Z"
+      "capturedAt": "2026-10-23T00:34:58.163Z"
     },
     {
       "backend": "pt",
@@ -1029,7 +1029,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:16.532Z"
+      "capturedAt": "2026-10-23T00:34:59.901Z"
     },
     {
       "backend": "pt",
@@ -1042,7 +1042,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:16.794Z"
+      "capturedAt": "2026-10-23T00:35:00.169Z"
     },
     {
       "backend": "pt",
@@ -1055,7 +1055,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:18.116Z"
+      "capturedAt": "2026-10-23T00:35:01.488Z"
     },
     {
       "backend": "pt",
@@ -1068,7 +1068,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:18.376Z"
+      "capturedAt": "2026-10-23T00:35:01.751Z"
     },
     {
       "backend": "pt",
@@ -1081,7 +1081,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:18.641Z"
+      "capturedAt": "2026-10-23T00:35:02.016Z"
     },
     {
       "backend": "pt",
@@ -1094,7 +1094,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:18.904Z"
+      "capturedAt": "2026-10-23T00:35:02.281Z"
     },
     {
       "backend": "pt",
@@ -1107,7 +1107,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:19.168Z"
+      "capturedAt": "2026-10-23T00:35:02.542Z"
     },
     {
       "backend": "pt",
@@ -1120,7 +1120,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:20.470Z"
+      "capturedAt": "2026-10-23T00:35:03.862Z"
     },
     {
       "backend": "pt",
@@ -1133,7 +1133,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:20.730Z"
+      "capturedAt": "2026-10-23T00:35:04.123Z"
     },
     {
       "backend": "pt",
@@ -1146,7 +1146,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:20.993Z"
+      "capturedAt": "2026-10-23T00:35:04.387Z"
     },
     {
       "backend": "pt",
@@ -1159,7 +1159,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:21.257Z"
+      "capturedAt": "2026-10-23T00:35:04.652Z"
     },
     {
       "backend": "pt",
@@ -1172,7 +1172,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:23.259Z"
+      "capturedAt": "2026-10-23T00:35:06.394Z"
     },
     {
       "backend": "pt",
@@ -1185,7 +1185,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:23.785Z"
+      "capturedAt": "2026-10-23T00:35:06.656Z"
     },
     {
       "backend": "pt",
@@ -1198,7 +1198,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:25.103Z"
+      "capturedAt": "2026-10-23T00:35:07.711Z"
     },
     {
       "backend": "pt",
@@ -1211,7 +1211,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:25.367Z"
+      "capturedAt": "2026-10-23T00:35:07.970Z"
     },
     {
       "backend": "pt",
@@ -1224,7 +1224,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:25.630Z"
+      "capturedAt": "2026-10-23T00:35:08.220Z"
     },
     {
       "backend": "pt",
@@ -1237,7 +1237,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:25.893Z"
+      "capturedAt": "2026-10-23T00:35:08.485Z"
     },
     {
       "backend": "pt",
@@ -1250,7 +1250,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:28.528Z"
+      "capturedAt": "2026-10-23T00:35:11.125Z"
     },
     {
       "backend": "pt",
@@ -1263,7 +1263,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:28.789Z"
+      "capturedAt": "2026-10-23T00:35:11.387Z"
     },
     {
       "backend": "pt",
@@ -1276,7 +1276,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:29.053Z"
+      "capturedAt": "2026-10-23T00:35:11.652Z"
     },
     {
       "backend": "pt",
@@ -1289,7 +1289,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:29.314Z"
+      "capturedAt": "2026-10-23T00:35:11.917Z"
     },
     {
       "backend": "pt",
@@ -1302,7 +1302,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:29.577Z"
+      "capturedAt": "2026-10-23T00:35:12.181Z"
     },
     {
       "backend": "pt",
@@ -1315,7 +1315,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:29.839Z"
+      "capturedAt": "2026-10-23T00:35:12.444Z"
     },
     {
       "backend": "pt",
@@ -1328,7 +1328,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:30.103Z"
+      "capturedAt": "2026-10-23T00:35:12.707Z"
     },
     {
       "backend": "pt",
@@ -1341,7 +1341,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:30.365Z"
+      "capturedAt": "2026-10-23T00:35:12.957Z"
     },
     {
       "backend": "pt",
@@ -1354,7 +1354,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:30.628Z"
+      "capturedAt": "2026-10-23T00:35:13.221Z"
     },
     {
       "backend": "pt",
@@ -1367,7 +1367,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:31.156Z"
+      "capturedAt": "2026-10-23T00:35:13.751Z"
     },
     {
       "backend": "pt",
@@ -1380,7 +1380,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:31.419Z"
+      "capturedAt": "2026-10-23T00:35:14.017Z"
     },
     {
       "backend": "pt",
@@ -1393,7 +1393,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:32.995Z"
+      "capturedAt": "2026-10-23T00:35:15.598Z"
     },
     {
       "backend": "pt",
@@ -1406,7 +1406,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:33.259Z"
+      "capturedAt": "2026-10-23T00:35:15.860Z"
     },
     {
       "backend": "pt",
@@ -1419,7 +1419,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:33.523Z"
+      "capturedAt": "2026-10-23T00:35:16.124Z"
     },
     {
       "backend": "pt",
@@ -1432,7 +1432,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:33.787Z"
+      "capturedAt": "2026-10-23T00:35:16.374Z"
     },
     {
       "backend": "pt",
@@ -1445,7 +1445,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:34.048Z"
+      "capturedAt": "2026-10-23T00:35:16.637Z"
     },
     {
       "backend": "pt",
@@ -1458,7 +1458,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:34.298Z"
+      "capturedAt": "2026-10-23T00:35:16.902Z"
     },
     {
       "backend": "pt",
@@ -1471,7 +1471,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:36.147Z"
+      "capturedAt": "2026-10-23T00:35:20.340Z"
     },
     {
       "backend": "pt",
@@ -1484,7 +1484,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:36.408Z"
+      "capturedAt": "2026-10-23T00:35:20.602Z"
     },
     {
       "backend": "pt",
@@ -1497,7 +1497,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:36.672Z"
+      "capturedAt": "2026-10-23T00:35:20.865Z"
     },
     {
       "backend": "pt",
@@ -1510,7 +1510,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:36.936Z"
+      "capturedAt": "2026-10-23T00:35:21.116Z"
     },
     {
       "backend": "pt",
@@ -1523,7 +1523,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:37.200Z"
+      "capturedAt": "2026-10-23T00:35:21.379Z"
     },
     {
       "backend": "pt",
@@ -1536,7 +1536,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:37.464Z"
+      "capturedAt": "2026-10-23T00:35:21.642Z"
     },
     {
       "backend": "pt",
@@ -1545,11 +1545,11 @@
       "input": "show logging",
       "mode": "enable",
       "status": "STATUS_OK",
-      "rawOutput": "Syslog logging: enabled (0 messages dropped, 0 messages rate-limited,\n          0 flushes, 0 overruns, xml disabled, filtering disabled)\n\nNo Active Message Discriminator.\n\n\nNo Inactive Message Discriminator.\n\n\n    Console logging: level debugging, 122 messages logged, xml disabled,\n          filtering disabled\n    Monitor logging: level debugging, 0 messages logged, xml disabled,\n          filtering disabled\n    Buffer logging:  level debugging, 0 messages logged, xml disabled,\n          filtering disabled\n\n    Logging Exception size (4096 bytes) \n    Count and timestamp logging messages: disabled\n    Persistent logging: disabled\n\nNo active filter modules.\n\nESM: 0 messages dropped\n    Trap logging: level informational, 122 message lines logged\n\nLog Buffer (4096 bytes):\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINK-5-CHANGED: Interface FastEthernet0/1, changed state to administratively down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINK-5-CHANGED: Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received 802.1Q BPDU on non trunk FastEthernet0/1 VLAN1.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0001. Inconsistent port type.\n\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received BPDU with inconsistent peer vlan id 1 on FastEthernet0/1 VLAN99.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0099. Inconsistent local vlan.\n\n\n%LINK-5-CHANGED: Interface Vlan30, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan30, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan30, changed state to down\n\n%LINK-5-CHANGED: Interface Vlan30, changed state to administratively down\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received 802.1Q BPDU on non trunk FastEthernet0/1 VLAN1.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0001. Inconsistent port type.\n\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received BPDU with inconsistent peer vlan id 1 on FastEthernet0/1 VLAN99.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0099. Inconsistent local vlan.\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n",
+      "rawOutput": "Syslog logging: enabled (0 messages dropped, 0 messages rate-limited,\n          0 flushes, 0 overruns, xml disabled, filtering disabled)\n\nNo Active Message Discriminator.\n\n\nNo Inactive Message Discriminator.\n\n\n    Console logging: level debugging, 153 messages logged, xml disabled,\n          filtering disabled\n    Monitor logging: level debugging, 0 messages logged, xml disabled,\n          filtering disabled\n    Buffer logging:  level debugging, 0 messages logged, xml disabled,\n          filtering disabled\n\n    Logging Exception size (4096 bytes) \n    Count and timestamp logging messages: disabled\n    Persistent logging: disabled\n\nNo active filter modules.\n\nESM: 0 messages dropped\n    Trap logging: level informational, 153 message lines logged\n\nLog Buffer (4096 bytes):\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan30, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan30, changed state to down\n\n%LINK-5-CHANGED: Interface Vlan30, changed state to administratively down\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received 802.1Q BPDU on non trunk FastEthernet0/1 VLAN1.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0001. Inconsistent port type.\n\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received BPDU with inconsistent peer vlan id 1 on FastEthernet0/1 VLAN99.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0099. Inconsistent local vlan.\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINK-3-UPDOWN: Interface Vlan30, changed state to down\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan30, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface Vlan30, changed state to down\n\n%LINK-5-CHANGED: Interface Vlan30, changed state to administratively down\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received 802.1Q BPDU on non trunk FastEthernet0/1 VLAN1.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0001. Inconsistent port type.\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received BPDU with inconsistent peer vlan id 1 on FastEthernet0/1 VLAN99.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0099. Inconsistent local vlan.\n\n\n%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on FastEthernet0/1 (99), with Switch FastEthernet0/1 (1).\n\n",
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:39.498Z"
+      "capturedAt": "2026-10-23T00:36:27.184Z"
     },
     {
       "backend": "pt",
@@ -1558,11 +1558,11 @@
       "input": "show logging",
       "mode": "enable",
       "status": "STATUS_OK",
-      "rawOutput": "Syslog logging: enabled (0 messages dropped, 0 messages rate-limited,\n          0 flushes, 0 overruns, xml disabled, filtering disabled)\n\nNo Active Message Discriminator.\n\n\nNo Inactive Message Discriminator.\n\n\n    Console logging: level debugging, 108 messages logged, xml disabled,\n          filtering disabled\n    Monitor logging: level debugging, 0 messages logged, xml disabled,\n          filtering disabled\n    Buffer logging:  level debugging, 0 messages logged, xml disabled,\n          filtering disabled\n\n    Logging Exception size (4096 bytes) \n    Count and timestamp logging messages: disabled\n    Persistent logging: disabled\n\nNo active filter modules.\n\nESM: 0 messages dropped\n    Trap logging: level informational, 108 message lines logged\n\nLog Buffer (4096 bytes):\n\nMoved to root-inconsistent state\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-ROOTGUARDBLOCK: Port 0/2 tried to become non-designated in VLAN 10.\n\nMoved to root-inconsistent state\n%SPANTREE-2-ROOTGUARDBLOCK: Port 0/2 tried to become non-designated in VLAN 1.\n\nMoved to root-inconsistent state\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINK-3-UPDOWN: Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINK-5-CHANGED: Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-ROOTGUARDBLOCK: Port 0/2 tried to become non-designated in VLAN 10.\n\nMoved to root-inconsistent state\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-ROOTGUARDBLOCK: Port 0/2 tried to become non-designated in VLAN 20.\n\nMoved to root-inconsistent state\n%SPANTREE-2-ROOTGUARDBLOCK: Port 0/2 tried to become non-designated in VLAN 1.\n\nMoved to root-inconsistent state\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINK-3-UPDOWN: Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINK-5-CHANGED: Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received BPDU with inconsistent peer vlan id 99 on FastEthernet0/1 VLAN1.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0001. Inconsistent local vlan.\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on FastEthernet0/1 (1), with Switch FastEthernet0/1 (99).\n%SPANTREE-2-UNBLOCK_CONSIST_PORT: Unblocking FastEthernet0/1 on VLAN0099. Port consistency restored.\n\n%SPANTREE-2-UNBLOCK_CONSIST_PORT: Unblocking FastEthernet0/1 on VLAN0001. Port consistency restored.\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received BPDU with inconsistent peer vlan id 99 on FastEthernet0/1 VLAN1.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0001. Inconsistent local vlan.\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n",
+      "rawOutput": "Syslog logging: enabled (0 messages dropped, 0 messages rate-limited,\n          0 flushes, 0 overruns, xml disabled, filtering disabled)\n\nNo Active Message Discriminator.\n\n\nNo Inactive Message Discriminator.\n\n\n    Console logging: level debugging, 128 messages logged, xml disabled,\n          filtering disabled\n    Monitor logging: level debugging, 0 messages logged, xml disabled,\n          filtering disabled\n    Buffer logging:  level debugging, 0 messages logged, xml disabled,\n          filtering disabled\n\n    Logging Exception size (4096 bytes) \n    Count and timestamp logging messages: disabled\n    Persistent logging: disabled\n\nNo active filter modules.\n\nESM: 0 messages dropped\n    Trap logging: level informational, 128 message lines logged\n\nLog Buffer (4096 bytes):\n\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received BPDU with inconsistent peer vlan id 99 on FastEthernet0/1 VLAN1.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0001. Inconsistent local vlan.\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on FastEthernet0/1 (1), with Switch FastEthernet0/1 (99).\n%SPANTREE-2-UNBLOCK_CONSIST_PORT: Unblocking FastEthernet0/1 on VLAN0099. Port consistency restored.\n\n%SPANTREE-2-UNBLOCK_CONSIST_PORT: Unblocking FastEthernet0/1 on VLAN0001. Port consistency restored.\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received BPDU with inconsistent peer vlan id 99 on FastEthernet0/1 VLAN1.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0001. Inconsistent local vlan.\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on FastEthernet0/1 (1), with Switch FastEthernet0/1 (99).\n%SPANTREE-2-UNBLOCK_CONSIST_PORT: Unblocking FastEthernet0/1 on VLAN0099. Port consistency restored.\n\n%SPANTREE-2-UNBLOCK_CONSIST_PORT: Unblocking FastEthernet0/1 on VLAN0001. Port consistency restored.\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to down\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%LINEPROTO-5-UPDOWN: Line protocol on Interface FastEthernet0/1, changed state to up\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%SYS-5-CONFIG_I: Configured from console by console\n%SPANTREE-2-RECV_PVID_ERR: Received BPDU with inconsistent peer vlan id 99 on FastEthernet0/1 VLAN1.\n\n%SPANTREE-2-BLOCK_PVID_LOCAL: Blocking FastEthernet0/1 on VLAN0001. Inconsistent local vlan.\n\n\n%SYS-5-CONFIG_I: Configured from console by console\n\n%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on FastEthernet0/1 (1), with Switch FastEthernet0/1 (99).\n\n",
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:39.763Z"
+      "capturedAt": "2026-10-23T00:36:27.450Z"
     },
     {
       "backend": "pt",
@@ -1575,7 +1575,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:41.605Z"
+      "capturedAt": "2026-10-23T00:36:29.292Z"
     },
     {
       "backend": "pt",
@@ -1588,7 +1588,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:41.869Z"
+      "capturedAt": "2026-10-23T00:36:29.554Z"
     },
     {
       "backend": "pt",
@@ -1601,7 +1601,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:42.132Z"
+      "capturedAt": "2026-10-23T00:36:29.818Z"
     },
     {
       "backend": "pt",
@@ -1614,7 +1614,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:42.393Z"
+      "capturedAt": "2026-10-23T00:36:30.082Z"
     },
     {
       "backend": "pt",
@@ -1627,7 +1627,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:42.655Z"
+      "capturedAt": "2026-10-23T00:36:30.346Z"
     },
     {
       "backend": "pt",
@@ -1640,7 +1640,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:42.917Z"
+      "capturedAt": "2026-10-23T00:36:30.608Z"
     },
     {
       "backend": "pt",
@@ -1653,7 +1653,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:43.181Z"
+      "capturedAt": "2026-10-23T00:36:30.872Z"
     },
     {
       "backend": "pt",
@@ -1666,7 +1666,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:43.709Z"
+      "capturedAt": "2026-10-23T00:36:31.403Z"
     },
     {
       "backend": "pt",
@@ -1679,7 +1679,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:43.969Z"
+      "capturedAt": "2026-10-23T00:36:31.667Z"
     },
     {
       "backend": "pt",
@@ -1688,11 +1688,11 @@
       "input": "ipconfig /all",
       "mode": "",
       "status": "STATUS_OK",
-      "rawOutput": "\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time=23ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 23ms, Average = 5ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.10.1\nInvalid Command.\n\nC:\\>ping 192.168.10.11\n\nPinging 192.168.10.11 with 32 bytes of data:\n\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\nReply from 192.168.10.11: bytes=32 time=11ms TTL=128\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\n\nPing statistics for 192.168.10.11:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 11ms, Average = 2ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.20.1\nInvalid Command.\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\nRequest timed out.\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 1, Lost = 3 (75% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n --More-- ",
+      "rawOutput": "ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n --More-- ",
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:44.231Z"
+      "capturedAt": "2026-10-23T00:36:31.933Z"
     },
     {
       "backend": "pt",
@@ -1705,7 +1705,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:44.493Z"
+      "capturedAt": "2026-10-23T00:36:32.196Z"
     },
     {
       "backend": "pt",
@@ -1714,11 +1714,11 @@
       "input": "ping 192.168.20.1",
       "mode": "",
       "status": "STATUS_OK",
-      "rawOutput": "\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time=23ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 23ms, Average = 5ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.10.1\nInvalid Command.\n\nC:\\>ping 192.168.10.11\n\nPinging 192.168.10.11 with 32 bytes of data:\n\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\nReply from 192.168.10.11: bytes=32 time=11ms TTL=128\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\n\nPing statistics for 192.168.10.11:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 11ms, Average = 2ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.20.1\nInvalid Command.\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\nRequest timed out.\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 1, Lost = 3 (75% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.20.1\nInvalid Command.\n\nC:\\>",
+      "rawOutput": "\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time=23ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 23ms, Average = 5ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.10.1\nInvalid Command.\n\nC:\\>ping 192.168.10.11\n\nPinging 192.168.10.11 with 32 bytes of data:\n\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\nReply from 192.168.10.11: bytes=32 time=11ms TTL=128\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\n\nPing statistics for 192.168.10.11:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 11ms, Average = 2ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.20.1\nInvalid Command.\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\nRequest timed out.\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 1, Lost = 3 (75% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.20.1\nInvalid Command.\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\nRequest timed out.\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 1, Lost = 3 (75% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.10.1\nInvalid Command.\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.20.1\nInvalid Command.\n\nC:\\>",
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:44.758Z"
+      "capturedAt": "2026-10-23T00:36:32.460Z"
     },
     {
       "backend": "pt",
@@ -1727,11 +1727,11 @@
       "input": "ping 192.168.10.1",
       "mode": "",
       "status": "STATUS_OK",
-      "rawOutput": "\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time=1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 1ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time=14ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 14ms, Average = 3ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time=26ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time=12ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 26ms, Average = 9ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0030.A330.483A\n   Link-local IPv6 Address.........: FE80::230:A3FF:FE30:483A\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.20.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.20.1\n   DHCP Servers....................: 192.168.20.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-D6-1A-28-0E-00-30-A3-30-48-3A\n   DNS Servers.....................: ::\n                                     192.168.20.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0090.0CE3.EA91\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.10.1\nInvalid Command.\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0030.A330.483A\n   Link-local IPv6 Address.........: FE80::230:A3FF:FE30:483A\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.20.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.20.1\n   DHCP Servers....................: 192.168.20.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-D6-1A-28-0E-00-30-A3-30-48-3A\n   DNS Servers.....................: ::\n                                     192.168.20.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0090.0CE3.EA91\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.10.1\nInvalid Command.\n\nC:\\>",
+      "rawOutput": "\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time=1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 1ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time=14ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 14ms, Average = 3ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time=26ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time=12ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 26ms, Average = 9ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0030.A330.483A\n   Link-local IPv6 Address.........: FE80::230:A3FF:FE30:483A\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.20.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.20.1\n   DHCP Servers....................: 192.168.20.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-D6-1A-28-0E-00-30-A3-30-48-3A\n   DNS Servers.....................: ::\n                                     192.168.20.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0090.0CE3.EA91\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.10.1\nInvalid Command.\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0030.A330.483A\n   Link-local IPv6 Address.........: FE80::230:A3FF:FE30:483A\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.20.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.20.1\n   DHCP Servers....................: 192.168.20.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-D6-1A-28-0E-00-30-A3-30-48-3A\n   DNS Servers.....................: ::\n                                     192.168.20.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0090.0CE3.EA91\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.10.1\nInvalid Command.\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0030.A330.483A\n   Link-local IPv6 Address.........: FE80::230:A3FF:FE30:483A\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.20.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.20.1\n   DHCP Servers....................: 192.168.20.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-D6-1A-28-0E-00-30-A3-30-48-3A\n   DNS Servers.....................: ::\n                                     192.168.20.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0090.0CE3.EA91\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.20.1\nInvalid Command.\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0030.A330.483A\n   Link-local IPv6 Address.........: FE80::230:A3FF:FE30:483A\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.20.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.20.1\n   DHCP Servers....................: 192.168.20.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-D6-1A-28-0E-00-30-A3-30-48-3A\n   DNS Servers.....................: ::\n                                     192.168.20.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0090.0CE3.EA91\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.10.1\nInvalid Command.\n\nC:\\>",
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:45.020Z"
+      "capturedAt": "2026-10-23T00:36:32.724Z"
     },
     {
       "backend": "pt",
@@ -1744,7 +1744,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:46.605Z"
+      "capturedAt": "2026-10-23T00:36:34.309Z"
     },
     {
       "backend": "pt",
@@ -1757,7 +1757,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:46.866Z"
+      "capturedAt": "2026-10-23T00:36:34.573Z"
     },
     {
       "backend": "pt",
@@ -1770,7 +1770,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:47.131Z"
+      "capturedAt": "2026-10-23T00:36:34.837Z"
     },
     {
       "backend": "pt",
@@ -1783,7 +1783,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:47.396Z"
+      "capturedAt": "2026-10-23T00:36:35.100Z"
     },
     {
       "backend": "pt",
@@ -1796,7 +1796,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:47.658Z"
+      "capturedAt": "2026-10-23T00:36:35.363Z"
     },
     {
       "backend": "pt",
@@ -1809,7 +1809,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:47.920Z"
+      "capturedAt": "2026-10-23T00:36:35.626Z"
     },
     {
       "backend": "pt",
@@ -1822,7 +1822,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:48.449Z"
+      "capturedAt": "2026-10-23T00:36:36.155Z"
     },
     {
       "backend": "pt",
@@ -1835,7 +1835,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:49.497Z"
+      "capturedAt": "2026-10-23T00:36:37.209Z"
     },
     {
       "backend": "pt",
@@ -1848,7 +1848,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:49.760Z"
+      "capturedAt": "2026-10-23T00:36:37.472Z"
     },
     {
       "backend": "pt",
@@ -1861,7 +1861,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:50.023Z"
+      "capturedAt": "2026-10-23T00:36:37.734Z"
     },
     {
       "backend": "pt",
@@ -1874,7 +1874,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:50.288Z"
+      "capturedAt": "2026-10-23T00:36:37.997Z"
     },
     {
       "backend": "pt",
@@ -1887,7 +1887,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:51.829Z"
+      "capturedAt": "2026-10-23T00:36:39.538Z"
     },
     {
       "backend": "pt",
@@ -1900,7 +1900,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:53.141Z"
+      "capturedAt": "2026-10-23T00:36:40.848Z"
     },
     {
       "backend": "pt",
@@ -1913,7 +1913,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:53.400Z"
+      "capturedAt": "2026-10-23T00:36:41.098Z"
     },
     {
       "backend": "pt",
@@ -1926,7 +1926,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:53.665Z"
+      "capturedAt": "2026-10-23T00:36:41.362Z"
     },
     {
       "backend": "pt",
@@ -1935,11 +1935,11 @@
       "input": "switchport voice vlan 150",
       "mode": "",
       "status": "STATUS_OK",
-      "rawOutput": "\n",
+      "rawOutput": "% Voice VLAN does not exist. Creating vlan 150\n\n",
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:53.929Z"
+      "capturedAt": "2026-10-23T00:36:41.626Z"
     },
     {
       "backend": "pt",
@@ -1952,7 +1952,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:54.193Z"
+      "capturedAt": "2026-10-23T00:36:41.890Z"
     },
     {
       "backend": "pt",
@@ -1965,7 +1965,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:54.722Z"
+      "capturedAt": "2026-10-23T00:36:42.404Z"
     },
     {
       "backend": "pt",
@@ -1978,7 +1978,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:56.043Z"
+      "capturedAt": "2026-10-23T00:36:43.728Z"
     },
     {
       "backend": "pt",
@@ -1991,7 +1991,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:56.305Z"
+      "capturedAt": "2026-10-23T00:36:43.992Z"
     },
     {
       "backend": "pt",
@@ -2004,7 +2004,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:56.568Z"
+      "capturedAt": "2026-10-23T00:36:44.254Z"
     },
     {
       "backend": "pt",
@@ -2017,7 +2017,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:56.819Z"
+      "capturedAt": "2026-10-23T00:36:44.516Z"
     },
     {
       "backend": "pt",
@@ -2030,7 +2030,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:57.082Z"
+      "capturedAt": "2026-10-23T00:36:44.777Z"
     },
     {
       "backend": "pt",
@@ -2043,7 +2043,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:57.612Z"
+      "capturedAt": "2026-10-23T00:36:45.304Z"
     },
     {
       "backend": "pt",
@@ -2056,7 +2056,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:58.407Z"
+      "capturedAt": "2026-10-23T00:36:46.094Z"
     },
     {
       "backend": "pt",
@@ -2069,7 +2069,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:58.668Z"
+      "capturedAt": "2026-10-23T00:36:46.354Z"
     },
     {
       "backend": "pt",
@@ -2082,7 +2082,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:58.931Z"
+      "capturedAt": "2026-10-23T00:36:46.618Z"
     },
     {
       "backend": "pt",
@@ -2095,7 +2095,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:16:59.461Z"
+      "capturedAt": "2026-10-23T00:36:47.143Z"
     },
     {
       "backend": "pt",
@@ -2108,7 +2108,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:04.471Z"
+      "capturedAt": "2026-10-23T00:36:52.147Z"
     },
     {
       "backend": "pt",
@@ -2121,7 +2121,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:04.734Z"
+      "capturedAt": "2026-10-23T00:36:52.408Z"
     },
     {
       "backend": "pt",
@@ -2134,7 +2134,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:04.998Z"
+      "capturedAt": "2026-10-23T00:36:52.669Z"
     },
     {
       "backend": "pt",
@@ -2147,7 +2147,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:05.260Z"
+      "capturedAt": "2026-10-23T00:36:52.930Z"
     },
     {
       "backend": "pt",
@@ -2160,7 +2160,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:05.523Z"
+      "capturedAt": "2026-10-23T00:36:53.192Z"
     },
     {
       "backend": "pt",
@@ -2173,7 +2173,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:05.787Z"
+      "capturedAt": "2026-10-23T00:36:53.442Z"
     },
     {
       "backend": "pt",
@@ -2186,7 +2186,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:06.052Z"
+      "capturedAt": "2026-10-23T00:36:53.707Z"
     },
     {
       "backend": "pt",
@@ -2199,7 +2199,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:06.314Z"
+      "capturedAt": "2026-10-23T00:36:53.969Z"
     },
     {
       "backend": "pt",
@@ -2212,7 +2212,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:06.575Z"
+      "capturedAt": "2026-10-23T00:36:54.233Z"
     },
     {
       "backend": "pt",
@@ -2225,7 +2225,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:06.840Z"
+      "capturedAt": "2026-10-23T00:36:54.498Z"
     },
     {
       "backend": "pt",
@@ -2238,7 +2238,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:07.101Z"
+      "capturedAt": "2026-10-23T00:36:54.758Z"
     },
     {
       "backend": "pt",
@@ -2251,7 +2251,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:07.364Z"
+      "capturedAt": "2026-10-23T00:36:55.022Z"
     },
     {
       "backend": "pt",
@@ -2264,7 +2264,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:07.627Z"
+      "capturedAt": "2026-10-23T00:36:55.285Z"
     },
     {
       "backend": "pt",
@@ -2277,7 +2277,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:07.878Z"
+      "capturedAt": "2026-10-23T00:36:55.546Z"
     },
     {
       "backend": "pt",
@@ -2290,7 +2290,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:08.142Z"
+      "capturedAt": "2026-10-23T00:36:55.796Z"
     },
     {
       "backend": "pt",
@@ -2303,7 +2303,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:08.406Z"
+      "capturedAt": "2026-10-23T00:36:56.060Z"
     },
     {
       "backend": "pt",
@@ -2316,7 +2316,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:08.670Z"
+      "capturedAt": "2026-10-23T00:36:56.325Z"
     },
     {
       "backend": "pt",
@@ -2329,7 +2329,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:08.921Z"
+      "capturedAt": "2026-10-23T00:36:56.588Z"
     },
     {
       "backend": "pt",
@@ -2342,7 +2342,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:09.186Z"
+      "capturedAt": "2026-10-23T00:36:56.849Z"
     },
     {
       "backend": "pt",
@@ -2355,7 +2355,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:11.275Z"
+      "capturedAt": "2026-10-23T00:36:59.477Z"
     },
     {
       "backend": "pt",
@@ -2368,7 +2368,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:11.535Z"
+      "capturedAt": "2026-10-23T00:36:59.727Z"
     },
     {
       "backend": "pt",
@@ -2381,7 +2381,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:11.799Z"
+      "capturedAt": "2026-10-23T00:36:59.992Z"
     },
     {
       "backend": "pt",
@@ -2394,7 +2394,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:12.063Z"
+      "capturedAt": "2026-10-23T00:37:00.254Z"
     },
     {
       "backend": "pt",
@@ -2407,7 +2407,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:12.326Z"
+      "capturedAt": "2026-10-23T00:37:00.517Z"
     },
     {
       "backend": "pt",
@@ -2420,7 +2420,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:12.591Z"
+      "capturedAt": "2026-10-23T00:37:00.780Z"
     },
     {
       "backend": "pt",
@@ -2433,7 +2433,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:12.854Z"
+      "capturedAt": "2026-10-23T00:37:01.045Z"
     },
     {
       "backend": "pt",
@@ -2446,7 +2446,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:13.911Z"
+      "capturedAt": "2026-10-23T00:37:02.901Z"
     },
     {
       "backend": "pt",
@@ -2459,7 +2459,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:14.173Z"
+      "capturedAt": "2026-10-23T00:37:03.164Z"
     },
     {
       "backend": "pt",
@@ -2472,7 +2472,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:14.436Z"
+      "capturedAt": "2026-10-23T00:37:03.426Z"
     },
     {
       "backend": "pt",
@@ -2485,7 +2485,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:16.734Z"
+      "capturedAt": "2026-10-23T00:37:05.465Z"
     },
     {
       "backend": "pt",
@@ -2498,7 +2498,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:17.257Z"
+      "capturedAt": "2026-10-23T00:37:05.728Z"
     },
     {
       "backend": "pt",
@@ -2511,7 +2511,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:17.785Z"
+      "capturedAt": "2026-10-23T00:37:05.991Z"
     },
     {
       "backend": "pt",
@@ -2524,7 +2524,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:18.310Z"
+      "capturedAt": "2026-10-23T00:37:06.258Z"
     },
     {
       "backend": "pt",
@@ -2537,46 +2537,7 @@
       "prompt": null,
       "promptStatus": "bridge does not expose console prompts or interactive settlement",
       "settlements": [],
-      "capturedAt": "2026-10-22T21:17:18.574Z"
-    },
-    {
-      "backend": "pt",
-      "experiment": "restore-verification-paced",
-      "device": "PC0",
-      "input": "ping 192.168.10.1",
-      "mode": "",
-      "status": "STATUS_OK",
-      "rawOutput": "ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n",
-      "prompt": null,
-      "promptStatus": "bridge does not expose console prompts or interactive settlement",
-      "settlements": [],
-      "capturedAt": "2026-10-22T21:19:11.039Z"
-    },
-    {
-      "backend": "pt",
-      "experiment": "restore-verification-paced",
-      "device": "PC0",
-      "input": "ping 192.168.20.1",
-      "mode": "",
-      "status": "STATUS_OK",
-      "rawOutput": "",
-      "prompt": null,
-      "promptStatus": "bridge does not expose console prompts or interactive settlement",
-      "settlements": [],
-      "capturedAt": "2026-10-22T21:19:12.580Z"
-    },
-    {
-      "backend": "pt",
-      "experiment": "restore-verification-paced",
-      "device": "PC1",
-      "input": "ping 192.168.20.1",
-      "mode": "",
-      "status": "STATUS_OK",
-      "rawOutput": "\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time=1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 1ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time=14ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 14ms, Average = 3ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time=26ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time=12ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 26ms, Average = 9ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0030.A330.483A\n   Link-local IPv6 Address.........: FE80::230:A3FF:FE30:483A\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.20.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.20.1\n   DHCP Servers....................: 192.168.20.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-D6-1A-28-0E-00-30-A3-30-48-3A\n   DNS Servers.....................: ::\n                                     192.168.20.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0090.0CE3.EA91\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.10.1\nInvalid Command.\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0030.A330.483A\n   Link-local IPv6 Address.........: FE80::230:A3FF:FE30:483A\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.20.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.20.1\n   DHCP Servers....................: 192.168.20.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-D6-1A-28-0E-00-30-A3-30-48-3A\n   DNS Servers.....................: ::\n                                     192.168.20.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0090.0CE3.EA91\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.10.1\nInvalid Command.\n\nC:\\>ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.20.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0030.A330.483A\n   Link-local IPv6 Address.........: FE80::230:A3FF:FE30:483A\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.20.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.20.1\n   DHCP Servers....................: 192.168.20.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-D6-1A-28-0E-00-30-A3-30-48-3A\n   DNS Servers.....................: ::\n                                     192.168.20.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0090.0CE3.EA91\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 192.168.20.1\nInvalid Command.\n\nC:\\>",
-      "prompt": null,
-      "promptStatus": "bridge does not expose console prompts or interactive settlement",
-      "settlements": [],
-      "capturedAt": "2026-10-22T21:19:13.852Z"
+      "capturedAt": "2026-10-23T00:37:06.521Z"
     }
   ],
   "blockedExperiments": []

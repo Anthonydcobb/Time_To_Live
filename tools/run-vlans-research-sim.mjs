@@ -102,7 +102,9 @@ record(s1, "allowed-vlan-mutations", "show interfaces gigabitEthernet 0/2 switch
 
 config(s1, "native-mismatch", ["vlan 99", "exit", "interface gigabitEthernet 0/2", "switchport mode trunk", "switchport trunk native vlan 99", "end"]);
 config(s2, "native-mismatch", ["vlan 99", "exit", "interface gigabitEthernet 0/1", "switchport mode trunk", "switchport trunk native vlan 1", "end"]);
-net.clock.advance(3_000);
+// CDP advertisements are periodic at 60 seconds; wait past the interval
+// before inspecting the native-VLAN mismatch log.
+net.clock.advance(65_000);
 record(s1, "native-mismatch", "show logging");
 record(s2, "native-mismatch", "show logging");
 

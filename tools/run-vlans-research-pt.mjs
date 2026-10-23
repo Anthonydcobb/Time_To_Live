@@ -75,7 +75,9 @@ for (const command of ["show interfaces trunk", "show interfaces fastEthernet 0/
 
 await config("native-mismatch", "Switch0", [{ mode: "enable", line: "configure terminal" }, g("vlan 99"), g("interface fastEthernet 0/1"), i("switchport mode trunk"), i("switchport trunk native vlan 99"), i("end")]);
 await config("native-mismatch", "Switch1", [{ mode: "enable", line: "configure terminal" }, g("vlan 99"), g("interface fastEthernet 0/1"), i("switchport mode trunk"), i("switchport trunk native vlan 1"), i("end")]);
-await sleep(1500);
+// CDP advertisements are periodic at 60 seconds; wait past the interval
+// before inspecting the native-VLAN mismatch log.
+await sleep(65000);
 await record("native-mismatch", "Switch0", "show logging");
 await record("native-mismatch", "Switch1", "show logging");
 
