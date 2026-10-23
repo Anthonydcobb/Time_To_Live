@@ -183,8 +183,9 @@ class GameAudio {
   }
 
   /**
-   * Walter's radio: squelch in when he starts talking, static under his voice for as long as he
-   * holds the channel, squelch out when he's done. Safe to call repeatedly.
+   * Walter's radio: squelch in and one short burst of static when he starts talking, squelch out
+   * when he's done. The static plays once rather than looping under his lines. Safe to call
+   * repeatedly.
    */
   walkie(on: boolean): void {
     const ctx = this.ctx;
@@ -195,28 +196,23 @@ class GameAudio {
       this.radio = null;
       return;
     }
+    const t = ctx.currentTime;
     const src = this.noiseSource();
     const bp = ctx.createBiquadFilter();
     bp.type = "bandpass";
     bp.frequency.value = 2400;
     bp.Q.value = 0.9;
     const g = ctx.createGain();
-    g.gain.value = 0;
-    g.gain.setTargetAtTime(0.018, ctx.currentTime + 0.08, 0.05);
-    // The static breathes a little, like a weak signal.
-    const lfo = ctx.createOscillator();
-    lfo.frequency.value = 3.3;
-    const depth = ctx.createGain();
-    depth.gain.value = 0.007;
-    lfo.connect(depth).connect(g.gain);
+    g.gain.setValueAtTime(0, t);
+    g.gain.linearRampToValueAtTime(0.018, t + 0.1);
+    g.gain.setTargetAtTime(0, t + 0.3, 0.15);
     src.connect(bp).connect(g).connect(this.master);
-    src.start();
-    lfo.start();
+    src.start(t);
+    src.stop(t + 1.2);
     this.radio = {
       stop: () => {
+        g.gain.cancelScheduledValues(ctx.currentTime);
         g.gain.setTargetAtTime(0, ctx.currentTime, 0.03);
-        src.stop(ctx.currentTime + 0.2);
-        lfo.stop(ctx.currentTime + 0.2);
       },
     };
   }
