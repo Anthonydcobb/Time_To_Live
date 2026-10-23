@@ -21,6 +21,10 @@ Last updated: 2026-10-23.
 - **Walter's walkie** squelches open once when he starts talking and closes (longer
   tail, falling chirp) when another speaker, the end of the talk or a screen takes over,
   instead of keying per line (`audio.walkie`, `Ui.advance`).
+- **Typing sound:** soft key clicks loop while a dialogue line types out and stop when
+  it's all on screen (`audio.typing`, called from `Ui.renderLine`). The file is
+  `public/assets/audio/dialogue-typing.mp3`, a copy of agy's
+  `art/music/ui-sfx/dialogue-typing-soft-muted.mp3`. Level is `TYPING_LEVEL` (0.5).
 - **Audio direction for agy** is in `docs/audio-direction.md`: cosmic horror over
   Dungeon Crawler Carl, Silent Hill first, lo-fi drums with a Night Vale feel, walkie
   static for Walter, metal door banging for Gary.

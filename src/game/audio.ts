@@ -1,6 +1,7 @@
 /**
  * All of the game's sound, through the Web Audio API. Hums, static, whispers and crackles are
- * built live from oscillators and filtered noise; the only files are each room's music.
+ * built live from oscillators and filtered noise; the only files are each room's music and the
+ * dialogue's typing.
  *
  * Browsers only allow sound after a click, so nothing plays until `start()` is called from
  * the "Click to play" button. Calls made before that are remembered or quietly ignored.
@@ -17,6 +18,10 @@ const MUSIC: Partial<Record<RoomId, string>> = {
   office: "assets/audio/bobs-office.mp3",
 };
 const MUSIC_LEVEL = 0.35;
+
+/** Soft key clicks that loop under dialogue while it types out. */
+const TYPING = "assets/audio/dialogue-typing.mp3";
+const TYPING_LEVEL = 0.5;
 
 const near = (px: number, py: number, p: { x: number; y: number }, reach: number) =>
   Math.max(0, 1 - Math.hypot(px - p.x, py - p.y) / reach);
@@ -38,6 +43,7 @@ class GameAudio {
   private drone: { gain: GainNode; stop(): void } | null = null;
   private radio: { stop(): void } | null = null;
   private music: { url: string; stop(): void } | null = null;
+  private typist: { stop(): void } | null = null;
   private tracks = new Map<string, Promise<AudioBuffer>>();
   private lastUpdate = 0;
   private pos = { x: 0, y: 0 };
@@ -210,7 +216,54 @@ class GameAudio {
     };
   }
 
+  /** Key clicks while a line of dialogue types out; they stop as soon as it's all on screen. */
+  typing(on: boolean): void {
+    const ctx = this.ctx;
+    if (!ctx || on === !!this.typist) return;
+    if (!on) {
+      this.typist?.stop();
+      this.typist = null;
+      return;
+    }
+    const gain = ctx.createGain();
+    gain.gain.value = TYPING_LEVEL;
+    gain.connect(this.master);
+    let src: AudioBufferSourceNode | null = null;
+    let stopped = false;
+    this.typist = {
+      stop: () => {
+        stopped = true;
+        gain.gain.setTargetAtTime(0, ctx.currentTime, 0.03);
+        src?.stop(ctx.currentTime + 0.2);
+      },
+    };
+    this.load(TYPING)
+      .then((buffer) => {
+        if (stopped) return;
+        src = ctx.createBufferSource();
+        src.buffer = buffer;
+        src.loop = true;
+        src.connect(gain);
+        // Start somewhere in the loop so every line doesn't open on the same clicks.
+        src.start(0, Math.random() * buffer.duration);
+      })
+      .catch(() => {});
+  }
+
   // ---- building blocks -------------------------------------------------------
+
+  /** Fetches and decodes a sound file once; a failed one is forgotten so it can be tried again. */
+  private load(url: string): Promise<AudioBuffer> {
+    let track = this.tracks.get(url);
+    if (!track) {
+      track = fetch(url)
+        .then((r) => r.arrayBuffer())
+        .then((data) => this.ctx!.decodeAudioData(data));
+      track.catch(() => this.tracks.delete(url));
+      this.tracks.set(url, track);
+    }
+    return track;
+  }
 
   private noiseSource(): AudioBufferSourceNode {
     const src = this.ctx!.createBufferSource();
@@ -445,13 +498,6 @@ class GameAudio {
     this.music?.stop();
     this.music = null;
     if (!url) return;
-    let track = this.tracks.get(url);
-    if (!track) {
-      track = fetch(url)
-        .then((r) => r.arrayBuffer())
-        .then((data) => ctx.decodeAudioData(data));
-      this.tracks.set(url, track);
-    }
     const gain = ctx.createGain();
     gain.gain.value = 0;
     gain.connect(this.master);
@@ -466,7 +512,7 @@ class GameAudio {
       },
     };
     this.music = music;
-    track
+    this.load(url)
       .then((buffer) => {
         if (stopped) return;
         src = ctx.createBufferSource();
@@ -478,7 +524,6 @@ class GameAudio {
       })
       .catch(() => {
         // A missing or broken file just means silence, never a crash.
-        this.tracks.delete(url);
         if (this.music === music) this.music = null;
       });
   }

@@ -211,6 +211,7 @@ export class Ui {
     const next = this.queue.shift();
     audio.walkie(isWalter(next));
     if (!next) {
+      audio.typing(false);
       $("dialogue").hidden = true;
       this.hideCloseUp();
       hideImage($("bust"));
@@ -340,6 +341,7 @@ export class Ui {
     const typing = this.typed < this.length;
     $("more").hidden = typing;
     $("dialogue").classList.toggle("typing", typing);
+    audio.typing(typing);
   }
 
   /** The console's status lights: RX/TX blinks while text comes in, LINK/ERR for the radio and anything wrong. */
