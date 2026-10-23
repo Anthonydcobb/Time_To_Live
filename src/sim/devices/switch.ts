@@ -62,6 +62,10 @@ export class Switch extends IosDevice {
   /** Access-layer security counters used by the IOS show commands. */
   readonly dhcpSnoopingStats = { processed: 0, untrustedDrops: 0, rateLimitDrops: 0 };
   readonly arpInspectionStats = { inspected: 0, drops: 0 };
+  /** IOS enables EtherChannel misconfiguration guard by default. */
+  etherchannelMisconfigGuard = true;
+  /** Catalyst default EtherChannel hashing method. */
+  portChannelLoadBalance = "src-dst-ip";
 
   constructor(id: string, hostname = "Switch") {
     super(id);
@@ -75,6 +79,7 @@ export class Switch extends IosDevice {
       queueWhileArping: false,
       initialTtl: 255,
       localRoutes: false,
+      staticRoutes: () => this.config.staticRoutes,
       defaultGateway: () => this.config.defaultGateway,
       filter: (iface, packet, direction) => permitsStandardAcl(this.config, iface.name, packet, direction),
     });
@@ -106,6 +111,7 @@ export class Switch extends IosDevice {
       { name: "FastEthernet", help: "FastEthernet IEEE 802.3" },
       { name: "GigabitEthernet", help: "GigabitEthernet IEEE 802.3z" },
       { name: "Vlan", help: "Catalyst Vlans" },
+      { name: "Port-channel", help: "EtherChannel interface" },
     ];
   }
 
@@ -117,7 +123,7 @@ export class Switch extends IosDevice {
   }
 
   configInterfaceOrder(c: IosConfig): string[] {
-    return [...this.ports.map((p) => p.name), ...this.sviNames(c)];
+    return [...this.ports.map((p) => p.name), ...Object.keys(c.interfaces).filter((n) => /^Port-channel\d+$/i.test(n)).sort(), ...this.sviNames(c)];
   }
 
   interfaces(): InterfaceView[] {
@@ -130,6 +136,15 @@ export class Switch extends IosDevice {
       status: () => port.status(),
       protocol: () => (port.protocolUp ? "up" : "down"),
     }));
+    const portChannels: InterfaceView[] = Object.keys(this.config.interfaces).filter((n) => /^Port-channel\d+$/i.test(n)).sort().map((name) => ({
+      name,
+      shortName: name,
+      mac: this.baseMac,
+      port: null,
+      routed: !this.config.interfaces[name].switchport,
+      status: () => this.config.interfaces[name]?.shutdown ? "administratively down" : this.channelGroupPorts(Number(name.match(/\d+$/)?.[0])).some((p) => this.channelMemberState(p) === "P") ? "up" : "down",
+      protocol: () => this.config.interfaces[name]?.shutdown ? "down" : this.channelGroupPorts(Number(name.match(/\d+$/)?.[0])).some((p) => this.channelMemberState(p) === "P") ? "up" : "down",
+    }));
     const svis: InterfaceView[] = this.sviNames().map((name) => ({
       name,
       shortName: `Vl${sviVlan(name)}`,
@@ -139,12 +154,12 @@ export class Switch extends IosDevice {
       status: () => (this.config.interfaces[name]?.shutdown ? "administratively down" : this.sviUp.has(name) ? "up" : "down"),
       protocol: () => (this.sviUp.has(name) ? "up" : "down"),
     }));
-    return [...physical, ...svis];
+    return [...physical, ...portChannels, ...svis];
   }
 
   l3Interfaces(): L3Interface[] {
     const routed = this.ports.filter((p) => !this.config.interfaces[p.name].switchport).map((p) => this.l3.get(p)!);
-    return [...routed, ...this.sviNames().map((n) => this.svi(n))];
+    return [...routed, ...Object.keys(this.config.interfaces).filter((n) => /^Port-channel\d+$/i.test(n) && !this.config.interfaces[n].switchport).map((n) => this.portChannel(n)), ...this.sviNames().map((n) => this.svi(n))];
   }
 
   private svi(name: string): L3Interface {
@@ -173,18 +188,38 @@ export class Switch extends IosDevice {
     return svi;
   }
 
+  private readonly portChannels = new Map<string, L3Interface>();
+
+  private portChannel(name: string): L3Interface {
+    let iface = this.portChannels.get(name);
+    if (!iface) {
+      const group = Number(name.match(/\d+$/)?.[0]);
+      const cfg = () => this.config.interfaces[name];
+      iface = { name, mac: this.baseMac, get ip() { return cfg()?.ip ?? null; }, get mask() { return cfg()?.mask ?? null; }, get ipv6Addresses() { return cfg()?.ipv6Addresses ?? []; }, up: () => !!cfg() && !cfg().shutdown && this.config.ipRouting && this.channelGroupPorts(group).some((p) => this.channelMemberState(p) === "P"), transmit: (frame) => { const member = this.channelGroupPorts(group).find((p) => this.channelMemberState(p) === "P"); if (member) this.send(member, frame); } };
+      this.portChannels.set(name, iface);
+    }
+    return iface;
+  }
+
   canCreateInterface(name: string): string | null {
+    if (/^Port-channel\d+$/i.test(name)) return `Port-channel${Number(name.match(/\d+$/)?.[0])}`;
     const vlan = sviVlan(name);
     return vlan !== null && vlan >= 1 && vlan <= 4094 ? `Vlan${vlan}` : null;
   }
 
   createInterface(name: string): void {
+    if (/^Port-channel\d+$/i.test(name)) {
+      this.config.interfaces[name] = newInterfaceConfig(false);
+      this.config.interfaces[name].switchport = defaultSwitchport();
+      return;
+    }
     // Only Vlan1 ships shut down. A new SVI is enabled and comes up once its VLAN has a forwarding port.
     this.config.interfaces[name] = newInterfaceConfig(false);
     this.updateSvis();
   }
 
   deleteInterface(name: string): string | null {
+    if (/^Port-channel\d+$/i.test(name)) { delete this.config.interfaces[name]; this.portChannels.delete(name); return null; }
     if (sviVlan(name) === null) return "% Physical interfaces cannot be deleted";
     delete this.config.interfaces[name];
     if (this.sviUp.delete(name)) {
@@ -259,29 +294,65 @@ export class Switch extends IosDevice {
     return "access";
   }
 
+  channelGroupPorts(group: number): Port[] {
+    return this.ports.filter((p) => this.config.interfaces[p.name].channelGroup === group);
+  }
+
+  private channelCompatible(port: Port, peer: Port): boolean {
+    const ours = this.config.interfaces[port.name];
+    const theirs = peer.device instanceof Switch ? peer.device.config.interfaces[peer.name] : undefined;
+    if (!theirs) return false;
+    if (ours.speed !== "auto" && theirs.speed !== "auto" && ours.speed !== theirs.speed) return false;
+    if (ours.duplex !== "auto" && theirs.duplex !== "auto" && ours.duplex !== theirs.duplex) return false;
+    if (ours.switchport && theirs.switchport) {
+      const a = ours.switchport; const b = theirs.switchport;
+      if (a.mode !== b.mode || a.accessVlan !== b.accessVlan || a.nativeVlan !== b.nativeVlan) return false;
+      if (JSON.stringify(a.allowed) !== JSON.stringify(b.allowed)) return false;
+    }
+    const localMembers = this.channelGroupPorts(ours.channelGroup!);
+    for (const member of localMembers) {
+      const cfg = this.config.interfaces[member.name];
+      if (cfg.speed !== ours.speed || cfg.duplex !== ours.duplex) return false;
+      if (cfg.switchport && ours.switchport && (cfg.switchport.mode !== ours.switchport.mode || cfg.switchport.accessVlan !== ours.switchport.accessVlan || cfg.switchport.nativeVlan !== ours.switchport.nativeVlan || JSON.stringify(cfg.switchport.allowed) !== JSON.stringify(ours.switchport.allowed))) return false;
+    }
+    return true;
+  }
+
+  channelMemberState(port: Port): "P" | "D" | "I" | "s" {
+    const cfg = this.config.interfaces[port.name];
+    if (cfg.channelGroup === null || cfg.channelMode === null) return "I";
+    if (!port.protocolUp) return "D";
+    const peer = port.peer;
+    if (!peer || !(peer.device instanceof Switch)) return "I";
+    const theirs = peer.device.config.interfaces[peer.name];
+    if (theirs.channelGroup !== cfg.channelGroup || theirs.channelMode === null) return "I";
+    const oursLacp = cfg.channelMode === "active" || cfg.channelMode === "passive";
+    const theirsLacp = theirs.channelMode === "active" || theirs.channelMode === "passive";
+    const oursPagp = cfg.channelMode === "desirable" || cfg.channelMode === "auto";
+    const theirsPagp = theirs.channelMode === "desirable" || theirs.channelMode === "auto";
+    if ((oursLacp && theirsPagp) || (oursPagp && theirsLacp)) return "s";
+    if (!this.channelCompatible(port, peer)) {
+      const reason = cfg.speed !== "auto" && theirs.speed !== cfg.speed ? `speed of ${port.shortName} is ${cfg.speed}M, peer is ${theirs.speed}M` : "switchport parameters do not match";
+      const line = `%EC-5-CANNOT_BUNDLE2: ${port.shortName} is not compatible with ${peer.shortName} and will be suspended (${reason})`;
+      if (!this.logBuffer.some((entry) => entry.includes(line))) this.emit(line);
+      return "s";
+    }
+    if (cfg.channelMode === "on") return "P";
+    if (theirs.channelMode === "on") return "I";
+    if (cfg.channelMode === "active" || cfg.channelMode === "passive") {
+      return theirs.channelMode === "active" || cfg.channelMode === "active" ? "P" : "I";
+    }
+    return theirs.channelMode === "desirable" || cfg.channelMode === "desirable" ? "P" : "I";
+  }
+
   channelGroupActive(port: Port): boolean {
-    const sp = this.config.interfaces[port.name].switchport;
-    if (!sp) return false;
-    if (sp.channelGroup === null || sp.channelMode === null) return false;
-    const members = this.ports.filter((p) => this.switchport(p).channelGroup === sp.channelGroup);
-    if (!members.length) return false;
-    return members.every((member) => {
-      const peer = member.peer;
-      if (!peer || !(peer.device instanceof Switch)) return false;
-      const other = peer.device.switchport(peer);
-      if (other.channelGroup !== sp.channelGroup || other.channelMode === null) return false;
-      if (sp.channelMode === "on" || other.channelMode === "on") return sp.channelMode === "on" && other.channelMode === "on";
-      if (sp.channelMode === "active" || sp.channelMode === "passive" || other.channelMode === "active" || other.channelMode === "passive") {
-        return (sp.channelMode === "active" || sp.channelMode === "passive") && (other.channelMode === "active" || other.channelMode === "passive") && (sp.channelMode === "active" || other.channelMode === "active");
-      }
-      return (sp.channelMode === "desirable" || sp.channelMode === "auto") && (other.channelMode === "desirable" || other.channelMode === "auto") && (sp.channelMode === "desirable" || other.channelMode === "desirable");
-    });
+    return this.channelMemberState(port) === "P";
   }
 
   channelMembers(port: Port): Port[] {
-    const group = this.switchport(port).channelGroup;
-    if (group === null || !this.channelGroupActive(port)) return [port];
-    return this.ports.filter((p) => this.switchport(p).channelGroup === group).sort((a, b) => a.shortName.localeCompare(b.shortName));
+    const group = this.config.interfaces[port.name].channelGroup;
+    if (group === null) return [port];
+    return this.channelGroupPorts(group).filter((p) => this.channelMemberState(p) === "P").sort((a, b) => a.shortName.localeCompare(b.shortName));
   }
 
   channelRepresentative(port: Port): Port {
@@ -289,9 +360,9 @@ export class Switch extends IosDevice {
   }
 
   setChannelGroup(port: Port, group: number, mode: ChannelGroupMode): void {
-    const sp = this.switchport(port);
-    sp.channelGroup = group;
-    sp.channelMode = mode;
+    const cfg = this.config.interfaces[port.name];
+    cfg.channelGroup = group;
+    cfg.channelMode = mode;
     this.vlanConfigChanged();
   }
 
@@ -589,7 +660,9 @@ export class Switch extends IosDevice {
     if (this.handleBpdu(port, frame)) return;
     if (!this.config.interfaces[port.name].switchport) {
       const iface = this.l3.get(port);
-      if (iface?.up()) this.stack.handleFrame(iface, retag(frame, undefined));
+      const group = this.config.interfaces[port.name].channelGroup;
+      const routedPo = group !== null && this.config.interfaces[`Port-channel${group}`] && !this.config.interfaces[`Port-channel${group}`].switchport ? this.portChannel(`Port-channel${group}`) : iface;
+      if (routedPo?.up()) this.stack.handleFrame(routedPo, retag(frame, undefined));
       return;
     }
     const vlan = this.ingressVlan(port, frame);

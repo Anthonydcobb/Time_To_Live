@@ -75,10 +75,13 @@ export interface InterfaceConfig {
   switchport?: SwitchportConfig;
   /** Router subinterfaces only: `encapsulation dot1Q <vlan> [native]`. */
   encapsulation?: { vlan: number; native: boolean } | null;
+  /** EtherChannel membership applies to both Layer 2 and routed physical interfaces. */
+  channelGroup: number | null;
+  channelMode: ChannelGroupMode | null;
 }
 
 export function newInterfaceConfig(shutdown: boolean): InterfaceConfig {
-  return { shutdown, description: null, speed: "auto", duplex: "auto", ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, ipv6AccessGroupIn: null, ipv6AccessGroupOut: null, cdp: true, natRole: null, hsrp: null, vrrp: null, glbp: null, ospfPriority: 1 };
+  return { shutdown, description: null, speed: "auto", duplex: "auto", ip: null, mask: null, ipv6Addresses: [], ipv6OspfArea: null, helperAddresses: [], accessGroupIn: null, accessGroupOut: null, ipv6AccessGroupIn: null, ipv6AccessGroupOut: null, cdp: true, natRole: null, hsrp: null, vrrp: null, glbp: null, ospfPriority: 1, channelGroup: null, channelMode: null };
 }
 
 export interface AclAddress {

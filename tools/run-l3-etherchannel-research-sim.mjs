@@ -59,12 +59,13 @@ const b = net.add(new Switch("SWB", "SWB"));
 const left = net.add(new Pc("LEFT"));
 const right = net.add(new Pc("RIGHT"));
 const core = net.add(new Switch("CORE", "CORE"));
+const routedPeer = net.add(new Switch("RPOER", "RPOER"));
 const r1 = net.add(new Router("R1", "R1"));
 const l3left = net.add(new Pc("L3LEFT"));
 const l3right = net.add(new Pc("L3RIGHT"));
 const vlan10 = net.add(new Pc("VLAN10"));
 const vlan20 = net.add(new Pc("VLAN20"));
-for (const d of [a, b, core, r1]) settle(d);
+for (const d of [a, b, core, routedPeer, r1]) settle(d);
 
 net.connect(a.port("Gi0/1"), b.port("Gi0/1"));
 net.connect(a.port("Gi0/2"), b.port("Gi0/2"));
@@ -72,6 +73,12 @@ config(a, "etherchannel-baseline", ["interface gi0/1", "switchport mode trunk", 
 config(b, "etherchannel-baseline", ["interface gi0/1", "switchport mode trunk", "channel-group 1 mode active", "interface gi0/2", "switchport mode trunk", "channel-group 1 mode active", "end"]);
 net.clock.advance(35000);
 for (const command of ["show etherchannel summary", "show etherchannel port-channel 1", "show interfaces port-channel 1", "show lacp neighbor", "show pagp neighbor", "show etherchannel load-balance", "show spanning-tree"]) record(a, "etherchannel-active-active", command, { waitedMs: 35000 });
+net.disconnect(a.port("Gi0/2"));
+net.clock.advance(5000);
+record(a, "member-failure", "show etherchannel summary", { waitedMs: 5000 });
+net.connect(a.port("Gi0/2"), b.port("Gi0/2"));
+net.clock.advance(35000);
+record(a, "member-recovery", "show etherchannel summary", { waitedMs: 35000 });
 
 const matrix = [["active-passive", "active", "passive"], ["passive-passive", "passive", "passive"], ["desirable-auto", "desirable", "auto"], ["auto-auto", "auto", "auto"], ["on-on", "on", "on"], ["on-active", "on", "active"]];
 let group = 10;
@@ -87,13 +94,6 @@ config(a, "mismatch-member-settings", ["interface gi0/1", "no channel-group", "s
 config(b, "mismatch-member-settings", ["interface range gi0/1 - 2", "no channel-group", "switchport mode trunk", "channel-group 20 mode active", "end"]);
 net.clock.advance(5000);
 for (const command of ["show etherchannel summary", "show interfaces status", "show logging"]) record(a, "mismatch-member-settings", command, { waitedMs: 5000 });
-net.disconnect(a.port("Gi0/2"));
-net.clock.advance(5000);
-record(a, "member-failure", "show etherchannel summary", { waitedMs: 5000 });
-net.connect(a.port("Gi0/2"), b.port("Gi0/2"));
-net.clock.advance(35000);
-record(a, "member-recovery", "show etherchannel summary", { waitedMs: 35000 });
-
 config(core, "l3-switch-off", ["interface gi0/1", "no switchport", "ip address 10.0.0.1 255.255.255.0", "no shutdown", "interface gi0/2", "no switchport", "ip address 10.0.1.1 255.255.255.0", "no shutdown", "end"]);
 net.connect(l3left.nic, core.port("Gi0/1"));
 net.connect(l3right.nic, core.port("Gi0/2"));
@@ -117,8 +117,12 @@ record(core, "svi-inter-vlan", "show ip route", { waitedMs: 35000 });
 
 config(core, "default-route", ["interface fastEthernet 0/5", "no switchport", "ip address 172.16.0.2 255.255.255.0", "no shutdown", "exit", "ip route 0.0.0.0 0.0.0.0 172.16.0.1", "end"]);
 record(core, "default-route", "show ip route");
-config(core, "routed-etherchannel", ["interface port-channel 30", "no switchport", "ip address 172.31.0.2 255.255.255.252", "no shutdown", "end"]);
-record(core, "routed-etherchannel", "show running-config");
+net.connect(core.port("Fa0/3"), routedPeer.port("Fa0/3"));
+net.connect(core.port("Fa0/4"), routedPeer.port("Fa0/4"));
+config(core, "routed-etherchannel", ["interface range fa0/3 - 4", "no switchport", "channel-group 30 mode active", "interface port-channel 30", "no switchport", "ip address 172.31.0.2 255.255.255.252", "no shutdown", "end"]);
+config(routedPeer, "routed-etherchannel", ["interface range fa0/3 - 4", "no switchport", "channel-group 30 mode active", "interface port-channel 30", "no switchport", "ip address 172.31.0.1 255.255.255.252", "no shutdown", "end"]);
+net.clock.advance(35000);
+for (const command of ["show etherchannel summary", "show etherchannel port-channel 30", "show interfaces port-channel 30", "show ip route", "show running-config"]) record(core, "routed-etherchannel", command, { waitedMs: 35000 });
 
 await mkdir(resolve(root, "harness/artifacts"), { recursive: true });
 await writeFile(resolve(root, "harness/artifacts/l3-etherchannel-research-sim.json"), JSON.stringify({ capturedAt: stamp(), backend: "sim", version: "workspace-sim", image: "src/sim", observations }, null, 2) + "\n");

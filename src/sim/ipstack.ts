@@ -126,7 +126,9 @@ export class IpStack {
       if (s.exitIface) {
         const iface = connected.find((r) => r.iface?.name === s.exitIface)?.iface;
         if (iface) routes.push({ code: "S", network: s.network, mask: s.mask, nextHop: s.nextHop, iface, distance: s.distance ?? 1 });
-      } else if (s.nextHop !== null && connected.some((r) => r.code === "C" && networkOf(s.nextHop!, r.mask) === r.network)) {
+      } else if (s.nextHop !== null) {
+        // Keep configured next-hop routes visible in the RIB while recursive
+        // resolution is unavailable; lookup() still refuses to forward them.
         routes.push({ code: "S", network: s.network, mask: s.mask, nextHop: s.nextHop, iface: null, distance: s.distance ?? 1 });
       }
     }

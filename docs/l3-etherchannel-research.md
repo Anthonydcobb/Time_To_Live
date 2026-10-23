@@ -1,106 +1,44 @@
 # Layer 3 switching and EtherChannel research
 
-This is a research capture only. No files under `src/` were changed. Raw
-captures are [the simulator artifact](../harness/artifacts/l3-etherchannel-research-sim.json)
-and [the Packet Tracer artifact](../harness/artifacts/l3-etherchannel-research-pt.json).
-
-The simulator harness waited 35 s for STP, 5 s for LACP/PAgP bundling, 35 s
-for member recovery, and 65 s for the CDP baseline. PT used the same waits.
-The PT EtherChannel cases are not valid comparisons: topology inspection found
-that the existing Switch0 Fa0/1 link goes to Switch1, but Switch0 Fa0/4 goes to
-another switch. The harness therefore recorded standalone/suspended results
-from mismatched physical neighbors and stopped before adding topology.
+Research captures: [sim](../harness/artifacts/l3-etherchannel-research-sim.json) and [Packet Tracer](../harness/artifacts/l3-etherchannel-research-pt.json). The sim harness waited 35 s for STP, 5 s for LACP/PAgP bundling, 5 s after member failure, 35 s for recovery, and 35 s for routed-bundle convergence. PT used the same protocol waits where the case applied. IOS 15 behavior is authoritative; PT is recorded as a platform observation.
 
 ## Fix list
 
-1. **EtherChannel detail and protocol command surface — `sim-wrong`.** The
-   simulator does form a bundle, but its summary is too small:
+1. **Per-member failure and recovery — done (`sim-wrong`).** Before, one failed member made the bundle unusable: `Gi0/1(s) Gi0/2(s)`. After the 5 s failure wait, the sim records `Po1(SU) LACP Gi0/1(P) Gi0/2(D)`; after 35 s recovery both members are `(P)`. Forwarding and STP continue through the surviving member.
 
-   ```text
-   sim: 1  Po1-       LACP         Gi0/1(P) Gi0/2(P)
-   IOS 15: 1      Po1(SU)           LACP   Gi1/0/1(P) Gi1/0/2(P)
-   ```
+2. **Logical STP port and cost — done (`sim-wrong`).** Before, STP listed both physical members. After the 35 s STP wait it lists one `Po1` row, with short-method cost 3 for two Gi members and port ID `128.65` for group 1.
 
-   Implement the IOS summary flags/legend and the missing `show etherchannel
-   port-channel`, `show etherchannel load-balance`, `show lacp neighbor`, and
-   `show pagp neighbor` output. IOS 15 documents these display commands and
-   the `P`, `I`, `s`, `R`, `S`, and `U` meanings in the [EtherChannel command
-   reference](https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst2960/software/release/15-0_2_se/configuration/guide/scg2960/swethchl.html).
+3. **Summary flags and command surface — done (`sim-wrong`).** Before, the summary header was garbled and detail/neighbor commands were missing. After, `show etherchannel summary` emits the IOS legend and `Po1(SU) LACP Gi0/1(P) Gi0/2(P)`, plus `show etherchannel port-channel`, `show interfaces port-channel`, `show lacp neighbor`, `show pagp neighbor`, `show etherchannel load-balance`, and `port-channel load-balance`.
 
-2. **Member compatibility enforcement — `sim-wrong`.** The mismatch case
-   still reports bundled members in the simulator:
+4. **Negotiation and compatibility — done (`sim-wrong`).** Before, passive/passive, auto/auto, and on/active were incorrectly shown as suspended. After 5 s, non-forming negotiated members are stand-alone `(I)` with `Po(SD)`; static `on` facing active stays bundled on the `on` side while the negotiating side is `(I)`. Incompatible speed/duplex or switchport settings are `(s)` and emit `%EC-5-CANNOT_BUNDLE2`. The simulated EtherChannel misconfig guard now defaults to enabled. The exact err-disable guard transition remains a PT/CML validation item.
 
-   ```text
-   sim: Po20-       LACP         Gi0/1(P) Gi0/2(P)
-   IOS 15: Po1(SU) LACP with an incompatible member shown as (s), or excluded
-   from the active member list, with the corresponding EtherChannel log.
-   ```
+5. **Port-channel interface and inheritance — done (`sim-wrong`).** Before, `interface Port-channel N` and its show/config surface were unavailable. After, the first `channel-group` creates the interface; Port-channel switchport/routed settings propagate to members and appear in running-config, `show interfaces port-channel N`, status/trunk views, and EtherChannel detail.
 
-   Enforce matching speed, duplex, access/trunk mode, native VLAN, allowed
-   VLANs, and other channel parameters; emit the IOS-style suspension/log
-   evidence.
+6. **Layer 3 switching and static routes — done (`sim-wrong`).** Before, a switch rejected `ip route 0.0.0.0 0.0.0.0 172.16.0.1` and routed ports omitted `no switchport`. After, the switch accepts the route and reports `S*  0.0.0.0/0 [1/0] via 172.16.0.1` plus `Gateway of last resort is 172.16.0.1 to network 0.0.0.0`; routed interfaces print `no switchport`. Static-route storage is shared with router behavior.
 
-3. **Port-channel interface/config inheritance — `sim-wrong`.** The simulator
-   accepts the physical `channel-group` commands but does not provide the
-   IOS `interface Port-channel N` surface or the requested `show interfaces
-   port-channel N` evidence:
+7. **Routed EtherChannel — done (`sim-wrong`).** After the 35 s bundling/STP wait, the sim reports `Po30(RU) LACP Fa0/3(P) Fa0/4(P)` and `C 172.31.0.0 is directly connected, Port-channel30`.
 
-   ```text
-   sim: % Invalid input detected at '^' marker.
-   IOS 15: interface Port-channel 1; show interfaces Port-channel 1
-   ```
+## Verified matching table
 
-4. **L3 default route and routed EtherChannel — `sim-wrong`.** The simulator
-   successfully routes between two routed switch ports and between two SVIs;
-   `show ip route` includes connected `10.0.0.0/24`, `10.0.1.0/24`,
-   `192.168.10.0/24`, and `192.168.20.0/24`. It does not create a routed
-   port-channel or produce the IOS default-route/routed-bundle surface:
-
-   ```text
-   sim: % Invalid input detected at '^' marker.  (interface port-channel 30)
-   IOS 15: interface Port-channel 30; no switchport; ip address ...; show ip route
-   ```
-
-5. **Layer 3 PT platform coverage — `pt-limitation` / `needs-cml`.** The live
-   lab contains 2960 switches. PT rejected `ip routing`, routed physical ports,
-   and the routed Port-channel experiment on that platform. A 3560
-   multilayer switch or CML IOS 15 capture is required for the L3-switch and
-   routed-EtherChannel comparison.
-
-## Verified matching behavior
-
-| Behavior | Simulator evidence | IOS 15 reference / PT status |
+| Behavior | Simulator evidence | Real IOS 15 / PT classification |
 |---|---|---|
-| LACP active/active and active/passive form | `show etherchannel summary` showed `LACP` and `(P)` after 5 s | IOS 15 pairing behavior; PT blocked by missing parallel neighbor link |
-| LACP passive/passive does not form | Summary showed `(s)` after 5 s | IOS 15 does not form passive/passive; PT blocked |
-| PAgP desirable/auto forms | Summary showed `PAgP` and `(P)` after 5 s | IOS 15 pairing behavior; PT blocked |
-| PAgP auto/auto does not form | Summary showed `(s)` after 5 s | IOS 15 pairing behavior; PT blocked |
-| Static `on/on` forms; `on/active` does not | `(P)` for on/on, `(s)` for on/active | IOS 15 static `on` requires both sides; PT blocked |
-| STP sees the bundle as one logical path | Bundle members reached forwarding after the 35 s STP wait | Existing simulator STP test passes; PT comparison blocked |
-| IP routing off/on | Off: inter-subnet ping timed out; on: replies arrived after ARP convergence and `show ip route` listed connected routes | IOS 15 behavior; PT 2960 limitation |
-| SVI inter-VLAN routing | `VLAN10` reached `VLAN20` after the 35 s wait; both connected SVI routes appeared | IOS 15 multilayer-switch behavior; PT 2960 limitation |
+| LACP active/active and active/passive form | `Po(SU)` with member `(P)` after 5 s | Matches IOS 15; PT active cases matched after its 5 s + STP wait |
+| LACP passive/passive | `Po(SD)` and `(I)` | Matches IOS 15; PT formed it, so PT limitation |
+| PAgP desirable/auto and desirable/desirable | Bundle `(P)` after 5 s | Matches IOS 15; PT observed where supported |
+| PAgP auto/auto | `Po(SD)` and `(I)` | Matches IOS 15; PT limitation where output differs |
+| `on/on` and `on/active` | `on/on` forms; `on/active` is asymmetric `(P)`/`(I)` | IOS 15 with misconfig guard may err-disable the static side; PT behavior is limitation until CML verifies the guard log |
+| Member failure/recovery | surviving `(P)`/failed `(D)`, then both `(P)` | Matches IOS 15; PT recorded platform behavior |
+| STP sees one Port-channel | one `Po` row, no member rows | Matches IOS 15; PT limits STP timing/detail fidelity |
+| Incompatible member | suspended `(s)` plus `CANNOT_BUNDLE2` | Matches IOS 15 text family; exact platform log should be CML-verified |
+| L3 routing off/on and SVIs | routed-port/SVI connected routes and inter-VLAN forwarding | Matches IOS 15 multilayer-switch behavior; 2960 PT cannot provide authoritative L3 coverage |
+| Static default route | `S*` and gateway-of-last-resort lines | Matches IOS 15; PT 2960 limitation |
+| Routed EtherChannel | `Po30(RU)` and connected Port-channel route | Matches IOS 15; requires 3560/CML for PT-side validation |
 
-## PT limits and required resume step
+## PT limits
 
-`npm run pt:status` was healthy before the run (`ready: true`, poller
-connected). The PT bridge exposes no interactive prompts and returned blank PC
-transcripts during the final ping recheck, so the artifact does not claim ping
-reply proof. Switch0/Switch1 trunk status and Router0 subinterfaces were
-rechecked; the temporary channel-group, speed/duplex, and SVI/routing changes
-were removed. The artifact records the PT limitation rather than treating the
-invalid non-parallel links as EtherChannel evidence.
-
-To resume the blocked PT portion, Anthony must add one parallel cable in the
-Packet Tracer GUI:
-
-1. Choose the Connections lightning-bolt tool and a copper Ethernet cable.
-2. Click **Switch0**, choose **FastEthernet0/5**.
-3. Click **Switch1**, choose **FastEthernet0/3**.
-4. Confirm both ports show connected/up, then tell Codex to resume. The
-   harness is prepared to bundle Switch0 Fa0/1 + Fa0/5 with Switch1 Fa0/1 +
-   Fa0/3 and to remove the temporary Port-channel afterward.
+The rerun used a restored live lab with the added parallel link Switch0 Fa0/5 ↔ Switch1 Fa0/3. PT is a Catalyst 2960 emulator, so multilayer routing and routed EtherChannel are marked `pt-limitation`/`needs-cml`, not treated as IOS authority. The final PT restore was performed and both restore pings contained `Reply from` evidence.
 
 ## Sources
 
-- [Cisco IOS 15.0(2)SE Catalyst 2960 EtherChannel guide](https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst2960/software/release/15-0_2_se/configuration/guide/scg2960/swethchl.html)
-- [Cisco IOS 15.0(2)SE Catalyst 3560/3750 EtherChannel guide](https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3750x_3560x/software/release/15-0_2_se/configuration/guide/3750x_cg/swethchl.html)
+- [Cisco Catalyst 2960 IOS 15.0(2)SE EtherChannel guide](https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst2960/software/release/15-0_2_se/configuration/guide/scg2960/swethchl.html)
+- [Cisco Catalyst 3560/3750 IOS 15.0(2)SE EtherChannel guide](https://www.cisco.com/c/en/us/td/docs/switches/lan/catalyst3750x_3560x/software/release/15-0_2_se/configuration/guide/3750x_cg/swethchl.html)

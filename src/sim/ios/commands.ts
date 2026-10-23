@@ -423,6 +423,8 @@ const MOTD = kw("motd", "Set Message of the Day banner");
 const DOMAIN = kw("domain-lookup", "Enable IP Domain Name System hostname translation");
 const DOMAIN_NAME = kw("domain-name", "Define the default domain name");
 const ROUTE = kw("route", "Establish static routes");
+const PORT_CHANNEL = kw("port-channel", "Port-channel configuration");
+const LOAD_BALANCE = kw("load-balance", "EtherChannel load-balance method");
 const STP = kw("spanning-tree", "Spanning Tree Protocol");
 const ACCESS_LIST = kw("access-list", "Add an access list entry");
 const PERMIT = kw("permit", "Permit access");
@@ -707,6 +709,12 @@ const configCommands: Entry[] = [
   cmd(CONFIG, [IP, kw("routing", "Enable IP routing")], (c) => {
     if (c.device.kind === "switch") c.device.config.ipRouting = true;
   }, { devices: ["switch"] }),
+  cmd(CONFIG, [PORT_CHANNEL, LOAD_BALANCE, wordArg("Load-balance method")], (c, [method]) => {
+    if (c.device.kind === "switch") (c.device as Switch).portChannelLoadBalance = method as string;
+  }, { devices: ["switch"] }),
+  cmd(CONFIG, [NO, PORT_CHANNEL, LOAD_BALANCE], (c) => {
+    if (c.device.kind === "switch") (c.device as Switch).portChannelLoadBalance = "src-dst-ip";
+  }, { devices: ["switch"] }),
   cmd(CONFIG, [kw("ipv6", "Global IPv6 configuration"), kw("unicast-routing", "Enable IPv6 unicast routing")], (c) => {
     c.device.config.ipv6UnicastRouting = true;
   }),
@@ -777,10 +785,10 @@ const configCommands: Entry[] = [
   }),
   cmd(CONFIG, [IP, ROUTE, ipArg("Destination prefix"), ipArg("Destination prefix mask"), ipArg("Forwarding router's address")], (c, [n, m, h]) =>
     addRoute(c, n as Ipv4, m as Ipv4, { nextHop: h as Ipv4, exitIface: null }),
-  { devices: ["router"] }),
+  { when: (c) => c.device.kind === "router" || (c.device.kind === "switch" && c.device.config.ipRouting) }),
   cmd(CONFIG, [IP, ROUTE, ipArg("Destination prefix"), ipArg("Destination prefix mask"), ipArg("Forwarding router's address"), numArg(1, 255, "Administrative distance")], (c, [n, m, h, distance]) =>
     addRoute(c, n as Ipv4, m as Ipv4, { nextHop: h as Ipv4, exitIface: null, distance: distance as number }),
-  { devices: ["router"] }),
+  { when: (c) => c.device.kind === "router" || (c.device.kind === "switch" && c.device.config.ipRouting) }),
   cmd(CONFIG, [IP, ROUTE, ipArg("Destination prefix"), ipArg("Destination prefix mask"), ifaceArg], (c, [n, m, i]) =>
     addRoute(c, n as Ipv4, m as Ipv4, { nextHop: null, exitIface: i as string }),
   { devices: ["router"] }),
@@ -788,11 +796,11 @@ const configCommands: Entry[] = [
     addRoute(c, n as Ipv4, m as Ipv4, { nextHop: null, exitIface: i as string, distance: distance as number }),
   { devices: ["router"] }),
   cmd(CONFIG, [NO, IP, ROUTE, ipArg("Destination prefix"), ipArg("Destination prefix mask")], (c, [n, m]) => removeRoute(c, n as Ipv4, m as Ipv4), {
-    devices: ["router"],
+    when: (c) => c.device.kind === "router" || (c.device.kind === "switch" && c.device.config.ipRouting),
   }),
   cmd(CONFIG, [NO, IP, ROUTE, ipArg("Destination prefix"), ipArg("Destination prefix mask"), ipArg("Forwarding router's address")], (c, [n, m, h]) =>
     removeRoute(c, n as Ipv4, m as Ipv4, h as Ipv4),
-  { devices: ["router"] }),
+  { when: (c) => c.device.kind === "router" || (c.device.kind === "switch" && c.device.config.ipRouting) }),
   cmd(CONFIG, [IP, kw("default-gateway", "Specify default gateway (if not routing IP)"), ipArg("IP address of default gateway")], (c, [gw]) => {
     c.device.config.defaultGateway = gw as Ipv4;
   }, { devices: ["switch"] }),
@@ -828,7 +836,8 @@ const configCommands: Entry[] = [
 ];
 
 const routedIface = (c: Ctx) => c.console.ifaces.every((n) => c.device.findInterface(n)?.routed);
-const physicalPort = (c: Ctx) => c.console.ifaces.every((n) => c.device.findInterface(n)?.port);
+const physicalPort = (c: Ctx) => c.console.ifaces.every((n) => c.device.findInterface(n)?.port || (c.device.kind === "switch" && /^Port-channel\d+$/i.test(n)));
+const switchInterface = (c: Ctx) => c.device.kind === "switch" && physicalPort(c);
 const IF_IP = kw("ip", "Interface Internet Protocol config commands");
 const ADDRESS = kw("address", "Set the IP address of an interface");
 
@@ -1208,11 +1217,21 @@ function sw(c: Ctx): Switch {
 /** Applies a switchport change to every selected port, then lets DTP and spanning tree catch up. */
 function eachSwitchport(c: Ctx, fn: (sp: NonNullable<ReturnType<Ctx["device"]["ifaceConfig"]>["switchport"]>) => string | void): void {
   for (const name of c.console.ifaces) {
-    const error = fn(c.device.ifaceConfig(name).switchport!);
-    if (error) {
-      const short = c.device.findInterface(name)?.port?.shortName ?? name;
-      c.out.push(error === NEGOTIATE_CONFLICT ? `${error} on this interface: ${short}` : error);
-      break;
+    const targets = [c.device.ifaceConfig(name).switchport].filter((sp): sp is NonNullable<typeof sp> => !!sp);
+    if (/^Port-channel\d+$/i.test(name)) {
+      const group = Number(name.match(/\d+$/)?.[0]);
+      for (const member of sw(c).channelGroupPorts(group)) {
+        const sp = c.device.ifaceConfig(member.name).switchport;
+        if (sp) targets.push(sp);
+      }
+    }
+    for (const sp of targets) {
+      const error = fn(sp);
+      if (error) {
+        const short = c.device.findInterface(name)?.port?.shortName ?? name;
+        c.out.push(error === NEGOTIATE_CONFLICT ? `${error} on this interface: ${short}` : error);
+        return;
+      }
     }
   }
   sw(c).vlanConfigChanged();
@@ -1264,22 +1283,28 @@ const ALL_VLANS = Array.from({ length: 4094 }, (_, i) => i + 1);
 
 const switchCommands: Entry[] = [
   cmd(IF, [NO, SWITCHPORT], (c) => {
-    for (const name of c.console.ifaces) c.device.ifaceConfig(name).switchport = undefined;
+    for (const name of c.console.ifaces) {
+      c.device.ifaceConfig(name).switchport = undefined;
+      if (/^Port-channel\d+$/i.test(name)) {
+        const group = Number(name.match(/\d+$/)?.[0]);
+        for (const member of sw(c).channelGroupPorts(group)) c.device.ifaceConfig(member.name).switchport = undefined;
+      }
+    }
     sw(c).vlanConfigChanged();
-  }, { devices: ["switch"], when: physicalPort }),
-  cmd(IF, [SWITCHPORT, SP_MODE, kw("access", "Set trunking mode to ACCESS unconditionally")], (c) => setMode(c, "access"), { devices: ["switch"], when: physicalPort }),
-  cmd(IF, [SWITCHPORT, SP_MODE, kw("trunk", "Set trunking mode to TRUNK unconditionally")], (c) => setMode(c, "trunk"), { devices: ["switch"], when: physicalPort }),
+  }, { devices: ["switch"], when: switchInterface }),
+  cmd(IF, [SWITCHPORT, SP_MODE, kw("access", "Set trunking mode to ACCESS unconditionally")], (c) => setMode(c, "access"), { devices: ["switch"], when: switchInterface }),
+  cmd(IF, [SWITCHPORT, SP_MODE, kw("trunk", "Set trunking mode to TRUNK unconditionally")], (c) => setMode(c, "trunk"), { devices: ["switch"], when: switchInterface }),
   cmd(
     IF,
     [SWITCHPORT, SP_MODE, kw("dynamic", "Set trunking mode to dynamically negotiate access or trunk mode"), kw("auto", "Set trunking mode dynamic negotiation parameter to AUTO")],
     (c) => setMode(c, "dynamic auto"),
-    { devices: ["switch"], when: physicalPort },
+    { devices: ["switch"], when: switchInterface },
   ),
   cmd(
     IF,
     [SWITCHPORT, SP_MODE, kw("dynamic", "Set trunking mode to dynamically negotiate access or trunk mode"), kw("desirable", "Set trunking mode dynamic negotiation parameter to DESIRABLE")],
     (c) => setMode(c, "dynamic desirable"),
-    { devices: ["switch"], when: physicalPort },
+    { devices: ["switch"], when: switchInterface },
   ),
   cmd(IF, [NO, SWITCHPORT, SP_MODE], (c) => setMode(c, "dynamic auto"), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [SWITCHPORT, SP_ACCESS, kw("vlan", "Set VLAN when interface is in access mode"), numArg(1, 4094, "VLAN ID of the VLAN when this port is in access mode")], (c, [v]) => {
@@ -1371,7 +1396,10 @@ const switchCommands: Entry[] = [
   cmd(IF, [CHANNEL_GROUP, numArg(1, 64, "Channel group number"), kw("mode", "EtherChannel mode"), kw("passive", "LACP passive" )], (c, [group]) => setChannel(c, group as number, "passive"), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [CHANNEL_GROUP, numArg(1, 64, "Channel group number"), kw("mode", "EtherChannel mode"), kw("desirable", "PAgP desirable" )], (c, [group]) => setChannel(c, group as number, "desirable"), { devices: ["switch"], when: physicalPort }),
   cmd(IF, [CHANNEL_GROUP, numArg(1, 64, "Channel group number"), kw("mode", "EtherChannel mode"), kw("auto", "PAgP auto" )], (c, [group]) => setChannel(c, group as number, "auto"), { devices: ["switch"], when: physicalPort }),
-  cmd(IF, [NO, CHANNEL_GROUP], (c) => eachSwitchport(c, (sp) => { sp.channelGroup = null; sp.channelMode = null; }), { devices: ["switch"], when: physicalPort }),
+  cmd(IF, [NO, CHANNEL_GROUP], (c) => {
+    for (const name of c.console.ifaces) { c.device.ifaceConfig(name).channelGroup = null; c.device.ifaceConfig(name).channelMode = null; }
+    sw(c).vlanConfigChanged();
+  }, { devices: ["switch"], when: physicalPort }),
 
   cmd(CONFIG, [VLAN_KW, vlanListArg("ISL VLAN IDs 1-4094")], (c, [list]) => {
     if (sw(c).config.vtpMode === "client") {
@@ -1481,6 +1509,10 @@ const switchCommands: Entry[] = [
   cmd(EXEC, [SHOW, kw("port-security", "Port security status")], (c) => c.out.push(...show.showPortSecurity(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("port-security", "Port security status"), kw("interface", "Port security interface status"), ifaceArg], (c, [name]) => c.out.push(...show.showPortSecurity(sw(c), name as string)), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("etherchannel", "EtherChannel information"), kw("summary", "EtherChannel summary")], (c) => c.out.push(...show.showEtherchannelSummary(sw(c))), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("etherchannel", "EtherChannel information"), kw("port-channel", "Port-channel information"), numArg(1, 64, "Channel group")], (c, [group]) => c.out.push(...show.showEtherchannelPortChannel(sw(c), group as number)), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("etherchannel", "EtherChannel information"), kw("load-balance", "EtherChannel load-balance")], (c) => c.out.push(...show.showEtherchannelLoadBalance(sw(c))), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("lacp", "LACP information"), kw("neighbor", "LACP neighbors")], (c) => c.out.push(...show.showLacpNeighbor(sw(c))), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("pagp", "PAgP information"), kw("neighbor", "PAgP neighbors")], (c) => c.out.push(...show.showPagpNeighbor(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("interfaces", "Interface status and configuration"), ifaceArg, kw("switchport", "Show interface switchport information")], (c, [name]) =>
     c.out.push(...show.showInterfacesSwitchport(sw(c), name as string)),
   { devices: ["switch"] }),

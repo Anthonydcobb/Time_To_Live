@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-10-23T01:25:08.916Z",
+  "capturedAt": "2026-10-23T17:36:01.153Z",
   "backend": "sim",
   "version": "workspace-sim",
   "image": "src/sim",
@@ -18,7 +18,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.864Z"
+      "capturedAt": "2026-10-23T17:36:01.091Z"
     },
     {
       "backend": "sim",
@@ -35,7 +35,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.866Z"
+      "capturedAt": "2026-10-23T17:36:01.093Z"
     },
     {
       "backend": "sim",
@@ -52,7 +52,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.867Z"
+      "capturedAt": "2026-10-23T17:36:01.094Z"
     },
     {
       "backend": "sim",
@@ -69,7 +69,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.867Z"
+      "capturedAt": "2026-10-23T17:36:01.094Z"
     },
     {
       "backend": "sim",
@@ -86,7 +86,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.867Z"
+      "capturedAt": "2026-10-23T17:36:01.095Z"
     },
     {
       "backend": "sim",
@@ -103,7 +103,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.867Z"
+      "capturedAt": "2026-10-23T17:36:01.096Z"
     },
     {
       "backend": "sim",
@@ -120,7 +120,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.868Z"
+      "capturedAt": "2026-10-23T17:36:01.096Z"
     },
     {
       "backend": "sim",
@@ -137,7 +137,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.870Z"
+      "capturedAt": "2026-10-23T17:36:01.096Z"
     },
     {
       "backend": "sim",
@@ -153,7 +153,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.870Z"
+      "capturedAt": "2026-10-23T17:36:01.096Z"
     },
     {
       "backend": "sim",
@@ -170,7 +170,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.870Z"
+      "capturedAt": "2026-10-23T17:36:01.097Z"
     },
     {
       "backend": "sim",
@@ -187,7 +187,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.870Z"
+      "capturedAt": "2026-10-23T17:36:01.097Z"
     },
     {
       "backend": "sim",
@@ -204,7 +204,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.870Z"
+      "capturedAt": "2026-10-23T17:36:01.097Z"
     },
     {
       "backend": "sim",
@@ -221,7 +221,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.870Z"
+      "capturedAt": "2026-10-23T17:36:01.098Z"
     },
     {
       "backend": "sim",
@@ -238,7 +238,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.871Z"
+      "capturedAt": "2026-10-23T17:36:01.098Z"
     },
     {
       "backend": "sim",
@@ -255,7 +255,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.871Z"
+      "capturedAt": "2026-10-23T17:36:01.098Z"
     },
     {
       "backend": "sim",
@@ -272,7 +272,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.871Z"
+      "capturedAt": "2026-10-23T17:36:01.100Z"
     },
     {
       "backend": "sim",
@@ -283,12 +283,12 @@
       "input": "show etherchannel summary",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "\n                Port-channel        Protocol    Ports\nGroup  Port-channel   Protocol       Ports\n------+-------------+-----------+-----------------------------------------------\n    1  Po1-       LACP         Gi0/1(P) Gi0/2(P)\n",
+      "rawOutput": "\nFlags:  D - down        P - bundled in port-channel\n        I - stand-alone s - suspended\n        H - Hot-standby (LACP only)\n        R - Layer3      S - Layer2\n        U - in use      f - failed to allocate aggregator\n        M - not in use, minimum links not met\n        u - unsuitable for bundling\n        w - waiting to be aggregated\n        d - default port\n\nNumber of channel-groups in use: 1\nNumber of aggregators:           1\n\nGroup  Port-channel  Protocol    Ports\n------+-------------+-----------+-----------------------------------------------\n1      Po1(SU)         LACP      Gi0/1(P)    Gi0/2(P)\nPo1- (logical Port-channel)\n",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T01:25:08.874Z"
+      "capturedAt": "2026-10-23T17:36:01.104Z"
     },
     {
       "backend": "sim",
@@ -299,12 +299,12 @@
       "input": "show etherchannel port-channel 1",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "                      ^\n% Invalid input detected at '^' marker.\n",
+      "rawOutput": "Group Port-channel Protocol    Ports\n1     Po1          LACP\n                Gi0/1  P\n                Gi0/2  P",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T01:25:08.874Z"
+      "capturedAt": "2026-10-23T17:36:01.104Z"
     },
     {
       "backend": "sim",
@@ -315,12 +315,12 @@
       "input": "show interfaces port-channel 1",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "                    ^\n% Invalid input detected at '^' marker.\n",
+      "rawOutput": "                                 ^\n% Invalid input detected at '^' marker.\n",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T01:25:08.875Z"
+      "capturedAt": "2026-10-23T17:36:01.104Z"
     },
     {
       "backend": "sim",
@@ -331,12 +331,12 @@
       "input": "show lacp neighbor",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "          ^\n% Invalid input detected at '^' marker.\n",
+      "rawOutput": "                 LACP port-channel                 LACP neighbor\nPort      Flags   Port-channel    Port       Age\nGi0/1     P       Po1\nGi0/2     P       Po1",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T01:25:08.875Z"
+      "capturedAt": "2026-10-23T17:36:01.104Z"
     },
     {
       "backend": "sim",
@@ -347,12 +347,12 @@
       "input": "show pagp neighbor",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "          ^\n% Invalid input detected at '^' marker.\n",
+      "rawOutput": "Flags:  S - Device is sending Slow hello\n        U - Device is in Use\nGroup Port      Partner Name",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T01:25:08.875Z"
+      "capturedAt": "2026-10-23T17:36:01.104Z"
     },
     {
       "backend": "sim",
@@ -363,12 +363,12 @@
       "input": "show etherchannel load-balance",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "                      ^\n% Invalid input detected at '^' marker.\n",
+      "rawOutput": "EtherChannel Load-Balancing Configuration:\n        src-dst-ip",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T01:25:08.875Z"
+      "capturedAt": "2026-10-23T17:36:01.104Z"
     },
     {
       "backend": "sim",
@@ -379,12 +379,44 @@
       "input": "show spanning-tree",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "VLAN0001\n  Spanning tree enabled protocol ieee\n  Root ID    Priority    32769\n             Address     00e0.b00a.0001\n             This bridge is the root\n\n  Bridge ID  Priority    32769\n             Address     00e0.b00a.0001\n\nInterface        Role Sts Cost      Prio.Nbr Type\n---------------- ---- --- --------- -------- --------------------------------\nGi0/1            Desg FWD 4         128.1    P2p\nGi0/2            Desg FWD 4         128.2    P2p\n",
+      "rawOutput": "VLAN0001\n  Spanning tree enabled protocol ieee\n  Root ID    Priority    32769\n             Address     00e0.b00a.0001\n             This bridge is the root\n\n  Bridge ID  Priority    32769\n             Address     00e0.b00a.0001\n\nInterface        Role Sts Cost      Prio.Nbr Type\n---------------- ---- --- --------- -------- --------------------------------\nPo1              Desg FWD 3         128.65    P2p\n",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T01:25:08.875Z"
+      "capturedAt": "2026-10-23T17:36:01.105Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "member-failure",
+      "device": "SWA",
+      "input": "show etherchannel summary",
+      "mode": "SWA#",
+      "status": "ok",
+      "rawOutput": "\nFlags:  D - down        P - bundled in port-channel\n        I - stand-alone s - suspended\n        H - Hot-standby (LACP only)\n        R - Layer3      S - Layer2\n        U - in use      f - failed to allocate aggregator\n        M - not in use, minimum links not met\n        u - unsuitable for bundling\n        w - waiting to be aggregated\n        d - default port\n\nNumber of channel-groups in use: 1\nNumber of aggregators:           1\n\nGroup  Port-channel  Protocol    Ports\n------+-------------+-----------+-----------------------------------------------\n1      Po1(SU)         LACP      Gi0/1(P)    Gi0/2(D)\nPo1- (logical Port-channel)\n",
+      "promptBefore": "SWA#",
+      "promptAfter": "SWA#",
+      "preSettlements": [],
+      "waitedMs": 5000,
+      "capturedAt": "2026-10-23T17:36:01.105Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "member-recovery",
+      "device": "SWA",
+      "input": "show etherchannel summary",
+      "mode": "SWA#",
+      "status": "ok",
+      "rawOutput": "\nFlags:  D - down        P - bundled in port-channel\n        I - stand-alone s - suspended\n        H - Hot-standby (LACP only)\n        R - Layer3      S - Layer2\n        U - in use      f - failed to allocate aggregator\n        M - not in use, minimum links not met\n        u - unsuitable for bundling\n        w - waiting to be aggregated\n        d - default port\n\nNumber of channel-groups in use: 1\nNumber of aggregators:           1\n\nGroup  Port-channel  Protocol    Ports\n------+-------------+-----------+-----------------------------------------------\n1      Po1(SU)         LACP      Gi0/1(P)    Gi0/2(P)\nPo1- (logical Port-channel)\n",
+      "promptBefore": "SWA#",
+      "promptAfter": "SWA#",
+      "preSettlements": [],
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T17:36:01.106Z"
     },
     {
       "backend": "sim",
@@ -400,7 +432,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.875Z"
+      "capturedAt": "2026-10-23T17:36:01.106Z"
     },
     {
       "backend": "sim",
@@ -417,7 +449,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.875Z"
+      "capturedAt": "2026-10-23T17:36:01.107Z"
     },
     {
       "backend": "sim",
@@ -434,7 +466,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.876Z"
+      "capturedAt": "2026-10-23T17:36:01.107Z"
     },
     {
       "backend": "sim",
@@ -451,7 +483,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.877Z"
+      "capturedAt": "2026-10-23T17:36:01.108Z"
     },
     {
       "backend": "sim",
@@ -468,7 +500,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.877Z"
+      "capturedAt": "2026-10-23T17:36:01.108Z"
     },
     {
       "backend": "sim",
@@ -484,7 +516,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.877Z"
+      "capturedAt": "2026-10-23T17:36:01.108Z"
     },
     {
       "backend": "sim",
@@ -501,7 +533,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.878Z"
+      "capturedAt": "2026-10-23T17:36:01.108Z"
     },
     {
       "backend": "sim",
@@ -518,7 +550,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.878Z"
+      "capturedAt": "2026-10-23T17:36:01.109Z"
     },
     {
       "backend": "sim",
@@ -535,7 +567,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.879Z"
+      "capturedAt": "2026-10-23T17:36:01.110Z"
     },
     {
       "backend": "sim",
@@ -552,7 +584,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.880Z"
+      "capturedAt": "2026-10-23T17:36:01.111Z"
     },
     {
       "backend": "sim",
@@ -563,12 +595,12 @@
       "input": "show etherchannel summary",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "\n                Port-channel        Protocol    Ports\nGroup  Port-channel   Protocol       Ports\n------+-------------+-----------+-----------------------------------------------\n   10  Po10-       LACP         Gi0/1(P) Gi0/2(P)\n",
+      "rawOutput": "\nFlags:  D - down        P - bundled in port-channel\n        I - stand-alone s - suspended\n        H - Hot-standby (LACP only)\n        R - Layer3      S - Layer2\n        U - in use      f - failed to allocate aggregator\n        M - not in use, minimum links not met\n        u - unsuitable for bundling\n        w - waiting to be aggregated\n        d - default port\n\nNumber of channel-groups in use: 1\nNumber of aggregators:           1\n\nGroup  Port-channel  Protocol    Ports\n------+-------------+-----------+-----------------------------------------------\n10      Po10(SU)         LACP      Gi0/1(P)    Gi0/2(P)\nPo10- (logical Port-channel)\n",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 5000,
-      "capturedAt": "2026-10-23T01:25:08.880Z"
+      "capturedAt": "2026-10-23T17:36:01.111Z"
     },
     {
       "backend": "sim",
@@ -584,7 +616,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.880Z"
+      "capturedAt": "2026-10-23T17:36:01.111Z"
     },
     {
       "backend": "sim",
@@ -601,7 +633,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.880Z"
+      "capturedAt": "2026-10-23T17:36:01.111Z"
     },
     {
       "backend": "sim",
@@ -618,7 +650,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.881Z"
+      "capturedAt": "2026-10-23T17:36:01.112Z"
     },
     {
       "backend": "sim",
@@ -635,7 +667,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.882Z"
+      "capturedAt": "2026-10-23T17:36:01.113Z"
     },
     {
       "backend": "sim",
@@ -652,7 +684,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.882Z"
+      "capturedAt": "2026-10-23T17:36:01.113Z"
     },
     {
       "backend": "sim",
@@ -668,7 +700,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.882Z"
+      "capturedAt": "2026-10-23T17:36:01.113Z"
     },
     {
       "backend": "sim",
@@ -685,7 +717,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.882Z"
+      "capturedAt": "2026-10-23T17:36:01.113Z"
     },
     {
       "backend": "sim",
@@ -702,7 +734,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.883Z"
+      "capturedAt": "2026-10-23T17:36:01.114Z"
     },
     {
       "backend": "sim",
@@ -719,7 +751,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.883Z"
+      "capturedAt": "2026-10-23T17:36:01.115Z"
     },
     {
       "backend": "sim",
@@ -736,7 +768,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.884Z"
+      "capturedAt": "2026-10-23T17:36:01.116Z"
     },
     {
       "backend": "sim",
@@ -747,12 +779,12 @@
       "input": "show etherchannel summary",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "\n                Port-channel        Protocol    Ports\nGroup  Port-channel   Protocol       Ports\n------+-------------+-----------+-----------------------------------------------\n   11  Po11-       LACP         Gi0/1(s) Gi0/2(s)\n",
+      "rawOutput": "\nFlags:  D - down        P - bundled in port-channel\n        I - stand-alone s - suspended\n        H - Hot-standby (LACP only)\n        R - Layer3      S - Layer2\n        U - in use      f - failed to allocate aggregator\n        M - not in use, minimum links not met\n        u - unsuitable for bundling\n        w - waiting to be aggregated\n        d - default port\n\nNumber of channel-groups in use: 1\nNumber of aggregators:           1\n\nGroup  Port-channel  Protocol    Ports\n------+-------------+-----------+-----------------------------------------------\n11      Po11(SD)         LACP      Gi0/1(I)    Gi0/2(I)\nPo11- (logical Port-channel)\n",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 5000,
-      "capturedAt": "2026-10-23T01:25:08.884Z"
+      "capturedAt": "2026-10-23T17:36:01.116Z"
     },
     {
       "backend": "sim",
@@ -768,7 +800,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.884Z"
+      "capturedAt": "2026-10-23T17:36:01.117Z"
     },
     {
       "backend": "sim",
@@ -785,7 +817,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.884Z"
+      "capturedAt": "2026-10-23T17:36:01.117Z"
     },
     {
       "backend": "sim",
@@ -802,7 +834,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.885Z"
+      "capturedAt": "2026-10-23T17:36:01.117Z"
     },
     {
       "backend": "sim",
@@ -819,7 +851,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.886Z"
+      "capturedAt": "2026-10-23T17:36:01.118Z"
     },
     {
       "backend": "sim",
@@ -836,7 +868,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.887Z"
+      "capturedAt": "2026-10-23T17:36:01.118Z"
     },
     {
       "backend": "sim",
@@ -852,7 +884,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.887Z"
+      "capturedAt": "2026-10-23T17:36:01.118Z"
     },
     {
       "backend": "sim",
@@ -869,7 +901,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.887Z"
+      "capturedAt": "2026-10-23T17:36:01.118Z"
     },
     {
       "backend": "sim",
@@ -886,7 +918,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.887Z"
+      "capturedAt": "2026-10-23T17:36:01.119Z"
     },
     {
       "backend": "sim",
@@ -903,7 +935,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.888Z"
+      "capturedAt": "2026-10-23T17:36:01.120Z"
     },
     {
       "backend": "sim",
@@ -920,7 +952,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.888Z"
+      "capturedAt": "2026-10-23T17:36:01.120Z"
     },
     {
       "backend": "sim",
@@ -931,12 +963,12 @@
       "input": "show etherchannel summary",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "\n                Port-channel        Protocol    Ports\nGroup  Port-channel   Protocol       Ports\n------+-------------+-----------+-----------------------------------------------\n   12  Po12-       PAgP         Gi0/1(P) Gi0/2(P)\n",
+      "rawOutput": "\nFlags:  D - down        P - bundled in port-channel\n        I - stand-alone s - suspended\n        H - Hot-standby (LACP only)\n        R - Layer3      S - Layer2\n        U - in use      f - failed to allocate aggregator\n        M - not in use, minimum links not met\n        u - unsuitable for bundling\n        w - waiting to be aggregated\n        d - default port\n\nNumber of channel-groups in use: 1\nNumber of aggregators:           1\n\nGroup  Port-channel  Protocol    Ports\n------+-------------+-----------+-----------------------------------------------\n12      Po12(SU)         PAgP      Gi0/1(P)    Gi0/2(P)\nPo12- (logical Port-channel)\n",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 5000,
-      "capturedAt": "2026-10-23T01:25:08.888Z"
+      "capturedAt": "2026-10-23T17:36:01.120Z"
     },
     {
       "backend": "sim",
@@ -952,7 +984,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.888Z"
+      "capturedAt": "2026-10-23T17:36:01.120Z"
     },
     {
       "backend": "sim",
@@ -969,7 +1001,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.888Z"
+      "capturedAt": "2026-10-23T17:36:01.120Z"
     },
     {
       "backend": "sim",
@@ -986,7 +1018,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.888Z"
+      "capturedAt": "2026-10-23T17:36:01.121Z"
     },
     {
       "backend": "sim",
@@ -1003,7 +1035,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.889Z"
+      "capturedAt": "2026-10-23T17:36:01.121Z"
     },
     {
       "backend": "sim",
@@ -1020,7 +1052,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.889Z"
+      "capturedAt": "2026-10-23T17:36:01.121Z"
     },
     {
       "backend": "sim",
@@ -1036,7 +1068,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.889Z"
+      "capturedAt": "2026-10-23T17:36:01.121Z"
     },
     {
       "backend": "sim",
@@ -1053,7 +1085,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.889Z"
+      "capturedAt": "2026-10-23T17:36:01.121Z"
     },
     {
       "backend": "sim",
@@ -1070,7 +1102,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.889Z"
+      "capturedAt": "2026-10-23T17:36:01.122Z"
     },
     {
       "backend": "sim",
@@ -1087,7 +1119,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.890Z"
+      "capturedAt": "2026-10-23T17:36:01.122Z"
     },
     {
       "backend": "sim",
@@ -1104,7 +1136,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.890Z"
+      "capturedAt": "2026-10-23T17:36:01.122Z"
     },
     {
       "backend": "sim",
@@ -1115,12 +1147,12 @@
       "input": "show etherchannel summary",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "\n                Port-channel        Protocol    Ports\nGroup  Port-channel   Protocol       Ports\n------+-------------+-----------+-----------------------------------------------\n   13  Po13-       PAgP         Gi0/1(s) Gi0/2(s)\n",
+      "rawOutput": "\nFlags:  D - down        P - bundled in port-channel\n        I - stand-alone s - suspended\n        H - Hot-standby (LACP only)\n        R - Layer3      S - Layer2\n        U - in use      f - failed to allocate aggregator\n        M - not in use, minimum links not met\n        u - unsuitable for bundling\n        w - waiting to be aggregated\n        d - default port\n\nNumber of channel-groups in use: 1\nNumber of aggregators:           1\n\nGroup  Port-channel  Protocol    Ports\n------+-------------+-----------+-----------------------------------------------\n13      Po13(SD)         PAgP      Gi0/1(I)    Gi0/2(I)\nPo13- (logical Port-channel)\n",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 5000,
-      "capturedAt": "2026-10-23T01:25:08.890Z"
+      "capturedAt": "2026-10-23T17:36:01.123Z"
     },
     {
       "backend": "sim",
@@ -1136,7 +1168,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.890Z"
+      "capturedAt": "2026-10-23T17:36:01.123Z"
     },
     {
       "backend": "sim",
@@ -1153,7 +1185,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.890Z"
+      "capturedAt": "2026-10-23T17:36:01.123Z"
     },
     {
       "backend": "sim",
@@ -1170,7 +1202,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.891Z"
+      "capturedAt": "2026-10-23T17:36:01.123Z"
     },
     {
       "backend": "sim",
@@ -1187,7 +1219,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.892Z"
+      "capturedAt": "2026-10-23T17:36:01.123Z"
     },
     {
       "backend": "sim",
@@ -1204,7 +1236,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.892Z"
+      "capturedAt": "2026-10-23T17:36:01.124Z"
     },
     {
       "backend": "sim",
@@ -1220,7 +1252,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.892Z"
+      "capturedAt": "2026-10-23T17:36:01.124Z"
     },
     {
       "backend": "sim",
@@ -1237,7 +1269,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.892Z"
+      "capturedAt": "2026-10-23T17:36:01.124Z"
     },
     {
       "backend": "sim",
@@ -1254,7 +1286,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.893Z"
+      "capturedAt": "2026-10-23T17:36:01.124Z"
     },
     {
       "backend": "sim",
@@ -1271,7 +1303,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.894Z"
+      "capturedAt": "2026-10-23T17:36:01.125Z"
     },
     {
       "backend": "sim",
@@ -1288,7 +1320,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.894Z"
+      "capturedAt": "2026-10-23T17:36:01.126Z"
     },
     {
       "backend": "sim",
@@ -1299,12 +1331,12 @@
       "input": "show etherchannel summary",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "\n                Port-channel        Protocol    Ports\nGroup  Port-channel   Protocol       Ports\n------+-------------+-----------+-----------------------------------------------\n   14  Po14-       -            Gi0/1(P) Gi0/2(P)\n",
+      "rawOutput": "\nFlags:  D - down        P - bundled in port-channel\n        I - stand-alone s - suspended\n        H - Hot-standby (LACP only)\n        R - Layer3      S - Layer2\n        U - in use      f - failed to allocate aggregator\n        M - not in use, minimum links not met\n        u - unsuitable for bundling\n        w - waiting to be aggregated\n        d - default port\n\nNumber of channel-groups in use: 1\nNumber of aggregators:           1\n\nGroup  Port-channel  Protocol    Ports\n------+-------------+-----------+-----------------------------------------------\n14      Po14(SU)         -         Gi0/1(P)    Gi0/2(P)\nPo14- (logical Port-channel)\n",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 5000,
-      "capturedAt": "2026-10-23T01:25:08.894Z"
+      "capturedAt": "2026-10-23T17:36:01.126Z"
     },
     {
       "backend": "sim",
@@ -1320,7 +1352,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.894Z"
+      "capturedAt": "2026-10-23T17:36:01.126Z"
     },
     {
       "backend": "sim",
@@ -1337,7 +1369,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.894Z"
+      "capturedAt": "2026-10-23T17:36:01.126Z"
     },
     {
       "backend": "sim",
@@ -1354,7 +1386,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.895Z"
+      "capturedAt": "2026-10-23T17:36:01.126Z"
     },
     {
       "backend": "sim",
@@ -1371,7 +1403,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.896Z"
+      "capturedAt": "2026-10-23T17:36:01.126Z"
     },
     {
       "backend": "sim",
@@ -1388,7 +1420,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.896Z"
+      "capturedAt": "2026-10-23T17:36:01.127Z"
     },
     {
       "backend": "sim",
@@ -1404,7 +1436,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.896Z"
+      "capturedAt": "2026-10-23T17:36:01.127Z"
     },
     {
       "backend": "sim",
@@ -1421,7 +1453,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.896Z"
+      "capturedAt": "2026-10-23T17:36:01.127Z"
     },
     {
       "backend": "sim",
@@ -1438,7 +1470,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.897Z"
+      "capturedAt": "2026-10-23T17:36:01.127Z"
     },
     {
       "backend": "sim",
@@ -1455,7 +1487,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.898Z"
+      "capturedAt": "2026-10-23T17:36:01.128Z"
     },
     {
       "backend": "sim",
@@ -1472,7 +1504,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.898Z"
+      "capturedAt": "2026-10-23T17:36:01.128Z"
     },
     {
       "backend": "sim",
@@ -1483,12 +1515,12 @@
       "input": "show etherchannel summary",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "\n                Port-channel        Protocol    Ports\nGroup  Port-channel   Protocol       Ports\n------+-------------+-----------+-----------------------------------------------\n   15  Po15-       -            Gi0/1(s) Gi0/2(s)\n",
+      "rawOutput": "\nFlags:  D - down        P - bundled in port-channel\n        I - stand-alone s - suspended\n        H - Hot-standby (LACP only)\n        R - Layer3      S - Layer2\n        U - in use      f - failed to allocate aggregator\n        M - not in use, minimum links not met\n        u - unsuitable for bundling\n        w - waiting to be aggregated\n        d - default port\n\nNumber of channel-groups in use: 1\nNumber of aggregators:           1\n\nGroup  Port-channel  Protocol    Ports\n------+-------------+-----------+-----------------------------------------------\n15      Po15(SU)         -         Gi0/1(P)    Gi0/2(P)\nPo15- (logical Port-channel)\n",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 5000,
-      "capturedAt": "2026-10-23T01:25:08.898Z"
+      "capturedAt": "2026-10-23T17:36:01.128Z"
     },
     {
       "backend": "sim",
@@ -1504,7 +1536,7 @@
       "promptAfter": "SWA(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.898Z"
+      "capturedAt": "2026-10-23T17:36:01.128Z"
     },
     {
       "backend": "sim",
@@ -1521,7 +1553,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.898Z"
+      "capturedAt": "2026-10-23T17:36:01.128Z"
     },
     {
       "backend": "sim",
@@ -1538,7 +1570,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.898Z"
+      "capturedAt": "2026-10-23T17:36:01.129Z"
     },
     {
       "backend": "sim",
@@ -1555,7 +1587,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.898Z"
+      "capturedAt": "2026-10-23T17:36:01.129Z"
     },
     {
       "backend": "sim",
@@ -1572,7 +1604,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.899Z"
+      "capturedAt": "2026-10-23T17:36:01.129Z"
     },
     {
       "backend": "sim",
@@ -1589,7 +1621,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.899Z"
+      "capturedAt": "2026-10-23T17:36:01.129Z"
     },
     {
       "backend": "sim",
@@ -1606,7 +1638,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.899Z"
+      "capturedAt": "2026-10-23T17:36:01.130Z"
     },
     {
       "backend": "sim",
@@ -1623,7 +1655,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.899Z"
+      "capturedAt": "2026-10-23T17:36:01.130Z"
     },
     {
       "backend": "sim",
@@ -1640,7 +1672,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.900Z"
+      "capturedAt": "2026-10-23T17:36:01.131Z"
     },
     {
       "backend": "sim",
@@ -1657,7 +1689,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.900Z"
+      "capturedAt": "2026-10-23T17:36:01.131Z"
     },
     {
       "backend": "sim",
@@ -1674,7 +1706,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.900Z"
+      "capturedAt": "2026-10-23T17:36:01.131Z"
     },
     {
       "backend": "sim",
@@ -1691,7 +1723,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.900Z"
+      "capturedAt": "2026-10-23T17:36:01.131Z"
     },
     {
       "backend": "sim",
@@ -1707,7 +1739,7 @@
       "promptAfter": "SWB(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.900Z"
+      "capturedAt": "2026-10-23T17:36:01.131Z"
     },
     {
       "backend": "sim",
@@ -1724,7 +1756,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.900Z"
+      "capturedAt": "2026-10-23T17:36:01.131Z"
     },
     {
       "backend": "sim",
@@ -1741,7 +1773,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.901Z"
+      "capturedAt": "2026-10-23T17:36:01.132Z"
     },
     {
       "backend": "sim",
@@ -1758,7 +1790,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.901Z"
+      "capturedAt": "2026-10-23T17:36:01.132Z"
     },
     {
       "backend": "sim",
@@ -1775,7 +1807,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.902Z"
+      "capturedAt": "2026-10-23T17:36:01.133Z"
     },
     {
       "backend": "sim",
@@ -1792,7 +1824,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.902Z"
+      "capturedAt": "2026-10-23T17:36:01.133Z"
     },
     {
       "backend": "sim",
@@ -1803,12 +1835,12 @@
       "input": "show etherchannel summary",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "\n                Port-channel        Protocol    Ports\nGroup  Port-channel   Protocol       Ports\n------+-------------+-----------+-----------------------------------------------\n   20  Po20-       LACP         Gi0/1(P) Gi0/2(P)\n",
+      "rawOutput": "\nFlags:  D - down        P - bundled in port-channel\n        I - stand-alone s - suspended\n        H - Hot-standby (LACP only)\n        R - Layer3      S - Layer2\n        U - in use      f - failed to allocate aggregator\n        M - not in use, minimum links not met\n        u - unsuitable for bundling\n        w - waiting to be aggregated\n        d - default port\n\nNumber of channel-groups in use: 1\nNumber of aggregators:           1\n\nGroup  Port-channel  Protocol    Ports\n------+-------------+-----------+-----------------------------------------------\n20      Po20(SD)         LACP      Gi0/1(s)    Gi0/2(s)\nPo20- (logical Port-channel)\n",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 5000,
-      "capturedAt": "2026-10-23T01:25:08.902Z"
+      "capturedAt": "2026-10-23T17:36:01.134Z"
     },
     {
       "backend": "sim",
@@ -1824,7 +1856,7 @@
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 5000,
-      "capturedAt": "2026-10-23T01:25:08.903Z"
+      "capturedAt": "2026-10-23T17:36:01.134Z"
     },
     {
       "backend": "sim",
@@ -1835,44 +1867,12 @@
       "input": "show logging",
       "mode": "SWA#",
       "status": "ok",
-      "rawOutput": "Syslog logging: enabled\n  Logging to none\n  Trap logging: level 6\n  Log buffer: 14 messages (maximum 100)\nLog Buffer:\n*Mar  1 00:00:00.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/1, changed state to up\n*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up\n*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:00:35.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:00:40.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:00:45.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:00:50.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:00:55.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:00.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:05.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:05.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to down\n*Mar  1 00:01:08.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to up",
+      "rawOutput": "Syslog logging: enabled\n  Logging to none\n  Trap logging: level 6\n  Log buffer: 20 messages (maximum 100)\nLog Buffer:\n*Mar  1 00:00:00.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/1, changed state to up\n*Mar  1 00:00:02.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/1, changed state to up\n*Mar  1 00:00:03.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:00:35.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/2, changed state to down\n*Mar  1 00:00:35.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to down\n*Mar  1 00:00:42.000: %LINK-3-UPDOWN: Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:00:43.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to up\n*Mar  1 00:01:15.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:20.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:25.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:30.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:35.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:40.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:45.000: %SYS-5-CONFIG_I: Configured from console by console\n*Mar  1 00:01:45.000: %EC-5-CANNOT_BUNDLE2: Gi0/1 is not compatible with Gi0/1 and will be suspended (switchport parameters do not match)\n*Mar  1 00:01:45.000: %EC-5-CANNOT_BUNDLE2: Gi0/2 is not compatible with Gi0/2 and will be suspended (speed of Gi0/2 is 10M, peer is autoM)\n*Mar  1 00:01:45.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to down\n*Mar  1 00:01:48.000: %LINEPROTO-5-UPDOWN: Line protocol on Interface GigabitEthernet0/2, changed state to up",
       "promptBefore": "SWA#",
       "promptAfter": "SWA#",
       "preSettlements": [],
       "waitedMs": 5000,
-      "capturedAt": "2026-10-23T01:25:08.903Z"
-    },
-    {
-      "backend": "sim",
-      "version": "workspace-sim",
-      "image": "src/sim",
-      "experiment": "member-failure",
-      "device": "SWA",
-      "input": "show etherchannel summary",
-      "mode": "SWA#",
-      "status": "ok",
-      "rawOutput": "\n                Port-channel        Protocol    Ports\nGroup  Port-channel   Protocol       Ports\n------+-------------+-----------+-----------------------------------------------\n   20  Po20-       LACP         Gi0/1(s) Gi0/2(s)\n",
-      "promptBefore": "SWA#",
-      "promptAfter": "SWA#",
-      "preSettlements": [],
-      "waitedMs": 5000,
-      "capturedAt": "2026-10-23T01:25:08.903Z"
-    },
-    {
-      "backend": "sim",
-      "version": "workspace-sim",
-      "image": "src/sim",
-      "experiment": "member-recovery",
-      "device": "SWA",
-      "input": "show etherchannel summary",
-      "mode": "SWA#",
-      "status": "ok",
-      "rawOutput": "\n                Port-channel        Protocol    Ports\nGroup  Port-channel   Protocol       Ports\n------+-------------+-----------+-----------------------------------------------\n   20  Po20-       LACP         Gi0/1(P) Gi0/2(P)\n",
-      "promptBefore": "SWA#",
-      "promptAfter": "SWA#",
-      "preSettlements": [],
-      "waitedMs": 35000,
-      "capturedAt": "2026-10-23T01:25:08.904Z"
+      "capturedAt": "2026-10-23T17:36:01.134Z"
     },
     {
       "backend": "sim",
@@ -1888,7 +1888,7 @@
       "promptAfter": "CORE(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.904Z"
+      "capturedAt": "2026-10-23T17:36:01.134Z"
     },
     {
       "backend": "sim",
@@ -1905,7 +1905,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.904Z"
+      "capturedAt": "2026-10-23T17:36:01.134Z"
     },
     {
       "backend": "sim",
@@ -1922,7 +1922,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.904Z"
+      "capturedAt": "2026-10-23T17:36:01.135Z"
     },
     {
       "backend": "sim",
@@ -1939,7 +1939,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.904Z"
+      "capturedAt": "2026-10-23T17:36:01.135Z"
     },
     {
       "backend": "sim",
@@ -1956,7 +1956,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.905Z"
+      "capturedAt": "2026-10-23T17:36:01.136Z"
     },
     {
       "backend": "sim",
@@ -1973,7 +1973,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.905Z"
+      "capturedAt": "2026-10-23T17:36:01.136Z"
     },
     {
       "backend": "sim",
@@ -1990,7 +1990,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.905Z"
+      "capturedAt": "2026-10-23T17:36:01.136Z"
     },
     {
       "backend": "sim",
@@ -2007,7 +2007,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.905Z"
+      "capturedAt": "2026-10-23T17:36:01.136Z"
     },
     {
       "backend": "sim",
@@ -2024,7 +2024,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.905Z"
+      "capturedAt": "2026-10-23T17:36:01.136Z"
     },
     {
       "backend": "sim",
@@ -2041,7 +2041,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.905Z"
+      "capturedAt": "2026-10-23T17:36:01.136Z"
     },
     {
       "backend": "sim",
@@ -2054,7 +2054,7 @@
       "status": "ok",
       "rawOutput": "Pinging 10.0.1.10 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\nRequest timed out.\nRequest timed out.\n\nPing statistics for 10.0.1.10:\n    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),",
       "waitedMs": 3000,
-      "capturedAt": "2026-10-23T01:25:08.907Z"
+      "capturedAt": "2026-10-23T17:36:01.138Z"
     },
     {
       "backend": "sim",
@@ -2070,7 +2070,7 @@
       "promptAfter": "CORE(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.907Z"
+      "capturedAt": "2026-10-23T17:36:01.138Z"
     },
     {
       "backend": "sim",
@@ -2087,7 +2087,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.907Z"
+      "capturedAt": "2026-10-23T17:36:01.138Z"
     },
     {
       "backend": "sim",
@@ -2104,7 +2104,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.907Z"
+      "capturedAt": "2026-10-23T17:36:01.138Z"
     },
     {
       "backend": "sim",
@@ -2117,7 +2117,7 @@
       "status": "ok",
       "rawOutput": "Pinging 10.0.1.10 with 32 bytes of data:\n\nRequest timed out.\nReply from 10.0.1.10: bytes=32 time=1ms TTL=127\nReply from 10.0.1.10: bytes=32 time=1ms TTL=127\nReply from 10.0.1.10: bytes=32 time=1ms TTL=127\n\nPing statistics for 10.0.1.10:\n    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 1ms, Maximum = 1ms, Average = 1ms",
       "waitedMs": 3000,
-      "capturedAt": "2026-10-23T01:25:08.908Z"
+      "capturedAt": "2026-10-23T17:36:01.139Z"
     },
     {
       "backend": "sim",
@@ -2133,7 +2133,7 @@
       "promptAfter": "CORE#",
       "preSettlements": [],
       "waitedMs": 3000,
-      "capturedAt": "2026-10-23T01:25:08.908Z"
+      "capturedAt": "2026-10-23T17:36:01.139Z"
     },
     {
       "backend": "sim",
@@ -2149,7 +2149,7 @@
       "promptAfter": "CORE(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.908Z"
+      "capturedAt": "2026-10-23T17:36:01.139Z"
     },
     {
       "backend": "sim",
@@ -2166,7 +2166,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.908Z"
+      "capturedAt": "2026-10-23T17:36:01.139Z"
     },
     {
       "backend": "sim",
@@ -2183,7 +2183,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.908Z"
+      "capturedAt": "2026-10-23T17:36:01.140Z"
     },
     {
       "backend": "sim",
@@ -2200,7 +2200,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.908Z"
+      "capturedAt": "2026-10-23T17:36:01.140Z"
     },
     {
       "backend": "sim",
@@ -2217,7 +2217,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.909Z"
+      "capturedAt": "2026-10-23T17:36:01.140Z"
     },
     {
       "backend": "sim",
@@ -2234,7 +2234,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.909Z"
+      "capturedAt": "2026-10-23T17:36:01.140Z"
     },
     {
       "backend": "sim",
@@ -2251,7 +2251,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.909Z"
+      "capturedAt": "2026-10-23T17:36:01.140Z"
     },
     {
       "backend": "sim",
@@ -2268,7 +2268,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.909Z"
+      "capturedAt": "2026-10-23T17:36:01.141Z"
     },
     {
       "backend": "sim",
@@ -2285,7 +2285,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.909Z"
+      "capturedAt": "2026-10-23T17:36:01.141Z"
     },
     {
       "backend": "sim",
@@ -2302,7 +2302,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.910Z"
+      "capturedAt": "2026-10-23T17:36:01.141Z"
     },
     {
       "backend": "sim",
@@ -2319,7 +2319,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.910Z"
+      "capturedAt": "2026-10-23T17:36:01.141Z"
     },
     {
       "backend": "sim",
@@ -2336,7 +2336,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.910Z"
+      "capturedAt": "2026-10-23T17:36:01.142Z"
     },
     {
       "backend": "sim",
@@ -2353,7 +2353,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.911Z"
+      "capturedAt": "2026-10-23T17:36:01.142Z"
     },
     {
       "backend": "sim",
@@ -2370,7 +2370,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.911Z"
+      "capturedAt": "2026-10-23T17:36:01.142Z"
     },
     {
       "backend": "sim",
@@ -2387,7 +2387,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.911Z"
+      "capturedAt": "2026-10-23T17:36:01.142Z"
     },
     {
       "backend": "sim",
@@ -2404,7 +2404,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.911Z"
+      "capturedAt": "2026-10-23T17:36:01.143Z"
     },
     {
       "backend": "sim",
@@ -2417,7 +2417,7 @@
       "status": "ok",
       "rawOutput": "Pinging 192.168.20.10 with 32 bytes of data:\n\nRequest timed out.\nReply from 192.168.20.10: bytes=32 time=1ms TTL=127\nReply from 192.168.20.10: bytes=32 time=1ms TTL=127\nReply from 192.168.20.10: bytes=32 time=1ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 1ms, Maximum = 1ms, Average = 1ms",
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T01:25:08.913Z"
+      "capturedAt": "2026-10-23T17:36:01.144Z"
     },
     {
       "backend": "sim",
@@ -2433,7 +2433,7 @@
       "promptAfter": "CORE#",
       "preSettlements": [],
       "waitedMs": 35000,
-      "capturedAt": "2026-10-23T01:25:08.913Z"
+      "capturedAt": "2026-10-23T17:36:01.145Z"
     },
     {
       "backend": "sim",
@@ -2449,7 +2449,7 @@
       "promptAfter": "CORE(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.913Z"
+      "capturedAt": "2026-10-23T17:36:01.145Z"
     },
     {
       "backend": "sim",
@@ -2466,7 +2466,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.913Z"
+      "capturedAt": "2026-10-23T17:36:01.145Z"
     },
     {
       "backend": "sim",
@@ -2483,7 +2483,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.913Z"
+      "capturedAt": "2026-10-23T17:36:01.145Z"
     },
     {
       "backend": "sim",
@@ -2500,7 +2500,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.914Z"
+      "capturedAt": "2026-10-23T17:36:01.145Z"
     },
     {
       "backend": "sim",
@@ -2517,7 +2517,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.914Z"
+      "capturedAt": "2026-10-23T17:36:01.145Z"
     },
     {
       "backend": "sim",
@@ -2534,7 +2534,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.914Z"
+      "capturedAt": "2026-10-23T17:36:01.146Z"
     },
     {
       "backend": "sim",
@@ -2545,13 +2545,13 @@
       "input": "ip route 0.0.0.0 0.0.0.0 172.16.0.1",
       "mode": "CORE(config)#",
       "status": "ok",
-      "rawOutput": "                    ^\n% Invalid input detected at '^' marker.\n",
+      "rawOutput": "",
       "promptBefore": "CORE(config)#",
       "promptAfter": "CORE(config)#",
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.914Z"
+      "capturedAt": "2026-10-23T17:36:01.146Z"
     },
     {
       "backend": "sim",
@@ -2568,7 +2568,7 @@
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.914Z"
+      "capturedAt": "2026-10-23T17:36:01.146Z"
     },
     {
       "backend": "sim",
@@ -2579,12 +2579,12 @@
       "input": "show ip route",
       "mode": "CORE#",
       "status": "ok",
-      "rawOutput": "Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP\n       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area\n       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2\n       E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP\n       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2\n       ia - IS-IS inter area, * - candidate default, U - per-user static route\n       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP\n       + - replicated route, % - next hop override\n\nGateway of last resort is not set\n\n      10.0.0.0/24 is subnetted, 2 subnets\nC        10.0.0.0 is directly connected, GigabitEthernet0/1\nC        10.0.1.0 is directly connected, GigabitEthernet0/2\nC     192.168.10.0/24 is directly connected, Vlan10\nC     192.168.20.0/24 is directly connected, Vlan20\n",
+      "rawOutput": "Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP\n       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area\n       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2\n       E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP\n       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2\n       ia - IS-IS inter area, * - candidate default, U - per-user static route\n       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP\n       + - replicated route, % - next hop override\n\nGateway of last resort is 172.16.0.1 to network 0.0.0.0\n\n      10.0.0.0/24 is subnetted, 2 subnets\nC        10.0.0.0 is directly connected, GigabitEthernet0/1\nC        10.0.1.0 is directly connected, GigabitEthernet0/2\nC     192.168.10.0/24 is directly connected, Vlan10\nC     192.168.20.0/24 is directly connected, Vlan20\nS*  0.0.0.0/0 [1/0] via 172.16.0.1\n",
       "promptBefore": "CORE#",
       "promptAfter": "CORE#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.914Z"
+      "capturedAt": "2026-10-23T17:36:01.146Z"
     },
     {
       "backend": "sim",
@@ -2600,7 +2600,7 @@
       "promptAfter": "CORE(config)#",
       "preSettlements": [],
       "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.914Z"
+      "capturedAt": "2026-10-23T17:36:01.146Z"
     },
     {
       "backend": "sim",
@@ -2608,16 +2608,16 @@
       "image": "src/sim",
       "experiment": "routed-etherchannel",
       "device": "CORE",
-      "input": "interface port-channel 30",
+      "input": "interface range fa0/3 - 4",
       "mode": "CORE(config)#",
       "status": "ok",
-      "rawOutput": "                       ^\n% Invalid input detected at '^' marker.\n",
+      "rawOutput": "",
       "promptBefore": "CORE(config)#",
-      "promptAfter": "CORE(config)#",
+      "promptAfter": "CORE(config-if)#",
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.914Z"
+      "capturedAt": "2026-10-23T17:36:01.146Z"
     },
     {
       "backend": "sim",
@@ -2626,15 +2626,66 @@
       "experiment": "routed-etherchannel",
       "device": "CORE",
       "input": "no switchport",
-      "mode": "CORE(config)#",
+      "mode": "CORE(config-if)#",
       "status": "ok",
-      "rawOutput": "                 ^\n% Invalid input detected at '^' marker.\n",
-      "promptBefore": "CORE(config)#",
-      "promptAfter": "CORE(config)#",
+      "rawOutput": "",
+      "promptBefore": "CORE(config-if)#",
+      "promptAfter": "CORE(config-if)#",
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.914Z"
+      "capturedAt": "2026-10-23T17:36:01.146Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "CORE",
+      "input": "channel-group 30 mode active",
+      "mode": "CORE(config-if)#",
+      "status": "ok",
+      "rawOutput": "",
+      "promptBefore": "CORE(config-if)#",
+      "promptAfter": "CORE(config-if)#",
+      "preSettlements": [],
+      "waitedMs": 0,
+      "keepMode": true,
+      "capturedAt": "2026-10-23T17:36:01.147Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "CORE",
+      "input": "interface port-channel 30",
+      "mode": "CORE(config-if)#",
+      "status": "ok",
+      "rawOutput": "",
+      "promptBefore": "CORE(config-if)#",
+      "promptAfter": "CORE(config-if)#",
+      "preSettlements": [],
+      "waitedMs": 0,
+      "keepMode": true,
+      "capturedAt": "2026-10-23T17:36:01.147Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "CORE",
+      "input": "no switchport",
+      "mode": "CORE(config-if)#",
+      "status": "ok",
+      "rawOutput": "",
+      "promptBefore": "CORE(config-if)#",
+      "promptAfter": "CORE(config-if)#",
+      "preSettlements": [],
+      "waitedMs": 0,
+      "keepMode": true,
+      "capturedAt": "2026-10-23T17:36:01.148Z"
     },
     {
       "backend": "sim",
@@ -2643,15 +2694,15 @@
       "experiment": "routed-etherchannel",
       "device": "CORE",
       "input": "ip address 172.31.0.2 255.255.255.252",
-      "mode": "CORE(config)#",
+      "mode": "CORE(config-if)#",
       "status": "ok",
-      "rawOutput": "                 ^\n% Invalid input detected at '^' marker.\n",
-      "promptBefore": "CORE(config)#",
-      "promptAfter": "CORE(config)#",
+      "rawOutput": "",
+      "promptBefore": "CORE(config-if)#",
+      "promptAfter": "CORE(config-if)#",
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.914Z"
+      "capturedAt": "2026-10-23T17:36:01.148Z"
     },
     {
       "backend": "sim",
@@ -2660,15 +2711,15 @@
       "experiment": "routed-etherchannel",
       "device": "CORE",
       "input": "no shutdown",
-      "mode": "CORE(config)#",
+      "mode": "CORE(config-if)#",
       "status": "ok",
-      "rawOutput": "                 ^\n% Invalid input detected at '^' marker.\n",
-      "promptBefore": "CORE(config)#",
-      "promptAfter": "CORE(config)#",
+      "rawOutput": "",
+      "promptBefore": "CORE(config-if)#",
+      "promptAfter": "CORE(config-if)#",
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.914Z"
+      "capturedAt": "2026-10-23T17:36:01.149Z"
     },
     {
       "backend": "sim",
@@ -2677,15 +2728,231 @@
       "experiment": "routed-etherchannel",
       "device": "CORE",
       "input": "end",
-      "mode": "CORE(config)#",
+      "mode": "CORE(config-if)#",
       "status": "ok",
       "rawOutput": "",
-      "promptBefore": "CORE(config)#",
+      "promptBefore": "CORE(config-if)#",
       "promptAfter": "CORE#",
       "preSettlements": [],
       "waitedMs": 0,
       "keepMode": true,
-      "capturedAt": "2026-10-23T01:25:08.914Z"
+      "capturedAt": "2026-10-23T17:36:01.149Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "RPOER",
+      "input": "configure terminal",
+      "mode": "RPOER#",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "promptBefore": "RPOER#",
+      "promptAfter": "RPOER(config)#",
+      "preSettlements": [],
+      "waitedMs": 0,
+      "capturedAt": "2026-10-23T17:36:01.149Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "RPOER",
+      "input": "interface range fa0/3 - 4",
+      "mode": "RPOER(config)#",
+      "status": "ok",
+      "rawOutput": "",
+      "promptBefore": "RPOER(config)#",
+      "promptAfter": "RPOER(config-if)#",
+      "preSettlements": [],
+      "waitedMs": 0,
+      "keepMode": true,
+      "capturedAt": "2026-10-23T17:36:01.149Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "RPOER",
+      "input": "no switchport",
+      "mode": "RPOER(config-if)#",
+      "status": "ok",
+      "rawOutput": "",
+      "promptBefore": "RPOER(config-if)#",
+      "promptAfter": "RPOER(config-if)#",
+      "preSettlements": [],
+      "waitedMs": 0,
+      "keepMode": true,
+      "capturedAt": "2026-10-23T17:36:01.149Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "RPOER",
+      "input": "channel-group 30 mode active",
+      "mode": "RPOER(config-if)#",
+      "status": "ok",
+      "rawOutput": "",
+      "promptBefore": "RPOER(config-if)#",
+      "promptAfter": "RPOER(config-if)#",
+      "preSettlements": [],
+      "waitedMs": 0,
+      "keepMode": true,
+      "capturedAt": "2026-10-23T17:36:01.149Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "RPOER",
+      "input": "interface port-channel 30",
+      "mode": "RPOER(config-if)#",
+      "status": "ok",
+      "rawOutput": "",
+      "promptBefore": "RPOER(config-if)#",
+      "promptAfter": "RPOER(config-if)#",
+      "preSettlements": [],
+      "waitedMs": 0,
+      "keepMode": true,
+      "capturedAt": "2026-10-23T17:36:01.150Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "RPOER",
+      "input": "no switchport",
+      "mode": "RPOER(config-if)#",
+      "status": "ok",
+      "rawOutput": "",
+      "promptBefore": "RPOER(config-if)#",
+      "promptAfter": "RPOER(config-if)#",
+      "preSettlements": [],
+      "waitedMs": 0,
+      "keepMode": true,
+      "capturedAt": "2026-10-23T17:36:01.150Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "RPOER",
+      "input": "ip address 172.31.0.1 255.255.255.252",
+      "mode": "RPOER(config-if)#",
+      "status": "ok",
+      "rawOutput": "",
+      "promptBefore": "RPOER(config-if)#",
+      "promptAfter": "RPOER(config-if)#",
+      "preSettlements": [],
+      "waitedMs": 0,
+      "keepMode": true,
+      "capturedAt": "2026-10-23T17:36:01.150Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "RPOER",
+      "input": "no shutdown",
+      "mode": "RPOER(config-if)#",
+      "status": "ok",
+      "rawOutput": "",
+      "promptBefore": "RPOER(config-if)#",
+      "promptAfter": "RPOER(config-if)#",
+      "preSettlements": [],
+      "waitedMs": 0,
+      "keepMode": true,
+      "capturedAt": "2026-10-23T17:36:01.150Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "RPOER",
+      "input": "end",
+      "mode": "RPOER(config-if)#",
+      "status": "ok",
+      "rawOutput": "",
+      "promptBefore": "RPOER(config-if)#",
+      "promptAfter": "RPOER#",
+      "preSettlements": [],
+      "waitedMs": 0,
+      "keepMode": true,
+      "capturedAt": "2026-10-23T17:36:01.150Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "CORE",
+      "input": "show etherchannel summary",
+      "mode": "CORE#",
+      "status": "ok",
+      "rawOutput": "\nFlags:  D - down        P - bundled in port-channel\n        I - stand-alone s - suspended\n        H - Hot-standby (LACP only)\n        R - Layer3      S - Layer2\n        U - in use      f - failed to allocate aggregator\n        M - not in use, minimum links not met\n        u - unsuitable for bundling\n        w - waiting to be aggregated\n        d - default port\n\nNumber of channel-groups in use: 1\nNumber of aggregators:           1\n\nGroup  Port-channel  Protocol    Ports\n------+-------------+-----------+-----------------------------------------------\n30      Po30(RU)         LACP      Fa0/3(P)    Fa0/4(P)\nPo30- (logical Port-channel)\n",
+      "promptBefore": "CORE#",
+      "promptAfter": "CORE#",
+      "preSettlements": [],
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T17:36:01.151Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "CORE",
+      "input": "show etherchannel port-channel 30",
+      "mode": "CORE#",
+      "status": "ok",
+      "rawOutput": "Group Port-channel Protocol    Ports\n30     Po30          LACP\n                Fa0/3  P routed\n                Fa0/4  P routed",
+      "promptBefore": "CORE#",
+      "promptAfter": "CORE#",
+      "preSettlements": [],
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T17:36:01.151Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "CORE",
+      "input": "show interfaces port-channel 30",
+      "mode": "CORE#",
+      "status": "ok",
+      "rawOutput": "Port-channel30 is up, line protocol is up \n  Hardware is EtherSVI, address is 00e0.b00a.0039 (bia 00e0.b00a.0039)\n  Internet address is 172.31.0.2/30\n  MTU 1500 bytes, BW 1000000 Kbit/sec, DLY 10 usec, \n     reliability 255/255, txload 1/255, rxload 1/255\n  Encapsulation ARPA, loopback not set\n  Keepalive not supported \n  ARP type: ARPA, ARP Timeout 04:00:00\n  Last input never, output never, output hang never\n  Last clearing of \"show interface\" counters never\n  Input queue: 0/75/0/0 (size/max/drops/flushes); Total output drops: 0\n  Queueing strategy: fifo\n  Output queue: 0/40 (size/max)\n  5 minute input rate 0 bits/sec, 0 packets/sec\n  5 minute output rate 0 bits/sec, 0 packets/sec\n     0 packets input, 0 bytes, 0 no buffer\n     Received 0 broadcasts (0 IP multicasts)\n     0 runts, 0 giants, 0 throttles \n     0 input errors, 0 CRC, 0 frame, 0 overrun, 0 ignored\n     0 packets output, 0 bytes, 0 underruns\n     0 output errors, 1 interface resets\n     0 unknown protocol drops\n     0 output buffer failures, 0 output buffers swapped out",
+      "promptBefore": "CORE#",
+      "promptAfter": "CORE#",
+      "preSettlements": [],
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T17:36:01.152Z"
+    },
+    {
+      "backend": "sim",
+      "version": "workspace-sim",
+      "image": "src/sim",
+      "experiment": "routed-etherchannel",
+      "device": "CORE",
+      "input": "show ip route",
+      "mode": "CORE#",
+      "status": "ok",
+      "rawOutput": "Codes: L - local, C - connected, S - static, R - RIP, M - mobile, B - BGP\n       D - EIGRP, EX - EIGRP external, O - OSPF, IA - OSPF inter area\n       N1 - OSPF NSSA external type 1, N2 - OSPF NSSA external type 2\n       E1 - OSPF external type 1, E2 - OSPF external type 2, E - EGP\n       i - IS-IS, su - IS-IS summary, L1 - IS-IS level-1, L2 - IS-IS level-2\n       ia - IS-IS inter area, * - candidate default, U - per-user static route\n       o - ODR, P - periodic downloaded static route, H - NHRP, l - LISP\n       + - replicated route, % - next hop override\n\nGateway of last resort is 172.16.0.1 to network 0.0.0.0\n\n      10.0.0.0/24 is subnetted, 2 subnets\nC        10.0.0.0 is directly connected, GigabitEthernet0/1\nC        10.0.1.0 is directly connected, GigabitEthernet0/2\n      172.31.0.0/30 is subnetted, 1 subnets\nC        172.31.0.0 is directly connected, Port-channel30\nC     192.168.10.0/24 is directly connected, Vlan10\nC     192.168.20.0/24 is directly connected, Vlan20\nS*  0.0.0.0/0 [1/0] via 172.16.0.1\n",
+      "promptBefore": "CORE#",
+      "promptAfter": "CORE#",
+      "preSettlements": [],
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T17:36:01.152Z"
     },
     {
       "backend": "sim",
@@ -2696,12 +2963,12 @@
       "input": "show running-config",
       "mode": "CORE#",
       "status": "ok",
-      "rawOutput": "Building configuration...\n\nCurrent configuration : 1636 bytes\n!\n! Last configuration change at 00:03:01 UTC Mon Mar 1 1993\n!\nversion 15.0\nno service pad\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname CORE\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\nsystem mtu routing 1500\n!\nip routing\nspanning-tree mode pvst\nspanning-tree extend system-id\n!\nvlan internal allocation policy ascending\n!\ninterface FastEthernet0/1\n switchport access vlan 10\n switchport mode access\n!\ninterface FastEthernet0/2\n switchport access vlan 20\n switchport mode access\n!\ninterface FastEthernet0/3\n!\ninterface FastEthernet0/4\n!\ninterface FastEthernet0/5\n ip address 172.16.0.2 255.255.255.0\n!\ninterface FastEthernet0/6\n!\ninterface FastEthernet0/7\n!\ninterface FastEthernet0/8\n!\ninterface FastEthernet0/9\n!\ninterface FastEthernet0/10\n!\ninterface FastEthernet0/11\n!\ninterface FastEthernet0/12\n!\ninterface FastEthernet0/13\n!\ninterface FastEthernet0/14\n!\ninterface FastEthernet0/15\n!\ninterface FastEthernet0/16\n!\ninterface FastEthernet0/17\n!\ninterface FastEthernet0/18\n!\ninterface FastEthernet0/19\n!\ninterface FastEthernet0/20\n!\ninterface FastEthernet0/21\n!\ninterface FastEthernet0/22\n!\ninterface FastEthernet0/23\n!\ninterface FastEthernet0/24\n!\ninterface GigabitEthernet0/1\n ip address 10.0.0.1 255.255.255.0\n!\ninterface GigabitEthernet0/2\n ip address 10.0.1.1 255.255.255.0\n!\ninterface Vlan1\n no ip address\n shutdown\n!\ninterface Vlan10\n ip address 192.168.10.1 255.255.255.0\n!\ninterface Vlan20\n ip address 192.168.20.1 255.255.255.0\n!\nip http server\nip http secure-server\n!\nlogging trap 6\nline con 0\nline vty 0 4\n login\nline vty 5 15\n login\n!\nend\n",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 1965 bytes\n!\n! Last configuration change at 00:03:01 UTC Mon Mar 1 1993\n!\nversion 15.0\nno service pad\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname CORE\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\nsystem mtu routing 1500\n!\nip routing\nspanning-tree mode pvst\nspanning-tree extend system-id\n!\nvlan internal allocation policy ascending\n!\ninterface FastEthernet0/1\n switchport access vlan 10\n switchport mode access\n!\ninterface FastEthernet0/2\n switchport access vlan 20\n switchport mode access\n!\ninterface FastEthernet0/3\n no switchport\n no ip address\n channel-group 30 mode active\n!\ninterface FastEthernet0/4\n no switchport\n no ip address\n channel-group 30 mode active\n!\ninterface FastEthernet0/5\n no switchport\n ip address 172.16.0.2 255.255.255.0\n!\ninterface FastEthernet0/6\n!\ninterface FastEthernet0/7\n!\ninterface FastEthernet0/8\n!\ninterface FastEthernet0/9\n!\ninterface FastEthernet0/10\n!\ninterface FastEthernet0/11\n!\ninterface FastEthernet0/12\n!\ninterface FastEthernet0/13\n!\ninterface FastEthernet0/14\n!\ninterface FastEthernet0/15\n!\ninterface FastEthernet0/16\n!\ninterface FastEthernet0/17\n!\ninterface FastEthernet0/18\n!\ninterface FastEthernet0/19\n!\ninterface FastEthernet0/20\n!\ninterface FastEthernet0/21\n!\ninterface FastEthernet0/22\n!\ninterface FastEthernet0/23\n!\ninterface FastEthernet0/24\n!\ninterface GigabitEthernet0/1\n no switchport\n ip address 10.0.0.1 255.255.255.0\n!\ninterface GigabitEthernet0/2\n no switchport\n ip address 10.0.1.1 255.255.255.0\n!\ninterface Port-channel30\n no switchport\n ip address 172.31.0.2 255.255.255.252\n!\ninterface Vlan1\n no switchport\n no ip address\n shutdown\n!\ninterface Vlan10\n no switchport\n ip address 192.168.10.1 255.255.255.0\n!\ninterface Vlan20\n no switchport\n ip address 192.168.20.1 255.255.255.0\n!\nip http server\nip http secure-server\n!\nip route 0.0.0.0 0.0.0.0 172.16.0.1\n!\nlogging trap 6\nline con 0\nline vty 0 4\n login\nline vty 5 15\n login\n!\nend\n",
       "promptBefore": "CORE#",
       "promptAfter": "CORE#",
       "preSettlements": [],
-      "waitedMs": 0,
-      "capturedAt": "2026-10-23T01:25:08.915Z"
+      "waitedMs": 35000,
+      "capturedAt": "2026-10-23T17:36:01.153Z"
     }
   ]
 }

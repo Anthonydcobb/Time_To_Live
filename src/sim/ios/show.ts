@@ -121,7 +121,11 @@ export function renderConfig(device: IosDevice, c: IosConfig, stamps: ConfigStam
     if (ic.ipv6AccessGroupIn !== null) out.push(" ipv6 traffic-filter " + ic.ipv6AccessGroupIn + " in");
     if (ic.ipv6AccessGroupOut !== null) out.push(" ipv6 traffic-filter " + ic.ipv6AccessGroupOut + " out");
     if (ic.switchport) out.push(...switchportLines(ic.switchport));
-    else out.push(ic.ip !== null ? ` ip address ${formatIpv4(ic.ip)} ${formatIpv4(ic.mask!)}` : " no ip address");
+    else {
+      if (isSwitch) out.push(" no switchport");
+      out.push(ic.ip !== null ? ` ip address ${formatIpv4(ic.ip)} ${formatIpv4(ic.mask!)}` : " no ip address");
+    }
+    if (ic.channelGroup !== null && ic.channelMode !== null) out.push(` channel-group ${ic.channelGroup} mode ${ic.channelMode}`);
     if (ic.shutdown) out.push(" shutdown");
     if (physical && !isSwitch) out.push(` duplex ${ic.duplex}`, ` speed ${ic.speed}`);
     if (physical && !ic.cdp) out.push(" no cdp enable");
@@ -565,7 +569,7 @@ export function showIpRoute(device: IosDevice): string[] {
       for (const r of rs) out.push(`${code(r)}       ${routeTail(r, false)}`);
     }
   }
-  if (defaultRoute) out.push(`S*    0.0.0.0/0 [${defaultRoute.distance}/0] via ${formatIpv4(defaultRoute.nextHop ?? 0)}`);
+  if (defaultRoute) out.push(`S*  0.0.0.0/0 [${defaultRoute.distance}/0] via ${formatIpv4(defaultRoute.nextHop ?? 0)}`);
   out.push("");
   return out;
 }
@@ -752,20 +756,22 @@ export function showSpanningTree(sw: Switch): string[] {
   for (const vlan of [...sw.vlans.keys()].filter((v) => sw.vlanActive(v)).sort((a, b) => a - b)) {
     const root = electedRoot(sw, vlan);
     const rootPriority = root.bridgePriority(vlan) + vlan;
-    const rootPorts = sw.ports.filter((p) => sw.stpRole(p, vlan) === "root");
+    const rootPorts = stpPorts(sw).filter((p) => sw.stpRole(p, vlan) === "root");
     out.push(`VLAN${String(vlan).padStart(4, "0")}`, "  Spanning tree enabled protocol ieee", `  Root ID    Priority    ${rootPriority}`,
       `             Address     ${formatMacCisco(root.baseMac)}`);
     if (root === sw) out.push("             This bridge is the root");
     else if (rootPorts[0]) out.push(`             Cost        ${rootPorts[0].shortName.startsWith("Gi") ? 4 : 19}`, `             Port        ${rootPorts[0].shortName.replace(/^\D+/, "") || rootPorts[0].shortName}(${rootPorts[0].name})`);
     out.push("", `  Bridge ID  Priority    ${sw.bridgePriority(vlan) + vlan}`, `             Address     ${formatMacCisco(sw.baseMac)}`, "", "Interface        Role Sts Cost      Prio.Nbr Type", "---------------- ---- --- --------- -------- --------------------------------");
-    for (const p of sw.ports.filter((p) => sw.vlansOn(p).includes(vlan))) {
+    for (const p of stpPorts(sw).filter((p) => sw.vlansOn(p).includes(vlan))) {
       const role = sw.stpRole(p, vlan);
       const state = sw.stpState(p, vlan);
       const roleText = role === "root" ? "Root" : role === "alternate" ? "Altn" : "Desg";
       const stateText = state === "blocking" ? "BLK" : state === "listening" ? "LST" : state === "learning" ? "LRN" : state === "forwarding" ? "FWD" : "---";
-      const cost = p.shortName.startsWith("Gi") ? 4 : 19;
-      const number = Number(p.shortName.split("/").pop()) || 0;
-      out.push(`${p.shortName.padEnd(16)} ${roleText.padEnd(4)} ${stateText.padEnd(3)} ${String(cost).padEnd(9)} 128.${number}    ${p.peer?.device.kind === "switch" ? "P2p" : "Edge"}`);
+      const cost = stpCost(p);
+      const group = sw.config.interfaces[p.name].channelGroup;
+      const label = group === null ? p.shortName : `Po${group}`;
+      const number = group === null ? Number(p.shortName.split("/").pop()) || 0 : 64 + group;
+      out.push(`${label.padEnd(16)} ${roleText.padEnd(4)} ${stateText.padEnd(3)} ${String(cost).padEnd(9)} 128.${number}    ${p.peer?.device.kind === "switch" ? "P2p" : "Edge"}`);
     }
     out.push("");
   }
@@ -781,7 +787,13 @@ function stpRoot(sw: Switch, vlan: number): Switch {
 }
 
 function stpCost(port: ReturnType<Switch["port"]>): number {
+  const members = port.device.kind === "switch" ? (port.device as Switch).channelMembers(port) : [port];
+  if (members.length > 1) return members.every((p) => p.shortName.startsWith("Gi")) ? 3 : 12;
   return port.shortName.startsWith("Gi") ? 4 : 19;
+}
+
+function stpPorts(sw: Switch): ReturnType<Switch["port"]>[] {
+  return sw.ports.filter((p) => sw.config.interfaces[p.name].channelGroup === null || sw.channelRepresentative(p) === p);
 }
 
 /** IOS's `show spanning-tree root` view. */
@@ -819,7 +831,7 @@ export function showSpanningTreeSummary(sw: Switch): string[] {
     `PortFast BPDU Guard Default  is ${sw.config.spanningTreeBpduGuardDefault ? "enabled" : "disabled"}`,
     "Portfast BPDU Filter Default is disabled",
     "Loopguard Default            is disabled",
-    "EtherChannel misconfig guard is disabled",
+    `EtherChannel misconfig guard is ${sw.etherchannelMisconfigGuard ? "enabled" : "disabled"}`,
     "UplinkFast                   is disabled",
     "BackboneFast                 is disabled",
     "Configured Pathcost method used is short",
@@ -904,20 +916,67 @@ export function showSpanningTreeActive(sw: Switch): string[] {
 export function showEtherchannelSummary(sw: Switch): string[] {
   const groups = new Map<number, typeof sw.ports>();
   for (const port of sw.ports) {
-    const group = sw.switchport(port).channelGroup;
+    const group = sw.config.interfaces[port.name].channelGroup;
     if (group !== null) groups.set(group, [...(groups.get(group) ?? []), port]);
   }
-  const out = ["", "                Port-channel        Protocol    Ports", "Group  Port-channel   Protocol       Ports", "------+-------------+-----------+-----------------------------------------------"];
+  const out = [
+    "",
+    "Flags:  D - down        P - bundled in port-channel",
+    "        I - stand-alone s - suspended",
+    "        H - Hot-standby (LACP only)",
+    "        R - Layer3      S - Layer2",
+    "        U - in use      f - failed to allocate aggregator",
+    "        M - not in use, minimum links not met",
+    "        u - unsuitable for bundling",
+    "        w - waiting to be aggregated",
+    "        d - default port",
+    "",
+    `Number of channel-groups in use: ${groups.size}`,
+    `Number of aggregators:           ${groups.size}`,
+    "",
+    "Group  Port-channel  Protocol    Ports",
+    "------+-------------+-----------+-----------------------------------------------",
+  ];
   for (const [group, ports] of [...groups].sort(([a], [b]) => a - b)) {
-    const mode = sw.switchport(ports[0]).channelMode;
+    const mode = sw.config.interfaces[ports[0].name].channelMode;
     const protocol = mode === "active" || mode === "passive" ? "LACP" : mode === "desirable" || mode === "auto" ? "PAgP" : "-";
-    const active = sw.channelGroupActive(ports[0]);
-    const members = ports.map((port) => `${port.shortName}${active ? "(P)" : "(s)"}`).join(" ");
-    out.push(`${String(group).padStart(5)}  Po${group}-       ${protocol.padEnd(12)} ${members}`);
+    const bundled = ports.some((port) => sw.channelMemberState(port) === "P");
+    const routed = ports.some((port) => !sw.config.interfaces[port.name].switchport);
+    const poState = `${routed ? "R" : "S"}${bundled ? "U" : "D"}`;
+    const members = ports.map((port) => `${port.shortName}(${sw.channelMemberState(port)})`).join("    ");
+    out.push(`${String(group).padStart(1)}      Po${group}(${poState})         ${protocol.padEnd(8)}  ${members}`);
   }
   if (groups.size === 0) out.push("No EtherChannels configured.");
+  else out.push(...[...groups.keys()].sort((a, b) => a - b).map((group) => `Po${group}- (logical Port-channel)`));
   out.push("");
   return out;
+}
+
+export function showEtherchannelPortChannel(sw: Switch, group: number): string[] {
+  const ports = sw.channelGroupPorts(group);
+  if (!ports.length) return [`% Port-channel ${group} not found`];
+  const po = sw.config.interfaces[`Port-channel${group}`];
+  const mode = sw.config.interfaces[ports[0].name].channelMode;
+  const protocol = mode === "active" || mode === "passive" ? "LACP" : mode === "desirable" || mode === "auto" ? "PAgP" : "-";
+  return [
+    `Group Port-channel Protocol    Ports`,
+    `${group}     Po${group}          ${protocol}`, 
+    ...ports.map((p) => `                ${p.shortName}  ${sw.channelMemberState(p)}${po && !po.switchport ? " routed" : ""}`),
+  ];
+}
+
+export function showEtherchannelLoadBalance(sw: Switch): string[] {
+  return ["EtherChannel Load-Balancing Configuration:", `        ${sw.portChannelLoadBalance}`];
+}
+
+export function showLacpNeighbor(sw: Switch): string[] {
+  const ports = sw.ports.filter((p) => ["active", "passive"].includes(sw.config.interfaces[p.name].channelMode ?? ""));
+  return ["                 LACP port-channel                 LACP neighbor", "Port      Flags   Port-channel    Port       Age", ...ports.map((p) => `${p.shortName.padEnd(10)}${sw.channelMemberState(p).padEnd(8)}Po${sw.config.interfaces[p.name].channelGroup ?? "-"}`)];
+}
+
+export function showPagpNeighbor(sw: Switch): string[] {
+  const ports = sw.ports.filter((p) => ["desirable", "auto"].includes(sw.config.interfaces[p.name].channelMode ?? ""));
+  return ["Flags:  S - Device is sending Slow hello", "        U - Device is in Use", "Group Port      Partner Name", ...ports.map((p) => `${sw.config.interfaces[p.name].channelGroup ?? "-"}     ${p.shortName}      ${p.peer?.device.hostname ?? "-"}`)];
 }
 
 const VLAN_TYPES: Record<number, [string, string]> = { 1002: ["fddi", "-"], 1003: ["tr", "-"], 1004: ["fdnet", "ieee"], 1005: ["trnet", "ibm"] };
