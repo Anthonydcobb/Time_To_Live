@@ -24,7 +24,7 @@ const COFFEE_SPOT = { x: 14, y: 12 };
 const choice = await showTitle(ui);
 window.focus();
 audio.start();
-const loading = showLoading(choice.kind === "load" ? "RESTORING SESSION" : "CLOCKING IN");
+const loading = showLoading(choice.kind === "load" ? "RESTORING SESSION" : "CLOCKING IN", 1800);
 // Let the loading screen paint before a saved game's networks replay.
 await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
 if (choice.kind === "load") {

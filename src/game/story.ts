@@ -6,6 +6,7 @@ import { cornerStore } from "../sim/scenarios/corner-store";
 import { laundromat } from "../sim/scenarios/laundromat";
 import type { Scenario } from "../sim/scenarios/types";
 import { audio } from "./audio";
+import { showLoading } from "./menu";
 import { bookToast, NOTES, type BookContents } from "./grimoire-book";
 import type { RoomId } from "./rooms";
 import { writeSave, type SaveData } from "./save";
@@ -292,7 +293,7 @@ export class Story {
         else {
           const go: Partial<Record<SiteId, () => void>> = { quikstop: () => this.travel("shop") };
           if (this.flags.has("job2")) go.laundromat = () => this.travel("laundromat");
-          ui.openTownMap("bobs", go, { haunted: this.flags.has("haunt") });
+          ui.openTownMap("bobs", go);
         }
         return;
 
@@ -343,7 +344,7 @@ export class Story {
         ]);
         return;
       case "shop:exit":
-        if (this.flags.has("done")) ui.openTownMap("quikstop", { bobs: () => this.travel("office") }, { haunted: this.flags.has("haunt") });
+        if (this.flags.has("done")) ui.openTownMap("quikstop", { bobs: () => this.travel("office") });
         else ui.say(scene("shop-exit-early"));
         return;
     }
@@ -421,7 +422,7 @@ export class Story {
         ui.say(scene("toilet"), () => this.note("guestbook"));
         return;
       case "exit":
-        if (this.flags.has("done2")) ui.openTownMap("laundromat", { bobs: () => this.travel("office"), quikstop: () => this.travel("shop") }, { haunted: true });
+        if (this.flags.has("done2")) ui.openTownMap("laundromat", { bobs: () => this.travel("office"), quikstop: () => this.travel("shop") });
         else ui.say(scene("wash-exit-early"));
         return;
     }
@@ -654,8 +655,17 @@ export class Story {
     return { notes: [...this.notes], sites: this.flags.has("job") ? sites : [] };
   }
 
+  /**
+   * A trip across town is a loading screen: the posters, a ping and a tip, and the town's
+   * population, which goes up by one after each haunted job. It lifts a beat after the room is
+   * ready, and the room's story waits for it.
+   */
   private travel(to: RoomId): void {
     const pop = (4218 + (this.flags.has("done") ? 1 : 0) + (to === "office" && this.flags.has("done2") ? 1 : 0)).toLocaleString("en-US");
-    this.ui.showCard(`<p class="sign">WELCOME TO<br>STATIC SPRINGS</p><p class="sign small">POP. ${pop}</p>`, () => events.emit("goto", to), 1500);
+    const loading = showLoading(`WELCOME TO STATIC SPRINGS · POP. ${pop}`);
+    let lift!: () => void;
+    const gate = new Promise<void>((r) => (lift = r));
+    events.once("room-ready", () => void loading.finish().then(lift));
+    events.emit("goto", to, gate);
   }
 }

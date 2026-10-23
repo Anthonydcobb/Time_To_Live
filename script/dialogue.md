@@ -394,7 +394,7 @@ WALTER: One more thing before you go. On the router: show ip dhcp binding. Make 
 WALTER: Kid? Was there a third line on that list just now? Point zero. You can't lease point zero. That's the *network*.
 WALTER: ...No. Two PCs, two leases. That's what the paperwork says, so that's what happened. Ticket's DONE. Tell Gus and come on home. Over.
 
-# Walter's hints (press Q)
+# Walter's hints (press Q, or F1 at a laptop or PC)
 
 (The game picks the first hint that fits where you are.)
 
@@ -490,3 +490,18 @@ WALTER: Ping the printer, 192.168.20.5, from both PCs. Over.
 
 ## hint2-binding
 WALTER: Last thing: on the router, show ip dhcp binding. Make sure it's just our two PCs on the list. Over.
+
+# Loading screens
+
+## loading-tips
+(One of these shows in the corner of each loading screen, in order, looping. Plain help, not story.)
+> F1 radios Walter for a hint, even with a laptop or PC open.
+> Away from a screen, Q calls Walter on the walkie.
+> J unfolds the work order. Tasks tick themselves off when the network actually works.
+> At a router or switch, ? lists what you can type next, and Tab finishes the word.
+> The running config is what a device is thinking. The startup config is what it remembers.
+> A cup of coffee at Bob's saves your game.
+> An amber port light means the link is still coming up. Give it a moment.
+> Ctrl+Shift+6 stops a ping on a router. Ctrl+C stops one on a PC.
+> M turns the sound off and on.
+> Once you have the grimoire, G opens it.

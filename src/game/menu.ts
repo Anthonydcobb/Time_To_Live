@@ -1,5 +1,7 @@
 import { audio } from "./audio";
+import { parseLine, renderRuns } from "./markup";
 import { describeSave, readSave, type SaveData } from "./save";
+import { pick } from "./script";
 import { TEXT_SPEEDS, type Ui } from "./ui";
 
 /**
@@ -131,21 +133,42 @@ export function showTitle(ui: Ui): Promise<TitleChoice> {
 /** The ping that runs across the bottom of the loading screen. */
 const PING = ["Type escape sequence to abort.", "Sending 5, 100-byte ICMP Echos to 192.168.1.66, timeout is 2 seconds:"];
 
+/** The posters a loading screen cycles through. Each loading screen starts on the next one. */
+const POSTERS = ["assets/screens/loading.webp", "assets/screens/title.webp", "assets/screens/poster-montage.webp"];
+/** How long each poster holds before it crossfades to the next. */
+const POSTER_MS = 2600;
+let nextPoster = 0;
+/** Which loading tip is next. They come from script/dialogue.md, in order, looping. */
+let nextTip = Math.floor(Math.random() * 100);
+
 /**
- * The loading screen, over everything until `finish` is called. It stays up for at least
- * `minMs` so it reads as a screen rather than a flash.
+ * The loading screen, over everything until `finish` is called: the posters crossfading, a ping
+ * along the bottom and a help tip in the corner. It stays up for at least `minMs`, and `finish`
+ * gives it a beat (the ping completes) before it fades.
  */
-export function showLoading(heading: string, minMs = 1800): { finish(): Promise<void> } {
+export function showLoading(heading: string, minMs = 0): { finish(): Promise<void> } {
   const root = document.createElement("div");
   root.id = "loading";
+  const first = nextPoster++;
+  const posters = POSTERS.map((_, i) => POSTERS[(first + i) % POSTERS.length]);
   root.innerHTML = `
-    <img class="art" src="assets/screens/loading.webp" alt="" />
+    ${posters.map((src, i) => `<img class="art${i === 0 ? " on" : ""}" src="${src}" alt="" />`).join("")}
     <div class="ping" role="status">
-      <p class="head">${heading}</p>
+      <p class="head"></p>
       <p>${PING.join("<br>")}</p>
       <p class="bangs"></p>
-    </div>`;
+    </div>
+    <aside class="tip"><b>TIP</b><span></span></aside>`;
+  root.querySelector(".head")!.textContent = heading;
+  renderRuns(root.querySelector<HTMLElement>(".tip span")!, parseLine(pick("loading-tips", nextTip++)[0]?.text ?? ""));
   document.body.appendChild(root);
+  const arts = Array.from(root.querySelectorAll<HTMLElement>(".art"));
+  let shownArt = 0;
+  const cycle = window.setInterval(() => {
+    arts[shownArt].classList.remove("on");
+    shownArt = (shownArt + 1) % arts.length;
+    arts[shownArt].classList.add("on");
+  }, POSTER_MS);
   const bangs = root.querySelector<HTMLElement>(".bangs")!;
   // A timeout first, then replies, like the first ping after ARP.
   const marks = [".", "!", "!", "!", "!"];
@@ -161,13 +184,15 @@ export function showLoading(heading: string, minMs = 1800): { finish(): Promise<
           () => {
             window.clearInterval(timer);
             bangs.innerHTML = `!!!!!<br>Success rate is 100 percent (5/5), round-trip min/avg/max = 1/3/14 ms`;
+            // A beat on the finished ping, then the fade.
             window.setTimeout(() => {
               root.classList.add("leaving");
               window.setTimeout(() => {
+                window.clearInterval(cycle);
                 root.remove();
                 resolve();
               }, 600);
-            }, 500);
+            }, 900);
           },
           Math.max(0, minMs - (performance.now() - shown)),
         );

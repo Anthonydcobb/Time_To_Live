@@ -6,6 +6,15 @@ Last updated: 2026-10-23.
 
 ## Latest handoff update (2026-10-23, Claude)
 
+- **No more van drive.** Picking a place on the town map closes it and the trip is a
+  loading screen (`Story.travel` → `showLoading`): the posters (`public/assets/screens/`:
+  loading, title, poster-montage; each loading screen starts on the next one and they
+  crossfade every 2.6 s), "WELCOME TO STATIC SPRINGS · POP. n" with the population going
+  up after haunted jobs, the ping, and a tip from `## loading-tips` at the end of
+  `script/dialogue.md`. It lifts a beat after the room emits `room-ready`, and the room's
+  story waits for it (`goto` now carries a `gate`). Poster sketch 4 is left out: its credit
+  block is garbled AI text with a fake Stephen King credit. The van art in
+  `public/assets/ui/van-*.webp` is unused now.
 - **Store notes from Ant, done:** teeth clink against glass when you look at the shelves
   (`audio.teethJar`, procedural); an RJ45 click when a cable goes in or out at a rack
   (`audio.rj45`); job 1's "Work order complete" card is gone; the lights flicker the

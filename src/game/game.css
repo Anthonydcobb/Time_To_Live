@@ -846,6 +846,39 @@ kbd {
   object-position: left center;
 }
 
+/* The loading screen's posters crossfade, one at a time. */
+#loading .art {
+  opacity: 0;
+  transition: opacity 1.2s ease;
+}
+
+#loading .art.on {
+  opacity: 1;
+}
+
+/* A help tip in the bottom-right corner, over the ping band. */
+#loading .tip {
+  position: absolute;
+  right: clamp(16px, 4vw, 56px);
+  bottom: 22px;
+  z-index: 1;
+  max-width: min(420px, 45vw);
+  padding: 10px 14px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--amber);
+  background: #050504e6;
+  color: var(--text);
+  font: 13px/1.5 var(--mono);
+}
+
+#loading .tip b {
+  display: block;
+  margin-bottom: 2px;
+  color: var(--amber);
+  font-weight: normal;
+  letter-spacing: 0.14em;
+}
+
 #title .menu,
 #title .options {
   position: absolute;
@@ -2221,85 +2254,6 @@ body.no-effects #crt {
   #townmap .spot.open {
     animation: none;
   }
-}
-
-/* The B&B van driving across the town map. It's drawn facing left; --face 1 flips it right. */
-#townmap .van {
-  position: absolute;
-  width: 8%;
-  aspect-ratio: 260 / 158;
-  --face: -1;
-  transform: translate(-50%, -78%) scaleX(calc(-1 * var(--face)));
-  pointer-events: none;
-  z-index: 2;
-}
-
-#townmap .van[hidden] {
-  display: none;
-}
-
-#townmap .van img {
-  position: relative;
-  width: 100%;
-  height: 100%;
-  /* A pale rim, like streetlight on the roof, so it reads on the dark road. */
-  filter: drop-shadow(0 0 1px #f0e8d0) drop-shadow(0 0 2px #f0e8d0aa) drop-shadow(0 3px 3px #000a);
-}
-
-#townmap .van.haunted img {
-  filter: brightness(1.35) drop-shadow(0 0 1px #d8c8f0) drop-shadow(0 0 4px #9a5ad8aa) drop-shadow(0 3px 3px #000a);
-}
-
-/* Headlights, thrown ahead of the van's nose. */
-#townmap .van .beams {
-  position: absolute;
-  right: 84%;
-  top: 52%;
-  width: 95%;
-  height: 46%;
-  background: radial-gradient(ellipse at right, #ffe9a088 0%, #ffe9a033 45%, transparent 72%);
-  mix-blend-mode: screen;
-}
-
-#townmap .van.flicker .beams {
-  animation: beams-flicker 1.3s steps(1) infinite;
-}
-
-@keyframes beams-flicker {
-  0%,
-  100% {
-    opacity: 1;
-  }
-  12% {
-    opacity: 0.1;
-  }
-  16% {
-    opacity: 0.9;
-  }
-  54% {
-    opacity: 0.3;
-  }
-  58% {
-    opacity: 1;
-  }
-}
-
-/* The other headlights. There's no car drawn behind them. */
-#townmap .van.follower {
-  z-index: 1;
-  transition: opacity 400ms;
-}
-
-#townmap .van.follower .beams {
-  background: radial-gradient(ellipse at right, #fff2d066 0%, #fff2d022 45%, transparent 70%);
-}
-
-#townmap.in-transit .spot {
-  visibility: hidden;
-}
-
-#townmap.in-transit {
-  cursor: pointer;
 }
 
 #fieldkit .devs {

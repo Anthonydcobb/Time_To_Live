@@ -91,7 +91,8 @@ export class RoomScene extends Phaser.Scene {
     this.load.spritesheet("laundromat-props", "assets/sprites/props/laundromat-props.png", { frameWidth: 48, frameHeight: 64 });
   }
 
-  create(data: { room?: RoomId }): void {
+  /** `gate`: as for the first room, the story waits for it (a trip's loading screen lifting). */
+  create(data: { room?: RoomId; gate?: Promise<void> }): void {
     DIRS.forEach((dir, row) => {
       if (this.anims.exists(`walk-${dir}`)) return;
       this.anims.create({ key: `walk-${dir}`, frames: this.anims.generateFrameNumbers("player", { start: row * 5 + 1, end: row * 5 + 4 }), frameRate: 8, repeat: -1 });
@@ -174,7 +175,7 @@ export class RoomScene extends Phaser.Scene {
     this.keys = kb.addKeys("UP,DOWN,LEFT,RIGHT,W,A,S,D,E,Q", false) as unknown as Keys;
     this.keys = Object.fromEntries(Object.entries(this.keys).map(([k, v]) => [k.toLowerCase(), v])) as Keys;
 
-    const onGoto = (to: RoomId) => this.scene.restart({ room: to });
+    const onGoto = (to: RoomId, gate?: Promise<void>) => this.scene.restart({ room: to, gate });
     const onFlicker = () => this.flicker();
     const onBlackout = () => this.blackout();
     const onLights = () => this.lightsBack();
@@ -201,8 +202,10 @@ export class RoomScene extends Phaser.Scene {
       events.off("open", onOpen);
     });
 
-    const gate = this.first.gate;
+    const gate = data.gate ?? this.first.gate;
     this.first = {};
+    // Built and drawn: a loading screen over it can lift now.
+    events.emit("room-ready", this.room.id);
     const enter = () => {
       this.cameras.main.fadeIn(300);
       this.story.enter(this.room.id);
