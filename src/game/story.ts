@@ -175,6 +175,8 @@ export class Story {
   /** Called when a room finishes loading. */
   enter(room: RoomId): void {
     this.room = room;
+    // The apparition's TV lines and drone hang over the store until you leave it.
+    if (room !== "shop") this.ui.endLinger();
     if (room === "office" && !this.flags.has("intro")) {
       this.flags.add("intro");
       this.ui.say(scene("office-arrive"));
@@ -324,6 +326,7 @@ export class Story {
         return;
       case "shop:shelf1":
       case "shop:shelf2":
+        audio.teethJar();
         ui.say(scene("shelves"));
         return;
       case "shop:jack":
@@ -460,7 +463,10 @@ export class Story {
   /** Q: Walter's hint for wherever you are. */
   callWalter(): void {
     if (!this.flags.has("walkie")) return;
-    this.ui.say(this.wash ? this.laundromatHint(this.wash) : this.storeHint());
+    const lines = this.wash ? this.laundromatHint(this.wash) : this.storeHint();
+    // Over a laptop or PC he comes through on a strip at the top, so you can keep typing.
+    if (this.ui.onScreen) this.ui.radio(lines);
+    else this.ui.say(lines);
   }
 
   /** Walter's hint for job 1, by where you are and the first task that isn't done. */
@@ -506,6 +512,8 @@ export class Story {
 
   /** Watches the network a few times a second and reacts as tasks get done. */
   tick(): void {
+    // Walter's on the radio over a laptop or PC once you have the walkie.
+    this.ui.radioCall = this.flags.has("walkie") ? () => this.callWalter() : null;
     if (this.wash) return this.tickLaundromat(this.wash);
     const done = (id: string) => this.done(id);
     const once = (id: string, lines: Line[]) => {
@@ -527,6 +535,8 @@ export class Story {
   private haunt(): void {
     this.flags.add("haunt");
     const { net, s1 } = this.store;
+    // The last task ticks off and the lights stutter.
+    events.emit("flicker");
     window.setTimeout(() => {
       events.emit("flicker");
       this.phantom.configure(ip("192.168.1.66"), ip("255.255.255.0"), null);
@@ -535,21 +545,7 @@ export class Story {
       this.ui.bindCable(s1.port("FastEthernet0/24"));
       events.emit("haunt");
       this.phantomHellos();
-      this.ui.say(
-        scene("haunt-job1"),
-        () => {
-          this.flags.add("done");
-          const card = this.ui.showCard(
-            `<p class="big">Work order #0001 complete</p>
-             <p>NETWORK HEALTH <b>100%</b></p>
-             <p>CUSTOMER SATISFACTION <b>EXCELLENT</b></p>
-             <p class="vanish">BOUNDARY INTEGRITY <b>99.8%</b></p>`,
-            undefined,
-            4000,
-          );
-          window.setTimeout(() => card.querySelector(".vanish")?.classList.add("gone"), 2500);
-        },
-      );
+      this.ui.say(scene("haunt-job1"), () => this.flags.add("done"));
     }, 1500);
   }
 

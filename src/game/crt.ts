@@ -58,6 +58,13 @@ export const crt = {
     set(m === "soft" ? SOFT : 1);
   },
 
+  /** Holds the haunted look at a level just under the jitter, as the room stays wrong after a scare. */
+  linger(): void {
+    cancelAnimationFrame(anim);
+    mode = "haunted";
+    set(JITTER_ABOVE - 0.1);
+  },
+
   /** Eases the effect out over `ms`: slow to start, slow to finish, so it lingers. */
   fade(ms: number): void {
     cancelAnimationFrame(anim);

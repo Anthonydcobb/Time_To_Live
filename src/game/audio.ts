@@ -20,6 +20,17 @@ const MUSIC: Partial<Record<RoomId, string>> = {
 /** Quiet on purpose: the music sits under the room's hum and flickers, not over them. */
 const MUSIC_LEVEL = 0.1;
 
+/** An RJ45 plug clicking into a port, or (lower and slower) out of one. */
+const RJ45 = "assets/sound/ui/rj45-click.mp3";
+const RJ45_LEVEL = 0.5;
+
+/** A low drone under the store after the apparition, until you leave. Starts 2 s into the source. */
+const LINGER = "assets/sound/shop/after-apparition-drone-loop.mp3";
+const LINGER_LEVEL = 0.12;
+
+/** The fluorescent hum under every room. Kept low: it's felt more than heard. The store's tubes are a little louder. */
+const HUM_LEVEL = 0.013;
+
 /** Soft key clicks that loop under dialogue while it types out. */
 const TYPING = "assets/sound/ui/dialogue-typing-loop.mp3";
 const TYPING_LEVEL = 0.5;
@@ -55,6 +66,7 @@ class GameAudio {
   private radio: { stop(): void } | null = null;
   private music: { url: string; stop(): void } | null = null;
   private typist: { stop(): void } | null = null;
+  private lingering: { stop(): void } | null = null;
   private tracks = new Map<string, Promise<AudioBuffer>>();
   private lastUpdate = 0;
   private pos = { x: 0, y: 0 };
@@ -271,6 +283,78 @@ class GameAudio {
       .catch(() => {});
   }
 
+  /** A cable going into a port at the rack, or coming out. */
+  rj45(plugIn: boolean): void {
+    this.oneShot(RJ45, plugIn ? RJ45_LEVEL : RJ45_LEVEL * 0.7, plugIn ? 1 : 0.8);
+  }
+
+  /** Teeth rattling against the glass of their jar: three small clinks, never quite the same. */
+  teethJar(): void {
+    const ctx = this.ctx;
+    if (!ctx) return;
+    const t0 = ctx.currentTime;
+    [0, 0.11, 0.27].forEach((at, i) => {
+      const t = t0 + at + Math.random() * 0.03;
+      const level = 0.05 * (1 - i * 0.25);
+      // Glass rings at a few high, unrelated pitches that die away fast.
+      for (const f of [2350, 3870, 5610]) {
+        const o = ctx.createOscillator();
+        o.frequency.value = f * (0.96 + Math.random() * 0.08);
+        const g = ctx.createGain();
+        g.gain.setValueAtTime(level, t);
+        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.18 + Math.random() * 0.1);
+        o.connect(g).connect(this.master);
+        o.start(t);
+        o.stop(t + 0.35);
+      }
+      // The tick of a tooth hitting it.
+      const src = this.noiseSource();
+      const hp = ctx.createBiquadFilter();
+      hp.type = "highpass";
+      hp.frequency.value = 4000;
+      const g = ctx.createGain();
+      g.gain.setValueAtTime(level * 1.5, t);
+      g.gain.exponentialRampToValueAtTime(0.0001, t + 0.02);
+      src.connect(hp).connect(g).connect(this.master);
+      src.start(t);
+      src.stop(t + 0.05);
+    });
+  }
+
+  /** The drone that hangs over the store after the apparition. Off fades it out. */
+  linger(on: boolean): void {
+    const ctx = this.ctx;
+    if (!ctx || on === !!this.lingering) return;
+    if (!on) {
+      this.lingering?.stop();
+      this.lingering = null;
+      return;
+    }
+    const gain = ctx.createGain();
+    gain.gain.value = 0;
+    gain.connect(this.musicBus);
+    let src: AudioBufferSourceNode | null = null;
+    let stopped = false;
+    this.lingering = {
+      stop: () => {
+        stopped = true;
+        gain.gain.setTargetAtTime(0, ctx.currentTime, 0.8);
+        src?.stop(ctx.currentTime + 4);
+      },
+    };
+    this.load(LINGER)
+      .then((buffer) => {
+        if (stopped) return;
+        src = ctx.createBufferSource();
+        src.buffer = buffer;
+        src.loop = true;
+        src.connect(gain);
+        src.start();
+        gain.gain.setTargetAtTime(LINGER_LEVEL, ctx.currentTime, 1.5);
+      })
+      .catch(() => {});
+  }
+
   /** Gary bangs on his door as you start talking to him. */
   garyBang(): void {
     this.oneShot(GARY_BANG, GARY_BANG_LEVEL);
@@ -279,13 +363,14 @@ class GameAudio {
   // ---- building blocks -------------------------------------------------------
 
   /** Plays a sound file once. A missing file is silence. */
-  private oneShot(url: string, level: number): void {
+  private oneShot(url: string, level: number, rate = 1): void {
     const ctx = this.ctx;
     if (!ctx) return;
     this.load(url)
       .then((buffer) => {
         const src = ctx.createBufferSource();
         src.buffer = buffer;
+        src.playbackRate.value = rate;
         const gain = ctx.createGain();
         gain.gain.value = level;
         src.connect(gain).connect(this.master);
@@ -429,7 +514,7 @@ class GameAudio {
   /** The store: hum, the fridges' low rustle, and whispers that come from their direction. */
   private shopAmbience(): Ambience {
     const ctx = this.ctx!;
-    const hum = this.hum(0.035);
+    const hum = this.hum(HUM_LEVEL * 1.15);
     // Low breathy rustle, slowly swelling.
     const src = this.noiseSource();
     const bp = ctx.createBiquadFilter();
@@ -495,7 +580,7 @@ class GameAudio {
   /** Bob's office: hum, and a low throb behind Gary's door that grows as you walk up to it. */
   private officeAmbience(): Ambience {
     const ctx = this.ctx!;
-    const hum = this.hum(0.03);
+    const hum = this.hum(HUM_LEVEL);
     const throb = ctx.createGain();
     throb.gain.value = 0;
     const o = ctx.createOscillator();

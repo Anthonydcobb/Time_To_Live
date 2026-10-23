@@ -6,6 +6,16 @@ Last updated: 2026-10-23.
 
 ## Latest handoff update (2026-10-23, Claude)
 
+- **Store notes from Ant, done:** teeth clink against glass when you look at the shelves
+  (`audio.teethJar`, procedural); an RJ45 click when a cable goes in or out at a rack
+  (`audio.rj45`); job 1's "Work order complete" card is gone; the lights flicker the
+  moment the last task ticks off; after the apparition the CRT lines hold (`crt.linger`)
+  and a low drone loops (`audio.linger`) until you leave the store (`Ui.endLinger` from
+  `Story.enter`). The hum is quieter (`HUM_LEVEL`).
+- **Walter's help over a laptop or PC:** work order tasks now say what to do, not which
+  commands; the commands are in Walter's hints. F1, or the Radio Walter button that shows
+  while a laptop, PC or printer is open, gets the hint for the first unfinished task in a
+  strip over the screen (`Ui.radio`), so you can keep typing. Q still works away from screens.
 - **Title, options, loading and saving.** The game opens on a title screen (`menu.ts`, art
   `public/assets/screens/title.webp` from `art/concepts/title-screen/poster-sketch-1`) with
   New Game, Load Game and Options (music and sound volume, text speed, screen effects; kept
@@ -36,9 +46,11 @@ Last updated: 2026-10-23.
   Claude and pushed. A bundle survives a dead member (`(P)`/`(D)`), STP sees one `Po`,
   non-forming pairs are `(I)`/`Po(SD)`, the misconfig guard defaults on, the L3 switch
   takes `ip route`, routed ports print `no switchport`, and routed Port-channels work.
-  `channel-group` now lives on the interface config, not the switchport. Open question:
-  `channelMemberState` returns `(s)` for LACP facing PAgP; real IOS probably shows
-  stand-alone `(I)` there, since neither side negotiates. Check in CML.
+  `channel-group` now lives on the interface config, not the switchport. The LACP/PAgP
+  mismatch question is resolved in sim commit aabaeb5: Cisco IOS 15 docs say the
+  protocols are incompatible, and the live PT rerun showed `Po1(SD)` with `(I)` on
+  both ends after 35 seconds for bundling and STP. The sim now reports the same. PT is not IOS authority;
+  an exact IOS 15/CML status capture remains desirable when CML is available.
 - **Walter's walkie** squelches open once when he starts talking and closes (longer
   tail, falling chirp) when another speaker, the end of the talk or a screen takes over,
   instead of keying per line (`audio.walkie`, `Ui.advance`).

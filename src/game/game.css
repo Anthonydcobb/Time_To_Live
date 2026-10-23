@@ -2959,3 +2959,53 @@ body.crt-jitter #stage {
   font-size: 13px;
   animation: wo-toast 3.5s ease-out forwards;
 }
+
+/* ---- Walter on the radio over a laptop or PC (Ui.radio) ----------------------- */
+
+#radio-call {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  padding: 6px 12px;
+  border: 1px solid #4cff7a55;
+  background: #050504e6;
+  color: var(--green);
+  font: 13px var(--mono);
+  letter-spacing: 0.06em;
+  cursor: pointer;
+}
+
+#radio-call kbd {
+  color: var(--amber);
+  font: inherit;
+}
+
+#radio {
+  position: fixed;
+  top: 48px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 30;
+  width: min(720px, calc(100vw - 32px));
+  padding: 10px 16px 12px;
+  border: 1px solid var(--line);
+  border-left: 3px solid var(--amber);
+  background: #0b0c0af2;
+  box-shadow: 0 6px 24px #000a;
+  cursor: pointer;
+}
+
+#radio .who {
+  margin: 0 0 4px;
+  color: var(--amber);
+  font: 12px var(--mono);
+  letter-spacing: 0.12em;
+}
+
+#radio-line {
+  margin: 0;
+  color: var(--green);
+  font: 15px/1.45 var(--mono);
+}

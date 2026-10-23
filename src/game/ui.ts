@@ -176,6 +176,9 @@ export class Ui {
     window.addEventListener("keydown", (e) => this.onKey(e), true);
     $("panel-close").addEventListener("click", () => this.closePanel());
     $("laptop-close").addEventListener("click", () => this.closeLaptop());
+    // Don't take focus on click, so the terminal you're typing in keeps the keyboard.
+    $("radio-call").addEventListener("mousedown", (e) => e.preventDefault());
+    $("radio-call").addEventListener("click", () => this.radioCall?.());
     window.addEventListener("resize", () => {
       if (this.pcScreen.isOpen) this.pcScreen.resize();
       else if (this.laptopScreen.isOpen) this.laptopScreen.resize();
@@ -521,6 +524,12 @@ export class Ui {
   /** Redraws the port lights. Called a few times a second. */
   refresh(): void {
     if (this.panelOpen) this.updatePanel();
+    $("radio-call").hidden = !this.radioCall || !this.onScreen;
+    if (!this.onScreen && !$("radio").hidden) {
+      $("radio").hidden = true;
+      audio.typing(false);
+      audio.walkie(false);
+    }
   }
 
   /** Builds a button per port once; `updatePanel` keeps their lights current. */
@@ -584,9 +593,11 @@ export class Ui {
       if (this.holding) return this.flash("You're already holding a cable.");
       this.holding = p.peer;
       this.net.disconnect(p);
+      audio.rj45(false);
     } else if (this.holding) {
       try {
         this.net.connect(this.holding, p);
+        audio.rj45(true);
         this.holding = null;
       } catch (e) {
         if (e instanceof CableError) return this.flash(e.message);
@@ -658,11 +669,74 @@ export class Ui {
   apparition(then?: () => void): void {
     crt.on("haunted");
     apparition(() => {
-      // The screen doesn't snap back: the CRT look lingers while you walk around again.
-      crt.fade(8000);
+      // The screen doesn't snap back: the TV lines and a low drone stay until you leave the room.
+      crt.linger();
+      audio.linger(true);
+      this.lingering = true;
       this.closedAt = performance.now();
       then?.();
     }, this.beingStage);
+  }
+
+  /** Whether the room is still wrong after an apparition. */
+  private lingering = false;
+
+  /** Leaving the room lets the screen and the drone settle. */
+  endLinger(): void {
+    if (!this.lingering) return;
+    this.lingering = false;
+    crt.fade(4000);
+    audio.linger(false);
+  }
+
+  // ---- Walter on the radio over a laptop or PC --------------------------------
+
+  /** What F1 or the Radio Walter button does; the story sets it. Null hides the button. */
+  radioCall: (() => void) | null = null;
+  private radioTyper = 0;
+  private radioWait = 0;
+
+  /** Whether a laptop, PC or printer screen is open, where Q would type instead of calling Walter. */
+  get onScreen(): boolean {
+    return !!this.screen || this.pcScreen.isOpen || this.laptopScreen.isOpen;
+  }
+
+  /** Walter's lines in a strip over the open screen, one after another, so you can keep typing. */
+  radio(lines: Line[]): void {
+    const box = $("radio");
+    const el = $("radio-line");
+    window.clearInterval(this.radioTyper);
+    window.clearTimeout(this.radioWait);
+    audio.walkie(true);
+    let i = 0;
+    const next = () => {
+      window.clearInterval(this.radioTyper);
+      window.clearTimeout(this.radioWait);
+      const line = lines[i++];
+      if (!line) {
+        box.hidden = true;
+        audio.typing(false);
+        audio.walkie(false);
+        return;
+      }
+      box.hidden = false;
+      const runs = parseLine(line.text);
+      const length = visibleLength(runs);
+      let typed = 0;
+      renderRuns(el, runs, 0);
+      audio.typing(true);
+      this.radioTyper = window.setInterval(() => {
+        typed += 2;
+        renderRuns(el, runs, typed);
+        if (typed < length) return;
+        window.clearInterval(this.radioTyper);
+        audio.typing(false);
+        // Long enough to read, then the next line, or the radio goes quiet.
+        this.radioWait = window.setTimeout(next, Math.max(4000, length * 60));
+      }, this.typeMs);
+    };
+    box.onclick = next;
+    next();
   }
 
   /** Shows a message in place of the usual hint until the next click. */

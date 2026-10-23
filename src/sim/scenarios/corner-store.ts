@@ -77,27 +77,27 @@ export function cornerStore({ cabled = true } = {}) {
     // On each, identity and security come before interfaces.
     {
       id: "r1-name",
-      text: "Router: name it R1 with hostname.",
+      text: "Router: name it R1.",
       done: () => r1.hostname === "R1",
     },
     {
       id: "r1-secret",
-      text: "Router: lock privileged mode with an enable secret.",
+      text: "Router: lock privileged mode with a secret.",
       done: () => r1.config.enableSecret !== null,
     },
     {
       id: "r1-console",
-      text: "Router: password-protect the console (line console 0, password, login).",
+      text: "Router: password-protect the console.",
       done: () => consoleLocked(r1),
     },
     {
       id: "router",
-      text: "Router: give Gi0/0 the address 192.168.1.1 255.255.255.0 and turn it on with no shutdown.",
+      text: "Router: give Gi0/0 the address 192.168.1.1 255.255.255.0 and turn it on.",
       done: () => g00().ip === R1 && g00().mask === MASK && r1.port("Gi0/0").protocolUp,
     },
     {
       id: "r1-save",
-      text: "Router: save it with copy running-config startup-config.",
+      text: "Router: save the configuration so it survives a reboot.",
       // The saved config has to hold the router's setup, so saving too early doesn't count.
       done: () => {
         const s = r1.startup;
@@ -107,22 +107,22 @@ export function cornerStore({ cabled = true } = {}) {
     },
     {
       id: "s1-name",
-      text: "Switch: name it S1 with hostname.",
+      text: "Switch: name it S1.",
       done: () => s1.hostname === "S1",
     },
     {
       id: "s1-secret",
-      text: "Switch: lock privileged mode with an enable secret.",
+      text: "Switch: lock privileged mode with a secret.",
       done: () => s1.config.enableSecret !== null,
     },
     {
       id: "s1-console",
-      text: "Switch: password-protect the console (line console 0, password, login).",
+      text: "Switch: password-protect the console.",
       done: () => consoleLocked(s1),
     },
     {
       id: "s1-save",
-      text: "Switch: save it with copy running-config startup-config.",
+      text: "Switch: save the configuration so it survives a reboot.",
       done: () => {
         const s = s1.startup;
         return !!s && s.hostname === "S1" && s.enableSecret !== null && lineLocked(s.con);

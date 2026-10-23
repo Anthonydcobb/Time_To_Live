@@ -120,6 +120,11 @@ stub.addEventListener("click", () => unfold(body.hidden));
 window.addEventListener("keydown", (e) => {
   if ((e.key === "j" || e.key === "J") && !ui.typing) unfold(body.hidden);
   if ((e.key === "m" || e.key === "M") && !ui.typing) audio.toggleMute();
+  // F1 radios Walter for a hint, even from a laptop or PC where Q would just type a q.
+  if (e.key === "F1") {
+    e.preventDefault();
+    story.callWalter();
+  }
   // The book eats its own keys (G closes it), so only a G nobody else used opens it.
   if ((e.key === "g" || e.key === "G") && !e.defaultPrevented && !ui.busy) story.openGrimoire();
 });
