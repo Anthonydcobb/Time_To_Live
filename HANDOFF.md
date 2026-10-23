@@ -286,3 +286,5 @@ Phase 2 is the vertical slice. Ant picked 16 px art (drawn at 4x) and Phaser on 
 | 7 | Community radio station | NAT/PAT, wireless |
 | 8 | Hospital | Port security, HSRP, syslog/NTP |
 | 9 | The Void-View Hotel | Everything, IPv6, fixing someone else's broken network |
+
+The VLAN plan for each site from job 3 on, and where subnetting and VLSM come in (equal subnets at job 3, VLSM at job 5), are in `docs/site-networks.md`.
