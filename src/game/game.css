@@ -790,14 +790,6 @@ kbd {
   color: var(--dim);
 }
 
-#card .vanish {
-  transition: opacity 1.6s;
-}
-
-#card .vanish.gone {
-  opacity: 0;
-}
-
 #card {
   z-index: 10;
 }
