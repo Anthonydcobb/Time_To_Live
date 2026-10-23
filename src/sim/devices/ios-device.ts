@@ -94,6 +94,8 @@ export abstract class IosDevice extends Device {
   /** The header times as they were when startup-config was written. */
   startupStamps: { changed: number | null; nvram: number | null } = { changed: null, nvram: null };
   readonly cdpNeighbors = new Map<Port, CdpNeighbor>();
+  /** Last native-VLAN warning per local port, so repeated CDP frames do not spam the log. */
+  private readonly cdpNativeVlanMismatchAt = new Map<Port, number>();
   readonly lldpNeighbors = new Map<Port, LldpNeighbor>();
   /** Recent IOS messages retained by the local log buffer. */
   readonly logBuffer: string[] = [];
@@ -300,7 +302,13 @@ export abstract class IosDevice extends Device {
     });
     const ours = this.cdpNativeVlan(port);
     if (p.nativeVlan !== undefined && ours !== undefined && p.nativeVlan !== ours) {
-      this.emit(`%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on ${port.name} (${ours}), with ${p.deviceId} ${p.portId} (${p.nativeVlan}).`);
+      const last = this.cdpNativeVlanMismatchAt.get(port);
+      if (last === undefined || this.clock.now - last >= CDP_INTERVAL_MS) {
+        this.cdpNativeVlanMismatchAt.set(port, this.clock.now);
+        this.emit(`%CDP-4-NATIVE_VLAN_MISMATCH: Native VLAN mismatch discovered on ${port.name} (${ours}), with ${p.deviceId} ${p.portId} (${p.nativeVlan}).`);
+      }
+    } else {
+      this.cdpNativeVlanMismatchAt.delete(port);
     }
     return true;
   }
@@ -371,6 +379,7 @@ export abstract class IosDevice extends Device {
     this.afterReload();
     this.dirty = false;
     this.configChangedAt = null;
+    this.cdpNativeVlanMismatchAt.clear();
     for (const p of this.ports) this.network?.refresh(p);
   }
 

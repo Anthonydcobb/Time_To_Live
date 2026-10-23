@@ -53,6 +53,26 @@ describe("interface status", () => {
   });
 });
 
+describe("VLAN show commands", () => {
+  it("prints IOS 15 table and detail layouts for show vlan and show vlan id", () => {
+    const { s1 } = oneSwitch();
+    type(s1, "vlan 10", "name STAFF", "exit", "int fa0/1", "switchport access vlan 10", "end");
+    const all = type(s1, "show vlan");
+    expect(all).toContain("VLAN Name                             Status    Ports");
+    expect(all).toContain("VLAN Type  SAID       MTU   Parent RingNo BridgeNo Stp  BrdgMode Trans1 Trans2");
+    const one = type(s1, "show vlan id 10");
+    expect(one).toEqual([
+      "VLAN Name                             Status    Ports",
+      "---- -------------------------------- --------- -------------------------------",
+      "10   STAFF                            active    Fa0/1",
+      "",
+      "VLAN Type  SAID       MTU   Parent RingNo BridgeNo Stp  BrdgMode Trans1 Trans2",
+      "---- ----- ---------- ----- ------ ------ -------- ---- -------- ------ ------",
+      "10   enet  100010     1500  -      -      -        -    -        0      0   ",
+    ]);
+  });
+});
+
 describe("interface ranges", () => {
   it("applies switchport commands to every selected port", () => {
     const { s1 } = oneSwitch();
@@ -300,6 +320,15 @@ describe("DTP", () => {
     const { s1 } = oneSwitch();
     expect(type(s1, "int fa0/1", "switchport nonegotiate")).toEqual(["Command rejected: Conflict between 'nonegotiate' and 'dynamic' status on this interface: Fa0/1"]);
   });
+
+  it("keeps access/desirable and nonegotiate/desirable out of negotiated trunking", () => {
+    const access = twoSwitches("switchport mode access", "switchport mode dynamic desirable");
+    expect(access.a.operationalMode(access.ga)).toBe("access");
+    expect(access.b.operationalMode(access.gb)).toBe("access");
+    const nonegotiate = twoSwitches("switchport mode trunk;switchport nonegotiate", "switchport mode dynamic desirable");
+    expect(nonegotiate.a.operationalMode(nonegotiate.ga)).toBe("trunk");
+    expect(nonegotiate.b.operationalMode(nonegotiate.gb)).toBe("access");
+  });
 });
 
 describe("trunks", () => {
@@ -331,6 +360,22 @@ describe("trunks", () => {
       "Gi0/1       1,10",
       "",
     ]);
+  });
+
+  it("logs a native VLAN mismatch on both ends once per CDP interval", () => {
+    const t = twoSwitches("switchport mode trunk", "switchport mode trunk;switchport trunk native vlan 99");
+    const a = captureLogs(t.a);
+    const b = captureLogs(t.b);
+    t.net.clock.advance(60_000);
+    const mismatch = "%CDP-4-NATIVE_VLAN_MISMATCH";
+    expect(a.filter((line) => line.includes(mismatch))).toHaveLength(1);
+    expect(b.filter((line) => line.includes(mismatch))).toHaveLength(1);
+    t.net.clock.advance(50_000);
+    expect(a.filter((line) => line.includes(mismatch))).toHaveLength(1);
+    expect(b.filter((line) => line.includes(mismatch))).toHaveLength(1);
+    t.net.clock.advance(10_000);
+    expect(a.filter((line) => line.includes(mismatch))).toHaveLength(2);
+    expect(b.filter((line) => line.includes(mismatch))).toHaveLength(2);
   });
 
   it("drops a VLAN the trunk doesn't allow", () => {

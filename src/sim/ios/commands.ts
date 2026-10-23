@@ -1450,6 +1450,7 @@ const switchCommands: Entry[] = [
   ),
 
   cmd(EXEC, [SHOW, kw("vlan", "VTP VLAN status")], (c) => c.out.push(...show.showVlan(sw(c))), { devices: ["switch"] }),
+  cmd(EXEC, [SHOW, kw("vlan", "VTP VLAN status"), kw("id", "VLAN ID"), numArg(1, 4094, "VLAN ID")], (c, [id]) => c.out.push(...show.showVlanId(sw(c), id as number)), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("vtp", "VTP information"), kw("status", "VTP domain status")], (c) => c.out.push(...show.showVtpStatus(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("dhcp", "DHCP information"), kw("snooping", "DHCP snooping status"), kw("binding", "DHCP snooping bindings")], (c) => c.out.push(...show.showIpDhcpSnoopingBinding(sw(c))), { devices: ["switch"] }),
   cmd(EXEC, [SHOW, kw("ip", "IP information"), kw("dhcp", "DHCP information"), kw("snooping", "DHCP snooping status"), kw("statistics", "DHCP snooping statistics")], (c) => c.out.push(...show.showIpDhcpSnoopingStatistics(sw(c))), { devices: ["switch"] }),

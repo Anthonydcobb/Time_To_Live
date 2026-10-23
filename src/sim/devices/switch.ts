@@ -245,11 +245,15 @@ export class Switch extends IosDevice {
     if (!port.protocolUp) return "down";
     if (!this.config.interfaces[port.name].switchport) return "down";
     const ours = this.switchport(port);
-    if (ours.mode === "access" || ours.mode === "trunk") return ours.mode;
+    // A static access port always wins over DTP: a desirable peer remains
+    // static access instead of turning the link into a negotiated trunk.
+    if (ours.mode === "access") return "access";
+    if (ours.mode === "trunk") return "trunk";
     const peer = port.peer;
     const theirs = peer && peer.device instanceof Switch ? peer.device.config.interfaces[peer.name]?.switchport : undefined;
     // A port with nonegotiate never sends DTP, so the dynamic side never hears an offer.
-    if (!theirs || theirs.nonegotiate) return "access";
+    // `nonegotiate` suppresses the offer, so a dynamic peer also stays access.
+    if (!theirs || theirs.nonegotiate || theirs.mode === "access") return "access";
     if (theirs.mode === "trunk" || theirs.mode === "dynamic desirable") return "trunk";
     if (theirs.mode === "dynamic auto" && ours.mode === "dynamic desirable") return "trunk";
     return "access";

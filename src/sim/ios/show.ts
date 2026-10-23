@@ -946,6 +946,26 @@ export function showVlan(sw: Switch): string[] {
   return out;
 }
 
+/** `show vlan id N` prints the selected VLAN's table row and detail record. */
+export function showVlanId(sw: Switch, id: number): string[] {
+  const name = sw.vlans.get(id);
+  if (name === undefined) return [`% VLAN id ${id} not found in current VLAN database`];
+  const portNames = sw.ports
+    .filter((p) => sw.operationalMode(p) !== "trunk" && sw.config.interfaces[p.name].switchport?.accessVlan === id)
+    .map((p) => p.shortName);
+  const out = [
+    "VLAN Name                             Status    Ports",
+    "---- -------------------------------- --------- -------------------------------",
+    `${String(id).padEnd(5)}${name.padEnd(33)}${(UNSUPPORTED_VLANS.has(id) ? "act/unsup" : "active").padEnd(10)}${portNames.join(", ")}`,
+    "",
+    "VLAN Type  SAID       MTU   Parent RingNo BridgeNo Stp  BrdgMode Trans1 Trans2",
+    "---- ----- ---------- ----- ------ ------ -------- ---- -------- ------ ------",
+  ];
+  const [type, stp] = VLAN_TYPES[id] ?? ["enet", "-"];
+  out.push(`${String(id).padEnd(5)}${type.padEnd(6)}${String(100000 + id).padEnd(11)}1500  -      -      -        ${stp.padEnd(5)}-        0      0   `);
+  return out;
+}
+
 export function showInterfacesTrunk(sw: Switch): string[] {
   const trunks = sw.ports.filter((p) => sw.operationalMode(p) === "trunk");
   if (!trunks.length) return [];
