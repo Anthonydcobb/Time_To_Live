@@ -30,6 +30,10 @@ export const NOTES: Record<string, Note> = {
   "gus-log": { kind: "card", from: "Gus's shift log, newest entry", text: "DRYER 4 WON'T STOP ASKING FOR AN ADDRESS.\n0.0.0.0" },
   "lostfound": { kind: "polaroid", from: "Lost & found, Spin Cycle Eternal", text: "this room. from inside." },
   "guestbook": { kind: "scrap", from: "Restroom guest book", text: "Gus. Gus. Gus. Gus. Gus. Gus. Gus. Gus. Gus. Gus." },
+  "wo3-pen": { kind: "scrap", from: "Work order #0003, in pen", text: "Front desk and X-ray never share a network. Dr. Marrow was very clear." },
+  "den-book": { kind: "card", from: "Appointment book, Marrow Family Dentistry", text: "Every slot after 6 PM is full.\nEvery name is in the same handwriting.\nThe last one is yours." },
+  "den-jars": { kind: "card", from: "Shelf label, the packing room", text: "SPARES. SORTED BY OWNER.\nDO NOT MIX." },
+  "den-crates": { kind: "scrap", from: "Shipping label, the packing room", text: "QUIK-STOP FOREVER. ATTN: MRS. FINCH. FRAGILE. KEEP COOL." },
 };
 
 interface Ritual {
@@ -105,6 +109,34 @@ const RITUALS: Ritual[] = [
     lines: ["show ip dhcp binding"],
     margin: "Count the leases. Count them again. There is never a lease for .0.",
   },
+  {
+    job: "0003",
+    name: "Dividing the House",
+    what: "VLANs on a switch",
+    lines: ["vlan 10", " name STAFF", "vlan 20", " name XRAY", "interface fa0/3", " switchport mode access", " switchport access vlan 20"],
+    margin: "One switch, two houses. What lives in one cannot hear the other. It can still feel it through the wall.",
+  },
+  {
+    job: "0003",
+    name: "The Carrying Line",
+    what: "a trunk",
+    lines: ["interface gi0/1", " switchport mode trunk", "show interfaces trunk"],
+    margin: "A trunk carries every house at once, each frame marked with where it belongs. Check the marks.",
+  },
+  {
+    job: "0003",
+    name: "The Router on a Stick",
+    what: "subinterfaces, one per VLAN",
+    lines: ["interface gi0/0.20", " encapsulation dot1Q 20", " ip address 192.168.20.1 255.255.255.0"],
+    margin: "One cable, many doors. The router stands at every one of them and lets the houses speak.",
+  },
+  {
+    job: "0003",
+    name: "Counting the Houses",
+    what: "which VLANs exist",
+    lines: ["show vlan brief"],
+    margin: "Count the houses. You built two. The defaults are always there. There should be nothing else.",
+  },
 ];
 
 /** What happened on each job, for its page in the site logs. */
@@ -116,6 +148,10 @@ const LOGS: Record<string, { did: string; odd: string }> = {
   "0002": {
     did: "Woke Gi0/0, fenced off .1 to .20, opened a pool. The printer holds .5. The kiosk and office PC asked and were answered.",
     odd: "show ip dhcp binding listed a third lease for a few seconds: 192.168.20.0, a dryer's MAC, expiring Oct 14 1974. You can't lease .0.",
+  },
+  "0003": {
+    did: "Made VLAN 10 (STAFF) and VLAN 20 (XRAY), trunked S1 to R1, gave R1 a subinterface and a pool for each. The front desk pinged the X-ray through the router.",
+    odd: "show vlan brief listed VLAN 1974 for a few seconds: active, no ports, and nobody made it. Then the packing room door was open.",
   },
 };
 

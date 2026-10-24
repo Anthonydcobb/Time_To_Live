@@ -28,7 +28,7 @@ How it reads:
 - `## scene-name` starts a scene. The game asks for scenes by these names, so rewrite the lines
   as much as you like but leave the names alone. `npm test` says if one goes missing.
 - `WALTER: text` is a spoken line. WALTER and GARY get their "(walkie)" and "(through the door)"
-  tags on screen automatically. Other speakers: MRS. FINCH, GUS, SIMONE.
+  tags on screen automatically. Other speakers: MRS. FINCH, GUS, DR. MARROW, SIMONE.
 - `MRS. FINCH (paranoid): text` picks a mood for the portrait: calm, paranoid or frantic.
 - `> text` is narration, with no speaker.
 - Names work in any case: `Walter:` and `WALTER:` are the same.
@@ -117,6 +117,12 @@ WALTER: And whatever you hear behind that locked door, you do NOT open it. Not t
 > Everything is cabled. The PCs are set to get an address automatically, but nothing on the router is set up to give them one.
 > Someone has added in pen: Dryer 4 is not a customer.
 
+## board-wo3
+(The job board, once you have the grimoire.)
+> WORK ORDER #0003. Marrow Family Dentistry, on the shopfront row past the Quik-Stop. Dr. Ilse Marrow, DDS. Evening appointments only.
+> Everything is cabled and set to get an address automatically. The X-ray room must not share a network with the front desk. Nothing is configured.
+> Someone has added in pen: Front desk and X-ray never share a network. Dr. Marrow was very clear.
+
 ## gary-meet
 (Knocking on the locked door the first time.)
 > You knock. Something on the other side stands up from a very comfortable chair.
@@ -192,6 +198,13 @@ GARY: Did Dryer 4 get an address? I hope it did. Everybody should have somewhere
 WALTER: Kid. Before you clock out. Two jobs means you've earned the book.
 WALTER: Bob's desk, bottom drawer. Every tech gets a *grimoire* sooner or later. The incantations are all in it, and whatever you pick up out there goes in it too.
 WALTER: Don't let it read you first. Over.
+
+## home-job3
+(Walking back into the office after the dentist's.)
+WALTER: Three for three, kid! Bob's going to want you on the payroll. Bob's going to want you.
+GARY: Did you floss? You should always floss after a dentist. Even if you only did their network.
+WALTER: Gary, nobody asked. ...Kid, did the switch show you anything funny? A number that wasn't ours?
+WALTER: Don't answer that over the radio. Over.
 
 ## grimoire-drawer
 (Bob's desk once Walter has told you about the book.)
@@ -394,6 +407,116 @@ WALTER: One more thing before you go. On the router: show ip dhcp binding. Make 
 WALTER: Kid? Was there a third line on that list just now? Point zero. You can't lease point zero. That's the *network*.
 WALTER: ...No. Two PCs, two leases. That's what the paperwork says, so that's what happened. Ticket's DONE. Tell Gus and come on home. Over.
 
+# Job 3: Marrow Family Dentistry
+
+## den-arrive
+WALTER: Marrow Family Dentistry. Open evenings only. Dr. Marrow says the light's better. There are no windows in the cleaning rooms.
+WALTER: Here's the job. The front desk and the X-ray room can't share a network. Same switch, two networks. That's a VLAN: a fence inside the switch.
+WALTER: Rack's in the networking closet, back left, next to the packing room. Don't go in the packing room. It's locked anyway. Over.
+
+## marrow-meet
+DR. MARROW: You're from Bob's. Good. Come in. Don't touch anything that's been sterilized.
+DR. MARROW: The front desk, billing, and the panoramic X-ray. The X-ray must be kept apart from the others. Patient images are private.
+DR. MARROW: Your equipment is in the closet at the end of the hall. The door beside it stays shut. That's where I keep the spares.
+DR. MARROW: Smile. It helps.
+
+## marrow-idle
+(Idle chatter: one line each time you talk to her, looping.)
+DR. MARROW: Twenty-eight teeth. Thirty-two, if you count the ones that come in late. I always count them.
+DR. MARROW: My patients never cancel. They come in the evening. They wait very quietly.
+DR. MARROW: You have lovely enamel. That's not a compliment. It's an observation.
+DR. MARROW: Mrs. Finch is one of my oldest customers. She buys in bulk.
+
+## marrow-haunted
+DR. MARROW: The packing room door is open? Then you've seen the spares. Everyone has spares. Mine are simply better organized.
+DR. MARROW: Thank you for your work. The networks are separate now. Mostly.
+
+## den-rack
+(Shown above the rack's choices.)
+> The closet rack. A router, a switch, and a patch panel labeled in a careful hand: FRONT. BILLING. X-RAY. One port is labeled with a small drawing of a tooth.
+
+## packdoor-locked
+> A heavy door, painted the same white as the walls. PACKING. STAFF ONLY. It's locked, and it's cold to the touch.
+
+## den-jars
+(The packing room, after the haunt.)
+> Shelf after shelf of jars, every one full of teeth. Each jar has a label in Dr. Marrow's careful hand.
+> SPARES. SORTED BY OWNER. DO NOT MIX.
+#if walkie
+#goto den-jars-walter
+#end
+
+## den-jars-walter
+WALTER: Kid, I'm going to say this once. We're network people. We don't count other people's teeth. Over.
+
+## den-crates
+> Crates, packed in straw and stacked by the back door. The shipping labels all say the same thing.
+> QUIK-STOP FOREVER. ATTN: MRS. FINCH. FRAGILE. KEEP COOL.
+
+## den-packer
+> A packing machine, the kind that seals jars. Its tray is full of tiny lids. There's a chair behind it, worn smooth, facing the jars.
+
+## den-bench
+> A workbench with tweezers, a jeweler's loupe and a ledger. Every line in the ledger is a name and a number. The numbers never go above thirty-two.
+
+## den-server
+> The imaging server. A sticker on the side: X-RAY ONLY. DO NOT NETWORK WITH FRONT DESK. It hums a little lower than the rack does.
+
+## den-lightbox
+> X-rays clipped to the lightbox: jaws, front and side. Every one is labeled with tonight's date.
+
+## den-lightbox-haunted
+> The X-rays on the lightbox have changed. Same jaws. More teeth. One film is just static, and it's labeled with your name.
+
+## den-oppc
+> An operatory PC. Its cable is coiled on the desk, unplugged. A note on the screen: NOT ON THE NETWORK. PATIENTS ONLY.
+
+## den-chair
+> A dental chair, reclined and waiting. The paper bib is fresh. The light above it is on, aimed at nobody.
+
+## den-magazines
+> Magazines, all from October 1987. Every cover model is smiling with exactly the right number of teeth.
+
+## den-wifi
+> A guest Wi-Fi router. Not on today's work order. The network name on its sticker is MARROW-GUEST. The password is SMILE.
+
+## den-book
+> The appointment book. Every slot after 6 PM is full, every night, in the same handwriting. The last name on tonight's page is yours.
+
+## den-deskchair
+> The receptionist's chair. Nobody's at the desk. The chair is still turning, very slowly.
+
+## den-phone
+> You pick up the phone. No dial tone. Somebody on the line breathes in, like they're about to speak, and doesn't.
+
+## den-exit-early
+WALTER: Not yet, kid. Dr. Marrow's paying by the job, and she counts everything. Over.
+
+## den-done-vlans
+(Walter, as each part of the job gets done.)
+WALTER: Two VLANs! STAFF and XRAY. They exist now, but nothing lives in them yet. Put the ports in. Over.
+
+## den-done-trunk
+WALTER: Trunk's up. One cable, both VLANs, every frame tagged with where it belongs. Over.
+
+## den-done-router
+WALTER: Router's on a stick! One subinterface per VLAN. It's the only thing that can talk to both sides now. Over.
+
+## den-done-leases
+WALTER: Every PC got an address in its own VLAN. Front desk and billing on ten, the X-ray on twenty. Over.
+
+## den-ask-vlans
+(Once the network work is done.)
+WALTER: The front desk can reach the X-ray, and only through the router. Textbook, kid.
+WALTER: One more look before you go. On the switch: show vlan brief. Make sure it's just our two VLANs and the defaults. Over.
+
+## haunt-job3
+(A VLAN nobody made statics into the list and out again.)
+> Somewhere down the hall, a heavy door unlocks with a soft click.
+WALTER: Kid. VLAN nineteen seventy-four. Active. No ports. Did you make that?
+WALTER: No. You didn't. Nobody makes nineteen seventy-four.
+WALTER: ...It's gone now. Good. Two VLANs, like the ticket says. Ticket's DONE. And kid? Don't go in the packing room. Over.
+
 # Walter's hints (press Q, or F1 at a laptop or PC)
 
 (The game picks the first hint that fits where you are.)
@@ -452,8 +575,8 @@ WALTER: Ping the router from BOTH PCs. If the first one drops, that's ARP. Not g
 ## hint-ping-pc
 WALTER: Last thing: ping one PC from the other. Over.
 
-## hint2-grimoire
-WALTER: Read the book, kid. G. It's better company than Gary. Don't tell him I said that. Over.
+## hint2-board
+WALTER: Read the book, kid. G. It's better company than Gary. Then check the job board; there's a fresh ticket. Over.
 
 ## hint2-ask-grimoire
 WALTER: Bob's desk, kid. Bottom drawer. The book's expecting you. Over.
@@ -490,6 +613,36 @@ WALTER: Ping the printer, 192.168.20.5, from both PCs. Over.
 
 ## hint2-binding
 WALTER: Last thing: on the router, show ip dhcp binding. Make sure it's just our two PCs on the list. Over.
+
+## hint3-done
+WALTER: You're done! Come on home. Don't take a jar. Over.
+
+## hint3-travel
+WALTER: The dentist's, kid. Shopfront row, past the Quik-Stop. Over.
+
+## hint3-vlans
+WALTER: Switch first. In global config: vlan 10, then name STAFF. Then vlan 20, name XRAY. A VLAN only sticks once you leave its config mode. Over.
+
+## hint3-access
+WALTER: Now put the ports in their VLANs. Fa0/1 and Fa0/2 are the front desk and billing, Fa0/3 is the X-ray. On each: switchport mode access, then switchport access vlan, and the number. Over.
+
+## hint3-trunk
+WALTER: The switch's Gi0/1 goes to the router, and it has to carry both VLANs. That's a trunk. interface gi0/1, switchport mode trunk. Routers don't negotiate, so you force it. Over.
+
+## hint3-subinterfaces
+WALTER: Router on a stick. no shutdown on Gi0/0, then interface gi0/0.10, encapsulation dot1Q 10, ip address 192.168.10.1 255.255.255.0. Same again for .20. Over.
+
+## hint3-pools
+WALTER: One DHCP pool per VLAN. The ten pool hands out 192.168.10.0 with default-router 192.168.10.1, the twenty pool the same with twenty. Over.
+
+## hint3-renew
+WALTER: The PCs asked before there was anybody to answer. ipconfig /renew on each one: front desk, billing, X-ray. Over.
+
+## hint3-ping
+WALTER: From the front desk, ping the X-ray PC. ipconfig on the X-ray tells you its address. If it answers, the router's carrying it across. Over.
+
+## hint3-show-vlans
+WALTER: Last thing: on the switch, show vlan brief. Our two VLANs and the defaults. Nothing else. Over.
 
 # Loading screens
 

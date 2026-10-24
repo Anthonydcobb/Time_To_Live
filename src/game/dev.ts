@@ -1,6 +1,7 @@
 import type { IosDevice } from "../sim/devices/ios-device";
-import { parseIpv4 as ip } from "../sim/addr";
+import { formatIpv4, parseIpv4 as ip } from "../sim/addr";
 import type { Job } from "../sim/job";
+import type { dentist } from "../sim/scenarios/dentist";
 import type { laundromat } from "../sim/scenarios/laundromat";
 import { scriptNotes } from "./script";
 import { events, type Story } from "./story";
@@ -23,6 +24,7 @@ interface StoryInternals {
   told: Set<string>;
   haunt(): void;
   wash: ReturnType<typeof laundromat> | null;
+  den: ReturnType<typeof dentist> | null;
 }
 interface UiInternals {
   current: unknown;
@@ -72,7 +74,7 @@ export function installDevTools(story: Story, ui: Ui): void {
     closeDialogue();
   };
 
-  const go = (room: "office" | "shop") => {
+  const go = (room: "office" | "shop" | "dentist") => {
     closeDialogue();
     events.emit("goto", room);
   };
@@ -132,6 +134,44 @@ export function installDevTools(story: Story, ui: Ui): void {
     events.emit("goto", "laundromat");
   };
 
+  /** Skips jobs 1 and 2 and the grimoire as if they went fine, and takes work order #0003. */
+  const takeJob3 = () => {
+    if (!s.wash) takeJob2();
+    for (const f of ["ask-binding", "checked", "haunt2", "done2", "arrived2", "home2", "ask-grimoire", "grimoire"]) s.flags.add(f);
+    events.emit("grimoire");
+    story.takeDentist();
+    events.emit("job");
+    closeDialogue();
+  };
+
+  /**
+   * Does job 3's network work the way a player would, then leaves the last task, show vlan
+   * brief on the switch, to you, since that's where the VLAN that shouldn't exist shows up.
+   */
+  const finishJob3 = () => {
+    takeJob3();
+    const d = s.den!;
+    for (let i = 0; i < d.tasks.length; i++) s.told.add(`den${i}`);
+    type(d.s1, ["enable", "configure terminal", "vlan 10", "name STAFF", "exit", "vlan 20", "name XRAY", "exit",
+      "interface fastEthernet0/1", "switchport mode access", "switchport access vlan 10", "exit",
+      "interface fastEthernet0/2", "switchport mode access", "switchport access vlan 10", "exit",
+      "interface fastEthernet0/3", "switchport mode access", "switchport access vlan 20", "exit",
+      "interface gigabitEthernet0/1", "switchport mode trunk", "end"]);
+    type(d.r1, ["enable", "configure terminal", "interface gigabitEthernet0/0", "no shutdown", "exit",
+      "interface gigabitEthernet0/0.10", "encapsulation dot1Q 10", "ip address 192.168.10.1 255.255.255.0", "exit",
+      "interface gigabitEthernet0/0.20", "encapsulation dot1Q 20", "ip address 192.168.20.1 255.255.255.0", "exit",
+      "ip dhcp pool STAFF", "network 192.168.10.0 255.255.255.0", "default-router 192.168.10.1", "exit",
+      "ip dhcp pool XRAY", "network 192.168.20.0 255.255.255.0", "default-router 192.168.20.1", "end"]);
+    // Past spanning tree's listening and learning, then the renews and the ping across VLANs.
+    d.net.clock.advance(35_000);
+    for (const pc of [d.frontDesk, d.billing, d.xray]) finish(d.net, pc.shell.execute("ipconfig /renew").job);
+    if (d.xray.ip !== null) {
+      for (let i = 0; i < 2; i++) finish(d.net, d.frontDesk.shell.execute(`ping ${formatIpv4(d.xray.ip)}`).job);
+    }
+    closeDialogue();
+    events.emit("goto", "dentist");
+  };
+
   const panel = document.createElement("div");
   panel.id = "devtools";
   panel.innerHTML = `
@@ -148,6 +188,8 @@ export function installDevTools(story: Story, ui: Ui): void {
       <button data-act="close">Close dialogue</button>
       <button data-act="job2">Job 2</button>
       <button data-act="finish2">Finish job 2</button>
+      <button data-act="job3">Job 3</button>
+      <button data-act="finish3">Finish job 3</button>
       <button data-act="being">Being 1/4</button>
       <button data-act="grimoire">Grimoire</button>
     </div>
@@ -186,6 +228,12 @@ export function installDevTools(story: Story, ui: Ui): void {
       events.emit("goto", "laundromat");
     },
     finish2: finishJob2,
+    // Skips to work order #0003 and drives to the dentist's.
+    job3: () => {
+      takeJob3();
+      events.emit("goto", "dentist");
+    },
+    finish3: finishJob3,
     // Plays the apparition with the stage on the button, then moves the button to the next one.
     being: () => {
       ui.apparition();

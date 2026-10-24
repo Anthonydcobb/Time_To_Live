@@ -35,6 +35,13 @@ function facingOf(dx: number, dy: number): (typeof DIRS)[number] {
 type Keys = Record<"up" | "down" | "left" | "right" | "w" | "a" | "s" | "d" | "e" | "q", Phaser.Input.Keyboard.Key>;
 
 /** One grey-box room: tiles, props with labels, and you. */
+/**
+ * Pixels per tile on each sprite sheet that isn't the usual 16. A sheet drawn at 32 px per tile
+ * is shown at half the scale, so it covers the same ground with four times the detail.
+ */
+const SHEET_PX: Record<string, number> = { "dentist-props": 32 };
+const sheetScale = (key: string) => TILE / (SHEET_PX[key] ?? 16);
+
 export class RoomScene extends Phaser.Scene {
   private room!: RoomDef;
   private player!: Phaser.GameObjects.Container;
@@ -89,6 +96,8 @@ export class RoomScene extends Phaser.Scene {
     this.load.spritesheet("store-decor", "assets/sprites/props/store-decor.png", { frameWidth: 32, frameHeight: 80 });
     // The laundromat's machines and fittings: 48x64 cells, the same way.
     this.load.spritesheet("laundromat-props", "assets/sprites/props/laundromat-props.png", { frameWidth: 48, frameHeight: 64 });
+    // The dentist's props, cut from Gemini's concept at 32 px per tile: 64x96 cells (SHEET_PX).
+    this.load.spritesheet("dentist-props", "assets/sprites/props/dentist-props.png", { frameWidth: 64, frameHeight: 96 });
   }
 
   /** `gate`: as for the first room, the story waits for it (a trip's loading screen lifting). */
@@ -225,7 +234,7 @@ export class RoomScene extends Phaser.Scene {
       // An open door is just a gap in the wall.
       if (this.isOpen(p)) return;
       if (p.sprite) {
-        const door = this.add.sprite(x + w / 2, y + h, p.sprite, p.frame ?? 0).setOrigin(0.5, 1).setScale(4).setDepth(y + h);
+        const door = this.add.sprite(x + w / 2, y + h, p.sprite, p.frame ?? 0).setOrigin(0.5, 1).setScale(sheetScale(p.sprite)).setDepth(y + h);
         this.doors.set(p.id, [door, solid(x, y, w, h)]);
         return;
       }
@@ -239,7 +248,7 @@ export class RoomScene extends Phaser.Scene {
     }
     if (p.sprite) {
       // Standing on the bottom of its footprint, so tall things rise up over the wall behind.
-      const sprite = this.add.sprite(x + w / 2, y + h, p.sprite, p.frame ?? 0).setOrigin(0.5, 1).setScale(4).setDepth(p.onWall ? 1 : y + h);
+      const sprite = this.add.sprite(x + w / 2, y + h, p.sprite, p.frame ?? 0).setOrigin(0.5, 1).setScale(sheetScale(p.sprite)).setDepth(p.onWall ? 1 : y + h);
       this.propSprites.set(p.id, [...(this.propSprites.get(p.id) ?? []), sprite]);
       if (p.walk) {
         // No collision: someone on their rounds just steps around you.

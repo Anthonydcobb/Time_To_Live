@@ -3,6 +3,7 @@ import { macAllocatorState, parseIpv4 as ip, setMacAllocator } from "../sim/addr
 import { Pc } from "../sim/devices/pc";
 import { BASICS, Grimoire } from "../sim/grimoire";
 import { cornerStore } from "../sim/scenarios/corner-store";
+import { dentist } from "../sim/scenarios/dentist";
 import { laundromat } from "../sim/scenarios/laundromat";
 import type { Scenario } from "../sim/scenarios/types";
 import { audio } from "./audio";
@@ -22,14 +23,24 @@ const PC_HINT = "On a PC: ipconfig 192.168.1.10 255.255.255.0 192.168.1.1   ·  
 const DHCP_HINT = "ipconfig /renew asks the router for a lease   ·   ipconfig shows what you got   ·   Esc closes";
 const PRINTER_HINT = "Fixed address: ipconfig 192.168.20.5 255.255.255.0 192.168.20.1   ·   Esc closes";
 const IOS_HINT = "? lists commands   ·   Tab completes   ·   Esc closes the laptop";
+const VLAN_HINT = "After a PC moves to a new VLAN: ipconfig /renew   ·   ipconfig shows what you got   ·   Esc closes";
+
+/** Whether `word` is an abbreviation of `full` IOS would take (at least `min` letters). */
+const abbrev = (word: string | undefined, full: string, min: number) => !!word && word.length >= min && full.startsWith(word);
 
 /** Whether a typed line is show ip dhcp binding, abbreviated any way IOS allows ("sh ip dh b"). */
 function isShowDhcpBinding(line: string): boolean {
   const w = line.trim().toLowerCase().split(/\s+/);
-  const starts = (word: string | undefined, full: string, min: number) => !!word && word.length >= min && full.startsWith(word);
   // "do show ..." works from config mode too.
   if (w[0] === "do") w.shift();
-  return w.length === 4 && starts(w[0], "show", 2) && w[1] === "ip" && starts(w[2], "dhcp", 2) && starts(w[3], "binding", 1);
+  return w.length === 4 && abbrev(w[0], "show", 2) && w[1] === "ip" && abbrev(w[2], "dhcp", 2) && abbrev(w[3], "binding", 1);
+}
+
+/** Whether a typed line is show vlan brief, abbreviated any way IOS allows ("sh vl br"). */
+function isShowVlanBrief(line: string): boolean {
+  const w = line.trim().toLowerCase().split(/\s+/);
+  if (w[0] === "do") w.shift();
+  return w.length === 3 && abbrev(w[0], "show", 2) && abbrev(w[1], "vlan", 2) && abbrev(w[2], "brief", 1);
 }
 
 /**
@@ -45,6 +56,10 @@ export class Story {
   private washLog: NetRecorder | null = null;
   /** Where the MAC allocator stood when job 2 was built, so a load rebuilds it with the same MACs. */
   private washMacs = 0;
+  /** Job 3, the dentist's, once you've taken it off the board. */
+  private den: ReturnType<typeof dentist> | null = null;
+  private denLog: NetRecorder | null = null;
+  private denMacs = 0;
   /** Plugged into S1 Fa0/24 when the job is done. The cable goes into the wall. */
   readonly phantom = new Pc("PHANTOM", "?", "666666666666");
   room: RoomId = "office";
@@ -54,8 +69,11 @@ export class Story {
   private garyTip = 0;
   private finchLine = 0;
   private gusLine = 0;
+  private marrowLine = 0;
   /** Where R1's command history stood when Walter asked for show ip dhcp binding. */
   private bindingFrom = 0;
+  /** Where S1's command history stood when Walter asked for show vlan brief. */
+  private vlansFrom = 0;
   private told = new Set<string>();
   /** Notes you've read, in order. They're pinned into the grimoire, even ones read before you had it. */
   private readonly notes: string[] = [];
@@ -79,7 +97,7 @@ export class Story {
 
   /** The job you're on now: its network, tasks and work order. */
   get job(): Scenario {
-    return this.wash ?? this.store;
+    return this.den ?? this.wash ?? this.store;
   }
 
   /** Gives consoles the shared grimoire and Story Mode (the setup dialog gets angrier each time you say yes). */
@@ -110,6 +128,25 @@ export class Story {
     this.flags.add("job2");
   }
 
+  /** Takes work order #0003: builds the dentist's network and points the laptop at it. */
+  takeDentist(): void {
+    if (this.den) return;
+    this.denMacs = macAllocatorState();
+    const job = dentist();
+    for (const i of job.incantations) this.grimoire.teach(i);
+    this.wire([job.r1, job.s1]);
+    this.ui.attach(job.net, [job.r1, job.s1, job.frontDesk, job.billing, job.xray], job.layout);
+    // As at the laundromat, the last real step is a look: Walter wants the VLAN list checked.
+    job.tasks.splice(job.tasks.length - 1, 0, {
+      id: "vlans",
+      text: "Check the switch's VLAN list: show vlan brief on S1.",
+      done: () => this.flags.has("checked3"),
+    });
+    this.den = job;
+    this.denLog = new NetRecorder(job.net);
+    this.flags.add("job3");
+  }
+
   /** Everything needed to pick up from here: the story, and what was done to each network. */
   snapshot(): SaveData {
     return {
@@ -119,10 +156,12 @@ export class Story {
       flags: [...this.flags],
       told: [...this.told],
       notes: [...this.notes],
-      lines: { gary: this.garyTip, finch: this.finchLine, gus: this.gusLine },
+      lines: { gary: this.garyTip, finch: this.finchLine, gus: this.gusLine, marrow: this.marrowLine },
       bindingFrom: this.bindingFrom,
+      vlansFrom: this.vlansFrom,
       store: this.storeLog.save(),
       wash: this.washLog ? { macs: this.washMacs, net: this.washLog.save() } : null,
+      den: this.denLog ? { macs: this.denMacs, net: this.denLog.save() } : null,
     };
   }
 
@@ -137,13 +176,21 @@ export class Story {
     this.garyTip = save.lines.gary;
     this.finchLine = save.lines.finch;
     this.gusLine = save.lines.gus;
+    this.marrowLine = save.lines.marrow ?? 0;
     this.bindingFrom = save.bindingFrom;
+    this.vlansFrom = save.vlansFrom ?? 0;
     this.storeLog.replay(save.store);
     if (save.wash) {
       setMacAllocator(save.wash.macs);
       this.wash = null;
       this.takeLaundromat();
       this.washLog!.replay(save.wash.net);
+    }
+    if (save.den) {
+      setMacAllocator(save.den.macs);
+      this.den = null;
+      this.takeDentist();
+      this.denLog!.replay(save.den.net);
     }
     this.ui.clearTerminals();
     // What the haunts left behind keeps going.
@@ -152,6 +199,7 @@ export class Story {
       this.phantomHellos();
     }
     if (this.flags.has("done2")) this.ui.beingStage = 2;
+    if (this.flags.has("done3")) this.ui.beingStage = 3;
     if (this.flags.has("grimoire")) events.emit("grimoire");
   }
 
@@ -198,6 +246,14 @@ export class Story {
       this.flags.add("home2");
       this.ui.say(scene("home-job2"), () => this.flags.add("ask-grimoire"));
     }
+    if (room === "dentist" && !this.flags.has("arrived3")) {
+      this.flags.add("arrived3");
+      this.ui.say(scene("den-arrive"));
+    }
+    if (room === "office" && this.flags.has("done3") && !this.flags.has("home3")) {
+      this.flags.add("home3");
+      this.ui.say(scene("home-job3"));
+    }
   }
 
   /** Press E on a prop. */
@@ -207,6 +263,7 @@ export class Story {
     // Close-ups that change after a look (like Dryer 4) only play their first look once.
     this.flags.add(`seen:${this.room}:${id}`);
     if (this.room === "laundromat") return this.interactLaundromat(id);
+    if (this.room === "dentist") return this.interactDentist(id);
     switch (`${this.room}:${id}`) {
       // ---- home base ----
       case "office:walkie":
@@ -228,6 +285,17 @@ export class Story {
         } else ui.say(scene("walkie-again"));
         return;
       case "office:board":
+        if (this.flags.has("grimoire") && !this.flags.has("job3")) {
+          ui.say(
+            scene("board-wo3"),
+            () => {
+              this.note("wo3-pen");
+              this.takeDentist();
+              events.emit("job");
+            },
+          );
+          return;
+        }
         if (this.flags.has("home") && !this.flags.has("job2")) {
           ui.say(
             scene("board-wo2"),
@@ -293,6 +361,7 @@ export class Story {
         else {
           const go: Partial<Record<SiteId, () => void>> = { quikstop: () => this.travel("shop") };
           if (this.flags.has("job2")) go.laundromat = () => this.travel("laundromat");
+          if (this.flags.has("job3")) go.dentist = () => this.travel("dentist");
           ui.openTownMap("bobs", go);
         }
         return;
@@ -428,6 +497,96 @@ export class Story {
     }
   }
 
+  /** Press E on something at the dentist's. */
+  private interactDentist(id: string): void {
+    const job = this.den;
+    const ui = this.ui;
+    if (!job) return;
+    const { r1, s1, frontDesk, billing, xray } = job;
+    switch (id) {
+      case "marrow":
+        return this.talkToMarrow();
+      case "rack":
+        ui.choose(scene("den-rack")[0], [
+          { label: `Console into R1 (${r1.model})`, run: () => ui.openLaptop(r1, `R1 · ${r1.model} · console`, IOS_HINT) },
+          { label: `Console into S1 (${s1.model})`, run: () => ui.openLaptop(s1, `S1 · ${s1.model} · console`, IOS_HINT) },
+          { label: "Check the cables", run: () => ui.openPanel([r1, s1, frontDesk, billing, xray]) },
+          { label: "Never mind", run: () => {} },
+        ]);
+        return;
+      case "frontdesk":
+        ui.openLaptop(frontDesk, "PC0 · Front desk", VLAN_HINT);
+        return;
+      case "billing":
+        ui.openLaptop(billing, "PC1 · Billing", VLAN_HINT);
+        return;
+      case "xray":
+        ui.openLaptop(xray, "PC2 · Panoramic X-ray", VLAN_HINT);
+        return;
+      case "packdoor":
+        if (!this.flags.has("open:dentist:packdoor")) ui.say(scene("packdoor-locked"));
+        return;
+      case "jars":
+        audio.teethJar();
+        ui.say(scene("den-jars"), () => this.note("den-jars"));
+        return;
+      case "crates":
+        ui.say(scene("den-crates"), () => this.note("den-crates"));
+        return;
+      case "packer":
+        ui.say(scene("den-packer"));
+        return;
+      case "bench":
+        ui.say(scene("den-bench"));
+        return;
+      case "server":
+        ui.say(scene("den-server"));
+        return;
+      case "lightbox":
+        ui.say(scene(this.flags.has("haunt3") ? "den-lightbox-haunted" : "den-lightbox"));
+        return;
+      case "oppc":
+        ui.say(scene("den-oppc"));
+        return;
+      case "chair":
+        ui.say(scene("den-chair"));
+        return;
+      case "magazines":
+        ui.say(scene("den-magazines"));
+        return;
+      case "wifi":
+        ui.say(scene("den-wifi"));
+        return;
+      case "book":
+        ui.say(scene("den-book"), () => this.note("den-book"));
+        return;
+      case "deskchair":
+        ui.say(scene("den-deskchair"));
+        return;
+      case "phone":
+        ui.say(scene("den-phone"));
+        return;
+      case "exit":
+        if (this.flags.has("done3")) ui.openTownMap("dentist", { bobs: () => this.travel("office"), quikstop: () => this.travel("shop"), laundromat: () => this.travel("laundromat") });
+        else ui.say(scene("den-exit-early"));
+        return;
+    }
+  }
+
+  private talkToMarrow(): void {
+    const ui = this.ui;
+    if (!this.flags.has("marrow")) {
+      this.flags.add("marrow");
+      ui.say(scene("marrow-meet"));
+      return;
+    }
+    if (this.flags.has("haunt3")) {
+      ui.say(scene("marrow-haunted"));
+      return;
+    }
+    ui.say(pick("marrow-idle", this.marrowLine++));
+  }
+
   private talkToGus(): void {
     const ui = this.ui;
     if (!this.flags.has("gus")) {
@@ -464,7 +623,7 @@ export class Story {
   /** Q: Walter's hint for wherever you are. */
   callWalter(): void {
     if (!this.flags.has("walkie")) return;
-    const lines = this.wash ? this.laundromatHint(this.wash) : this.storeHint();
+    const lines = this.den ? this.dentistHint(this.den) : this.wash ? this.laundromatHint(this.wash) : this.storeHint();
     // Over a laptop or PC he comes through on a strip at the top, so you can keep typing.
     if (this.ui.onScreen) this.ui.radio(lines);
     else this.ui.say(lines);
@@ -496,7 +655,7 @@ export class Story {
   /** Walter's hint for job 2, by the first task that isn't done. */
   private laundromatHint(job: Scenario): Line[] {
     const ok = (i: number) => !!job.tasks[i].done?.();
-    if (this.flags.has("grimoire")) return scene("hint2-grimoire");
+    if (this.flags.has("grimoire")) return scene("hint2-board");
     if (this.flags.has("ask-grimoire")) return scene("hint2-ask-grimoire");
     if (this.flags.has("done2")) return scene("hint2-done");
     if (this.room !== "laundromat") return scene("hint2-travel");
@@ -511,10 +670,26 @@ export class Story {
     return scene("hint2-binding");
   }
 
+  /** Walter's hint for job 3, by the first task that isn't done. */
+  private dentistHint(job: Scenario): Line[] {
+    const ok = (i: number) => !!job.tasks[i].done?.();
+    if (this.flags.has("done3")) return scene("hint3-done");
+    if (this.room !== "dentist") return scene("hint3-travel");
+    if (!ok(0)) return scene("hint3-vlans");
+    if (!ok(1)) return scene("hint3-access");
+    if (!ok(2)) return scene("hint3-trunk");
+    if (!ok(3)) return scene("hint3-subinterfaces");
+    if (!ok(4)) return scene("hint3-pools");
+    if (!ok(5)) return scene("hint3-renew");
+    if (!ok(6)) return scene("hint3-ping");
+    return scene("hint3-show-vlans");
+  }
+
   /** Watches the network a few times a second and reacts as tasks get done. */
   tick(): void {
     // Walter's on the radio over a laptop or PC once you have the walkie.
     this.ui.radioCall = this.flags.has("walkie") ? () => this.callWalter() : null;
+    if (this.den) return this.tickDentist(this.den);
     if (this.wash) return this.tickLaundromat(this.wash);
     const done = (id: string) => this.done(id);
     const once = (id: string, lines: Line[]) => {
@@ -602,6 +777,60 @@ export class Story {
     );
   }
 
+  private tickDentist(job: ReturnType<typeof dentist>): void {
+    const ok = (i: number) => !!job.tasks[i].done?.();
+    const once = (i: number, lines: Line[]) => {
+      if (this.told.has(`den${i}`) || !ok(i)) return;
+      this.told.add(`den${i}`);
+      this.ui.say(lines);
+    };
+    once(0, scene("den-done-vlans"));
+    once(2, scene("den-done-trunk"));
+    once(3, scene("den-done-router"));
+    once(5, scene("den-done-leases"));
+    // Once the network work is done, Walter asks for one last look at the VLAN list.
+    const networkDone = job.tasks.every((t) => t.id === "vlans" || !t.done || t.done());
+    if (networkDone && !this.flags.has("ask-vlans")) {
+      this.flags.add("ask-vlans");
+      this.vlansFrom = job.s1.console.history.length;
+      this.ui.say(scene("den-ask-vlans"));
+    }
+    if (this.flags.has("ask-vlans") && !this.flags.has("checked3")) {
+      const typed = job.s1.console.history.slice(this.vlansFrom);
+      if (typed.some(isShowVlanBrief)) {
+        this.flags.add("checked3");
+        // Give the real list a moment on screen first.
+        window.setTimeout(() => this.hauntDentist(job), 1400);
+      }
+    }
+  }
+
+  /**
+   * Job 3's haunt. At the bottom of show vlan brief, under the defaults, a VLAN nobody made
+   * statics in: 1974, active, no ports. Then it's gone, and the packing room door stands open.
+   */
+  private hauntDentist(job: ReturnType<typeof dentist>): void {
+    this.flags.add("haunt3");
+    const ghost = `${"1974".padEnd(5)}${"VLAN1974".padEnd(33)}${"active".padEnd(10)}`;
+    this.ui.ghostLine(
+      job.s1,
+      ghost,
+      () => events.emit("flicker"),
+      () => {
+        events.emit("haunt");
+        this.flags.add("open:dentist:packdoor");
+        events.emit("open", "packdoor");
+        this.ui.say(
+          scene("haunt-job3"),
+          () => {
+            this.flags.add("done3");
+            this.ui.beingStage = 3;
+          },
+        );
+      },
+    );
+  }
+
   /** Pins a note into the grimoire. Notes read before you have the book wait for it. */
   private note(id: keyof typeof NOTES): void {
     if (this.notes.includes(id)) return;
@@ -625,23 +854,22 @@ export class Story {
     });
   }
 
-  /** G: the grimoire, if you have it. Closing it the first time ends the slice. */
+  /** G: the grimoire, if you have it. */
   openGrimoire(): void {
     if (!this.flags.has("grimoire")) return;
-    this.ui.openBook(this.bookContents(), () => {
-      if (this.flags.has("slice-end")) return;
-      this.flags.add("slice-end");
-      this.ui.showCard(`<p class="big">End of the laundromat slice</p><p>Thanks for playing the grey box. Press E to keep walking around.</p>`);
-    });
+    this.ui.openBook(this.bookContents(), () => {});
   }
 
   private bookContents(): BookContents {
-    const { store, wash } = this;
+    const { store, wash, den } = this;
     const sites: BookContents["sites"] = [
       { number: store.workOrder.number, name: store.workOrder.client, net: store.net, layout: store.layout, devices: [store.r1, store.s1, store.register, store.office], done: this.flags.has("done") },
     ];
     if (wash) {
       sites.push({ number: wash.workOrder.number, name: wash.workOrder.client, net: wash.net, layout: wash.layout, devices: [wash.r1, wash.s1, wash.kiosk, wash.office, wash.printer], done: this.flags.has("done2") });
+    }
+    if (den) {
+      sites.push({ number: den.workOrder.number, name: den.workOrder.client, net: den.net, layout: den.layout, devices: [den.r1, den.s1, den.frontDesk, den.billing, den.xray], done: this.flags.has("done3") });
     }
     return { notes: [...this.notes], sites: this.flags.has("job") ? sites : [] };
   }
@@ -652,7 +880,8 @@ export class Story {
    * ready, and the room's story waits for it.
    */
   private travel(to: RoomId): void {
-    const pop = (4218 + (this.flags.has("done") ? 1 : 0) + (to === "office" && this.flags.has("done2") ? 1 : 0)).toLocaleString("en-US");
+    // One more resident after each haunted job, from then on.
+    const pop = (4218 + ["done", "done2", "done3"].filter((f) => this.flags.has(f)).length).toLocaleString("en-US");
     const loading = showLoading(`WELCOME TO STATIC SPRINGS · POP. ${pop}`);
     let lift!: () => void;
     const gate = new Promise<void>((r) => (lift = r));

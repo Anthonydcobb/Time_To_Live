@@ -6,6 +6,27 @@ Last updated: 2026-10-23.
 
 ## Latest handoff update (2026-10-23, Claude)
 
+- **Job 3, Marrow Family Dentistry, is in the game as a grey box.** The room (`dentist` in
+  `rooms.ts`, 26x16) follows Ant's blueprint (`art/concepts/locations/dentist-office-layout.jpg`):
+  three cleaning rooms, the clinical hallway with the panoramic X-ray (PC2) and Dr. Marrow, the
+  networking closet (rack, imaging server), the waiting room and reception (front desk PC0,
+  billing PC1, appointment book, phone), and the back packing room behind a locked `door`
+  (teeth jars, a packing machine, crates addressed to the Quik-Stop). Props are grey boxes with
+  labels until Gemini's prop concepts become pixel art. The work order goes up on the board once
+  you have the grimoire (the end-of-slice card is gone). The network is `src/sim/scenarios/dentist.ts`
+  (VLANs 10 and 20, a trunk, router on a stick, a pool per VLAN), with a story-added last task:
+  `show vlan brief` on S1, where **VLAN 1974** statics in under the defaults, active with no
+  ports, and the packing room door unlocks. Walter's hints are `hint3-*`; the scenes are under
+  `# Job 3` in the script. Saves carry job 3 as `den` (optional, so older saves still load). The
+  town's population now counts every haunted job (`travel`). Dev panel: **Job 3** and **Finish job 3**.
+  `tests/vlans.test.ts` plays job 3 with the hint commands.
+- **Sprite sheets can carry more pixels per tile.** `SHEET_PX` in `room-scene.ts` sets a sheet's
+  density (16 if unlisted); a 32 px sheet draws at half scale, so it covers the same tiles with
+  four times the detail. Trial run: `dentist-props.png` (32 px per tile, 64x96 cells) is cut from
+  Gemini's `art/concepts/items/dentist-sprites-concept.jpg` by `art/source/props/make-dentist-props.py`.
+  Characters and floors are still 16 px, so pixel sizes are mixed in that room; Ant is judging it.
+  Still grey: Dr. Marrow, the counter, appointment book, phone, magazines and guest Wi-Fi.
+
 - **New town map:** Ant's foggy seaside map (`art/concepts/locations/static-springs-seaside-map-v1.jpg`,
   now `public/assets/ui/town-map.webp`). `SITES` in `town-map.ts` follows it: the shopfront row
   (Bob's, laundromat, Quik-Stop, dentist), the tunnel (the closed road to Bellwether), town hall,

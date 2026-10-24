@@ -452,3 +452,30 @@ describe("router-on-a-stick", () => {
     expect(type(s1, "show vlan brief")).toContain("20   XRAY                             active    Fa0/3");
   });
 });
+
+describe("job 3: the dentist's", () => {
+  it("ticks off every task with the commands Walter's hints teach", () => {
+    const { r1, s1, frontDesk, billing, xray, tasks, net } = dentist();
+    const done = () => tasks.map((t) => t.done?.() ?? null);
+    type(s1, "", "en", "conf t", "vlan 10", "name STAFF", "exit", "vlan 20", "name XRAY", "exit");
+    type(s1, "int fa0/1", "switchport mode access", "switchport access vlan 10", "int fa0/2", "switchport mode access", "switchport access vlan 10");
+    type(s1, "int fa0/3", "switchport mode access", "switchport access vlan 20", "int gi0/1", "switchport mode trunk", "end");
+    type(r1, "", "no", "", "en", "conf t", "int g0/0", "no shut", "int g0/0.10", "encapsulation dot1Q 10", "ip address 192.168.10.1 255.255.255.0");
+    type(r1, "int g0/0.20", "encapsulation dot1Q 20", "ip address 192.168.20.1 255.255.255.0", "exit");
+    type(r1, "ip dhcp pool STAFF", "network 192.168.10.0 255.255.255.0", "default-router 192.168.10.1");
+    type(r1, "ip dhcp pool XRAY", "network 192.168.20.0 255.255.255.0", "default-router 192.168.20.1", "end");
+    // Spanning tree holds the newly trunked port for 30 seconds.
+    net.clock.advance(35_000);
+    expect(done()).toEqual([true, true, true, true, true, false, false, null]);
+    for (const pc of [frontDesk, billing, xray]) run(pc, "ipconfig /renew");
+    expect(done()).toEqual([true, true, true, true, true, true, false, null]);
+    expect(pings(frontDesk, "192.168.20.1")).toBe(true);
+    run(frontDesk, `ping ${formatIpv4(xray.ip!)}`);
+    expect(done()).toEqual([true, true, true, true, true, true, true, null]);
+    // The list the story's haunt adds VLAN 1974 to: ours and the defaults, nothing else.
+    const vlans = type(s1, "show vlan brief").join("\n");
+    expect(vlans).toMatch(/^10\s+STAFF\s+active\s+Fa0\/1, Fa0\/2$/m);
+    expect(vlans).toMatch(/^20\s+XRAY\s+active\s+Fa0\/3$/m);
+    expect(vlans).not.toContain("1974");
+  });
+});

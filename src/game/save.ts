@@ -16,11 +16,15 @@ export interface SaveData {
   /** Notes you've read, pinned into the grimoire. */
   notes: string[];
   /** How far through each character's idle chatter you are. */
-  lines: { gary: number; finch: number; gus: number };
+  lines: { gary: number; finch: number; gus: number; marrow?: number };
   bindingFrom: number;
+  /** Where S1's history stood when Walter asked for show vlan brief. Missing in saves from before job 3. */
+  vlansFrom?: number;
   store: SavedNet;
   /** Job 2, once taken: its network, and where the MAC allocator stood when it was built. */
   wash: { macs: number; net: SavedNet } | null;
+  /** Job 3, the same way. Missing in saves from before job 3. */
+  den?: { macs: number; net: SavedNet } | null;
 }
 
 const KEY = "time-to-live:save";
@@ -50,7 +54,7 @@ export function writeSave(save: SaveData): boolean {
 /** One line for the title screen: which job you were on and when you saved. */
 export function describeSave(save: SaveData): string {
   const has = (f: string) => save.flags.includes(f);
-  const job = has("done2") ? "Laundromat done" : save.wash ? "Work order #0002" : has("done") ? "Corner store done" : has("job") ? "Work order #0001" : "First day";
+  const job = has("done3") ? "Dentist done" : save.den ? "Work order #0003" : has("done2") ? "Laundromat done" : save.wash ? "Work order #0002" : has("done") ? "Corner store done" : has("job") ? "Work order #0001" : "First day";
   const when = new Date(save.savedAt).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" });
   return `${job} · ${when}`;
 }

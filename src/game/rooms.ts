@@ -1,7 +1,7 @@
 /** Grey-box rooms. Each map character is one 16 px tile, drawn at 4x. */
 export const TILE = 64;
 
-export type RoomId = "office" | "shop" | "laundromat";
+export type RoomId = "office" | "shop" | "laundromat" | "dentist";
 
 /** Something in a room you can bump into or press E on. Positions are in tiles. */
 export interface Prop {
@@ -350,6 +350,94 @@ export const ROOMS: Record<RoomId, RoomDef> = {
         { x: 18.5, y: 12.5, r: 2.4, color: BULB },
         { x: 4.5, y: 7, r: 1.8, color: BULB },
         { x: 4.5, y: 3.5, r: 3.2, color: FLUORESCENT, wide: 1.4 },
+      ],
+    },
+  },
+  dentist: {
+    id: "dentist",
+    title: "Marrow Family Dentistry",
+    // From Ant's blueprint (art/concepts/locations/dentist-office-layout.jpg). Three cleaning
+    // rooms along the top open onto the clinical hallway. Top left is the back packing room
+    // (locked: Dr. Marrow keeps it to herself), with the networking closet under it. The waiting
+    // room and the reception desk share the bottom, with the entrance between them.
+    map: [
+      "##########################",
+      "##########################",
+      "#......#.....#.....#.....#",
+      "#......#.....#.....#.....#",
+      "#......#.....#.....#.....#",
+      "#......#.....#.....#.....#",
+      "#......###.#####.#####.###",
+      "#........................#",
+      "#######..................#",
+      "#......#.................#",
+      "#........................#",
+      "##################...#####",
+      "       #.................#",
+      "       #.................#",
+      "       #.................#",
+      "       ###################",
+    ],
+    props: [
+      // The back packing room: shelves of teeth in jars, the workbench, the jar packer and crates
+      // addressed to the Quik-Stop. Behind a locked door until the job is done.
+      { id: "jars", label: "Teeth\njars", x: 1, y: 2, w: 2, h: 1, verb: "Look at", color: 0x8a9a94, card: "assets/cards/jar-of-teeth.webp", sprite: "dentist-props", frame: 12 },
+      { id: "jars", label: "Teeth\njars", x: 3, y: 2, w: 2, h: 1, verb: "Look at", color: 0x8a9a94, card: "assets/cards/jar-of-teeth.webp", sprite: "dentist-props", frame: 12 },
+      { id: "packer", label: "Jar\npacker", x: 1, y: 4, w: 1, h: 1, verb: "Look at", color: 0x5a4e4e, sprite: "dentist-props", frame: 10 },
+      { id: "bench", label: "Work-\nbench", x: 2, y: 4, w: 2, h: 1, verb: "Look at", color: 0x6a5a44, sprite: "dentist-props", frame: 9 },
+      { id: "crates", label: "Crate", x: 1, y: 6, w: 1, h: 1, verb: "Look at", color: 0x7a6440, sprite: "dentist-props", frame: 11 },
+      { id: "crates", label: "Crate", x: 2, y: 6, w: 1, h: 1, verb: "Look at", color: 0x7a6440, sprite: "dentist-props", frame: 11 },
+      { id: "crates", label: "Crate", x: 3, y: 6, w: 1, h: 1, verb: "Look at", color: 0x7a6440, sprite: "dentist-props", frame: 11 },
+      { id: "packdoor", label: "Packing\nroom", x: 7, y: 7, w: 1, h: 1, verb: "Open", color: 0x4a3a2a, door: true, sprite: "dentist-props", frame: 8 },
+      // The networking closet.
+      { id: "rack", label: "Rack\nR1 S1", x: 1, y: 9, w: 1, h: 1, verb: "Work on", color: 0x3c4450, sprite: "dentist-props", frame: 6 },
+      { id: "server", label: "Imaging\nserver", x: 3, y: 9, w: 1, h: 1, verb: "Look at", color: 0x46504a, sprite: "dentist-props", frame: 6 },
+      { id: "stool", label: "Stool", x: 5, y: 10, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "store-decor", frame: 4 },
+      // Cleaning rooms 1 to 3: a chair with its light, and an operatory PC nobody cabled.
+      { id: "oppc", label: "PC", x: 8, y: 3, w: 1, h: 1, verb: "Look at", color: 0x46504a, sprite: "dentist-props", frame: 3 },
+      { id: "chair", label: "Dental\nchair", x: 10, y: 4, w: 1, h: 1, verb: "Look at", color: 0x6a8a84, sprite: "dentist-props", frame: 0 },
+      { id: "oppc", label: "PC", x: 14, y: 3, w: 1, h: 1, verb: "Look at", color: 0x46504a, sprite: "dentist-props", frame: 3 },
+      { id: "chair", label: "Dental\nchair", x: 16, y: 4, w: 1, h: 1, verb: "Look at", color: 0x6a8a84, sprite: "dentist-props", frame: 0 },
+      { id: "oppc", label: "PC", x: 20, y: 3, w: 1, h: 1, verb: "Look at", color: 0x46504a, sprite: "dentist-props", frame: 3 },
+      { id: "chair", label: "Dental\nchair", x: 22, y: 4, w: 1, h: 1, verb: "Look at", color: 0x6a8a84, sprite: "dentist-props", frame: 0 },
+      // The hallway: the panoramic X-ray (PC2) and its lightbox on the wall, and Dr. Marrow.
+      { id: "xray", label: "X-ray\nPC2", x: 13, y: 7, w: 1, h: 1, verb: "Use", color: 0x5a6a70, sprite: "dentist-props", frame: 4 },
+      { id: "lightbox", label: "Lightbox", x: 15, y: 6, w: 1, h: 1, verb: "Look at", color: 0x8a9aa0, onWall: true, sprite: "dentist-props", frame: 1 },
+      { id: "marrow", label: "Dr.\nMarrow", x: 19, y: 8, w: 1, h: 1, verb: "Talk to", color: 0x8a8478 },
+      // The waiting room.
+      { id: "benches", label: "Bench", x: 9, y: 12, w: 2, h: 1, verb: "", color: 0x5a4a3a, decor: true, sprite: "dentist-props", frame: 7 },
+      { id: "benches", label: "Bench", x: 9, y: 14, w: 2, h: 1, verb: "", color: 0x5a4a3a, decor: true, sprite: "dentist-props", frame: 7 },
+      { id: "benches", label: "Bench", x: 15, y: 14, w: 2, h: 1, verb: "", color: 0x5a4a3a, decor: true, sprite: "dentist-props", frame: 7 },
+      { id: "magazines", label: "Maga-\nzines", x: 14, y: 12, w: 1, h: 1, verb: "Look at", color: 0x6a5a6a },
+      { id: "wifi", label: "Guest\nWi-Fi", x: 8, y: 14, w: 1, h: 1, verb: "Look at", color: 0x46504a },
+      // Reception: the counter, the appointment book, the desk with the front desk and billing PCs
+      // on it, and the phone.
+      { id: "counter", label: "Counter", x: 19, y: 12, w: 1, h: 3, verb: "", color: 0x5a5448, decor: true },
+      { id: "book", label: "Appoint-\nments", x: 21, y: 12, w: 1, h: 1, verb: "Read", color: 0x6a5238 },
+      { id: "desk", label: "Desk", x: 23, y: 12, w: 2, h: 1, verb: "", color: 0x55524a, decor: true, sprite: "dentist-props", frame: 5 },
+      { id: "frontdesk", label: "Front\ndesk PC0", x: 23, y: 12, w: 1, h: 1, verb: "Use", color: 0x46504a, hidden: true },
+      { id: "billing", label: "Billing\nPC1", x: 24, y: 12, w: 1, h: 1, verb: "Use", color: 0x46504a, hidden: true },
+      { id: "deskchair", label: "Chair", x: 23, y: 13, w: 1, h: 1, verb: "Look at", color: 0x4a3a44, sprite: "store-decor", frame: 4 },
+      { id: "phone", label: "Phone", x: 24, y: 14, w: 1, h: 1, verb: "Pick up", color: 0x3a3a3a },
+      { id: "exit", label: "Door", x: 12, y: 15, w: 2, h: 1, verb: "Leave", color: 0x3a3428, onWall: true },
+    ],
+    spawn: { x: 12, y: 14 },
+    tiles: "office-tiles",
+    floor: [[0, 40], [1, 36], [2, 8], [3, 4], [4, 4], [5, 2], [6, 4], [7, 2]],
+    // Clinic white tubes over the cleaning rooms, the hallway and reception; the one over the
+    // X-ray stutters. One bare bulb in the closet and nothing in the packing room.
+    lights: {
+      ambient: 0x4a524e,
+      lamps: [
+        { x: 10.5, y: 3.6, r: 2.8, color: FLUORESCENT, wide: 1.3 },
+        { x: 16.5, y: 3.6, r: 2.8, color: FLUORESCENT, wide: 1.3 },
+        { x: 22.5, y: 3.6, r: 2.8, color: FLUORESCENT, wide: 1.3 },
+        { x: 10, y: 8.6, r: 3, color: FLUORESCENT, wide: 1.5 },
+        { x: 14, y: 8.4, r: 2.6, color: FLUORESCENT, wide: 1.2, flicker: true },
+        { x: 20, y: 8.6, r: 3, color: FLUORESCENT, wide: 1.5 },
+        { x: 11, y: 13, r: 3.2, color: FLUORESCENT, wide: 1.4 },
+        { x: 22, y: 13, r: 3, color: FLUORESCENT, wide: 1.3 },
+        { x: 3.5, y: 9.8, r: 2, color: BULB },
       ],
     },
   },
