@@ -24,8 +24,13 @@ Last updated: 2026-10-23.
   density (16 if unlisted); a 32 px sheet draws at half scale, so it covers the same tiles with
   four times the detail. Trial run: `dentist-props.png` (32 px per tile, 64x96 cells) is cut from
   Gemini's `art/concepts/items/dentist-sprites-concept.jpg` by `art/source/props/make-dentist-props.py`.
-  Characters and floors are still 16 px, so pixel sizes are mixed in that room; Ant is judging it.
-  Still grey: Dr. Marrow, the counter, appointment book, phone, magazines and guest Wi-Fi.
+  The dentist's is now all 32 px. The floor and walls come from `dentist-tiles.png`
+  (`art/source/tiles/make-dentist-tiles.py`), which has 1970s cream-and-mint clinic vinyl and the office walls
+  doubled. She is drawn from `player-walk-32.png` (`art/source/characters/make-player-32.py`, cut from
+  `art/concepts/characters/player-walk-concept.jpg`); `RoomDef.player` picks the sheet for each room.
+  Ant wants rooms to stop sharing one floor, so the other rooms should get their own floors next.
+  Also: the packing room door is now in its bottom wall, on a passage shared with the closet, and
+  the operatory PCs became wall X-ray viewers (`den-viewer`). Still grey: Dr. Marrow, the counter, appointment book, phone, magazines and guest Wi-Fi.
 
 - **New town map:** Ant's foggy seaside map (`art/concepts/locations/static-springs-seaside-map-v1.jpg`,
   now `public/assets/ui/town-map.webp`). `SITES` in `town-map.ts` follows it: the shopfront row

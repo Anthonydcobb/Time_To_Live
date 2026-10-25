@@ -39,7 +39,7 @@ type Keys = Record<"up" | "down" | "left" | "right" | "w" | "a" | "s" | "d" | "e
  * Pixels per tile on each sprite sheet that isn't the usual 16. A sheet drawn at 32 px per tile
  * is shown at half the scale, so it covers the same ground with four times the detail.
  */
-const SHEET_PX: Record<string, number> = { "dentist-props": 32 };
+const SHEET_PX: Record<string, number> = { "dentist-props": 32, "dentist-tiles": 32, "player-32": 32 };
 const sheetScale = (key: string) => TILE / (SHEET_PX[key] ?? 16);
 
 export class RoomScene extends Phaser.Scene {
@@ -52,6 +52,8 @@ export class RoomScene extends Phaser.Scene {
   private near: Prop | null = null;
   private facing = new Phaser.Math.Vector2(0, 1);
   private sprite!: Phaser.GameObjects.Sprite;
+  /** Your walk sheet in this room: "player", or a denser one (RoomDef.player). */
+  private playerSheet = "player";
   /** The room's darkness: ambient fill with lamp glows added, multiplied over everything. */
   private lightMap: Phaser.GameObjects.RenderTexture | null = null;
   private glow!: Phaser.GameObjects.Image;
@@ -80,6 +82,8 @@ export class RoomScene extends Phaser.Scene {
   preload(): void {
     // Rows: down, up, left, right. Each row is stand, step, pass, step, pass.
     this.load.spritesheet("player", "assets/sprites/characters/player-walk.png", { frameWidth: 16, frameHeight: 32 });
+    // The same walk at 32 px per tile, for rooms drawn at that density (RoomDef.player).
+    this.load.spritesheet("player-32", "assets/sprites/characters/player-walk-32.png", { frameWidth: 32, frameHeight: 64 });
     this.load.spritesheet("mrs-finch", "assets/sprites/characters/mrs-finch-walk.png", { frameWidth: 16, frameHeight: 32 });
     this.load.spritesheet("gus", "assets/sprites/characters/gus-walk.png", { frameWidth: 16, frameHeight: 32 });
     this.load.spritesheet("store-tiles", "assets/sprites/tiles/store-tiles.png", { frameWidth: 16, frameHeight: 16 });
@@ -90,6 +94,7 @@ export class RoomScene extends Phaser.Scene {
     // Frame 0 the walkie on its charger, frame 1 the charger once you've taken it, both on a side table.
     this.load.spritesheet("walkie", "assets/sprites/props/walkie.png", { frameWidth: 16, frameHeight: 32 });
     this.load.spritesheet("office-tiles", "assets/sprites/tiles/office-tiles.png", { frameWidth: 16, frameHeight: 16 });
+    this.load.spritesheet("dentist-tiles", "assets/sprites/tiles/dentist-tiles.png", { frameWidth: 32, frameHeight: 32 });
     // Bob's office props: 80x48 cells, each piece standing at the bottom centre of its cell.
     this.load.spritesheet("office-props", "assets/sprites/props/office-props.png", { frameWidth: 80, frameHeight: 48 });
     // Set dressing: 32x80 cells, each piece standing at the bottom centre of its cell.
@@ -102,11 +107,9 @@ export class RoomScene extends Phaser.Scene {
 
   /** `gate`: as for the first room, the story waits for it (a trip's loading screen lifting). */
   create(data: { room?: RoomId; gate?: Promise<void> }): void {
-    DIRS.forEach((dir, row) => {
-      if (this.anims.exists(`walk-${dir}`)) return;
-      this.anims.create({ key: `walk-${dir}`, frames: this.anims.generateFrameNumbers("player", { start: row * 5 + 1, end: row * 5 + 4 }), frameRate: 8, repeat: -1 });
-    });
     this.room = ROOMS[data.room ?? "office"];
+    this.playerSheet = this.room.player ?? "player";
+    this.makeWalkAnims(this.playerSheet, 8);
     this.propSprites.clear();
     this.doors.clear();
     this.walkers.clear();
@@ -133,7 +136,7 @@ export class RoomScene extends Phaser.Scene {
           if (ch !== "#") frame = pickFrame(tx, ty, this.room.floor ?? FLOOR_FRAMES);
           else if (at(1) === ".") frame = pickFrame(tx, ty, at(-1) === "#" ? WALL_LOWER_FRAMES : WALL_FACE_FRAMES);
           else if (at(1) === "#" && at(2) === ".") frame = pickFrame(tx, ty, WALL_UPPER_FRAMES);
-          this.add.image(x, y, tiles, frame).setOrigin(0).setScale(TILE / 16);
+          this.add.image(x, y, tiles, frame).setOrigin(0).setScale(sheetScale(tiles));
           if (ch === "#") solid(x, y, TILE, TILE);
         } else if (ch === "#") {
           const faceBelow = this.room.map[ty + 1]?.[tx] === ".";
@@ -149,9 +152,9 @@ export class RoomScene extends Phaser.Scene {
     for (const p of this.room.props) this.drawProp(p.id === "walkie" && this.story.has("walkie") ? { ...p, label: "Charger", frame: 1 } : p, solid);
     if (this.room.id === "shop" && this.story.has("haunt")) this.drawPhantomCable();
 
-    // You: the contractor, 16x32 drawn at 4x, standing on her feet.
+    // You: the contractor, a tile wide and two tall, standing on her feet.
     const s = this.first.at ?? this.room.spawn;
-    this.sprite = this.add.sprite(0, 0, "player", 0).setOrigin(0.5, 1).setScale(4);
+    this.sprite = this.add.sprite(0, 0, this.playerSheet, 0).setOrigin(0.5, 1).setScale(sheetScale(this.playerSheet));
     this.player = this.add.container((s.x + 0.5) * TILE, (s.y + 0.9) * TILE, [this.sprite]);
     this.physics.add.existing(this.player);
     this.body_ = this.player.body as Phaser.Physics.Arcade.Body;
@@ -422,7 +425,7 @@ export class RoomScene extends Phaser.Scene {
   private animate(moving: boolean): void {
     const f = this.facing;
     const dir = Math.abs(f.x) > Math.abs(f.y) ? (f.x < 0 ? "left" : "right") : f.y < 0 ? "up" : "down";
-    if (moving) this.sprite.play(`walk-${dir}`, true);
+    if (moving) this.sprite.play(`${this.playerSheet}-walk-${dir}`, true);
     else this.sprite.stop().setFrame(DIRS.indexOf(dir) * 5);
   }
 
@@ -434,10 +437,10 @@ export class RoomScene extends Phaser.Scene {
   }
 
   /** Walk animations for a sheet laid out like the player's, made once. */
-  private makeWalkAnims(sheet: string): void {
+  private makeWalkAnims(sheet: string, frameRate = 6): void {
     DIRS.forEach((dir, row) => {
       const key = `${sheet}-walk-${dir}`;
-      if (!this.anims.exists(key)) this.anims.create({ key, frames: this.anims.generateFrameNumbers(sheet, { start: row * 5 + 1, end: row * 5 + 4 }), frameRate: 6, repeat: -1 });
+      if (!this.anims.exists(key)) this.anims.create({ key, frames: this.anims.generateFrameNumbers(sheet, { start: row * 5 + 1, end: row * 5 + 4 }), frameRate, repeat: -1 });
     });
   }
 

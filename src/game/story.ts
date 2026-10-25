@@ -545,8 +545,8 @@ export class Story {
       case "lightbox":
         ui.say(scene(this.flags.has("haunt3") ? "den-lightbox-haunted" : "den-lightbox"));
         return;
-      case "oppc":
-        ui.say(scene("den-oppc"));
+      case "viewer":
+        ui.say(scene("den-viewer"));
         return;
       case "chair":
         ui.say(scene("den-chair"));

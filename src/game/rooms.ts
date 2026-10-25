@@ -46,10 +46,12 @@ export interface RoomDef {
   props: Prop[];
   /** Where you appear, in tiles. */
   spawn: { x: number; y: number };
-  /** A loaded 16 px tileset for the floor and walls. Without one the room is flat grey boxes. */
+  /** A loaded tileset for the floor and walls (16 px unless SHEET_PX says). Without one the room is flat grey boxes. */
   tiles?: string;
   /** Floor frames and weights for this room's tileset, if not the store's FLOOR_FRAMES. */
   floor?: [number, number][];
+  /** Your walk sheet here, if not the 16 px "player": a room drawn at 32 px wants her at 32 px too. */
+  player?: string;
   /** If set, the room is dark except for these. Without lights the room is evenly lit. */
   lights?: { ambient: number; lamps: Lamp[] };
 }
@@ -358,7 +360,8 @@ export const ROOMS: Record<RoomId, RoomDef> = {
     title: "Marrow Family Dentistry",
     // From Ant's blueprint (art/concepts/locations/dentist-office-layout.jpg). Three cleaning
     // rooms along the top open onto the clinical hallway. Top left is the back packing room
-    // (locked: Dr. Marrow keeps it to herself), with the networking closet under it. The waiting
+    // (locked: Dr. Marrow keeps it to herself), its door in the bottom wall onto a short passage
+    // that also leads into the networking closet. The waiting
     // room and the reception desk share the bottom, with the entrance between them.
     map: [
       "##########################",
@@ -368,9 +371,9 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       "#......#.....#.....#.....#",
       "#......#.....#.....#.....#",
       "#......###.#####.#####.###",
-      "#........................#",
-      "#######..................#",
       "#......#.................#",
+      "######.#.................#",
+      "#....#...................#",
       "#........................#",
       "##################...#####",
       "       #.................#",
@@ -388,17 +391,17 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "crates", label: "Crate", x: 1, y: 6, w: 1, h: 1, verb: "Look at", color: 0x7a6440, sprite: "dentist-props", frame: 11 },
       { id: "crates", label: "Crate", x: 2, y: 6, w: 1, h: 1, verb: "Look at", color: 0x7a6440, sprite: "dentist-props", frame: 11 },
       { id: "crates", label: "Crate", x: 3, y: 6, w: 1, h: 1, verb: "Look at", color: 0x7a6440, sprite: "dentist-props", frame: 11 },
-      { id: "packdoor", label: "Packing\nroom", x: 7, y: 7, w: 1, h: 1, verb: "Open", color: 0x4a3a2a, door: true, sprite: "dentist-props", frame: 8 },
+      { id: "packdoor", label: "Packing\nroom", x: 6, y: 8, w: 1, h: 1, verb: "Open", color: 0x4a3a2a, door: true, sprite: "dentist-props", frame: 8 },
       // The networking closet.
       { id: "rack", label: "Rack\nR1 S1", x: 1, y: 9, w: 1, h: 1, verb: "Work on", color: 0x3c4450, sprite: "dentist-props", frame: 6 },
       { id: "server", label: "Imaging\nserver", x: 3, y: 9, w: 1, h: 1, verb: "Look at", color: 0x46504a, sprite: "dentist-props", frame: 6 },
-      { id: "stool", label: "Stool", x: 5, y: 10, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "store-decor", frame: 4 },
-      // Cleaning rooms 1 to 3: a chair with its light, and an operatory PC nobody cabled.
-      { id: "oppc", label: "PC", x: 8, y: 3, w: 1, h: 1, verb: "Look at", color: 0x46504a, sprite: "dentist-props", frame: 3 },
+      { id: "stool", label: "Stool", x: 2, y: 10, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "store-decor", frame: 4 },
+      // Cleaning rooms 1 to 3: a chair with its light, and an X-ray viewer on the wall beside it.
+      { id: "viewer", label: "X-ray\nviewer", x: 8, y: 1, w: 1, h: 1, verb: "Look at", color: 0x8a9aa0, onWall: true, sprite: "dentist-props", frame: 1 },
       { id: "chair", label: "Dental\nchair", x: 10, y: 4, w: 1, h: 1, verb: "Look at", color: 0x6a8a84, sprite: "dentist-props", frame: 0 },
-      { id: "oppc", label: "PC", x: 14, y: 3, w: 1, h: 1, verb: "Look at", color: 0x46504a, sprite: "dentist-props", frame: 3 },
+      { id: "viewer", label: "X-ray\nviewer", x: 14, y: 1, w: 1, h: 1, verb: "Look at", color: 0x8a9aa0, onWall: true, sprite: "dentist-props", frame: 1 },
       { id: "chair", label: "Dental\nchair", x: 16, y: 4, w: 1, h: 1, verb: "Look at", color: 0x6a8a84, sprite: "dentist-props", frame: 0 },
-      { id: "oppc", label: "PC", x: 20, y: 3, w: 1, h: 1, verb: "Look at", color: 0x46504a, sprite: "dentist-props", frame: 3 },
+      { id: "viewer", label: "X-ray\nviewer", x: 20, y: 1, w: 1, h: 1, verb: "Look at", color: 0x8a9aa0, onWall: true, sprite: "dentist-props", frame: 1 },
       { id: "chair", label: "Dental\nchair", x: 22, y: 4, w: 1, h: 1, verb: "Look at", color: 0x6a8a84, sprite: "dentist-props", frame: 0 },
       // The hallway: the panoramic X-ray (PC2) and its lightbox on the wall, and Dr. Marrow.
       { id: "xray", label: "X-ray\nPC2", x: 13, y: 7, w: 1, h: 1, verb: "Use", color: 0x5a6a70, sprite: "dentist-props", frame: 4 },
@@ -422,8 +425,11 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "exit", label: "Door", x: 12, y: 15, w: 2, h: 1, verb: "Leave", color: 0x3a3428, onWall: true },
     ],
     spawn: { x: 12, y: 14 },
-    tiles: "office-tiles",
-    floor: [[0, 40], [1, 36], [2, 8], [3, 4], [4, 4], [5, 2], [6, 4], [7, 2]],
+    // Its own 32 px tileset (clinic vinyl; art/source/tiles/make-dentist-tiles.py) and the 32 px
+    // contractor, to match its props.
+    tiles: "dentist-tiles",
+    floor: [[0, 44], [1, 36], [2, 5], [3, 3], [4, 3], [5, 2], [6, 5], [7, 2]],
+    player: "player-32",
     // Clinic white tubes over the cleaning rooms, the hallway and reception; the one over the
     // X-ray stutters. One bare bulb in the closet and nothing in the packing room.
     lights: {
@@ -437,7 +443,7 @@ export const ROOMS: Record<RoomId, RoomDef> = {
         { x: 20, y: 8.6, r: 3, color: FLUORESCENT, wide: 1.5 },
         { x: 11, y: 13, r: 3.2, color: FLUORESCENT, wide: 1.4 },
         { x: 22, y: 13, r: 3, color: FLUORESCENT, wide: 1.3 },
-        { x: 3.5, y: 9.8, r: 2, color: BULB },
+        { x: 2.5, y: 9.8, r: 2, color: BULB },
       ],
     },
   },

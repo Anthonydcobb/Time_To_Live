@@ -468,8 +468,8 @@ WALTER: Kid, I'm going to say this once. We're network people. We don't count ot
 ## den-lightbox-haunted
 > The X-rays on the lightbox have changed. Same jaws. More teeth. One film is just static, and it's labeled with your name.
 
-## den-oppc
-> An operatory PC. Its cable is coiled on the desk, unplugged. A note on the screen: NOT ON THE NETWORK. PATIENTS ONLY.
+## den-viewer
+> An X-ray viewer on the wall by the chair, still lit. Bitewings from the last patient, clipped in a row. The name on the envelope has been scratched out, carefully, the way you'd clean a tooth.
 
 ## den-chair
 > A dental chair, reclined and waiting. The paper bib is fresh. The light above it is on, aimed at nobody.
