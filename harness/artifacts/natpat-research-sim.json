@@ -1,0 +1,699 @@
+{
+  "capturedAt": "2026-10-23T22:24:00.317Z",
+  "backend": "sim",
+  "topology": {
+    "id": "natpat-research",
+    "description": "Two inside hosts and one outside host for static NAT, pool translation, and PAT",
+    "devices": [
+      {
+        "name": "R1",
+        "type": "router",
+        "hostname": "R1",
+        "startupConfig": [
+          "enable",
+          "configure terminal",
+          "interface gigabitEthernet 0/0",
+          "ip address 192.168.10.1 255.255.255.0",
+          "ip nat inside",
+          "no shutdown",
+          "interface gigabitEthernet 0/1",
+          "ip address 192.168.20.1 255.255.255.0",
+          "ip nat outside",
+          "no shutdown",
+          "end"
+        ]
+      },
+      {
+        "name": "InsideSwitch",
+        "type": "switch"
+      },
+      {
+        "name": "PC0",
+        "type": "pc",
+        "ip": "192.168.10.10/24",
+        "gateway": "192.168.10.1"
+      },
+      {
+        "name": "PC2",
+        "type": "pc",
+        "ip": "192.168.10.11/24",
+        "gateway": "192.168.10.1"
+      },
+      {
+        "name": "PC1",
+        "type": "pc",
+        "ip": "192.168.20.10/24",
+        "gateway": "192.168.20.1"
+      }
+    ],
+    "links": [
+      {
+        "a": "PC0 Fa0",
+        "b": "InsideSwitch Fa0/1"
+      },
+      {
+        "a": "PC2 Fa0",
+        "b": "InsideSwitch Fa0/2"
+      },
+      {
+        "a": "InsideSwitch Fa0/24",
+        "b": "R1 Gi0/0"
+      },
+      {
+        "a": "PC1 Fa0",
+        "b": "R1 Gi0/1"
+      }
+    ]
+  },
+  "observations": [
+    {
+      "backend": "sim",
+      "experiment": "baseline",
+      "device": "R1",
+      "input": "show running-config",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 764 bytes\n!\n! Last configuration change at 00:00:00 UTC Mon Mar 1 1993\n!\nversion 15.1\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname R1\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\n!\nip cef\nno ipv6 cef\n!\nmultilink bundle-name authenticated\n!\ninterface GigabitEthernet0/0\n ip nat inside\n ip address 192.168.10.1 255.255.255.0\n duplex auto\n speed auto\n!\ninterface GigabitEthernet0/1\n ip nat outside\n ip address 192.168.20.1 255.255.255.0\n duplex auto\n speed auto\n!\ninterface GigabitEthernet0/2\n no ip address\n shutdown\n duplex auto\n speed auto\n!\nip forward-protocol nd\n!\nno ip http server\nno ip http secure-server\n!\nlogging trap 6\ncontrol-plane\n!\nline con 0\nline aux 0\nline vty 0 4\n login\n!\nend\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.302Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline",
+      "device": "R1",
+      "input": "show ip nat translations",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Pro Inside global      Pro Inside local       Outside local      Outside global\n--- -------------------- -------------------- --------------- ---------------",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.304Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline",
+      "device": "R1",
+      "input": "show ip nat statistics",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Total active translations: 0 (0 static, 0 dynamic; 0 extended)\nInside interfaces: GigabitEthernet0/0\nOutside interfaces: GigabitEthernet0/1\nHits: 0  Misses: 0\nExpired translations: 0\nDynamic mappings:",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.304Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline",
+      "device": "R1",
+      "input": "show ip interface gigabitEthernet 0/0",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "GigabitEthernet0/0 is up, line protocol is up\n  Internet address is 192.168.10.1/24\n  IP NAT inside",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.305Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline",
+      "device": "R1",
+      "input": "show ip interface gigabitEthernet 0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "GigabitEthernet0/1 is up, line protocol is up\n  Internet address is 192.168.20.1/24\n  IP NAT outside",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.305Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline-connectivity",
+      "device": "PC0",
+      "input": "ping -n 4 192.168.20.10",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.20.10 with 32 bytes of data:\n\nRequest timed out.\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.307Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "baseline-connectivity",
+      "device": "PC2",
+      "input": "ping -n 4 192.168.20.10",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.20.10 with 32 bytes of data:\n\nReply from 192.168.20.10: bytes=32 time=3ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 3ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.307Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "static-nat",
+      "device": "R1",
+      "input": "enable",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.308Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "static-nat",
+      "device": "R1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.308Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "static-nat",
+      "device": "R1",
+      "input": "ip nat inside source static 192.168.10.10 192.168.20.100",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.308Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "static-nat",
+      "device": "R1",
+      "input": "end",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.308Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "static-nat",
+      "device": "PC1",
+      "input": "ping -n 4 192.168.20.100",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.20.100 with 32 bytes of data:\n\nReply from 192.168.20.100: bytes=32 time=2ms TTL=127\nReply from 192.168.20.100: bytes=32 time=2ms TTL=127\nReply from 192.168.20.100: bytes=32 time=2ms TTL=127\nReply from 192.168.20.100: bytes=32 time=2ms TTL=127\n\nPing statistics for 192.168.20.100:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.309Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "static-nat",
+      "device": "R1",
+      "input": "show running-config",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 821 bytes\n!\n! Last configuration change at 00:00:46 UTC Mon Mar 1 1993\n!\nversion 15.1\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname R1\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\n!\nip cef\nno ipv6 cef\n!\nmultilink bundle-name authenticated\n!\ninterface GigabitEthernet0/0\n ip nat inside\n ip address 192.168.10.1 255.255.255.0\n duplex auto\n speed auto\n!\ninterface GigabitEthernet0/1\n ip nat outside\n ip address 192.168.20.1 255.255.255.0\n duplex auto\n speed auto\n!\ninterface GigabitEthernet0/2\n no ip address\n shutdown\n duplex auto\n speed auto\n!\nip forward-protocol nd\n!\nno ip http server\nno ip http secure-server\n!\nip nat inside source static 192.168.10.10 192.168.20.100\nlogging trap 6\ncontrol-plane\n!\nline con 0\nline aux 0\nline vty 0 4\n login\n!\nend\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.309Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "static-nat",
+      "device": "R1",
+      "input": "show ip nat translations",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Pro Inside global      Pro Inside local       Outside local      Outside global\n--- -------------------- -------------------- --------------- ---------------\n--- 192.168.20.100       192.168.10.10        ---               ---",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.309Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "static-nat",
+      "device": "R1",
+      "input": "show ip nat statistics",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Total active translations: 1 (1 static, 0 dynamic; 0 extended)\nInside interfaces: GigabitEthernet0/0\nOutside interfaces: GigabitEthernet0/1\nHits: 8  Misses: 14\nExpired translations: 0\nDynamic mappings:",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.309Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "static-nat",
+      "device": "R1",
+      "input": "show ip interface gigabitEthernet 0/0",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "GigabitEthernet0/0 is up, line protocol is up\n  Internet address is 192.168.10.1/24\n  IP NAT inside",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.309Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "static-nat",
+      "device": "R1",
+      "input": "show ip interface gigabitEthernet 0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "GigabitEthernet0/1 is up, line protocol is up\n  Internet address is 192.168.20.1/24\n  IP NAT outside",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.310Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "clear-dynamic-with-static-present",
+      "device": "R1",
+      "input": "clear ip nat translation *",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.310Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "static-after-clear",
+      "device": "R1",
+      "input": "show ip nat translations",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Pro Inside global      Pro Inside local       Outside local      Outside global\n--- -------------------- -------------------- --------------- ---------------\n--- 192.168.20.100       192.168.10.10        ---               ---",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.310Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "static-after-clear",
+      "device": "R1",
+      "input": "show ip nat statistics",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Total active translations: 1 (1 static, 0 dynamic; 0 extended)\nInside interfaces: GigabitEthernet0/0\nOutside interfaces: GigabitEthernet0/1\nHits: 8  Misses: 14\nExpired translations: 0\nDynamic mappings:",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.310Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "R1",
+      "input": "enable",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.310Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "R1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.310Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "R1",
+      "input": "access-list 1 permit 192.168.10.0 0.0.0.255",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.310Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "R1",
+      "input": "ip nat pool TTL-POOL 192.168.20.101 192.168.20.102 netmask 255.255.255.0",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "                  ^\n% Invalid input detected at '^' marker.\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.310Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "R1",
+      "input": "ip nat inside source list 1 pool TTL-POOL",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "                                       ^\n% Invalid input detected at '^' marker.\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.311Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "R1",
+      "input": "end",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.311Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "PC0",
+      "input": "ping -n 4 192.168.20.10",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.20.10 with 32 bytes of data:\n\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.311Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "PC2",
+      "input": "ping -n 4 192.168.20.10",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.20.10 with 32 bytes of data:\n\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.311Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "R1",
+      "input": "show running-config",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 867 bytes\n!\n! Last configuration change at 00:00:50 UTC Mon Mar 1 1993\n!\nversion 15.1\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname R1\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\n!\nip cef\nno ipv6 cef\n!\nmultilink bundle-name authenticated\n!\ninterface GigabitEthernet0/0\n ip nat inside\n ip address 192.168.10.1 255.255.255.0\n duplex auto\n speed auto\n!\ninterface GigabitEthernet0/1\n ip nat outside\n ip address 192.168.20.1 255.255.255.0\n duplex auto\n speed auto\n!\ninterface GigabitEthernet0/2\n no ip address\n shutdown\n duplex auto\n speed auto\n!\nip forward-protocol nd\n!\nno ip http server\nno ip http secure-server\n!\nip nat inside source static 192.168.10.10 192.168.20.100\nlogging trap 6\naccess-list 1 permit 192.168.10.0 0.0.0.255\n!\ncontrol-plane\n!\nline con 0\nline aux 0\nline vty 0 4\n login\n!\nend\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.312Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "R1",
+      "input": "show ip nat translations",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Pro Inside global      Pro Inside local       Outside local      Outside global\n--- -------------------- -------------------- --------------- ---------------\n--- 192.168.20.100       192.168.10.10        ---               ---",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.312Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "R1",
+      "input": "show ip nat statistics",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Total active translations: 1 (1 static, 0 dynamic; 0 extended)\nInside interfaces: GigabitEthernet0/0\nOutside interfaces: GigabitEthernet0/1\nHits: 16  Misses: 22\nExpired translations: 0\nDynamic mappings:",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.312Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "R1",
+      "input": "show ip interface gigabitEthernet 0/0",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "GigabitEthernet0/0 is up, line protocol is up\n  Internet address is 192.168.10.1/24\n  IP NAT inside",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.312Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "dynamic-pool",
+      "device": "R1",
+      "input": "show ip interface gigabitEthernet 0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "GigabitEthernet0/1 is up, line protocol is up\n  Internet address is 192.168.20.1/24\n  IP NAT outside",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.312Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "enable",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.313Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.313Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "no ip nat inside source list 1 pool TTL-POOL",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "                                          ^\n% Invalid input detected at '^' marker.\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.313Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "no ip nat pool TTL-POOL",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "                     ^\n% Invalid input detected at '^' marker.\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.313Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "no ip nat inside source static 192.168.10.10 192.168.20.100",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.313Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "end",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.313Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-preclear",
+      "device": "R1",
+      "input": "clear ip nat translation *",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.313Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "enable",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.313Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.314Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "ip nat inside source list 1 interface gigabitEthernet 0/1 overload",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.314Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "end",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.314Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "PC0",
+      "input": "ping -n 4 192.168.20.10",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.20.10 with 32 bytes of data:\n\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.315Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "PC2",
+      "input": "ping -n 4 192.168.20.10",
+      "mode": "pc-shell",
+      "status": "ok",
+      "rawOutput": "Pinging 192.168.20.10 with 32 bytes of data:\n\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\nReply from 192.168.20.10: bytes=32 time=2ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 2ms, Maximum = 2ms, Average = 2ms",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.315Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "show running-config",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 876 bytes\n!\n! Last configuration change at 00:00:58 UTC Mon Mar 1 1993\n!\nversion 15.1\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname R1\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\n!\nip cef\nno ipv6 cef\n!\nmultilink bundle-name authenticated\n!\ninterface GigabitEthernet0/0\n ip nat inside\n ip address 192.168.10.1 255.255.255.0\n duplex auto\n speed auto\n!\ninterface GigabitEthernet0/1\n ip nat outside\n ip address 192.168.20.1 255.255.255.0\n duplex auto\n speed auto\n!\ninterface GigabitEthernet0/2\n no ip address\n shutdown\n duplex auto\n speed auto\n!\nip forward-protocol nd\n!\nno ip http server\nno ip http secure-server\n!\nip nat inside source list 1 interface GigabitEthernet0/1 overload\nlogging trap 6\naccess-list 1 permit 192.168.10.0 0.0.0.255\n!\ncontrol-plane\n!\nline con 0\nline aux 0\nline vty 0 4\n login\n!\nend\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.316Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "show ip nat translations",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Pro Inside global      Pro Inside local       Outside local      Outside global\n--- -------------------- -------------------- --------------- ---------------\nicmp 192.168.20.1         192.168.10.10        ---               ---\nicmp 192.168.20.1         192.168.10.11        ---               ---",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.316Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "show ip nat statistics",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Total active translations: 2 (0 static, 2 dynamic; 0 extended)\nInside interfaces: GigabitEthernet0/0\nOutside interfaces: GigabitEthernet0/1\nHits: 32  Misses: 22\nExpired translations: 0\nDynamic mappings:\n  access-list 1 interface GigabitEthernet0/1 overload (active 2)",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.316Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "show ip interface gigabitEthernet 0/0",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "GigabitEthernet0/0 is up, line protocol is up\n  Internet address is 192.168.10.1/24\n  IP NAT inside",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.316Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "pat-overload",
+      "device": "R1",
+      "input": "show ip interface gigabitEthernet 0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "GigabitEthernet0/1 is up, line protocol is up\n  Internet address is 192.168.20.1/24\n  IP NAT outside",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.316Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "clear-dynamic-translations",
+      "device": "R1",
+      "input": "clear ip nat translation *",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.316Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "after-clear",
+      "device": "R1",
+      "input": "show running-config",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Building configuration...\n\nCurrent configuration : 876 bytes\n!\n! Last configuration change at 00:00:58 UTC Mon Mar 1 1993\n!\nversion 15.1\nservice timestamps debug datetime msec\nservice timestamps log datetime msec\nno service password-encryption\n!\nhostname R1\n!\nboot-start-marker\nboot-end-marker\n!\nno aaa new-model\n!\nip cef\nno ipv6 cef\n!\nmultilink bundle-name authenticated\n!\ninterface GigabitEthernet0/0\n ip nat inside\n ip address 192.168.10.1 255.255.255.0\n duplex auto\n speed auto\n!\ninterface GigabitEthernet0/1\n ip nat outside\n ip address 192.168.20.1 255.255.255.0\n duplex auto\n speed auto\n!\ninterface GigabitEthernet0/2\n no ip address\n shutdown\n duplex auto\n speed auto\n!\nip forward-protocol nd\n!\nno ip http server\nno ip http secure-server\n!\nip nat inside source list 1 interface GigabitEthernet0/1 overload\nlogging trap 6\naccess-list 1 permit 192.168.10.0 0.0.0.255\n!\ncontrol-plane\n!\nline con 0\nline aux 0\nline vty 0 4\n login\n!\nend\n",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.316Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "after-clear",
+      "device": "R1",
+      "input": "show ip nat translations",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Pro Inside global      Pro Inside local       Outside local      Outside global\n--- -------------------- -------------------- --------------- ---------------",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.316Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "after-clear",
+      "device": "R1",
+      "input": "show ip nat statistics",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "Total active translations: 0 (0 static, 0 dynamic; 0 extended)\nInside interfaces: GigabitEthernet0/0\nOutside interfaces: GigabitEthernet0/1\nHits: 32  Misses: 22\nExpired translations: 0\nDynamic mappings:\n  access-list 1 interface GigabitEthernet0/1 overload (active 0)",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.317Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "after-clear",
+      "device": "R1",
+      "input": "show ip interface gigabitEthernet 0/0",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "GigabitEthernet0/0 is up, line protocol is up\n  Internet address is 192.168.10.1/24\n  IP NAT inside",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.317Z"
+    },
+    {
+      "backend": "sim",
+      "experiment": "after-clear",
+      "device": "R1",
+      "input": "show ip interface gigabitEthernet 0/1",
+      "mode": "enable",
+      "status": "ok",
+      "rawOutput": "GigabitEthernet0/1 is up, line protocol is up\n  Internet address is 192.168.20.1/24\n  IP NAT outside",
+      "prompt": null,
+      "capturedAt": "2026-10-23T22:24:00.317Z"
+    }
+  ],
+  "cmlAvailability": "vmrun was not available in PATH, so a CML VM could not be checked or used.",
+  "harnessNote": "The simulator network was loaded in an isolated sim-server process and discarded on exit."
+}

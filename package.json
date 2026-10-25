@@ -9,7 +9,24 @@
     "build": "tsc --noEmit && vite build",
     "test": "vitest run",
     "test:watch": "vitest",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "sim:spike": "node tools/run-sim-spike.mjs",
+    "sim:faults": "node tools/run-sim-fault-scenarios.mjs",
+    "sim:stp": "node tools/run-sim-stp-scenario.mjs",
+    "sim:ipv6": "node tools/run-sim-ipv6-scenario.mjs",
+    "sim:ipv6-ospf": "node tools/run-sim-ipv6-ospf.mjs",
+    "sim:dhcp": "node tools/run-sim-dhcp-scenario.mjs",
+    "sim:nat": "node tools/run-sim-nat-scenario.mjs",
+    "sim:acl": "node tools/run-sim-acl-scenario.mjs",
+    "sim:routing": "node tools/run-sim-routing-scenario.mjs",
+    "sim:services": "node tools/run-sim-services-scenario.mjs",
+    "sim:security": "node tools/run-sim-access-security-scenario.mjs",
+    "sim:switching": "node tools/run-sim-switching-scenario.mjs",
+    "audit:network": "node tools/validate-network-artifacts.mjs",
+    "verify:network": "npm run build && npm test -- --run && npm run sim:spike && npm run sim:faults && npm run sim:stp && npm run sim:ipv6 && npm run sim:ipv6-ospf && npm run sim:dhcp && npm run sim:nat && npm run sim:acl && npm run sim:routing && npm run sim:services && npm run sim:security && npm run sim:switching && npm run audit:network",
+    "pt:topology": "node tools/run-pt-topology-spike.mjs",
+    "pt:health": "node tools/run-pt-expanded-health.mjs",
+    "pt:status": "node tools/check-pt-stack.mjs"
   },
   "devDependencies": {
     "typescript": "^5.9.3",
@@ -18,6 +35,7 @@
   },
   "dependencies": {
     "@xterm/addon-fit": "^0.11.0",
-    "@xterm/xterm": "^6.0.0"
+    "@xterm/xterm": "^6.0.0",
+    "phaser": "^3.90.0"
   }
 }

@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Time To Live: Packet Tracer Dashboard</title>
+    <link rel="stylesheet" href="/src/web/pt-dashboard.css" />
+  </head>
+  <body>
+    <header class="header">
+      <div>
+        <p class="eyebrow">TIME TO LIVE / PACKET TRACER</p>
+        <h1>Network Operations Dashboard</h1>
+      </div>
+      <div class="controls">
+        <label>Bridge URL <input id="bridge-url" value="http://127.0.0.1:39094" /></label>
+        <button id="refresh">Refresh</button>
+      </div>
+    </header>
+    <main>
+      <section class="status-row">
+        <div class="status-card"><span>Bridge</span><strong id="bridge-status">Checking…</strong></div>
+        <div class="status-card"><span>Packet Tracer ExApp</span><strong id="poller-status">Checking…</strong></div>
+        <div class="status-card"><span>Devices</span><strong id="device-count">—</strong></div>
+        <div class="status-card"><span>Links</span><strong id="link-count">—</strong></div>
+        <div class="status-card"><span>Last refresh</span><strong id="last-refresh">—</strong></div>
+      </section>
+      <section class="panel health-panel"><div class="panel-heading"><h2>Network health <small id="health-summary" class="muted">Not run</small></h2><span><label class="health-toggle"><input id="auto-health" type="checkbox" checked /> Auto-check every 60s</label> <button id="health-check">Run health check</button></span></div><div id="health-results"><p class="muted">No health check run yet.</p></div></section>
+      <section class="panel coverage-panel"><h2>Study coverage</h2><div class="coverage-grid"><div><h3>Hands-on modeled</h3><p>IPv4/IPv6, VLANs, trunks, STP, routing, OSPF/EIGRP, ACLs, NAT, DHCP, FHRP, port security, DHCP snooping, DAI, services, and interface faults.</p></div><div><h3>Concept-only / simplified</h3><p>Wireless RF behavior, production QoS, full SNMP polling and traps, centralized syslog, cloud/controller APIs, RADIUS/TACACS exchanges, and real transport encryption.</p></div></div></section>
+      <section class="panel topology-panel"><h2>Topology map</h2><div id="topology-map" class="topology-map"><p class="muted">Loading…</p></div></section>
+      <section class="grid">
+        <article class="panel"><h2>Live topology</h2><div id="devices" class="devices"><p class="muted">Loading…</p></div></article>
+        <article class="panel"><h2>Link endpoints</h2><div id="links"><p class="muted">Loading…</p></div></article>
+      </section>
+      <section class="panel command-panel">
+        <h2>Run command</h2>
+        <form id="command-form">
+          <select id="device-select" aria-label="Device"></select>
+          <select id="mode-select" aria-label="Command mode"><option value="enable">EXEC / enable</option><option value="global">Global config</option><option value="current">Current mode</option></select>
+          <input id="command" value="show spanning-tree" aria-label="Command" />
+          <button>Run</button>
+        </form>
+        <pre id="output">No command run yet.</pre>
+      </section>
+      <section class="panel history-panel"><h2>Command history</h2><div id="history"><p class="muted">No commands run yet.</p></div></section>
+    </main>
+    <script type="module" src="/src/web/pt-dashboard.ts"></script>
+  </body>
+</html>

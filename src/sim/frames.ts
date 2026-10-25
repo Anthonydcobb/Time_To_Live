@@ -1,4 +1,4 @@
-import type { Ipv4, Mac } from "./addr";
+import type { Ipv4, Ipv6, Mac } from "./addr";
 
 export interface ArpPacket {
   kind: "arp";
@@ -31,6 +31,17 @@ export interface DhcpMessage {
   dnsServers?: Ipv4[];
   domainName?: string;
   leaseSec?: number;
+  /** The client-facing interface address added by a DHCP relay. */
+  relayIp?: Ipv4;
+}
+
+/** A deliberately small DNS exchange carried inside the simulated IPv4 path. */
+export interface DnsPacket {
+  kind: "dns";
+  id: number;
+  response: boolean;
+  name: string;
+  addresses: Ipv4[];
 }
 
 /** An IPv4 packet carries either an ICMP message or a DHCP message. */
@@ -41,6 +52,23 @@ export interface Ipv4Packet {
   ttl: number;
   icmp?: IcmpMessage;
   dhcp?: DhcpMessage;
+  dns?: DnsPacket;
+}
+
+export interface Icmpv6Message {
+  type: "echo-request" | "echo-reply" | "time-exceeded" | "unreachable" | "neighbor-solicitation" | "neighbor-advertisement";
+  id: number;
+  seq: number;
+  target?: Ipv6;
+  targetMac?: Mac;
+}
+
+export interface Ipv6Packet {
+  kind: "ipv6";
+  src: Ipv6;
+  dst: Ipv6;
+  hopLimit: number;
+  icmpv6?: Icmpv6Message;
 }
 
 /** Cisco Discovery Protocol advertisement. Switches consume these instead of forwarding them. */
@@ -57,14 +85,40 @@ export interface CdpPacket {
   nativeVlan?: number;
 }
 
+/** A small IEEE 802.1AB-style LLDP advertisement. */
+export interface LldpPacket {
+  kind: "lldp";
+  deviceId: string;
+  platform: string;
+  capability: "Router" | "Switch";
+  portId: string;
+  ttlSec: number;
+  address: Ipv4 | null;
+}
+
+/** A small PVST-style configuration BPDU. It is intentionally modeled as a
+ * control frame so switches can react to real topology changes rather than
+ * merely waiting out a fixed timer. */
+export interface BpduPacket {
+  kind: "bpdu";
+  vlan: number;
+  rootPriority: number;
+  rootMac: Mac;
+  rootPathCost: number;
+  bridgePriority: number;
+  bridgeMac: Mac;
+  portId: string;
+}
+
 export const CDP_MAC: Mac = "01000ccccccc";
+export const STP_MAC: Mac = "0180c2000000";
 
 export interface Frame {
   src: Mac;
   dst: Mac;
   /** The 802.1Q tag, present only while the frame crosses a trunk. */
   vlan?: number;
-  payload: ArpPacket | Ipv4Packet | CdpPacket;
+  payload: ArpPacket | Ipv4Packet | Ipv6Packet | CdpPacket | LldpPacket | BpduPacket;
 }
 
 /** A copy of the frame with an 802.1Q tag, or without one when `vlan` is undefined. */

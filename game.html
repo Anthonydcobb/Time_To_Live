@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Time To Live</title>
+    <link rel="stylesheet" href="/src/game/game.css" />
+  </head>
+  <body>
+    <!-- A blurred, dark copy of the room that fills the letterbox bars around the game. -->
+    <canvas id="ambient" aria-hidden="true"></canvas>
+    <div id="stage"></div>
+
+    <!-- The work order: a stub that unfolds into the task list (J or click). -->
+    <aside id="work-order" hidden>
+      <button id="wo-stub" aria-expanded="false" aria-controls="wo-body">
+        <span class="wo-title">Work order #0001</span>
+        <span class="wo-where">Quik-Stop Forever</span>
+        <span id="wo-count"></span>
+      </button>
+      <div id="wo-body" hidden>
+        <p>Client: Mrs. Finch · Corner of Elm and Elm</p>
+        <ul id="tasks"></ul>
+      </div>
+    </aside>
+    <p id="keys">WASD / arrows move · <kbd>E</kbd> use · <kbd>Q</kbd> walkie · <kbd>J</kbd> work order · <kbd>M</kbd> sound<span id="key-grimoire" hidden> · <kbd>G</kbd> grimoire</span></p>
+
+    <!-- An illustrated close-up of whatever you're inspecting, centred in the room above the dialogue. -->
+    <div id="closeup-wrap"><img id="closeup" alt="" hidden /></div>
+    <div id="dialogue" hidden>
+      <!-- The speaker in an old picture frame, left of the console. -->
+      <div id="frame" hidden>
+        <img id="bust" alt="" hidden />
+        <div id="portrait" hidden></div>
+      </div>
+      <!-- A battered piece of network gear: name plate, status lights, and a green screen. -->
+      <div class="console">
+        <span class="screw tl"></span><span class="screw tr"></span><span class="screw bl"></span><span class="screw br"></span>
+        <header>
+          <p id="who"></p>
+          <ul class="leds" aria-hidden="true">
+            <li class="led-err">LINK/ERR <i></i></li>
+            <li class="led-rx">RX/TX <i></i></li>
+          </ul>
+        </header>
+        <div class="screen">
+          <div id="ghost" aria-hidden="true"></div>
+          <p id="line"></p>
+          <ul id="choices" hidden></ul>
+          <span id="more">[E] NEXT ▼</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="laptop" hidden>
+      <div class="lid">
+        <header><span id="laptop-title"></span><button id="laptop-close" aria-label="Close">Esc</button></header>
+        <div id="laptop-screen"></div>
+        <footer id="laptop-hint"></footer>
+      </div>
+    </div>
+
+    <div id="panel" hidden>
+      <div class="lid">
+        <header><span>Back of the rack</span><button id="panel-close" aria-label="Close">Esc</button></header>
+        <div id="panel-body"></div>
+        <footer id="panel-hint"></footer>
+      </div>
+    </div>
+
+    <div id="card" hidden></div>
+
+    <!-- Walter on the radio while a laptop or PC is open: F1 or the button calls him. -->
+    <button id="radio-call" hidden><kbd>F1</kbd> Radio Walter</button>
+    <div id="radio" hidden>
+      <p class="who">WALTER (walkie)</p>
+      <p id="radio-line"></p>
+    </div>
+    <script type="module" src="/src/game/main.ts"></script>
+  </body>
+</html>

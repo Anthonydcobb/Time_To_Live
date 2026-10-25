@@ -28,6 +28,7 @@ describe("grimoire", () => {
       line: ["config-line"],
       dhcp: ["dhcp-config"],
       vlan: ["config-vlan"],
+      acl: ["config-acl"],
     };
     for (const text of [...BASICS, ...DENTIST_INCANTATIONS]) {
       const { book, words } = parseIncantation(text);

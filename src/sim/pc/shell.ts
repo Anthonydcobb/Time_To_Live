@@ -22,7 +22,13 @@ export class PcShell {
   execute(line: string): ShellOutput {
     const [cmd, ...args] = line.trim().split(/\s+/);
     if (!cmd) return { lines: [] };
+    if (this.pc.terminal.active) {
+      if (cmd.toLowerCase() === "disconnect") return this.pc.terminal.close();
+      return this.pc.terminal.input(line);
+    }
     switch (cmd.toLowerCase()) {
+      case "terminal":
+        return this.pc.terminal.open();
       case "ipconfig":
         return this.ipconfig(args);
       case "ping":
@@ -45,6 +51,8 @@ export class PcShell {
           "  ipconfig <ip> <mask> [<gw>]    Set a static IP address",
           "  ping [-n count] <ip>           Send ICMP echo requests",
           "  tracert <ip>                   Trace the route to a host",
+          "  terminal                       Open the console cable terminal",
+          "  disconnect                     Close the console terminal",
         ] };
       default:
         return { lines: ["Invalid Command."] };
@@ -131,22 +139,53 @@ export class PcShell {
       count = Math.max(1, Math.min(100, Number(rest[1]) || 4));
       rest.splice(0, 2);
     }
-    const target = rest[0] ? parseIpv4(rest[0]) : null;
-    if (target === null) return { lines: ["Ping request could not find host. Please check the name and try again."] };
+    const name = rest[0] ?? "";
+    const target = parseIpv4(name);
+    if (target !== null) return this.pingAddress(target, count);
+    const job = new Job();
+    this.pc.resolve(name, (resolved) => {
+      if (!resolved) { job.write("Ping request could not find host. Please check the name and try again.\n"); job.finish(); return; }
+      this.pc.clock.schedule(0, () => {
+        if (job.done) return;
+        const failed = this.cannotSend(resolved);
+        if (failed) { job.write(failed.join("\n") + "\n"); job.finish(); return; }
+        const inner = winPing({ stack: this.pc.stack, clock: this.pc.clock }, resolved, count, name);
+        inner.onData((text) => job.write(text));
+        inner.onDone(() => job.finish());
+      });
+    });
+    return { lines: [], job };
+  }
+
+  private pingAddress(target: number, count: number): ShellOutput {
     const failed = this.cannotSend(target);
     if (failed) return { lines: failed };
     return { lines: [], job: winPing({ stack: this.pc.stack, clock: this.pc.clock }, target, count) };
   }
 
   private tracert(args: string[]): ShellOutput {
-    const target = args[0] ? parseIpv4(args[0]) : null;
-    if (target === null) return { lines: ["Unable to resolve target system name."] };
+    const name = args[0] ?? "";
+    const target = parseIpv4(name);
+    if (target !== null) return this.tracertAddress(target, name);
+    const job = new Job();
+    this.pc.resolve(name, (resolved) => {
+      if (!resolved) { job.write("Unable to resolve target system name.\n"); job.finish(); return; }
+      this.pc.clock.schedule(0, () => {
+        if (job.done) return;
+        const result = this.tracertAddress(resolved, name).job;
+        if (!result) { job.finish(); return; }
+        result.onData((text) => job.write(text));
+        result.onDone(() => job.finish());
+      });
+    });
+    return { lines: [], job };
+  }
+
+  private tracertAddress(target: number, label: string): ShellOutput {
     const failed = this.cannotSend(target);
     if (failed) return { lines: failed };
-    return {
-      lines: [`Tracing route to ${formatIpv4(target)} over a maximum of 30 hops: `, ""],
-      job: winTracert({ stack: this.pc.stack, clock: this.pc.clock }, target),
-    };
+    const shown = label === formatIpv4(target) ? label : `${label} [${formatIpv4(target)}]`;
+    return { lines: [`Tracing route to ${shown} over a maximum of 30 hops: `, ""], job: winTracert({ stack: this.pc.stack, clock: this.pc.clock }, target) };
   }
 
   /** Windows refuses to send at all without an address, a link or a route. */

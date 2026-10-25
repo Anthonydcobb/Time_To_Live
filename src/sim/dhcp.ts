@@ -46,6 +46,16 @@ export interface DhcpServerHost {
 export class DhcpServer {
   readonly bindings = new Map<Ipv4, DhcpBinding>();
   readonly conflicts = new Map<Ipv4, DhcpConflict>();
+  readonly statistics = {
+    received: 0,
+    sent: 0,
+    discoverReceived: 0,
+    offerSent: 0,
+    requestReceived: 0,
+    ackSent: 0,
+    nakSent: 0,
+    releaseReceived: 0,
+  };
   private readonly offers = new Map<Mac, { ip: Ipv4; pool: string; until: number }>();
   /** Clients whose discover is being ping-checked right now. */
   private readonly checking = new Set<Mac>();
@@ -72,10 +82,13 @@ export class DhcpServer {
 
   /** The pool serving the subnet an interface is in. */
   poolFor(iface: L3Interface): DhcpPool | null {
-    if (iface.ip === null || iface.mask === null) return null;
+    return iface.ip === null ? null : this.poolForAddress(iface.ip);
+  }
+
+  poolForAddress(address: Ipv4): DhcpPool | null {
     return (
       this.host.config().dhcpPools.find(
-        (p) => p.network !== null && p.mask !== null && networkOf(iface.ip!, p.mask) === p.network,
+        (p) => p.network !== null && p.mask !== null && networkOf(address, p.mask) === p.network,
       ) ?? null
     );
   }
@@ -103,16 +116,20 @@ export class DhcpServer {
 
   handle(iface: L3Interface, packet: Ipv4Packet): void {
     const msg = packet.dhcp!;
-    if (msg.op === "discover") this.discover(iface, msg);
-    else if (msg.op === "request") this.request(iface, msg);
+    this.statistics.received++;
+    if (msg.op === "discover") this.statistics.discoverReceived++;
+    if (msg.op === "request") this.statistics.requestReceived++;
+    if (msg.op === "release") this.statistics.releaseReceived++;
+    const pool = msg.relayIp === undefined ? this.poolFor(iface) : this.poolForAddress(msg.relayIp);
+    if (msg.op === "discover") this.discover(iface, msg, pool);
+    else if (msg.op === "request") this.request(iface, msg, pool);
     else if (msg.op === "release") {
       const b = this.bindings.get(packet.src);
       if (b && b.mac === msg.chaddr) this.bindings.delete(packet.src);
     }
   }
 
-  private discover(iface: L3Interface, msg: DhcpMessage): void {
-    const pool = this.poolFor(iface);
+  private discover(iface: L3Interface, msg: DhcpMessage, pool: DhcpPool | null): void {
     if (!pool || this.checking.has(msg.chaddr)) return;
     const existing = [...this.bindings.values()].find((b) => b.mac === msg.chaddr && b.pool === pool.name);
     if (existing) {
@@ -174,29 +191,40 @@ export class DhcpServer {
     };
   }
 
+  private sendResponse(iface: L3Interface, dst: Ipv4, msg: DhcpMessage): void {
+    this.statistics.sent++;
+    if (msg.op === "offer") this.statistics.offerSent++;
+    if (msg.op === "ack") this.statistics.ackSent++;
+    if (msg.op === "nak") this.statistics.nakSent++;
+    const frame = dhcpFrame(iface.mac, BROADCAST_MAC, iface.ip!, dst, msg);
+    if (msg.relayIp !== undefined) {
+      this.host.stack.send(frame.payload as Ipv4Packet);
+    } else {
+      iface.transmit(frame);
+    }
+  }
+
   private offer(iface: L3Interface, pool: DhcpPool, msg: DhcpMessage, ip: Ipv4): void {
     if (iface.ip === null) return;
     this.offers.set(msg.chaddr, { ip, pool: pool.name, until: this.now + OFFER_HOLD_MS });
-    iface.transmit(
-      dhcpFrame(iface.mac, msg.chaddr, iface.ip, ip, {
+    this.sendResponse(iface, msg.relayIp ?? ip, {
         op: "offer",
         xid: msg.xid,
         chaddr: msg.chaddr,
         yiaddr: ip,
         serverId: iface.ip,
+        relayIp: msg.relayIp,
         ...this.options(pool),
-      }),
-    );
+      });
   }
 
-  private request(iface: L3Interface, msg: DhcpMessage): void {
+  private request(iface: L3Interface, msg: DhcpMessage, pool: DhcpPool | null): void {
     if (iface.ip === null) return;
     // The client picked a different server's offer.
     if (msg.serverId !== undefined && msg.serverId !== iface.ip) {
       this.offers.delete(msg.chaddr);
       return;
     }
-    const pool = this.poolFor(iface);
     const want = msg.requested;
     if (!pool || want === undefined) return;
     const offered = this.offers.get(msg.chaddr);
@@ -205,23 +233,22 @@ export class DhcpServer {
       networkOf(want, pool.mask!) === pool.network &&
       ((offered?.ip === want && offered.until > this.now) || bound?.mac === msg.chaddr || (!this.excluded(want) && !this.inUse(want, msg.chaddr)));
     if (!ok) {
-      iface.transmit(dhcpFrame(iface.mac, BROADCAST_MAC, iface.ip, BROADCAST_IP, { op: "nak", xid: msg.xid, chaddr: msg.chaddr, yiaddr: 0, serverId: iface.ip }));
+      this.sendResponse(iface, msg.relayIp ?? BROADCAST_IP, { op: "nak", xid: msg.xid, chaddr: msg.chaddr, yiaddr: 0, serverId: iface.ip, relayIp: msg.relayIp });
       return;
     }
     this.offers.delete(msg.chaddr);
     const lease = leaseMs(pool);
     for (const [ip, b] of this.bindings) if (b.mac === msg.chaddr && b.pool === pool.name) this.bindings.delete(ip);
     this.bindings.set(want, { ip: want, mac: msg.chaddr, pool: pool.name, expiresAt: lease === null ? null : this.now + lease });
-    iface.transmit(
-      dhcpFrame(iface.mac, msg.chaddr, iface.ip, want, {
+    this.sendResponse(iface, msg.relayIp ?? want, {
         op: "ack",
         xid: msg.xid,
         chaddr: msg.chaddr,
         yiaddr: want,
         serverId: iface.ip,
+        relayIp: msg.relayIp,
         ...this.options(pool),
-      }),
-    );
+      });
   }
 }
 

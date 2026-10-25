@@ -108,7 +108,7 @@ export function dentist() {
     workOrder: {
       number: "0003",
       client: "Marrow Family Dentistry",
-      place: "Above the bait shop on Main Street, Static Springs. Dr. Ilse Marrow, DDS. Evening appointments only.",
+      place: "The shopfront row past the Quik-Stop, Static Springs. Dr. Ilse Marrow, DDS. Evening appointments only.",
       notes: "Everything is cabled and set to get an address automatically. The X-ray room must not share a network with the front desk. Nothing is configured.",
       hint: "VLANs are created when you leave config-vlan mode. After a PC moves to a new VLAN, run ipconfig /renew on it.",
     },

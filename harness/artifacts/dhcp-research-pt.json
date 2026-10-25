@@ -1,0 +1,3411 @@
+{
+  "capturedAt": "2026-10-22T20:05:42.770Z",
+  "backend": "pt",
+  "version": "Packet Tracer live bridge",
+  "image": "live rebuilt lab",
+  "observations": [
+    {
+      "backend": "pt",
+      "experiment": "baseline",
+      "device": "Router0",
+      "input": "show ip interface brief",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Interface              IP-Address      OK? Method Status                Protocol \nGigabitEthernet0/0     unassigned      YES unset  up                    up \nGigabitEthernet0/0.10  192.168.10.1    YES manual up                    up \nGigabitEthernet0/0.20  192.168.20.1    YES manual up                    up \nGigabitEthernet0/1     unassigned      YES unset  administratively down down \nGigabitEthernet0/2     unassigned      YES unset  administratively down down \nVlan1                  unassigned      YES unset  administratively down down\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "baseline",
+      "device": "PC0",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n --More-- "
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "ip dhcp excluded-address 192.168.10.1 192.168.10.10",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "ip dhcp pool TTL_RESEARCH",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "network 192.168.10.0 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "default-router 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "dns-server 192.168.10.53",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "lease 0 1",
+      "mode": "",
+      "status": "ERROR_INVALID",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "PC0",
+      "input": "ipconfig /dhcp",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\nCisco Packet Tracer PC Command Line 1.0\nC:\\>show version\nInvalid Command.\n\nC:\\>show ip interface brief\nInvalid Command.\n\nC:\\>show vlan brief\nInvalid Command.\n\nC:\\>show spanning-tree\nInvalid Command.\n\nC:\\>show mac address-table\nInvalid Command.\n\nC:\\>show cdp neighbors\nInvalid Command.\n\nC:\\>show version\nInvalid Command.\n\nC:\\>show ip interface brief\nInvalid Command.\n\nC:\\>show vlan brief\nInvalid Command.\n\nC:\\>show spanning-tree\nInvalid Command.\n\nC:\\>show mac address-table\nInvalid Command.\n\nC:\\>show cdp neighbors\nInvalid Command.\n\nC:\\>ipconfig 192.168.10.10 255.255.255.0 192.168.10.1\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\nRequest timed out.\nRequest timed out.\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),\n\nC:\\>ipconfig\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Link-local IPv6 Address.........: ::\n   IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n\nC:\\>ping 192.168.20.10\n\nPinging 192.168.20.10 with 32 bytes of data:\n\nRequest timed out.\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.10\n\nPinging 192.168.20.10 with 32 bytes of data:\n\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\nReply from 192.168.20.10: bytes=32 time=12ms TTL=127\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 12ms, Average = 3ms\n\nC:\\>ping 192.168.10.11\n\nPinging 192.168.10.11 with 32 bytes of data:\n\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\nReply from 192.168.10.11: bytes=32 time=1ms TTL=128\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\n\nPing statistics for 192.168.10.11:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 1ms, Average = 0ms\n\nC:\\>show version\nInvalid Command.\n\nC:\\>show ip interface brief\nInvalid Command.\n\nC:\\>show vlan brief\nInvalid Command.\n\nC:\\>show spanning-tree\nInvalid Command.\n\nC:\\>show mac address-table\nInvalid Command.\n\nC:\\>show cdp neighbors\nInvalid Command.\n\nC:\\>ipconfig 192.168.10.10 255.255.255.0 192.168.10.1\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nRequest timed out.\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>show version\nInvalid Command.\n\nC:\\>show ip interface brief\nInvalid Command.\n\nC:\\>show vlan brief\nInvalid Command.\n\nC:\\>show spanning-tree\nInvalid Command.\n\nC:\\>show mac address-table\nInvalid Command.\n\nC:\\>show cdp neighbors\nInvalid Command.\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig /renew\nInvalid Command.\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig /dhcp\nInvalid Command.\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "PC0",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /renew\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "PC0",
+      "input": "ipconfig /release",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "PC0",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "show ip dhcp binding",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "IP address       Client-ID/              Lease expiration        Type\n                 Hardware address\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "show ip dhcp pool",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "\nPool TTL_RESEARCH :\n Utilization mark (high/low)    : 100 / 0\n Subnet size (first/next)       : 0 / 0 \n Total addresses                : 254\n Leased addresses               : 0\n Excluded addresses             : 1\n Pending event                  : none\n\n 1 subnet is currently in the pool\n Current index        IP address range                    Leased/Excluded/Total\n 192.168.10.1         192.168.10.1     - 192.168.10.254    0    / 1     / 254\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "show ip dhcp conflict",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "IP address        Detection method   Detection time          VRF\n192.168.10.11     Ping               Mar 1 1993 01:31 am\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "show ip dhcp server statistics",
+      "mode": "enable",
+      "status": "ERROR_INVALID",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "show running-config | section dhcp",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "ip dhcp excluded-address 192.168.10.1 192.168.10.10\nip dhcp pool TTL_RESEARCH\n network 192.168.10.0 255.255.255.0\n default-router 192.168.10.1\n dns-server 192.168.10.53\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "clear ip dhcp binding *",
+      "mode": "enable",
+      "status": "ERROR_INVALID",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "clear ip dhcp binding 192.168.10.11",
+      "mode": "enable",
+      "status": "ERROR_INVALID",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "ip dhcp ?",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "  excluded-address  Prevent DHCP from assigning certain addresses\n  pool              Configure DHCP address pools\n  relay             DHCP relay agent parameters\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "basic-pool",
+      "device": "Router0",
+      "input": "ip dhcp",
+      "mode": "global",
+      "status": "ERROR_INCOMPLETE",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/0.20",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "Router1",
+      "input": "ip helper-address 192.168.20.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "Router0",
+      "input": "ip dhcp pool TTL_RELAY",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "Router0",
+      "input": "network 192.168.20.0 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "Router0",
+      "input": "default-router 192.168.20.2",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "Router0",
+      "input": "dns-server 192.168.20.53",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "PC1",
+      "input": "ipconfig /dhcp",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /dhcp\nInvalid Command.\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "PC1",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /renew\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "PC1",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "relay",
+      "device": "Router1",
+      "input": "show running-config | section dhcp",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "Router0",
+      "input": "ip dhcp excluded-address 192.168.10.1 192.168.10.253",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "PC0",
+      "input": "ipconfig /dhcp",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /dhcp\nInvalid Command.\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "PC2",
+      "input": "ipconfig /dhcp",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /dhcp\nInvalid Command.\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "PC0",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.12\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     192.168.10.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n --More-- "
+    },
+    {
+      "backend": "pt",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "PC2",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 000D.BD77.22D1\n   Link-local IPv6 Address.........: FE80::20D:BDFF:FE77:22D1\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.11\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-E8-6D-00-34-00-0D-BD-77-22-D1\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0060.2F4B.B4D9\n   Link-local IPv6 Address.........: ::\n --More-- "
+    },
+    {
+      "backend": "pt",
+      "experiment": "exhaustion-and-exclusion",
+      "device": "Router0",
+      "input": "show ip dhcp binding",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "IP address       Client-ID/              Lease expiration        Type\n                 Hardware address\n192.168.10.12    00E0.A379.2D27           --                     Automatic\n192.168.20.3     0030.A330.483A           --                     Automatic\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "wrong-default-router",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "wrong-default-router",
+      "device": "Router0",
+      "input": "ip dhcp pool TTL_RESEARCH",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "wrong-default-router",
+      "device": "Router0",
+      "input": "default-router 192.168.10.254",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "wrong-default-router",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "wrong-default-router",
+      "device": "PC0",
+      "input": "ipconfig /release",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\nCisco Packet Tracer PC Command Line 1.0\nC:\\>show version\nInvalid Command.\n\nC:\\>show ip interface brief\nInvalid Command.\n\nC:\\>show vlan brief\nInvalid Command.\n\nC:\\>show spanning-tree\nInvalid Command.\n\nC:\\>show mac address-table\nInvalid Command.\n\nC:\\>show cdp neighbors\nInvalid Command.\n\nC:\\>show version\nInvalid Command.\n\nC:\\>show ip interface brief\nInvalid Command.\n\nC:\\>show vlan brief\nInvalid Command.\n\nC:\\>show spanning-tree\nInvalid Command.\n\nC:\\>show mac address-table\nInvalid Command.\n\nC:\\>show cdp neighbors\nInvalid Command.\n\nC:\\>ipconfig 192.168.10.10 255.255.255.0 192.168.10.1\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\nRequest timed out.\nRequest timed out.\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),\n\nC:\\>ipconfig\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Link-local IPv6 Address.........: ::\n   IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n\nC:\\>ping 192.168.20.10\n\nPinging 192.168.20.10 with 32 bytes of data:\n\nRequest timed out.\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.10\n\nPinging 192.168.20.10 with 32 bytes of data:\n\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\nReply from 192.168.20.10: bytes=32 time=12ms TTL=127\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 12ms, Average = 3ms\n\nC:\\>ping 192.168.10.11\n\nPinging 192.168.10.11 with 32 bytes of data:\n\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\nReply from 192.168.10.11: bytes=32 time=1ms TTL=128\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\nReply from 192.168.10.11: bytes=32 time<1ms TTL=128\n\nPing statistics for 192.168.10.11:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 1ms, Average = 0ms\n\nC:\\>show version\nInvalid Command.\n\nC:\\>show ip interface brief\nInvalid Command.\n\nC:\\>show vlan brief\nInvalid Command.\n\nC:\\>show spanning-tree\nInvalid Command.\n\nC:\\>show mac address-table\nInvalid Command.\n\nC:\\>show cdp neighbors\nInvalid Command.\n\nC:\\>ipconfig 192.168.10.10 255.255.255.0 192.168.10.1\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nRequest timed out.\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 3, Lost = 1 (25% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>show version\nInvalid Command.\n\nC:\\>show ip interface brief\nInvalid Command.\n\nC:\\>show vlan brief\nInvalid Command.\n\nC:\\>show spanning-tree\nInvalid Command.\n\nC:\\>show mac address-table\nInvalid Command.\n\nC:\\>show cdp neighbors\nInvalid Command.\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig /renew\nInvalid Command.\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.10\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig /dhcp\nInvalid Command.\n\nC:\\>ipconfig /renew\n\n   IP Address......................: 192.168.10.12\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 192.168.10.1\n   DNS Server......................: 192.168.10.53\n\nC:\\>ipconfig /dhcp\nInvalid Command.\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.A379.2D27\n   Link-local IPv6 Address.........: FE80::2E0:A3FF:FE79:2D27\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.12\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7E-BA-A9-7B-00-E0-A3-79-2D-27\n   DNS Servers.....................: ::\n                                     192.168.10.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 00E0.F786.E0BE\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig /release\nInvalid Command.\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "wrong-default-router",
+      "device": "PC0",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /renew\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "wrong-default-router",
+      "device": "PC0",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "snooping",
+      "device": "Switch0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "snooping",
+      "device": "Switch0",
+      "input": "ip dhcp snooping",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "snooping",
+      "device": "Switch0",
+      "input": "ip dhcp snooping vlan 10",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "snooping",
+      "device": "Switch0",
+      "input": "interface fastEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "snooping",
+      "device": "Switch0",
+      "input": "ip dhcp snooping trust",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "snooping",
+      "device": "Switch0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "snooping",
+      "device": "PC0",
+      "input": "ipconfig /dhcp",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "snooping",
+      "device": "PC0",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "snooping",
+      "device": "Switch0",
+      "input": "show ip dhcp snooping",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Switch DHCP snooping is enabled\nDHCP snooping is configured on following VLANs:\n10\nInsertion of option 82 is enabled\nOption 82 on untrusted port is not allowed\nVerification of hwaddr field is enabled\nInterface                  Trusted    Rate limit (pps)\n-----------------------    -------    ----------------\nFastEthernet0/1            yes        unlimited       \n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "snooping",
+      "device": "Switch0",
+      "input": "show ip dhcp snooping binding",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "MacAddress          IpAddress        Lease(sec)  Type           VLAN  Interface\n------------------  ---------------  ----------  -------------  ----  -----------------\nTotal number of bindings: 0\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "snooping",
+      "device": "Switch0",
+      "input": "show ip dhcp snooping statistics",
+      "mode": "enable",
+      "status": "ERROR_INVALID",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_RESEARCH",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_RELAY",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 192.168.10.1 192.168.10.10",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 192.168.10.1 192.168.10.253",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/0.20",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Router1",
+      "input": "no ip helper-address 192.168.20.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Switch0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Switch0",
+      "input": "no ip dhcp snooping",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "Switch0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "PC0",
+      "input": "ipconfig 192.168.10.10 255.255.255.0 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "PC1",
+      "input": "ipconfig 192.168.20.10 255.255.255.0 192.168.20.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig 192.168.20.10 255.255.255.0 192.168.20.1\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore",
+      "device": "PC2",
+      "input": "ipconfig 192.168.10.11 255.255.255.0 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\nCisco Packet Tracer PC Command Line 1.0\nC:\\>show version\nInvalid Command.\n\nC:\\>show ip interface brief\nInvalid Command.\n\nC:\\>show vlan brief\nInvalid Command.\n\nC:\\>show spanning-tree\nInvalid Command.\n\nC:\\>show mac address-table\nInvalid Command.\n\nC:\\>show cdp neighbors\nInvalid Command.\n\nC:\\>show version\nInvalid Command.\n\nC:\\>show ip interface brief\nInvalid Command.\n\nC:\\>show vlan brief\nInvalid Command.\n\nC:\\>show spanning-tree\nInvalid Command.\n\nC:\\>show mac address-table\nInvalid Command.\n\nC:\\>show cdp neighbors\nInvalid Command.\n\nC:\\>ipconfig 192.168.10.11 255.255.255.0 192.168.10.1\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\nRequest timed out.\nRequest timed out.\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 0, Lost = 4 (100% loss),\n\nC:\\>ipconfig\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Link-local IPv6 Address.........: FE80::20D:BDFF:FE77:22D1\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.11\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Link-local IPv6 Address.........: ::\n   IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time=1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 1ms, Average = 0ms\n\nC:\\>ping 192.168.10.10\n\nPinging 192.168.10.10 with 32 bytes of data:\n\nReply from 192.168.10.10: bytes=32 time<1ms TTL=128\nReply from 192.168.10.10: bytes=32 time<1ms TTL=128\nReply from 192.168.10.10: bytes=32 time<1ms TTL=128\nReply from 192.168.10.10: bytes=32 time<1ms TTL=128\n\nPing statistics for 192.168.10.10:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ping 192.168.20.10\n\nPinging 192.168.20.10 with 32 bytes of data:\n\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\nReply from 192.168.20.10: bytes=32 time=1ms TTL=127\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\nReply from 192.168.20.10: bytes=32 time<1ms TTL=127\n\nPing statistics for 192.168.20.10:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 1ms, Average = 0ms\n\nC:\\>show version\nInvalid Command.\n\nC:\\>show ip interface brief\nInvalid Command.\n\nC:\\>show vlan brief\nInvalid Command.\n\nC:\\>show spanning-tree\nInvalid Command.\n\nC:\\>show mac address-table\nInvalid Command.\n\nC:\\>show cdp neighbors\nInvalid Command.\n\nC:\\>ipconfig 192.168.10.11 255.255.255.0 192.168.10.1\nC:\\>ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nRequest timed out.\nRequest timed out.\nRequest timed out.\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 192.168.10.1:\n    Packets: Sent = 4, Received = 1, Lost = 3 (75% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>show version\nInvalid Command.\n\nC:\\>show ip interface brief\nInvalid Command.\n\nC:\\>show vlan brief\nInvalid Command.\n\nC:\\>show spanning-tree\nInvalid Command.\n\nC:\\>show mac address-table\nInvalid Command.\n\nC:\\>show cdp neighbors\nInvalid Command.\n\nC:\\>ipconfig /dhcp\nInvalid Command.\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 000D.BD77.22D1\n   Link-local IPv6 Address.........: FE80::20D:BDFF:FE77:22D1\n   IPv6 Address....................: ::\n   IPv4 Address....................: 192.168.10.11\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     192.168.10.1\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-E8-6D-00-34-00-0D-BD-77-22-D1\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0060.2F4B.B4D9\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig 192.168.10.11 255.255.255.0 192.168.10.1\nInvalid Command.\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore-verification",
+      "device": "PC0",
+      "input": "ping 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore-verification",
+      "device": "PC0",
+      "input": "ping 192.168.20.10",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore-verification",
+      "device": "PC1",
+      "input": "ping 192.168.20.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "restore-verification",
+      "device": "PC2",
+      "input": "ping 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-baseline",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\nCisco Packet Tracer PC Command Line 1.0\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4219.A1B4\n   Link-local IPv6 Address.........: FE80::201:42FF:FE19:A1B4\n   IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7D-45-B3-23-00-01-42-19-A1-B4\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4302.3A4E\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig /all\nInvalid Command.\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "ip address 10.99.0.1 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "no shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "ip route 10.99.0.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "ip dhcp excluded-address 10.99.0.1 10.99.0.10",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "ip dhcp pool TTL_RELAY_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "network 10.99.0.0 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "default-router 10.99.0.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "dns-server 10.99.0.53",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "lease 0 1",
+      "mode": "",
+      "status": "ERROR_INVALID",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "show ip interface brief",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Interface              IP-Address      OK? Method Status                Protocol \nGigabitEthernet0/0     unassigned      YES unset  up                    up \nGigabitEthernet0/0.10  192.168.10.2    YES manual up                    up \nGigabitEthernet0/0.20  192.168.20.2    YES manual up                    up \nGigabitEthernet0/1     10.99.0.1       YES manual up                    up \nGigabitEthernet0/2     unassigned      YES unset  administratively down down \nVlan1                  unassigned      YES unset  administratively down down\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "show running-config | section dhcp",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "PC3",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /renew\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "show ip dhcp binding",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "IP address       Client-ID/              Lease expiration        Type\n                 Hardware address\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "show ip dhcp pool TTL_RELAY_CLEAN",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Pool TTL_RELAY_CLEAN :\n Utilization mark (high/low)    : 100 / 0\n Subnet size (first/next)       : 0 / 0 \n Total addresses                : 254\n Leased addresses               : 0\n Excluded addresses             : 1\n Pending event                  : none\n\n 1 subnet is currently in the pool\n Current index        IP address range                    Leased/Excluded/Total\n 10.99.0.1            10.99.0.1        - 10.99.0.254       0    / 1     / 254\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "no ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "ip address 10.99.1.1 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "no shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "no ip route 10.99.0.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "ip route 10.99.1.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "ip dhcp excluded-address 10.99.1.1 10.99.1.254",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "ip dhcp pool TTL_EXHAUST_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "network 10.99.1.0 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "default-router 10.99.1.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "PC3",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "show ip dhcp pool TTL_EXHAUST_CLEAN",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Pool TTL_EXHAUST_CLEAN :\n Utilization mark (high/low)    : 100 / 0\n Subnet size (first/next)       : 0 / 0 \n Total addresses                : 254\n Leased addresses               : 0\n Excluded addresses             : 2\n Pending event                  : none\n\n 1 subnet is currently in the pool\n Current index        IP address range                    Leased/Excluded/Total\n 10.99.1.1            10.99.1.1        - 10.99.1.254       0    / 2     / 254\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "show ip dhcp binding",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "IP address       Client-ID/              Lease expiration        Type\n                 Hardware address\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "no ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "ip address 10.99.2.1 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "no shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip route 10.99.1.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_RELAY_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_EXHAUST_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 10.99.0.1 10.99.0.10",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 10.99.1.1 10.99.1.254",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "PC3",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "PC3",
+      "input": "derived-state-diff",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "{\"before\":[],\"renew\":[],\"after\":[],\"baseline\":[\"   IPv4 Address....................: 0.0.0.0\",\"   Subnet Mask.....................: 0.0.0.0\",\"   Default Gateway.................: ::\",\"   DHCP Servers....................: 0.0.0.0\",\"   DNS Servers.....................: ::\"]}"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "no ip address",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_EXHAUST_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 10.99.1.1 10.99.1.254",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "no ip route 10.99.2.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "%No matching route to delete\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "PC3",
+      "input": "ipconfig 0.0.0.0 0.0.0.0 0.0.0.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore-verification",
+      "device": "PC0",
+      "input": "ping 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore-verification",
+      "device": "PC0",
+      "input": "ping 192.168.20.10",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore-verification",
+      "device": "PC1",
+      "input": "ping 192.168.20.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore-verification",
+      "device": "PC2",
+      "input": "ping 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-baseline",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4219.A1B4\n   Link-local IPv6 Address.........: FE80::201:42FF:FE19:A1B4\n   IPv6 Address....................: ::\n   IPv4 Address....................: 10.99.0.11\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     10.99.0.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7D-45-B3-23-00-01-42-19-A1-B4\n   DNS Servers.....................: ::\n                                     10.99.0.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4302.3A4E\n   Link-local IPv6 Address.........: ::\n --More-- "
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-baseline",
+      "device": "PC3",
+      "input": "ipconfig /release",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\nCisco Packet Tracer PC Command Line 1.0\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4219.A1B4\n   Link-local IPv6 Address.........: FE80::201:42FF:FE19:A1B4\n   IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7D-45-B3-23-00-01-42-19-A1-B4\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4302.3A4E\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig /all\nInvalid Command.\n\nC:\\>ipconfig /renew\nDHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4219.A1B4\n   Link-local IPv6 Address.........: FE80::201:42FF:FE19:A1B4\n   IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7D-45-B3-23-00-01-42-19-A1-B4\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4302.3A4E\n   Link-local IPv6 Address.........: ::\n --More--    IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7D-45-B3-23-00-01-42-19-A1-B4\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\n\nDHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>ipconfig /dhcp\nInvalid Command.\n\nC:\\>ipconfig /renew\nDHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>ipconfig\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Link-local IPv6 Address.........: FE80::201:42FF:FE19:A1B4\n   IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Link-local IPv6 Address.........: ::\n   IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n\nC:\\>DHCP request failed. \n\nC:\\>ipconfig 10.99.0.2 255.255.255.0 10.99.0.1\nC:\\>ping 10.99.0.1\n\nPinging 10.99.0.1 with 32 bytes of data:\n\nReply from 10.99.0.1: bytes=32 time<1ms TTL=255\nReply from 10.99.0.1: bytes=32 time<1ms TTL=255\nReply from 10.99.0.1: bytes=32 time<1ms TTL=255\nReply from 10.99.0.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 10.99.0.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /release\nPort is not using DHCP.\nC:\\>ipconfig /renew\n\n   IP Address......................: 10.99.0.11\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.99.0.1\n   DNS Server......................: 10.99.0.53\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4219.A1B4\n   Link-local IPv6 Address.........: FE80::201:42FF:FE19:A1B4\n   IPv6 Address....................: ::\n   IPv4 Address....................: 10.99.0.11\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     10.99.0.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7D-45-B3-23-00-01-42-19-A1-B4\n   DNS Servers.....................: ::\n                                     10.99.0.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4302.3A4E\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig /release\nInvalid Command.\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-baseline",
+      "device": "PC3",
+      "input": "ipconfig /dhcp",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /dhcp\nInvalid Command.\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "ip address 10.99.0.1 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "no shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "ip route 10.99.0.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "ip dhcp excluded-address 10.99.0.1 10.99.0.10",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "ip dhcp pool TTL_RELAY_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "network 10.99.0.0 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "default-router 10.99.0.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "dns-server 10.99.0.53",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "lease 0 1",
+      "mode": "",
+      "status": "ERROR_INVALID",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "show ip interface brief",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Interface              IP-Address      OK? Method Status                Protocol \nGigabitEthernet0/0     unassigned      YES unset  up                    up \nGigabitEthernet0/0.10  192.168.10.2    YES manual up                    up \nGigabitEthernet0/0.20  192.168.20.2    YES manual up                    up \nGigabitEthernet0/1     10.99.0.1       YES manual up                    up \nGigabitEthernet0/2     unassigned      YES unset  administratively down down \nVlan1                  unassigned      YES unset  administratively down down\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "show running-config | section dhcp",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "PC3",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /renew\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "show ip dhcp binding",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "IP address       Client-ID/              Lease expiration        Type\n                 Hardware address\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "show ip dhcp pool TTL_RELAY_CLEAN",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Pool TTL_RELAY_CLEAN :\n Utilization mark (high/low)    : 100 / 0\n Subnet size (first/next)       : 0 / 0 \n Total addresses                : 254\n Leased addresses               : 0\n Excluded addresses             : 1\n Pending event                  : none\n\n 1 subnet is currently in the pool\n Current index        IP address range                    Leased/Excluded/Total\n 10.99.0.1            10.99.0.1        - 10.99.0.254       0    / 1     / 254\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "no ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "ip address 10.99.1.1 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "no shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "no ip route 10.99.0.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "ip route 10.99.1.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "ip dhcp excluded-address 10.99.1.1 10.99.1.254",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "ip dhcp pool TTL_EXHAUST_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "network 10.99.1.0 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "default-router 10.99.1.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "PC3",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "show ip dhcp pool TTL_EXHAUST_CLEAN",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Pool TTL_EXHAUST_CLEAN :\n Utilization mark (high/low)    : 100 / 0\n Subnet size (first/next)       : 0 / 0 \n Total addresses                : 254\n Leased addresses               : 0\n Excluded addresses             : 2\n Pending event                  : none\n\n 1 subnet is currently in the pool\n Current index        IP address range                    Leased/Excluded/Total\n 10.99.1.1            10.99.1.1        - 10.99.1.254       0    / 2     / 254\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "show ip dhcp binding",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "IP address       Client-ID/              Lease expiration        Type\n                 Hardware address\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "no ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "ip address 10.99.2.1 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "no shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip route 10.99.1.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_RELAY_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_EXHAUST_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 10.99.0.1 10.99.0.10",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 10.99.1.1 10.99.1.254",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "PC3",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "PC3",
+      "input": "derived-state-diff",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "{\"before\":[],\"renew\":[],\"after\":[],\"baseline\":[\"   IPv4 Address....................: 10.99.0.11\",\"   Subnet Mask.....................: 255.255.255.0\",\"   Default Gateway.................: ::\",\"   DHCP Servers....................: 192.168.10.1\",\"   DNS Servers.....................: ::\"]}"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "no ip address",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_EXHAUST_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 10.99.1.1 10.99.1.254",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "no ip route 10.99.2.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "%No matching route to delete\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "PC3",
+      "input": "ipconfig 0.0.0.0 0.0.0.0 0.0.0.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore-verification",
+      "device": "PC0",
+      "input": "ping 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore-verification",
+      "device": "PC0",
+      "input": "ping 192.168.20.10",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore-verification",
+      "device": "PC1",
+      "input": "ping 192.168.20.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore-verification",
+      "device": "PC2",
+      "input": "ping 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-baseline",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4302.3A4E\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig /all\nInvalid Command.\n\nC:\\>ipconfig /renew\nDHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4219.A1B4\n   Link-local IPv6 Address.........: FE80::201:42FF:FE19:A1B4\n   IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7D-45-B3-23-00-01-42-19-A1-B4\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4302.3A4E\n   Link-local IPv6 Address.........: ::\n --More--    IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n   DHCP Servers....................: 0.0.0.0\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7D-45-B3-23-00-01-42-19-A1-B4\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\n\nDHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>ipconfig /dhcp\nInvalid Command.\n\nC:\\>ipconfig /renew\nDHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>ipconfig\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Link-local IPv6 Address.........: FE80::201:42FF:FE19:A1B4\n   IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Link-local IPv6 Address.........: ::\n   IPv6 Address....................: ::\n   IPv4 Address....................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n\nC:\\>DHCP request failed. \n\nC:\\>ipconfig 10.99.0.2 255.255.255.0 10.99.0.1\nC:\\>ping 10.99.0.1\n\nPinging 10.99.0.1 with 32 bytes of data:\n\nReply from 10.99.0.1: bytes=32 time<1ms TTL=255\nReply from 10.99.0.1: bytes=32 time<1ms TTL=255\nReply from 10.99.0.1: bytes=32 time<1ms TTL=255\nReply from 10.99.0.1: bytes=32 time<1ms TTL=255\n\nPing statistics for 10.99.0.1:\n    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),\nApproximate round trip times in milli-seconds:\n    Minimum = 0ms, Maximum = 0ms, Average = 0ms\n\nC:\\>ipconfig /release\nPort is not using DHCP.\nC:\\>ipconfig /renew\n\n   IP Address......................: 10.99.0.11\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.99.0.1\n   DNS Server......................: 10.99.0.53\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4219.A1B4\n   Link-local IPv6 Address.........: FE80::201:42FF:FE19:A1B4\n   IPv6 Address....................: ::\n   IPv4 Address....................: 10.99.0.11\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     10.99.0.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7D-45-B3-23-00-01-42-19-A1-B4\n   DNS Servers.....................: ::\n                                     10.99.0.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4302.3A4E\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig /release\nInvalid Command.\n\nC:\\>ipconfig /dhcp\nInvalid Command.\n\nC:\\>ipconfig /renew\nDHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>DHCP request failed. \n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4219.A1B4\n   Link-local IPv6 Address.........: FE80::201:42FF:FE19:A1B4\n   IPv6 Address....................: ::\n   Autoconfiguration IP Address....: 169.254.161.182\n   Subnet Mask.....................: 255.255.0.0\n   Default Gateway.................: ::\n                                     0.0.0.0\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7D-45-B3-23-00-01-42-19-A1-B4\n   DNS Servers.....................: ::\n                                     0.0.0.0\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4302.3A4E\n   Link-local IPv6 Address.........: ::\n\nC:\\>ing 10.99.0.1\nInvalid Command.\n\nC:\\>ipconfig /renew\nDHCP request failed. \n\nC:\\>\n   IP Address......................: 10.99.0.11\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.99.0.1\n   DNS Server......................: 10.99.0.53\n\nC:\\>ipconfig /release\n\n   IP Address......................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: 0.0.0.0\n   DNS Server......................: 0.0.0.0\n\nC:\\>ipconfig /renew\n\n   IP Address......................: 10.99.0.11\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: 10.99.0.1\n   DNS Server......................: 10.99.0.53\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4219.A1B4\n   Link-local IPv6 Address.........: FE80::201:42FF:FE19:A1B4\n   IPv6 Address....................: ::\n   IPv4 Address....................: 10.99.0.11\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     10.99.0.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7D-45-B3-23-00-01-42-19-A1-B4\n   DNS Servers.....................: ::\n                                     10.99.0.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4302.3A4E\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig /renew\nInvalid Command.\n\nC:\\>ipconfig /all\n\nFastEthernet0 Connection:(default port)\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4219.A1B4\n   Link-local IPv6 Address.........: FE80::201:42FF:FE19:A1B4\n   IPv6 Address....................: ::\n   IPv4 Address....................: 10.99.0.11\n   Subnet Mask.....................: 255.255.255.0\n   Default Gateway.................: ::\n                                     10.99.0.1\n   DHCP Servers....................: 192.168.10.1\n   DHCPv6 IAID.....................: \n   DHCPv6 Client DUID..............: 00-01-00-01-7D-45-B3-23-00-01-42-19-A1-B4\n   DNS Servers.....................: ::\n                                     10.99.0.53\n\nBluetooth Connection:\n\n   Connection-specific DNS Suffix..: \n   Physical Address................: 0001.4302.3A4E\n   Link-local IPv6 Address.........: ::\n\nC:\\>pconfig /all\nInvalid Command.\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-baseline",
+      "device": "PC3",
+      "input": "ipconfig /release",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /release\n\n   IP Address......................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: 0.0.0.0\n   DNS Server......................: 0.0.0.0\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-baseline",
+      "device": "PC3",
+      "input": "ipconfig /dhcp",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /dhcp\nInvalid Command.\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "ip address 10.99.0.1 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "no shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "ip route 10.99.0.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "ip dhcp excluded-address 10.99.0.1 10.99.0.10",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "ip dhcp pool TTL_RELAY_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "network 10.99.0.0 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "default-router 10.99.0.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "dns-server 10.99.0.53",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "lease 0 1",
+      "mode": "",
+      "status": "ERROR_INVALID",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "show ip interface brief",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Interface              IP-Address      OK? Method Status                Protocol \nGigabitEthernet0/0     unassigned      YES unset  up                    up \nGigabitEthernet0/0.10  192.168.10.2    YES manual up                    up \nGigabitEthernet0/0.20  192.168.20.2    YES manual up                    up \nGigabitEthernet0/1     10.99.0.1       YES manual up                    up \nGigabitEthernet0/2     unassigned      YES unset  administratively down down \nVlan1                  unassigned      YES unset  administratively down down\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router1",
+      "input": "show running-config | section dhcp",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "PC3",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /renew\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "show ip dhcp binding",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "IP address       Client-ID/              Lease expiration        Type\n                 Hardware address\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-relay",
+      "device": "Router0",
+      "input": "show ip dhcp pool TTL_RELAY_CLEAN",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Pool TTL_RELAY_CLEAN :\n Utilization mark (high/low)    : 100 / 0\n Subnet size (first/next)       : 0 / 0 \n Total addresses                : 254\n Leased addresses               : 0\n Excluded addresses             : 1\n Pending event                  : none\n\n 1 subnet is currently in the pool\n Current index        IP address range                    Leased/Excluded/Total\n 10.99.0.1            10.99.0.1        - 10.99.0.254       0    / 1     / 254\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "no ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "ip address 10.99.1.1 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "no shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "no ip route 10.99.0.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "ip route 10.99.1.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "ip dhcp excluded-address 10.99.1.1 10.99.1.254",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "ip dhcp pool TTL_EXHAUST_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "network 10.99.1.0 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "default-router 10.99.1.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "PC3",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /renew\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "show ip dhcp pool TTL_EXHAUST_CLEAN",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Pool TTL_EXHAUST_CLEAN :\n Utilization mark (high/low)    : 100 / 0\n Subnet size (first/next)       : 0 / 0 \n Total addresses                : 254\n Leased addresses               : 0\n Excluded addresses             : 2\n Pending event                  : none\n\n 1 subnet is currently in the pool\n Current index        IP address range                    Leased/Excluded/Total\n 10.99.1.1            10.99.1.1        - 10.99.1.254       0    / 2     / 254\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-exhaustion",
+      "device": "Router0",
+      "input": "show ip dhcp binding",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "IP address       Client-ID/              Lease expiration        Type\n                 Hardware address\n10.99.0.11       0001.4219.A1B4           --                     Automatic\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "no ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "ip address 10.99.2.1 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "no shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip route 10.99.1.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_RELAY_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_EXHAUST_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 10.99.0.1 10.99.0.10",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 10.99.1.1 10.99.1.254",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "PC3",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-apipa",
+      "device": "PC3",
+      "input": "derived-state-diff",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "{\"before\":[],\"renew\":[],\"after\":[],\"baseline\":[\"   IPv4 Address....................: 0.0.0.0\",\"   Subnet Mask.....................: 0.0.0.0\",\"   Default Gateway.................: ::\",\"   DHCP Servers....................: 0.0.0.0\",\"   DNS Servers.....................: ::\",\"   IPv4 Address....................: 0.0.0.0\",\"   Subnet Mask.....................: 0.0.0.0\",\"   Default Gateway.................: ::\",\"   DHCP Servers....................: 0.0.0.0\",\"   DNS Servers.....................: ::\",\"   IPv4 Address....................: 0.0.0.0\",\"   Subnet Mask.....................: 0.0.0.0\",\"   Default Gateway.................: ::\",\"   IPv4 Address....................: 0.0.0.0\",\"   Subnet Mask.....................: 0.0.0.0\",\"   Default Gateway.................: ::\",\"   Subnet Mask.....................: 255.255.255.0\",\"   Default Gateway.................: 10.99.0.1\",\"   IPv4 Address....................: 10.99.0.11\",\"   Subnet Mask.....................: 255.255.255.0\",\"   Default Gateway.................: ::\",\"   DHCP Servers....................: 192.168.10.1\",\"   DNS Servers.....................: ::\",\"   Subnet Mask.....................: 255.255.0.0\",\"   Default Gateway.................: ::\",\"   DHCP Servers....................: 192.168.10.1\",\"   DNS Servers.....................: ::\",\"   Subnet Mask.....................: 255.255.255.0\",\"   Default Gateway.................: 10.99.0.1\",\"   Subnet Mask.....................: 0.0.0.0\",\"   Default Gateway.................: 0.0.0.0\",\"   Subnet Mask.....................: 255.255.255.0\",\"   Default Gateway.................: 10.99.0.1\",\"   IPv4 Address....................: 10.99.0.11\",\"   Subnet Mask.....................: 255.255.255.0\",\"   Default Gateway.................: ::\",\"   DHCP Servers....................: 192.168.10.1\",\"   DNS Servers.....................: ::\",\"   IPv4 Address....................: 10.99.0.11\",\"   Subnet Mask.....................: 255.255.255.0\",\"   Default Gateway.................: ::\",\"   DHCP Servers....................: 192.168.10.1\",\"   DNS Servers.....................: ::\"]}"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "no ip address",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_EXHAUST_CLEAN",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 10.99.1.1 10.99.1.254",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "no ip route 10.99.2.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "%No matching route to delete\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore",
+      "device": "PC3",
+      "input": "ipconfig 0.0.0.0 0.0.0.0 0.0.0.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore-verification",
+      "device": "PC0",
+      "input": "ping 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore-verification",
+      "device": "PC0",
+      "input": "ping 192.168.20.10",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore-verification",
+      "device": "PC1",
+      "input": "ping 192.168.20.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "clean-restore-verification",
+      "device": "PC2",
+      "input": "ping 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router1",
+      "input": "ip address 10.99.0.1 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router1",
+      "input": "ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router1",
+      "input": "no shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router0",
+      "input": "ip route 10.99.0.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router0",
+      "input": "ip dhcp excluded-address 10.99.0.1 10.99.0.10",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router0",
+      "input": "ip dhcp pool TTL_RELAY_FINAL2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router0",
+      "input": "network 10.99.0.0 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router0",
+      "input": "default-router 10.99.0.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router0",
+      "input": "dns-server 10.99.0.53",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "PC3",
+      "input": "ipconfig /release",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /release\n\n   IP Address......................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: 0.0.0.0\n   DNS Server......................: 0.0.0.0\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "PC3",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /renew\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router0",
+      "input": "show ip dhcp binding",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "IP address       Client-ID/              Lease expiration        Type\n                 Hardware address\n10.99.0.11       0001.4219.A1B4           --                     Automatic\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-relay",
+      "device": "Router0",
+      "input": "show ip dhcp pool TTL_RELAY_FINAL2",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Pool TTL_RELAY_FINAL2 :\n Utilization mark (high/low)    : 100 / 0\n Subnet size (first/next)       : 0 / 0 \n Total addresses                : 254\n Leased addresses               : 0\n Excluded addresses             : 1\n Pending event                  : none\n\n 1 subnet is currently in the pool\n Current index        IP address range                    Leased/Excluded/Total\n 10.99.0.1            10.99.0.1        - 10.99.0.254       0    / 1     / 254\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router1",
+      "input": "ip address 10.99.1.1 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router1",
+      "input": "ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router1",
+      "input": "no shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router0",
+      "input": "no ip route 10.99.0.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router0",
+      "input": "ip route 10.99.1.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router0",
+      "input": "ip dhcp excluded-address 10.99.1.1 10.99.1.254",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router0",
+      "input": "ip dhcp pool TTL_EXHAUST_FINAL",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router0",
+      "input": "network 10.99.1.0 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router0",
+      "input": "default-router 10.99.1.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "PC3",
+      "input": "ipconfig /release",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /release\n\n   IP Address......................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: 0.0.0.0\n   DNS Server......................: 0.0.0.0\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "PC3",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /renew\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router0",
+      "input": "show ip dhcp pool TTL_EXHAUST_FINAL",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Pool TTL_EXHAUST_FINAL :\n Utilization mark (high/low)    : 100 / 0\n Subnet size (first/next)       : 0 / 0 \n Total addresses                : 254\n Leased addresses               : 0\n Excluded addresses             : 2\n Pending event                  : none\n\n 1 subnet is currently in the pool\n Current index        IP address range                    Leased/Excluded/Total\n 10.99.1.1            10.99.1.1        - 10.99.1.254       0    / 2     / 254\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-exhaustion",
+      "device": "Router0",
+      "input": "show ip dhcp binding",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "IP address       Client-ID/              Lease expiration        Type\n                 Hardware address\n10.99.0.11       0001.4219.A1B4           --                     Automatic\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router1",
+      "input": "no ip helper-address 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router1",
+      "input": "ip address 10.99.2.1 255.255.255.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router1",
+      "input": "no shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router0",
+      "input": "no ip route 10.99.1.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_RELAY_FINAL2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_EXHAUST_FINAL",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 10.99.0.1 10.99.0.10",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router0",
+      "input": "no ip dhcp excluded-address 10.99.1.1 10.99.1.254",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "PC3",
+      "input": "ipconfig /release",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /release\n\n   IP Address......................: 0.0.0.0\n   Subnet Mask.....................: 0.0.0.0\n   Default Gateway.................: 0.0.0.0\n   DNS Server......................: 0.0.0.0\n\nC:\\>"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "PC3",
+      "input": "ipconfig /renew",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ipconfig /renew\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-apipa",
+      "device": "PC3",
+      "input": "ipconfig /all",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router1",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router1",
+      "input": "interface gigabitEthernet 0/1",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router1",
+      "input": "shutdown",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router1",
+      "input": "no ip address",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router1",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router0",
+      "input": "configure terminal",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Enter configuration commands, one per line.  End with CNTL/Z.\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_RELAY_FINAL",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router0",
+      "input": "no ip route 10.99.2.0 255.255.255.0 192.168.10.2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "%No matching route to delete\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_RELAY_FINAL2",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router0",
+      "input": "no ip dhcp pool TTL_EXHAUST_FINAL",
+      "mode": "global",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router0",
+      "input": "end",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router0",
+      "input": "show running-config | section dhcp",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "Router1",
+      "input": "show ip interface brief",
+      "mode": "enable",
+      "status": "STATUS_OK",
+      "rawOutput": "Interface              IP-Address      OK? Method Status                Protocol \nGigabitEthernet0/0     unassigned      YES unset  up                    up \nGigabitEthernet0/0.10  192.168.10.2    YES manual up                    up \nGigabitEthernet0/0.20  192.168.20.2    YES manual up                    up \nGigabitEthernet0/1     unassigned      YES manual administratively down down \nGigabitEthernet0/2     unassigned      YES unset  administratively down down \nVlan1                  unassigned      YES unset  administratively down down\n\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore",
+      "device": "PC3",
+      "input": "ipconfig 0.0.0.0 0.0.0.0 0.0.0.0",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore-verification",
+      "device": "PC0",
+      "input": "ping 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore-verification",
+      "device": "PC0",
+      "input": "ping 192.168.20.10",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": ""
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore-verification",
+      "device": "PC1",
+      "input": "ping 192.168.20.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.20.1\n\nPinging 192.168.20.1 with 32 bytes of data:\n\nReply from 192.168.20.1: bytes=32 time<1ms TTL=255\n"
+    },
+    {
+      "backend": "pt",
+      "experiment": "final-restore-verification",
+      "device": "PC2",
+      "input": "ping 192.168.10.1",
+      "mode": "",
+      "status": "STATUS_OK",
+      "rawOutput": "ping 192.168.10.1\n\nPinging 192.168.10.1 with 32 bytes of data:\n\nReply from 192.168.10.1: bytes=32 time<1ms TTL=255\n"
+    }
+  ],
+  "blockedExperiments": []
+}
