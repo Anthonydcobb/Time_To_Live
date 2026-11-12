@@ -2,6 +2,10 @@
 
 Design note, 2026-10-19. Ant's idea, written up so Claude, Codex and anyone else work from the same plan. Nothing here is built yet.
 
+## Update, 2026-11-12: the NOC is there from the start
+
+Ant's full NOC plan (four apps: Service Desk, Network Monitor, Asset Inventory, Records Archive) makes the NOC terminal in Bob's office the place where tickets come in from job 1 on. Ant chose that **sites show up on the monitor from installation**, not only once SSH works. SSH at job 5 still matters: it's what lets you **fix** a site from the desk instead of driving out. The progression below still holds for remote fixes; read "appears on your NOC" as "becomes fixable from your NOC".
+
 ## The idea in one line
 
 Early on, every problem means driving out to the site. Learning SSH unlocks a NOC terminal at your desk in Bob's office, where you can fix configuration problems remotely. But physical problems, like a pulled cable, still mean you have to go there.
