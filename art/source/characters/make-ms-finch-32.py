@@ -20,7 +20,8 @@ from pathlib import Path
 from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[3]
-OUT = ROOT / "public/assets/sprites/characters/ms-finch-walk-32.png"
+# The game sheet is hand-drawn now (Ant, 2026-11-12), so this only writes the old placeholder.
+OUT = ROOT / "art/source/characters/generated/ms-finch-walk-32-placeholder.png"
 PREVIEW = ROOT / "art/previews/characters/ms-finch-walk-32-x4.png"
 
 W, H = 32, 64

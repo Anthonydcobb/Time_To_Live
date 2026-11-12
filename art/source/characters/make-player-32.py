@@ -17,7 +17,8 @@ from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[3]
 SRC = ROOT / "art/concepts/characters/player-walk-concept.jpg"
-OUT = ROOT / "public/assets/sprites/characters/player-walk-32.png"
+# The game sheet is hand-drawn now (Ant, 2026-11-12), so this only writes a reference cut.
+OUT = ROOT / "art/source/characters/generated/player-walk-32-cut.png"
 PREVIEW = ROOT / "art/previews/characters/player-walk-32-x4.png"
 
 CELL = (32, 64)

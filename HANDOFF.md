@@ -22,7 +22,13 @@ Last updated: 2026-11-12.
     reads a bit young.
   - Also in this change: Ant's local Ms. Finch renames (prop label, town map, grimoire scraps, `MS. FINCH`
     and `PENNY` portraits) and the room title "Finch's Quick Stop". The work order and script still say Quik-Stop Forever.
-  - Next for art: Bob's office and the laundromat at 32 px the same way, then NPC sheets (Gus).
+  - **Later the same day:** Ant's hand-finished walk sheets replaced both generated ones
+    (`player-walk-32.png`, `ms-finch-walk-32.png`); the two make scripts now write to
+    `art/source/characters/generated/` so they can't overwrite them. Ant's art helper works from
+    `art/walk-animation/WALK-ANIMATION-INSTRUCTIONS.md`. **Bob's office is 32 px too**
+    (`art/source/props/make-office-32.py`: office tiles with a new linoleum floor, office props,
+    the walkie; it borrows `store-decor-32`). She's 32 px in the office, store and dentist's.
+  - Next for art: the laundromat at 32 px the same way, then NPC sheets (Gus).
 
 ## Latest handoff update (2026-10-23, Claude)
 

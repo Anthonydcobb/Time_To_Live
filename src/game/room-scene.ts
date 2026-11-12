@@ -50,6 +50,9 @@ const SHEET_PX: Record<string, number> = {
   "store-rack-32": 32,
   "store-jack-32": 32,
   "store-decor-32": 32,
+  "office-tiles-32": 32,
+  "office-props-32": 32,
+  "walkie-32": 32,
 };
 const sheetScale = (key: string) => TILE / (SHEET_PX[key] ?? 16);
 
@@ -115,6 +118,10 @@ export class RoomScene extends Phaser.Scene {
     this.load.spritesheet("dentist-tiles", "assets/sprites/tiles/dentist-tiles.png", { frameWidth: 32, frameHeight: 32 });
     // Bob's office props: 80x48 cells, each piece standing at the bottom centre of its cell.
     this.load.spritesheet("office-props", "assets/sprites/props/office-props.png", { frameWidth: 80, frameHeight: 48 });
+    // Bob's office at 32 px (art/source/props/make-office-32.py).
+    this.load.spritesheet("office-props-32", "assets/sprites/props/office-props-32.png", { frameWidth: 160, frameHeight: 96 });
+    this.load.spritesheet("office-tiles-32", "assets/sprites/tiles/office-tiles-32.png", { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("walkie-32", "assets/sprites/props/walkie-32.png", { frameWidth: 32, frameHeight: 64 });
     // Set dressing: 32x80 cells, each piece standing at the bottom centre of its cell.
     this.load.spritesheet("store-decor", "assets/sprites/props/store-decor.png", { frameWidth: 32, frameHeight: 80 });
     this.load.spritesheet("store-decor-32", "assets/sprites/props/store-decor-32.png", { frameWidth: 64, frameHeight: 160 });
