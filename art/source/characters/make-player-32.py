@@ -5,7 +5,7 @@ sheet: rows down, up, left, right, five frames each (standing, then four steps),
 checker. This flood-fills the checker away around each frame, shrinks every frame by the same
 amount so she's about 60 px tall, and stands her on the bottom centre of a 32x64 cell. The
 game draws it at half the usual scale (SHEET_PX in room-scene.ts), in rooms whose props are
-32 px too.
+32 px too. Then `polish` tones the cable down, clears specks and fixes the palette.
 
     python art/source/characters/make-player-32.py
 """
@@ -100,9 +100,53 @@ def keep_largest(px, w: int, h: int) -> None:
             px[p] = (0, 0, 0, 0)
 
 
+# The up row in the concept swaps bags: a backpack when she stands and on the last step, a
+# messenger bag on the others. She carries the messenger bag (art spec), so the up row reuses
+# the two messenger-bag steps: stand on step 1, walk 1, 3, 1, 3.
+UP_ROW = [1, 1, 3, 1, 3]
+PALETTE = 40
+CABLE = [(70, 104, 128, 255), (104, 146, 172, 255), (146, 184, 204, 255)]  # shadow, base, light  # colours across the whole sheet, like hand-made pixel art
+
+
+def cable(rgb: tuple[int, int, int]) -> bool:
+    """The concept's console cable is a glowing cyan. Light blue, not glowing, is the spec, and the
+    glow is kept for hauntings."""
+    r, g, b = rgb
+    return b > r + 50 and g > r + 30
+
+
+def polish(sheet: Image.Image) -> Image.Image:
+    """Cleans up after the cut: tones the cable down, drops light specks of checker left on her
+    edges, and puts the whole sheet on one small palette."""
+    px = sheet.load()
+    w, h = sheet.size
+    wire = {(x, y): sum(px[x, y][:3]) / 3 for y in range(h) for x in range(w) if px[x, y][3] and cable(px[x, y][:3])}
+    for _ in range(2):
+        drop = []
+        for y in range(h):
+            for x in range(w):
+                c = px[x, y]
+                if not c[3] or max(c[:3]) - min(c[:3]) > 24 or sum(c[:3]) / 3 < 95:
+                    continue
+                if any(not (0 <= x + dx < w and 0 <= y + dy < h) or px[x + dx, y + dy][3] == 0 for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1))):
+                    drop.append((x, y))
+        for q in drop:
+            px[q] = (0, 0, 0, 0)
+    alpha = sheet.getchannel("A")
+    flat = sheet.convert("RGB").quantize(PALETTE, method=Image.Quantize.MEDIANCUT, dither=Image.Dither.NONE).convert("RGB")
+    flat.putalpha(alpha)
+    # The cable goes on last, on its own three blues, so the palette can't grey it out.
+    out = flat.load()
+    for q, v in wire.items():
+        if out[q][3]:
+            out[q] = CABLE[0] if v < 120 else CABLE[1] if v < 170 else CABLE[2]
+    return flat
+
+
 def main() -> None:
     sheet = Image.open(SRC).convert("RGB")
     frames = [[cut(sheet, cx, cy) for cx in COLS] for cy in ROWS]
+    frames[1] = [frames[1][i] for i in UP_ROW]
     # One scale for every frame, from the standing frame facing down, so steps don't change her size.
     stand = frames[0][0].getbbox()
     scale = TALL / (stand[3] - stand[1])
@@ -122,6 +166,7 @@ def main() -> None:
             cell = Image.new("RGBA", CELL)
             cell.paste(small, (x - col * CELL[0], y - row * CELL[1]), small)
             out.paste(cell, (col * CELL[0], row * CELL[1]), cell)
+    out = polish(out)
     OUT.parent.mkdir(parents=True, exist_ok=True)
     out.save(OUT)
     PREVIEW.parent.mkdir(parents=True, exist_ok=True)

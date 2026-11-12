@@ -20,7 +20,7 @@ interface Site {
 const SITES: Site[] = [
   { id: "bobs", name: "Bob's Bandwidth & Bloodletting", box: [0.29, 0.495, 0.396, 0.665], note: "Home base. The coffee is always warm." },
   { id: "laundromat", name: "Spin Cycle Eternal · job 2", box: [0.396, 0.48, 0.477, 0.64], note: "No work order yet. The dryers are running anyway." },
-  { id: "quikstop", name: "Quik-Stop Forever · job 1", box: [0.477, 0.455, 0.57, 0.6], note: "Mrs. Finch's corner store." },
+  { id: "quikstop", name: "Finch's Quick Stop · job 1", box: [0.477, 0.455, 0.57, 0.6], note: "Ms. Finch's corner store." },
   { id: "dentist", name: "Dentist's Office · job 3", box: [0.57, 0.46, 0.627, 0.56], note: "No work order yet. Someone inside is still smiling." },
   { id: "tunnel", name: "The Tunnel", box: [0.632, 0.45, 0.69, 0.545], note: "The road to Bellwether. The sign says it's closed. The sign has always said that." },
   { id: "townhall", name: "Town Hall & Sheriff · job 6", box: [0.207, 0.3, 0.316, 0.45], note: "No work order yet. The flag is at half-mast. It always is." },

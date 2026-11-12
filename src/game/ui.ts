@@ -33,6 +33,8 @@ export interface Line {
  * over the room; a mood without one falls back to `sheet`, three 64 px pixel faces side by side.
  */
 const PORTRAITS: Record<string, { busts?: (string | undefined)[]; sheet?: string }> = {
+  "MS. FINCH": { busts: ["assets/portraits/ms-finch-bust.webp", "assets/portraits/mrs-finch-bust.webp"], sheet: "assets/portraits/mrs-finch.png" },
+  PENNY: { busts: ["assets/portraits/ms-finch-bust.webp", "assets/portraits/mrs-finch-bust.webp"], sheet: "assets/portraits/mrs-finch.png" },
   "MRS. FINCH": { busts: ["assets/portraits/mrs-finch-bust.webp"], sheet: "assets/portraits/mrs-finch.png" },
   // You only ever hear Walter, so his portrait is the radio.
   "WALTER (walkie)": { busts: ["assets/portraits/walter-bust.webp"] },
