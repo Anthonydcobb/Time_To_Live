@@ -107,9 +107,31 @@ def linoleum(frame: int) -> Image.Image:
     return im
 
 
+def seat_monitors(src: Image.Image, drop: int = 8) -> Image.Image:
+    """The tech desks (frame 0, 80x48 cells) had their monitors perched on the back edge, as if
+    about to fall off. Lifts the monitors off and sets them down `drop` px onto the desktop."""
+    src = src.convert("RGBA")
+    px = src.load()
+    x0, x1, top, edge = 24, 56, 0, 19  # the desk cell's monitor band; the desk top starts at 16
+    desk = {px[x, y] for y in range(20, 26) for x in range(x0, x1)}
+    monitor = {}
+    for y in range(top, edge):
+        for x in range(x0, x1):
+            c = px[x, y]
+            if c[3] and (y < 16 or c not in desk):
+                monitor[(x, y)] = c
+                # Above the desk it's just air; on the desk's back edge, put the desk back.
+                px[x, y] = (0, 0, 0, 0) if y < 16 else px[x, y + 4]
+    for (x, y), c in monitor.items():
+        px[x, y + drop] = c
+    return src
+
+
 def main() -> None:
     for folder, name, grain in SHEETS:
         src = Image.open(SPRITES / folder / f"{name}.png")
+        if name == "office-props":
+            src = seat_monitors(src)
         out = upres(src, seed=len(name), grain=grain)
         if name == "office-tiles":
             # The floor row is drawn fresh at 32 px; the walls keep their doubled 16 px art.

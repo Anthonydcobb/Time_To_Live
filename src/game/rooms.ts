@@ -129,7 +129,7 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "desk", label: "Bob's desk", x: 1, y: 9, w: 3, h: 1, verb: "Look at", color: 0x55524a, sprite: "office-props-32", frame: 1, card: "assets/cards/bobs-desk.webp" },
       { id: "armchair", label: "Armchair", x: 1, y: 12, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props-32", frame: 2 },
       // The walkie's charger sits on a side table by the armchair (the table is part of its sprite).
-      { id: "walkie-32", label: "Walkie", x: 2, y: 12, w: 1, h: 1, verb: "Pick up", color: 0x4a5a4a, sprite: "walkie-32" },
+      { id: "walkie", label: "Walkie", x: 2, y: 12, w: 1, h: 1, verb: "Pick up", color: 0x4a5a4a, sprite: "walkie-32" },
       // Main office
       { id: "files", label: "Files", x: 8, y: 5, w: 1, h: 1, verb: "", color: 0x50504a, decor: true, sprite: "office-props-32", frame: 11 },
       { id: "files", label: "Files", x: 8, y: 7, w: 1, h: 2, verb: "", color: 0x50504a, decor: true, sprite: "store-decor-32", frame: 5 },
@@ -146,10 +146,10 @@ export const ROOMS: Record<RoomId, RoomDef> = {
       { id: "chair", label: "Chair", x: 9, y: 8, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props-32", frame: 3 },
       { id: "chair", label: "Chair", x: 12, y: 7, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props-32", frame: 3 },
       { id: "chair", label: "Chair", x: 12, y: 9, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props-32", frame: 3 },
-      // The right-hand pod is one desk short, which opens the floor up toward the coffee.
-      { id: "techdesks", label: "Tech\ndesks", x: 15, y: 6, w: 2, h: 2, verb: "", color: 0x55524a, decor: true, sprite: "office-props-32", frame: 0 },
-      { id: "chair", label: "Chair", x: 14, y: 6, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props-32", frame: 3 },
-      { id: "chair", label: "Chair", x: 17, y: 7, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props-32", frame: 3 },
+      // The NOC terminal, where tickets come in from now on (Ant, 2026-11-12). It takes the right-hand
+      // tech pod's place. A grey box until its art and screens are designed.
+      { id: "noc", label: "NOC\nterminal", x: 14, y: 6, w: 4, h: 2, verb: "Use", color: 0x3c4a46 },
+      { id: "chair", label: "Chair", x: 15, y: 8, w: 1, h: 1, verb: "", color: 0x4a3a44, decor: true, sprite: "office-props-32", frame: 3 },
       { id: "files", label: "Files", x: 19, y: 5, w: 1, h: 2, verb: "", color: 0x50504a, decor: true, sprite: "store-decor-32", frame: 5 },
       { id: "files", label: "Files", x: 19, y: 7, w: 1, h: 1, verb: "", color: 0x50504a, decor: true, sprite: "office-props-32", frame: 11 },
       { id: "files", label: "Files", x: 19, y: 9, w: 1, h: 2, verb: "", color: 0x50504a, decor: true, sprite: "store-decor-32", frame: 5 },
