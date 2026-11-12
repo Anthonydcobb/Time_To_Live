@@ -25,7 +25,7 @@ export const NOTES: Record<string, Note> = {
   "bob-sticky": { kind: "sticky", from: "Bob's monitor", text: "At the Cryptis quarterly. Sell the upgrade. Everybody needs the upgrade. -B" },
   "bellwether": { kind: "card", from: "A drawer label, Bob's office", text: "BELLWETHER\n(the drawer is empty)" },
   "wo1-pen": { kind: "scrap", from: "Work order #0001, in pen", text: "Do not restock the back cooler." },
-  "finch-calendar": { kind: "scrap", from: "Quik-Stop back office", text: "Desk calendar, October 1987. Every day crossed off, even the ones that haven't happened." },
+  "finch-calendar": { kind: "scrap", from: "Finch's Quick Stop back office", text: "Desk calendar, October 1987. Every day crossed off, even the ones that haven't happened." },
   "wo2-pen": { kind: "scrap", from: "Work order #0002, in pen", text: "Dryer 4 is not a customer." },
   "gus-log": { kind: "card", from: "Gus's shift log, newest entry", text: "DRYER 4 WON'T STOP ASKING FOR AN ADDRESS.\n0.0.0.0" },
   "lostfound": { kind: "polaroid", from: "Lost & found, Spin Cycle Eternal", text: "this room. from inside." },
@@ -33,7 +33,7 @@ export const NOTES: Record<string, Note> = {
   "wo3-pen": { kind: "scrap", from: "Work order #0003, in pen", text: "Front desk and X-ray never share a network. Dr. Marrow was very clear." },
   "den-book": { kind: "card", from: "Appointment book, Marrow Family Dentistry", text: "Every slot after 6 PM is full.\nEvery name is in the same handwriting.\nThe last one is yours." },
   "den-jars": { kind: "card", from: "Shelf label, the packing room", text: "SPARES. SORTED BY OWNER.\nDO NOT MIX." },
-  "den-crates": { kind: "scrap", from: "Shipping label, the packing room", text: "QUIK-STOP FOREVER. ATTN: MRS. FINCH. FRAGILE. KEEP COOL." },
+  "den-crates": { kind: "scrap", from: "Shipping label, the packing room", text: "FINCH'S QUICK STOP. ATTN: MS. FINCH. FRAGILE. KEEP COOL." },
 };
 
 interface Ritual {

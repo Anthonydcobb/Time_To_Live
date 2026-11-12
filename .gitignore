@@ -7,3 +7,4 @@ dist/
 harness/artifacts/
 harness/pt-exapp/out/
 harness/pt-exapp/*.pta
+__pycache__/

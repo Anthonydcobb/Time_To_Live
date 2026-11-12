@@ -2,7 +2,33 @@
 
 Read this first if you're picking up the project, human or AI. Update it whenever you finish something or change a plan.
 
-Last updated: 2026-10-23.
+Last updated: 2026-11-12.
+
+## Latest handoff update (2026-11-12, Claude)
+
+- **32 px is the art standard now, and Finch's Quick Stop (job 1) runs at it.** 32 px tiles and
+  32x64 characters, shown at half scale through `SHEET_PX`, so rooms and the camera don't change.
+  The shop uses `store-*-32` sheets, `player-32` and `ms-finch-32` (`rooms.ts`, loaded in `room-scene.ts`).
+  - `art/source/upres32.py` turns a 16 px sheet into a shaded 32 px twin (1 px outline with selout,
+    top-left light, grain, small palette). `art/source/props/make-store-32.py` runs it on every store
+    sheet and draws a new worn-stone floor row. This is a first pass: hand-drawn sheets can replace
+    any `*-32.png` with the same frame layout, no code changes.
+  - Ms. Finch (the young clerk) has `ms-finch-walk-32.png`, drawn shape by shape by
+    `art/source/characters/make-ms-finch-32.py` from her dialogue concepts (bun, pencil, three clips,
+    maroon cardigan, floral apron, keys). Placeholder quality; a hand pass would help most on her face and side walk.
+  - `make-player-32.py` now polishes the cut: the cable is a muted light blue, not glowing cyan (glow is
+    for hauntings), light specks of checker are gone, one 40-colour palette, and the up row uses only the
+    messenger-bag frames. Still to fix by hand: the bag vanishes in the down and side idle frames, and she
+    reads a bit young.
+  - Also in this change: Ant's local Ms. Finch renames (prop label, town map, grimoire scraps, `MS. FINCH`
+    and `PENNY` portraits) and the room title "Finch's Quick Stop". The work order and script still say Quik-Stop Forever.
+  - **Later the same day:** Ant's hand-finished walk sheets replaced both generated ones
+    (`player-walk-32.png`, `ms-finch-walk-32.png`); the two make scripts now write to
+    `art/source/characters/generated/` so they can't overwrite them. Ant's art helper works from
+    `art/walk-animation/WALK-ANIMATION-INSTRUCTIONS.md`. **Bob's office is 32 px too**
+    (`art/source/props/make-office-32.py`: office tiles with a new linoleum floor, office props,
+    the walkie; it borrows `store-decor-32`). She's 32 px in the office, store and dentist's.
+  - Next for art: the laundromat at 32 px the same way, then NPC sheets (Gus).
 
 ## Latest handoff update (2026-10-23, Claude)
 

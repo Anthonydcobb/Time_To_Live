@@ -39,7 +39,21 @@ type Keys = Record<"up" | "down" | "left" | "right" | "w" | "a" | "s" | "d" | "e
  * Pixels per tile on each sprite sheet that isn't the usual 16. A sheet drawn at 32 px per tile
  * is shown at half the scale, so it covers the same ground with four times the detail.
  */
-const SHEET_PX: Record<string, number> = { "dentist-props": 32, "dentist-tiles": 32, "player-32": 32 };
+const SHEET_PX: Record<string, number> = {
+  "dentist-props": 32,
+  "dentist-tiles": 32,
+  "player-32": 32,
+  "ms-finch-32": 32,
+  "store-tiles-32": 32,
+  "store-fridges-32": 32,
+  "store-counter-32": 32,
+  "store-rack-32": 32,
+  "store-jack-32": 32,
+  "store-decor-32": 32,
+  "office-tiles-32": 32,
+  "office-props-32": 32,
+  "walkie-32": 32,
+};
 const sheetScale = (key: string) => TILE / (SHEET_PX[key] ?? 16);
 
 export class RoomScene extends Phaser.Scene {
@@ -85,6 +99,13 @@ export class RoomScene extends Phaser.Scene {
     // The same walk at 32 px per tile, for rooms drawn at that density (RoomDef.player).
     this.load.spritesheet("player-32", "assets/sprites/characters/player-walk-32.png", { frameWidth: 32, frameHeight: 64 });
     this.load.spritesheet("mrs-finch", "assets/sprites/characters/mrs-finch-walk.png", { frameWidth: 16, frameHeight: 32 });
+    // Finch's Quick Stop at 32 px (art/source/props/make-store-32.py, characters/make-ms-finch-32.py).
+    this.load.spritesheet("ms-finch-32", "assets/sprites/characters/ms-finch-walk-32.png", { frameWidth: 32, frameHeight: 64 });
+    this.load.spritesheet("store-tiles-32", "assets/sprites/tiles/store-tiles-32.png", { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("store-fridges-32", "assets/sprites/props/store-fridges-32.png", { frameWidth: 64, frameHeight: 96 });
+    this.load.spritesheet("store-counter-32", "assets/sprites/props/store-counter-32.png", { frameWidth: 32, frameHeight: 160 });
+    this.load.spritesheet("store-rack-32", "assets/sprites/props/store-rack-32.png", { frameWidth: 64, frameHeight: 64 });
+    this.load.spritesheet("store-jack-32", "assets/sprites/props/store-jack-32.png", { frameWidth: 32, frameHeight: 32 });
     this.load.spritesheet("gus", "assets/sprites/characters/gus-walk.png", { frameWidth: 16, frameHeight: 32 });
     this.load.spritesheet("store-tiles", "assets/sprites/tiles/store-tiles.png", { frameWidth: 16, frameHeight: 16 });
     this.load.spritesheet("store-fridges", "assets/sprites/props/store-fridges.png", { frameWidth: 32, frameHeight: 48 });
@@ -97,8 +118,13 @@ export class RoomScene extends Phaser.Scene {
     this.load.spritesheet("dentist-tiles", "assets/sprites/tiles/dentist-tiles.png", { frameWidth: 32, frameHeight: 32 });
     // Bob's office props: 80x48 cells, each piece standing at the bottom centre of its cell.
     this.load.spritesheet("office-props", "assets/sprites/props/office-props.png", { frameWidth: 80, frameHeight: 48 });
+    // Bob's office at 32 px (art/source/props/make-office-32.py).
+    this.load.spritesheet("office-props-32", "assets/sprites/props/office-props-32.png", { frameWidth: 160, frameHeight: 96 });
+    this.load.spritesheet("office-tiles-32", "assets/sprites/tiles/office-tiles-32.png", { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet("walkie-32", "assets/sprites/props/walkie-32.png", { frameWidth: 32, frameHeight: 64 });
     // Set dressing: 32x80 cells, each piece standing at the bottom centre of its cell.
     this.load.spritesheet("store-decor", "assets/sprites/props/store-decor.png", { frameWidth: 32, frameHeight: 80 });
+    this.load.spritesheet("store-decor-32", "assets/sprites/props/store-decor-32.png", { frameWidth: 64, frameHeight: 160 });
     // The laundromat's machines and fittings: 48x64 cells, the same way.
     this.load.spritesheet("laundromat-props", "assets/sprites/props/laundromat-props.png", { frameWidth: 48, frameHeight: 64 });
     // The dentist's props, cut from Gemini's concept at 32 px per tile: 64x96 cells (SHEET_PX).

@@ -412,6 +412,10 @@ export class Story {
           { label: "Leave it", run: () => {} },
         ]);
         return;
+      case "office:noc":
+        // Placeholder until Ant's NOC plan is in: tickets will come in here.
+        ui.say([{ text: "The NOC terminal hums. Its screens show a login prompt that nobody has set up yet." }]);
+        return;
       case "shop:exit":
         if (this.flags.has("done")) ui.openTownMap("quikstop", { bobs: () => this.travel("office") });
         else ui.say(scene("shop-exit-early"));
