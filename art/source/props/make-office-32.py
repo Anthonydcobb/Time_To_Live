@@ -19,9 +19,9 @@ sys.path.insert(0, str(ROOT / "art/source"))
 from upres32 import preview, upres  # noqa: E402
 
 T = 32
-# Two tired linoleum tones in 16 px squares, the green-grey of an office that's a bit too old.
-LINO = [(92, 98, 82), (82, 88, 74)]
-SEAM = (58, 62, 52)
+# Dim, worn sheet linoleum in big tile-sized squares, the colour of an office that's a bit too old.
+LINO = [(70, 72, 60), (66, 68, 57)]
+SEAM = (48, 48, 42)
 WARM = (255, 244, 220)
 COOL = (24, 22, 30)
 
@@ -39,7 +39,7 @@ def mix(c, to, k):
 
 
 def linoleum(frame: int) -> Image.Image:
-    """One floor tile: four 16 px linoleum squares, faintly mottled, with a seam where they meet.
+    """One floor tile of dim, worn linoleum, faintly mottled, with a faint seam on two sides.
     Frames 2 to 7 keep the old sheet's wear: a crack, scuffs, a water stain, a cable cover, a
     dropped memo and a dark stain."""
     rng = random.Random(900 + frame)
@@ -47,15 +47,16 @@ def linoleum(frame: int) -> Image.Image:
     px = im.load()
     for y in range(T):
         for x in range(T):
-            base = LINO[((x // 16) + (y // 16)) % 2]
+            base = LINO[frame % 2]
             n = math.sin(x * 0.45 + frame) * math.sin(y * 0.38 + frame * 2) * 2.5
             c = tuple(round(v + n) for v in base)
             if rng.random() < 0.04:
                 c = mix(c, COOL, 0.2)
-            if x % 16 == 15 or y % 16 == 15:
-                c = SEAM
-            elif x % 16 == 0 or y % 16 == 0:
-                c = mix(c, WARM, 0.08)
+            # Faint seams: the sheet was laid in tile-wide strips long ago.
+            if x == T - 1 or y == T - 1:
+                c = mix(c, SEAM, 0.6)
+            elif x == 0 or y == 0:
+                c = mix(c, WARM, 0.05)
             px[x, y] = c + (255,)
 
     def dots(path, colour, k):
@@ -76,6 +77,8 @@ def linoleum(frame: int) -> Image.Image:
         cx, cy = rng.randrange(10, 22), rng.randrange(10, 22)
         dots([(x, y) for y in range(T) for x in range(T) if math.hypot(x - cx, (y - cy) * 1.2) + rng.uniform(-2, 2) < r], colour, k)
 
+    if frame in (0, 1):
+        blot((84, 84, 70), 9, 0.25)  # worn paler where people walk
     if frame == 2:
         walk(16, COOL, 0.7)  # a crack
     elif frame == 3:
